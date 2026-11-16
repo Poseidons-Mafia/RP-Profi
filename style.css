@@ -1,28 +1,26 @@
 /* =============================================================
    Wiwang Law – Aktensystem
-   Markenfarben aus dem Logo: Schwarz, Rot, Gold
+   Farben aus dem Logo: Rot, Gold, Schwarz + Cremeweiß der Briefvorlage
    ============================================================= */
 :root {
   --red: #a30000;
-  --red-bright: #c8102e;
-  --red-dark: #6e0000;
+  --red-dark: #7d0000;
   --gold: #cc9e00;
-  --gold-bright: #e6b400;
+  --gold-soft: #f6ebc4;
+  --black: #141414;
 
-  --bg: #0e0e0e;
-  --panel: #181818;
-  --panel-2: #212121;
-  --input: #101010;
-  --line: #2c2c2c;
-  --text: #f3efe4;
-  --muted: #9b9484;
+  --bg: #faf5e4;        /* Cremeweiß wie die Rechnung */
+  --panel: #fffdf6;
+  --text: #1a1a1a;
+  --muted: #7b7262;
+  --line: #e8dcb8;
+  --danger: #a30000;
   --radius: 10px;
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
-html { background: var(--bg); }
 body {
   margin: 0;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
@@ -32,24 +30,21 @@ body {
   min-height: 100vh;
 }
 
-/* Glückssymbol als goldenes Wasserzeichen */
+/* Glückssymbol aus der Briefvorlage als Wasserzeichen */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: url("assets/symbol.png") center 60% / min(80vmin, 720px) no-repeat;
-  filter: brightness(1.6) saturate(1.4);
-  opacity: 0.07;
+  background: url("assets/symbol.png") center 55% / min(70vmin, 640px) no-repeat;
+  opacity: 0.09;
   pointer-events: none;
   z-index: -1;
 }
 
-button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inherit; }
+button, input, select, textarea { font: inherit; font-size: 0.95rem; }
 
 .muted { color: var(--muted); }
 .center { text-align: center; }
-
-::selection { background: var(--gold); color: #000; }
 
 /* ---------- Kopfzeile ---------- */
 .topbar {
@@ -62,33 +57,32 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
   background: var(--red);
   color: #fff;
   border-bottom: 4px solid var(--gold);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 }
 
 .brand { display: flex; align-items: center; gap: 14px; }
 .brand-logo { height: 64px; width: auto; display: block; }
 .brand-sub {
-  color: var(--gold-bright);
+  color: var(--gold);
   font-weight: bold;
   font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  border-left: 2px solid #000;
+  letter-spacing: 0.18em;
+  border-left: 2px solid var(--gold);
   padding-left: 14px;
 }
 
 .topbar-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.topbar .btn { color: #fff; background: rgba(0, 0, 0, 0.25); border-color: rgba(0, 0, 0, 0.35); }
-.topbar .btn:hover { background: rgba(0, 0, 0, 0.45); }
-.topbar .btn.primary { background: var(--gold); border-color: var(--gold); color: #000; }
-.topbar .btn.primary:hover { background: var(--gold-bright); }
+.topbar .btn.ghost { color: #fff; border-color: rgba(255,255,255,0.4); }
+.topbar .btn.ghost:hover { background: rgba(0,0,0,0.15); }
+.topbar .btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); font-weight: bold; }
+.topbar .btn.primary:hover { background: #e0b000; }
 
-.user-name { font-size: 0.85rem; color: var(--gold-bright); font-weight: bold; margin-right: 4px; }
+.user-name { font-size: 0.85rem; opacity: 0.85; margin-right: 4px; }
 
 /* ---------- Buttons ---------- */
 .btn {
   border: 1px solid var(--line);
-  background: var(--panel-2);
+  background: transparent;
   color: var(--text);
   padding: 8px 14px;
   border-radius: 8px;
@@ -98,11 +92,11 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
   font-size: 0.95rem;
   line-height: 1.2;
 }
-.btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+.btn:hover { background: var(--gold-soft); }
 .btn.primary { background: var(--red); border-color: var(--red); color: #fff; font-weight: bold; }
-.btn.primary:hover { background: var(--red-bright); border-color: var(--red-bright); color: #fff; }
-.btn.danger { background: transparent; color: #ff6b6b; border-color: #5a1a1a; }
-.btn.danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
+.btn.primary:hover { background: var(--red-dark); }
+.btn.danger { color: var(--danger); border-color: #e9c2c2; }
+.btn.danger:hover { background: #f9e6e6; }
 
 /* ---------- Layout ---------- */
 .layout {
@@ -110,7 +104,7 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
   grid-template-columns: 320px 1fr;
   gap: 20px;
   max-width: 1200px;
-  margin: 24px auto;
+  margin: 20px auto;
   padding: 0 20px;
 }
 
@@ -123,15 +117,14 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
 .sidebar { align-self: start; border-top: 3px solid var(--red); }
 .detail { border-top: 3px solid var(--gold); }
 
-#search, .card input, dialog input, dialog select, dialog textarea, .note-form textarea {
-  background: var(--input);
+#search {
+  width: 100%;
+  padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  color: var(--text);
+  background: #fff;
 }
-#search { width: 100%; padding: 9px 12px; }
-::placeholder { color: #6f6a5e; }
-:is(#search, .card input, dialog input, dialog select, dialog textarea, .note-form textarea):focus {
+#search:focus, .card input:focus, dialog :is(input, select, textarea):focus, .note-form textarea:focus {
   outline: 2px solid var(--gold);
   outline-offset: 0;
   border-color: var(--gold);
@@ -142,14 +135,13 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
 .chip {
   border: 1px solid var(--line);
   background: transparent;
-  color: var(--muted);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 0.8rem;
   cursor: pointer;
 }
-.chip:hover { border-color: var(--gold); color: var(--gold-bright); }
-.chip.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
+.chip:hover { background: var(--gold-soft); }
+.chip.active { background: var(--black); color: var(--gold); border-color: var(--black); }
 
 /* ---------- Aktenliste ---------- */
 .case-list { list-style: none; margin: 0; padding: 0; }
@@ -158,15 +150,13 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
   padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
+  border: 1px solid transparent;
   border-left: 3px solid transparent;
-  margin-bottom: 2px;
 }
-.case-list li:hover { background: var(--panel-2); border-left-color: var(--gold); }
-.case-list li.active { background: var(--red); border-left-color: var(--gold); }
-.case-list li.active .num { color: var(--gold-bright); }
-.case-list li.active .meta { color: #f1d0d0; }
+.case-list li:hover { background: var(--bg); }
+.case-list li.active { background: var(--gold-soft); border-color: #e3cf8c; border-left-color: var(--red); }
 
-.case-list .num { font-family: ui-monospace, Menlo, monospace; font-size: 0.75rem; color: var(--gold); }
+.case-list .num { font-family: ui-monospace, Menlo, monospace; font-size: 0.75rem; color: var(--red); }
 .case-list .title { display: block; font-weight: bold; }
 .case-list .meta { display: flex; justify-content: space-between; gap: 8px; font-size: 0.82rem; color: var(--muted); }
 
@@ -178,10 +168,9 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
   font-size: 0.75rem;
   font-weight: bold;
 }
-.badge.offen { background: var(--red-bright); color: #fff; }
-.badge.in-bearbeitung { background: var(--gold); color: #000; }
-.badge.geschlossen { background: #3a3a3a; color: #cfcfcf; }
-.case-list li.active .badge.offen { background: #000; color: var(--gold-bright); }
+.badge.offen { background: #fbeaea; color: var(--red); }
+.badge.in-bearbeitung { background: var(--gold-soft); color: #7a5d00; }
+.badge.geschlossen { background: #e9e6df; color: #555; }
 
 /* ---------- Detailansicht ---------- */
 .placeholder {
@@ -203,7 +192,7 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
 .detail-head h2 { margin: 4px 0 0; }
 .detail-actions { display: flex; gap: 8px; align-items: flex-start; }
 
-.case-number { font-family: ui-monospace, Menlo, monospace; color: var(--gold-bright); font-size: 0.85rem; font-weight: bold; }
+.case-number { font-family: ui-monospace, Menlo, monospace; color: var(--red); font-size: 0.85rem; font-weight: bold; }
 
 .facts {
   display: grid;
@@ -217,48 +206,54 @@ button, input, select, textarea { font: inherit; font-size: 0.95rem; color: inhe
 h3 {
   font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--gold-bright);
+  letter-spacing: 0.1em;
+  color: var(--red);
   margin: 24px 0 8px;
 }
 
 .summary { white-space: pre-wrap; margin: 0; }
 
 .note-form { display: flex; gap: 8px; align-items: flex-start; }
-.note-form textarea { flex: 1; padding: 8px 10px; resize: vertical; }
+.note-form textarea {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  resize: vertical;
+  background: #fff;
+}
 
 .notes { list-style: none; padding: 0; margin: 14px 0 0; }
 .notes li {
-  border-left: 3px solid var(--red);
+  border-left: 3px solid var(--gold);
   padding: 6px 12px;
   margin-bottom: 10px;
-  background: var(--panel-2);
+  background: var(--bg);
   border-radius: 0 8px 8px 0;
   position: relative;
 }
 .notes time { display: block; font-size: 0.75rem; color: var(--muted); }
 .notes p { margin: 2px 0 0; white-space: pre-wrap; }
-.notes .author { font-weight: bold; color: var(--gold); }
+.notes .author { font-weight: bold; color: var(--text); }
 .notes .remove {
   position: absolute; top: 4px; right: 6px;
   border: none; background: none; color: var(--muted);
   cursor: pointer; font-size: 1rem;
 }
-.notes .remove:hover { color: var(--red-bright); }
+.notes .remove:hover { color: var(--danger); }
 
 /* ---------- Dialog ---------- */
 dialog {
-  border: 1px solid var(--line);
+  border: none;
   border-top: 4px solid var(--red);
   border-radius: var(--radius);
   padding: 24px;
   width: min(560px, calc(100% - 32px));
   background: var(--panel);
-  color: var(--text);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
 }
-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-dialog h2 { margin-top: 0; color: var(--gold-bright); }
+dialog::backdrop { background: rgba(20, 10, 10, 0.55); }
+dialog h2 { margin-top: 0; }
 
 dialog label {
   display: block;
@@ -272,6 +267,10 @@ dialog input, dialog select, dialog textarea {
   width: 100%;
   margin-top: 4px;
   padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  background: #fff;
 }
 .row { display: flex; gap: 12px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
@@ -280,7 +279,7 @@ dialog input, dialog select, dialog textarea {
 .center-screen {
   display: grid;
   place-items: center;
-  padding: 56px 16px;
+  padding: 48px 16px;
 }
 
 .card {
@@ -288,13 +287,12 @@ dialog input, dialog select, dialog textarea {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 28px;
-  width: min(420px, 100%);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  width: min(440px, 100%);
+  box-shadow: 0 10px 30px rgba(80, 50, 0, 0.08);
 }
 .card h2 { margin-top: 0; }
 
 .login-card { padding-top: 0; overflow: hidden; }
-.login-card h2 { color: var(--gold-bright); }
 .login-brand {
   margin: 0 -28px 24px;
   padding: 22px;
@@ -316,15 +314,18 @@ dialog input, dialog select, dialog textarea {
   width: 100%;
   margin-top: 4px;
   padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
 }
 
-.btn.full { width: 100%; padding: 11px 14px; }
-.error { color: #ff6b6b; font-size: 0.9rem; }
-code { background: var(--panel-2); color: var(--gold-bright); padding: 1px 5px; border-radius: 4px; }
+.btn.full { width: 100%; }
+.error { color: var(--danger); font-size: 0.9rem; }
+code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
 
 /* ---------- Handy ---------- */
 @media (max-width: 760px) {
-  .layout { grid-template-columns: 1fr; padding: 0 12px; margin-top: 16px; }
+  .layout { grid-template-columns: 1fr; padding: 0 12px; }
   .topbar { padding: 10px 16px; }
   .brand-logo { height: 48px; }
   .row { flex-direction: column; gap: 0; }
