@@ -33,7 +33,6 @@ const NAV = [
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
   { page: "team", label: "Team", href: "#/team" },
-  { page: "leitfaden", label: "Leitfaden Straftat ↗", href: "leitfaden/straftat.html?v=9" },
 ];
 
 // ---------- Routing ----------
@@ -119,6 +118,7 @@ function showScreen(name) {
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
   $("topbar-actions").hidden = !inApp;
+  document.body.classList.toggle("in-app", inApp);
 }
 
 // ---------- Anmeldung ----------

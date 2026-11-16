@@ -10,7 +10,7 @@ function briefkopf() {
   return html`
     <div class="doc-letterhead">
       <div class="sender">${s().kanzlei} · ${s().ort}${s().telefon ? ` · Tel. ${s().telefon}` : ""}</div>
-      <img src="assets/logo.png?v=9" alt="${s().kanzlei}">
+      <img src="assets/logo.png?v=11" alt="${s().kanzlei}">
     </div>`;
 }
 
