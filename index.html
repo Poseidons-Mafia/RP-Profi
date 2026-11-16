@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wiwang Law – Aktensystem</title>
+  <meta name="theme-color" content="#a30000">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="apple-touch-icon" href="assets/icon.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="logo">W</span>
-      <div>
-        <h1>Wiwang Law</h1>
-        <p>Aktensystem</p>
-      </div>
+      <img class="brand-logo" src="assets/logo.png" alt="Wiwang Law">
+      <span class="brand-sub">Aktensystem</span>
     </div>
     <div id="topbar-actions" class="topbar-actions" hidden>
       <span id="user-name" class="user-name"></span>
@@ -39,7 +39,8 @@
 
   <!-- Login -->
   <section id="login-screen" class="center-screen" hidden>
-    <form id="login-form" class="card">
+    <form id="login-form" class="card login-card">
+      <img class="login-photo" src="assets/team.jpg" alt="Das Team von Wiwang Law">
       <h2>Anmelden</h2>
       <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
       <label>E-Mail
