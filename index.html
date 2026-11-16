@@ -2,32 +2,27 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Wiwang Law – Aktensystem</title>
   <meta name="theme-color" content="#a30000">
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
-  <meta name="app-version" content="7">
-  <link rel="stylesheet" href="style.css?v=7">
+  <meta name="app-version" content="8">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <img class="brand-logo" src="assets/logo.png?v=7" alt="Wiwang Law">
+    <a class="brand" href="#/">
+      <img class="brand-logo" src="assets/logo.png?v=8" alt="Wiwang Law">
       <span class="brand-sub">Aktensystem</span>
-    </div>
+    </a>
     <div id="topbar-actions" class="topbar-actions" hidden>
-      <span id="user-name" class="user-name"></span>
-      <button id="btn-export" class="btn ghost" title="Alle Akten als Sicherungskopie speichern">Export</button>
-      <label class="btn ghost" title="Akten aus einer Datei hinzufügen">
-        Import
-        <input id="input-import" type="file" accept="application/json" hidden>
-      </label>
-      <button id="btn-users" class="btn ghost" hidden>Nutzer</button>
-      <button id="btn-logout" class="btn ghost">Abmelden</button>
-      <button id="btn-new" class="btn primary">+ Neue Akte</button>
+      <button class="btn primary" data-action="akte-neu" title="Neue Akte (Taste N)">+ Neue Akte</button>
+      <button id="btn-me" class="btn ghost" data-action="profil-bearbeiten" title="Mein Profil">Profil</button>
+      <button class="btn ghost" data-action="logout">Abmelden</button>
     </div>
   </header>
+  <nav id="nav" class="nav" hidden></nav>
 
   <!-- Hinweis, falls config.js noch nicht ausgefüllt ist -->
   <section id="setup-screen" class="center-screen" hidden>
@@ -39,10 +34,32 @@
     </div>
   </section>
 
+  <!-- Hinweis, falls das Datenbank-Update noch fehlt -->
+  <section id="update-screen" class="center-screen" hidden>
+    <div class="card">
+      <h2>Datenbank-Update nötig</h2>
+      <p>Die Website ist schon auf dem neuesten Stand, die Datenbank aber noch nicht.</p>
+      <ol>
+        <li>In Supabase den <strong>SQL Editor</strong> öffnen.</li>
+        <li>Den kompletten Inhalt der Datei <code>supabase-update-2.sql</code> aus dem GitHub-Repository einfügen.</li>
+        <li>Auf <strong>Run</strong> klicken und danach diese Seite neu laden.</li>
+      </ol>
+      <div class="actions-row">
+        <button class="btn primary" data-action="reload">Neu laden</button>
+        <button class="btn" data-action="logout">Abmelden</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Laden -->
+  <section id="loading-screen" class="center-screen" hidden>
+    <div class="loading"><span class="spinner"></span><p id="loading-text">Akten werden geladen …</p></div>
+  </section>
+
   <!-- Login -->
   <section id="login-screen" class="center-screen" hidden>
     <form id="login-form" class="card login-card">
-      <div class="login-brand"><img src="assets/logo.png?v=7" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=8" alt="Wiwang Law"></div>
       <h2>Anmelden</h2>
       <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
       <label>E-Mail
@@ -56,143 +73,28 @@
     </form>
   </section>
 
-  <main id="app" class="layout" hidden>
-    <!-- Linke Spalte: Aktenliste -->
-    <aside class="sidebar">
-      <input id="search" type="search" placeholder="Suchen (Name, Aktenzeichen …)">
-      <div class="filters" id="filters">
-        <button class="chip active" data-status="alle">Alle</button>
-        <button class="chip" data-status="Offen">Offen</button>
-        <button class="chip" data-status="In Bearbeitung">In Bearbeitung</button>
-        <button class="chip" data-status="Geschlossen">Geschlossen</button>
-      </div>
-      <ul id="case-list" class="case-list"></ul>
-      <p id="list-empty" class="muted center">Keine Akten gefunden.</p>
-    </aside>
+  <main id="main" hidden></main>
 
-    <!-- Rechte Spalte: Detailansicht -->
-    <section id="detail" class="detail">
-      <div id="detail-empty" class="placeholder">
-        <p>Wähle links eine Akte aus<br>oder lege eine neue an.</p>
-      </div>
-
-      <div id="detail-view" hidden>
-        <div class="detail-head">
-          <div>
-            <span id="d-number" class="case-number"></span>
-            <h2 id="d-title"></h2>
-          </div>
-          <div class="detail-actions">
-            <button id="btn-edit" class="btn ghost">Bearbeiten</button>
-            <button id="btn-delete" class="btn danger">Löschen</button>
-          </div>
-        </div>
-
-        <dl class="facts">
-          <div><dt>Mandant</dt><dd id="d-client"></dd></div>
-          <div><dt>Gegenpartei</dt><dd id="d-opponent"></dd></div>
-          <div><dt>Rechtsgebiet</dt><dd id="d-area"></dd></div>
-          <div><dt>Zuständig</dt><dd id="d-lawyer"></dd></div>
-          <div><dt>Status</dt><dd id="d-status"></dd></div>
-          <div><dt>Angelegt</dt><dd id="d-created"></dd></div>
-          <div><dt>Angelegt von</dt><dd id="d-created-by"></dd></div>
-        </dl>
-
-        <h3>Sachverhalt</h3>
-        <p id="d-summary" class="summary"></p>
-
-        <h3>Verlauf</h3>
-        <form id="note-form" class="note-form">
-          <textarea id="note-text" rows="2" placeholder="Neuer Eintrag (z. B. Gespräch mit Mandant, Gerichtstermin …)" required></textarea>
-          <button class="btn primary" type="submit">Eintragen</button>
-        </form>
-        <ul id="d-notes" class="notes"></ul>
-      </div>
-    </section>
-  </main>
-
-  <!-- Formular zum Anlegen / Bearbeiten -->
-  <dialog id="case-dialog">
-    <form id="case-form" method="dialog">
-      <h2 id="form-heading">Neue Akte</h2>
-
-      <label>Titel / Betreff
-        <input name="title" required placeholder="z. B. Verkehrsunfall Vinewood Blvd.">
-      </label>
-      <div class="row">
-        <label>Mandant
-          <input name="client" required placeholder="Vor- und Nachname">
-        </label>
-        <label>Gegenpartei
-          <input name="opponent" placeholder="optional">
-        </label>
-      </div>
-      <div class="row">
-        <label>Rechtsgebiet
-          <select name="area">
-            <option>Strafrecht</option>
-            <option>Zivilrecht</option>
-            <option>Verkehrsrecht</option>
-            <option>Arbeitsrecht</option>
-            <option>Vertragsrecht</option>
-            <option>Sonstiges</option>
-          </select>
-        </label>
-        <label>Status
-          <select name="status">
-            <option>Offen</option>
-            <option>In Bearbeitung</option>
-            <option>Geschlossen</option>
-          </select>
-        </label>
-      </div>
-      <label>Zuständiger Anwalt
-        <input name="lawyer" placeholder="z. B. RA Wiwang">
-      </label>
-      <label>Sachverhalt
-        <textarea name="summary" rows="4" placeholder="Kurze Beschreibung des Falls"></textarea>
-      </label>
-
-      <div class="dialog-actions">
-        <button type="button" id="btn-cancel" class="btn ghost">Abbrechen</button>
-        <button type="submit" class="btn primary">Speichern</button>
-      </div>
-    </form>
-  </dialog>
-
-  <!-- Nutzerverwaltung (nur für Admins sichtbar) -->
-  <dialog id="users-dialog" class="users-dialog">
-    <div class="users-head">
-      <h2>Nutzerverwaltung</h2>
-      <button type="button" id="btn-users-close" class="btn ghost" aria-label="Schließen">✕</button>
-    </div>
-
-    <form id="user-form" class="user-form">
-      <h3>Neuen Nutzer anlegen</h3>
-      <div class="row">
-        <label>E-Mail
-          <input name="email" type="email" required placeholder="z. B. max@wiwang.de" autocomplete="off">
-        </label>
-        <label>Passwort
-          <span class="pw-field">
-            <input name="password" type="text" required minlength="6" placeholder="mind. 6 Zeichen" autocomplete="off">
-            <button type="button" id="btn-gen-pw" class="btn ghost" title="Zufälliges Passwort erzeugen">Zufall</button>
-          </span>
-        </label>
-      </div>
-      <p id="user-msg" class="user-msg" hidden></p>
-      <div class="dialog-actions">
-        <button type="submit" class="btn primary">Nutzer anlegen</button>
-      </div>
-    </form>
-
-    <h3>Alle Nutzer</h3>
-    <ul id="user-list" class="user-list"></ul>
-  </dialog>
+  <!-- Dialoge und Druckbereich -->
+  <dialog id="form-dialog"></dialog>
+  <dialog id="doc-dialog"></dialog>
+  <div id="print-area"></div>
+  <div id="toasts" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-  <script src="config.js?v=7"></script>
-  <script src="update-check.js?v=7"></script>
-  <script src="script.js?v=7"></script>
+  <script src="config.js?v=8"></script>
+  <script src="update-check.js?v=8"></script>
+  <script src="js/util.js?v=8"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/forms.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
+  <script src="js/dokumente.js?v=8"></script>
+  <script src="js/akten.js?v=8"></script>
+  <script src="js/uebersicht.js?v=8"></script>
+  <script src="js/mandanten.js?v=8"></script>
+  <script src="js/kalender.js?v=8"></script>
+  <script src="js/rechnungen.js?v=8"></script>
+  <script src="js/gesetzbuch.js?v=8"></script>
+  <script src="js/team.js?v=8"></script>
 </body>
 </html>
