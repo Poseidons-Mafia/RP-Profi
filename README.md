@@ -23,6 +23,9 @@ und Änderungen erscheinen bei allen sofort.
   frühere Ergebnisse, offene Rechnungen.
 - **Kalender & Aufgaben:** Liste und Monatsansicht, Fristen-Warnung, Export in den Handy-Kalender (`.ics`).
 - **Rechnungen** im Stil der Kanzlei-Vorlage mit Gebührenkatalog, Zahlungsstatus, Zahlungserinnerung.
+- **Buchhaltung** (doppelte Buchführung): Kontenrahmen, Grundbuch mit unveränderbaren Buchungen
+  (Korrektur nur per Storno), Hauptbuch mit T-Konten, Summen- und Saldenliste, Bilanz und GuV.
+  Rechnungen und Zahlungseingänge werden automatisch gebucht. Buchen darf nur der Admin.
 - **Gesetzbuch & Strafrechner:** Paragraphen eures Servers, Massenimport aus Google Sheets/Excel.
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
@@ -33,15 +36,16 @@ und Änderungen erscheinen bei allen sofort.
 ## Update von einer älteren Version
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
-[`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken.
-Bestehende Akten bleiben erhalten. Ihre Mandanten werden automatisch in die Kartei übernommen.
+[`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung). Bestehende Daten bleiben erhalten:
+Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
 ## Neueinrichtung (ca. 10 Minuten)
 
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Team** an.
@@ -68,5 +72,6 @@ Bestehende Akten bleiben erhalten. Ihre Mandanten werden automatisch in die Kart
 | `js/forms.js` | Formulare und Dialoge |
 | `js/app.js` | Anmeldung, Seitenwechsel, Tastenkürzel |
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
+| `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

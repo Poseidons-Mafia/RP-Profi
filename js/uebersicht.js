@@ -4,7 +4,7 @@
 
 const TABELLEN_NAMEN = {
   akten: "Akte", eintraege: "Verlaufseintrag", beteiligte: "Beteiligte/n", beweise: "Beweismittel",
-  termine: "Termin", aufgaben: "Aufgabe", rechnungen: "Rechnung", mandanten: "Mandant",
+  termine: "Termin", aufgaben: "Aufgabe", rechnungen: "Rechnung", mandanten: "Mandant", buchungen: "Buchung",
 };
 const FELD_NAMEN = {
   status: "Status", prioritaet: "Priorität", title: "Titel", summary: "Sachverhalt", opponent: "Gegenpartei",

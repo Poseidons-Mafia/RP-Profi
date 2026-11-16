@@ -7,13 +7,13 @@
   <meta name="theme-color" content="#a30000">
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
-  <meta name="app-version" content="11">
-  <link rel="stylesheet" href="style.css?v=11">
+  <meta name="app-version" content="12">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#/">
-      <img class="brand-logo" src="assets/logo.png?v=11" alt="Wiwang Law">
+      <img class="brand-logo" src="assets/logo.png?v=12" alt="Wiwang Law">
       <span class="brand-sub">Aktensystem</span>
     </a>
     <div id="topbar-actions" class="topbar-actions" hidden>
@@ -41,7 +41,7 @@
       <p>Die Website ist schon auf dem neuesten Stand, die Datenbank aber noch nicht.</p>
       <ol>
         <li>In Supabase den <strong>SQL Editor</strong> öffnen.</li>
-        <li>Den kompletten Inhalt der Datei <code>supabase-update-2.sql</code> aus dem GitHub-Repository einfügen.</li>
+        <li>Den Inhalt der noch nicht ausgeführten Update-Dateien aus dem GitHub-Repository einfügen (<code>supabase-update-2.sql</code>, dann <code>supabase-update-3.sql</code>).</li>
         <li>Auf <strong>Run</strong> klicken und danach diese Seite neu laden.</li>
       </ol>
       <div class="actions-row">
@@ -59,7 +59,7 @@
   <!-- Login -->
   <section id="login-screen" class="center-screen" hidden>
     <form id="login-form" class="card login-card">
-      <div class="login-brand"><img src="assets/logo.png?v=11" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=12" alt="Wiwang Law"></div>
       <h2>Anmelden</h2>
       <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
       <label>E-Mail
@@ -75,7 +75,7 @@
 
   <main id="main" hidden></main>
 
-  <a class="guide-btn" href="leitfaden/straftat.html?v=11" title="Leitfaden: Abhandlung einer Straftat (öffentlich)" aria-label="Leitfaden: Abhandlung einer Straftat">
+  <a class="guide-btn" href="leitfaden/straftat.html?v=12" title="Leitfaden: Abhandlung einer Straftat (öffentlich)" aria-label="Leitfaden: Abhandlung einer Straftat">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7a2 2 0 0 1 2 2v9h-7a2 2 0 0 1-2-2zM3.5 11.5a2 2 0 0 1 2-2h7M6.5 5.5h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Leitfaden</span>
   </a>
@@ -87,19 +87,20 @@
   <div id="toasts" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-  <script src="config.js?v=11"></script>
-  <script src="update-check.js?v=11"></script>
-  <script src="js/util.js?v=11"></script>
-  <script src="js/data.js?v=11"></script>
-  <script src="js/forms.js?v=11"></script>
-  <script src="js/app.js?v=11"></script>
-  <script src="js/dokumente.js?v=11"></script>
-  <script src="js/akten.js?v=11"></script>
-  <script src="js/uebersicht.js?v=11"></script>
-  <script src="js/mandanten.js?v=11"></script>
-  <script src="js/kalender.js?v=11"></script>
-  <script src="js/rechnungen.js?v=11"></script>
-  <script src="js/gesetzbuch.js?v=11"></script>
-  <script src="js/team.js?v=11"></script>
+  <script src="config.js?v=12"></script>
+  <script src="update-check.js?v=12"></script>
+  <script src="js/util.js?v=12"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/forms.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
+  <script src="js/dokumente.js?v=12"></script>
+  <script src="js/akten.js?v=12"></script>
+  <script src="js/uebersicht.js?v=12"></script>
+  <script src="js/mandanten.js?v=12"></script>
+  <script src="js/kalender.js?v=12"></script>
+  <script src="js/rechnungen.js?v=12"></script>
+  <script src="js/gesetzbuch.js?v=12"></script>
+  <script src="js/team.js?v=12"></script>
+  <script src="js/buchhaltung.js?v=12"></script>
 </body>
 </html>

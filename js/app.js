@@ -31,6 +31,7 @@ const NAV = [
   { page: "mandanten", label: "Mandanten", href: "#/mandanten" },
   { page: "kalender", label: "Kalender", href: "#/kalender" },
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
+  { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
   { page: "team", label: "Team", href: "#/team" },
 ];

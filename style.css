@@ -568,6 +568,32 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.25);
 }
 
+/* ---------- Buchhaltung: T-Konten ---------- */
+.tk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+.tkonto { min-width: 0; font-size: 0.88rem; }
+.tk-head { text-align: center; font-weight: bold; padding-bottom: 4px; }
+.tk-head a { color: inherit; text-decoration: none; }
+.tk-head small { display: block; font-weight: normal; color: var(--muted); font-size: 0.72rem; }
+.tk-cols { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--black); }
+.tk-side { padding: 4px 0 6px; min-width: 0; }
+.tk-side + .tk-side { border-left: 2px solid var(--black); }
+.tk-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 0 8px 4px; }
+.tk-side:last-child .tk-label { text-align: right; }
+.tk-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 8px; align-items: baseline; }
+.tk-row:nth-child(even) { background: rgba(232, 220, 184, 0.25); }
+.tk-text { min-width: 0; overflow-wrap: anywhere; }
+.tk-text small { display: block; color: var(--muted); font-size: 0.72rem; }
+.tk-betrag { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tk-row.saldo { font-style: italic; color: var(--red); }
+.tk-row.ab { color: var(--blue); }
+.tk-total { border-top: 1px solid var(--black); border-bottom: 3px double var(--black); font-weight: bold; }
+.tk-total > div { padding: 4px 8px; text-align: right; font-variant-numeric: tabular-nums; }
+.tk-total > div + div { border-left: 2px solid var(--black); }
+.journal tr.storniert td { color: var(--muted); }
+.journal tr.storniert td:nth-child(4) { text-decoration: line-through; }
+.journal tr.storno td { background: #fff6f3; }
+.doc-t table td { padding: 1mm 2mm; text-align: left; }
+
 /* ---------- Formulare & Dialoge ---------- */
 dialog {
   border: none;
@@ -796,6 +822,8 @@ body.in-app .guide-btn span { display: none; }
   .doc-page { width: 100%; min-height: 0; padding: 8mm 6mm; font-size: 10pt; }
   .pos-table .c-preis { width: 92px; }
   .pos-table .c-sum { width: 84px; }
+  .tk-grid { grid-template-columns: 1fr; }
+  .tkonto { font-size: 0.8rem; }
   .kpi .value { font-size: 1.35rem; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .quick-add { grid-template-columns: 1fr 1fr; }
