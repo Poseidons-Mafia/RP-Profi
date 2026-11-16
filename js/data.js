@@ -1,0 +1,314 @@
+// =============================================================
+//  Wiwang Law – Daten
+//  Lädt alles aus Supabase, hält es per Live-Updates aktuell und
+//  bietet Speichern/Löschen sowie Nachschlage-Funktionen.
+// =============================================================
+
+// ---------- Auswahllisten ----------
+const OPTIONEN = {
+  status: ["Offen", "In Bearbeitung", "Geschlossen"],
+  prioritaet: ["Normal", "Hoch", "Dringend"],
+  rechtsgebiet: ["Strafrecht", "Zivilrecht", "Verkehrsrecht", "Arbeitsrecht", "Vertragsrecht", "Verwaltungsrecht", "Sonstiges"],
+  mandatsart: ["Verteidigung", "Vertretung Kläger/in", "Vertretung Beklagte/r", "Nebenklage", "Haftprüfung", "Beratung", "Vertragsprüfung", "Sonstiges"],
+  ergebnis: ["Freispruch", "Einstellung", "Strafmilderung / Deal", "Verurteilung", "Vergleich", "Klage gewonnen", "Klage verloren", "Zurückgezogen", "Mandat beendet"],
+  eintragArt: ["Notiz", "Telefonat", "Gespräch", "Gericht", "Polizei / StA", "Schriftverkehr", "Intern"],
+  rolle: ["Zeuge", "Beamter", "Staatsanwalt", "Richter", "Gegenpartei", "Gegenanwalt", "Mitbeschuldigter", "Geschädigter", "Sachverständiger", "Sonstige"],
+  beweisArt: ["Foto", "Video", "Bodycam", "Dokument", "Zeugenaussage", "Chatverlauf", "Sonstiges"],
+  terminArt: ["Verhandlung", "Haftprüfung", "Mandantengespräch", "Vernehmung", "Frist", "Wiedervorlage", "Termin"],
+  rechnungStatus: ["Offen", "Bezahlt", "Storniert"],
+  markierung: ["Stammkunde", "VIP", "Zahlt schlecht", "Vorsicht", "Kein Mandat mehr"],
+};
+const ERFOLGE = ["Freispruch", "Einstellung", "Strafmilderung / Deal", "Klage gewonnen", "Vergleich"];
+const GEGNER_ROLLEN = ["Gegenpartei", "Mitbeschuldigter", "Geschädigter"];
+
+const DEFAULT_SETTINGS = {
+  kanzlei: "Wiwang Law",
+  ort: "Los Santos",
+  telefon: "",
+  waehrung: "$",
+  haft_einheit: "HE",
+  zahlungsziel_tage: 7,
+  rechnung_einleitung: "für die von uns geleisteten Dienste stellen wir Ihnen, wie in §2 Ihres Mandatsvertrags festgelegt, folgende Kostenpunkte in Rechnung:",
+  rechnung_hinweis: "Bitte begleichen Sie den Betrag innerhalb von 7 Tagen.",
+};
+
+// ---------- Zustand ----------
+const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "beweise", "termine",
+                "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen"];
+const PK = { profiles: "user_id" };
+const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
+const PROTOKOLL_LIMIT = 500;
+
+const state = {
+  session: null,
+  me: null,          // { id, email }
+  isAdmin: false,
+  loaded: false,
+  settings: { ...DEFAULT_SETTINGS },
+  protokoll: [],
+};
+for (const t of TABLES) state[t] = [];
+
+let db = null;
+let liveChannel = null;
+
+// ---------- Laden ----------
+async function fetchAll(table) {
+  const key = PK[table] || "id";
+  const rows = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db.from(table).select("*").order(key, { ascending: true }).range(from, from + 999);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < 1000) return rows;
+  }
+}
+
+async function loadAll() {
+  const results = await Promise.all(TABLES.map(fetchAll));
+  TABLES.forEach((t, i) => (state[t] = results[i]));
+  const { data, error } = await db.from("protokoll").select("*")
+    .order("id", { ascending: false }).limit(PROTOKOLL_LIMIT);
+  if (error) throw error;
+  state.protokoll = data;
+  applySettings();
+  state.loaded = true;
+}
+
+// Fehlt eine Tabelle/Spalte, wurde supabase-update-2.sql noch nicht ausgeführt
+function isMissingSchema(error) {
+  const text = `${error && error.code} ${error && error.message}`;
+  return /PGRST20[0-9]|42P01|42703|schema cache|does not exist/i.test(text);
+}
+
+function applySettings() {
+  const row = state.einstellungen[0];
+  state.settings = { ...DEFAULT_SETTINGS, ...((row && row.daten) || {}) };
+}
+
+// ---------- Live-Updates ----------
+function startLive() {
+  stopLive();
+  liveChannel = db.channel("wiwang-live");
+  for (const table of [...TABLES, "protokoll"]) {
+    liveChannel.on("postgres_changes", { event: "*", schema: "public", table }, (p) => applyChange(table, p));
+  }
+  liveChannel.subscribe();
+}
+
+function stopLive() {
+  if (liveChannel && db) db.removeChannel(liveChannel);
+  liveChannel = null;
+}
+
+function applyChange(table, payload) {
+  const key = PK[table] || "id";
+  if (table === "protokoll") {
+    if (payload.eventType === "INSERT" && !state.protokoll.some((p) => p.id === payload.new.id)) {
+      state.protokoll.unshift(payload.new);
+      if (state.protokoll.length > PROTOKOLL_LIMIT) state.protokoll.length = PROTOKOLL_LIMIT;
+      if (payload.new.akte_id && ui.historie[payload.new.akte_id]) ui.historie[payload.new.akte_id].unshift(payload.new);
+    }
+  } else if (payload.eventType === "DELETE") {
+    removeLocal(table, payload.old && payload.old[key]);
+  } else if (payload.new) {
+    upsertLocal(table, payload.new);
+  }
+  if (table === "einstellungen") applySettings();
+  scheduleRender();
+}
+
+function upsertLocal(table, row) {
+  const key = PK[table] || "id";
+  const list = state[table];
+  const i = list.findIndex((r) => r[key] === row[key]);
+  if (i >= 0) list[i] = row;
+  else list.push(row);
+}
+
+function removeLocal(table, id) {
+  if (!id) return;
+  const key = PK[table] || "id";
+  state[table] = state[table].filter((r) => r[key] !== id);
+  if (table === "akten") {
+    for (const t of AKTE_KINDER) state[t] = state[t].filter((r) => r.akte_id !== id);
+  }
+}
+
+// Nach längerer Abwesenheit (z. B. Handy gesperrt) alles frisch laden,
+// falls Live-Updates verpasst wurden
+let hiddenSince = null;
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "hidden") { hiddenSince = Date.now(); return; }
+  if (state.loaded && hiddenSince && Date.now() - hiddenSince > 120000) {
+    try { await loadAll(); scheduleRender(); } catch (e) { console.warn(e); }
+  }
+  hiddenSince = null;
+});
+
+// ---------- Speichern & Löschen ----------
+async function insertRow(table, values) {
+  const { data, error } = await db.from(table).insert(values).select().single();
+  if (error) throw error;
+  upsertLocal(table, data);
+  scheduleRender();
+  return data;
+}
+
+async function insertRows(table, rows) {
+  if (!rows.length) return [];
+  const { data, error } = await db.from(table).insert(rows).select();
+  if (error) throw error;
+  data.forEach((r) => upsertLocal(table, r));
+  scheduleRender();
+  return data;
+}
+
+async function updateRow(table, id, values) {
+  const key = PK[table] || "id";
+  const { data, error } = await db.from(table).update(values).eq(key, id).select().single();
+  if (error) throw error;
+  upsertLocal(table, data);
+  if (table === "einstellungen") applySettings();
+  scheduleRender();
+  return data;
+}
+
+async function deleteRow(table, id) {
+  const key = PK[table] || "id";
+  const { error } = await db.from(table).delete().eq(key, id);
+  if (error) throw error;
+  removeLocal(table, id);
+  scheduleRender();
+}
+
+// ---------- Nachschlagen ----------
+const byId = (table, id) => (id ? state[table].find((r) => r.id === id) : undefined);
+
+function profileOf(idOrEmail) {
+  if (!idOrEmail) return undefined;
+  if (String(idOrEmail).includes("@")) {
+    const e = String(idOrEmail).toLowerCase();
+    return state.profiles.find((p) => (p.email || "").toLowerCase() === e);
+  }
+  return state.profiles.find((p) => p.user_id === idOrEmail);
+}
+
+// Anzeigename einer Person (über User-ID oder E-Mail)
+function personName(idOrEmail, fallback = "–") {
+  if (!idOrEmail) return fallback;
+  const p = profileOf(idOrEmail);
+  if (p && p.anzeigename) return p.anzeigename;
+  const email = p ? p.email : String(idOrEmail).includes("@") ? idOrEmail : null;
+  return email ? email.split("@")[0] : fallback;
+}
+
+function myName() {
+  return personName(state.me && state.me.id, state.me ? state.me.email.split("@")[0] : "");
+}
+
+function myProfile() {
+  return state.me ? profileOf(state.me.id) : undefined;
+}
+
+function team() {
+  return [...state.profiles].sort((a, b) => personName(a.user_id).localeCompare(personName(b.user_id), "de"));
+}
+
+function teamOptions() {
+  return team().map((p) => ({ value: p.user_id, label: personName(p.user_id) + (p.titel ? ` (${p.titel})` : "") }));
+}
+
+function isMe(idOrEmail) {
+  if (!state.me || !idOrEmail) return false;
+  return idOrEmail === state.me.id || String(idOrEmail).toLowerCase() === state.me.email.toLowerCase();
+}
+
+function mandantName(akte) {
+  const m = byId("mandanten", akte.mandant_id);
+  return m ? m.name : akte.client || "–";
+}
+
+function findMandantByName(name) {
+  const n = norm(name);
+  return n ? state.mandanten.find((m) => norm(m.name) === n) : undefined;
+}
+
+function akteLabel(a) {
+  return a ? `${a.number || "—"} · ${a.title}` : "–";
+}
+
+function akteOptions() {
+  return [...state.akten]
+    .sort((a, b) => (b.number || "").localeCompare(a.number || ""))
+    .map((a) => ({ value: a.id, label: `${a.number} · ${truncate(a.title, 40)} (${truncate(mandantName(a), 24)})` }));
+}
+
+function kinder(table, akteId) {
+  return state[table].filter((r) => r.akte_id === akteId);
+}
+
+function zuletztAktiv(akte) {
+  let t = Math.max(new Date(akte.updated_at || akte.created_at).getTime(), new Date(akte.created_at).getTime());
+  for (const table of AKTE_KINDER) {
+    for (const r of state[table]) if (r.akte_id === akte.id) t = Math.max(t, new Date(r.created_at).getTime());
+  }
+  return new Date(t);
+}
+
+function naechsterTermin(akteId) {
+  const now = startOfDay();
+  return state.termine
+    .filter((t) => t.akte_id === akteId && !t.erledigt && new Date(t.beginn) >= now)
+    .sort((a, b) => new Date(a.beginn) - new Date(b.beginn))[0];
+}
+
+function vorwurfSumme(vorwuerfe) {
+  let geld = 0, haft = 0;
+  for (const v of vorwuerfe || []) {
+    const n = Number(v.anzahl) || 1;
+    geld += (Number(v.geldstrafe) || 0) * n;
+    haft += (Number(v.haft) || 0) * n;
+  }
+  return { geld, haft };
+}
+
+function gegnerNamen(akte) {
+  return [akte.opponent, ...kinder("beteiligte", akte.id).filter((b) => GEGNER_ROLLEN.includes(b.rolle)).map((b) => b.name)]
+    .map(norm).filter(Boolean);
+}
+
+// Interessenkonflikte: Gegner hier ist anderswo unser Mandant – oder umgekehrt
+function konflikte(akte) {
+  const result = [];
+  const mandant = norm(mandantName(akte));
+  const gegner = new Set(gegnerNamen(akte));
+  for (const other of state.akten) {
+    if (other.id === akte.id) continue;
+    const otherMandant = norm(mandantName(other));
+    if (otherMandant && gegner.has(otherMandant)) {
+      result.push({ akte: other, grund: `${mandantName(other)} ist dort unser Mandant` });
+    } else if (mandant && gegnerNamen(other).includes(mandant)) {
+      result.push({ akte: other, grund: `${mandantName(akte)} ist dort Gegenseite` });
+    }
+  }
+  return result;
+}
+
+function offeneRechnungSumme(list) {
+  return list.filter((r) => r.status === "Offen").reduce((s, r) => s + (Number(r.summe) || 0), 0);
+}
+
+function rechnungUeberfaellig(r) {
+  if (r.status !== "Offen") return false;
+  const tage = Number(state.settings.zahlungsziel_tage) || 7;
+  return addDays(parseDate(r.datum), tage) < startOfDay();
+}
+
+function terminUeberfaellig(t) {
+  return !t.erledigt && ["Frist", "Wiedervorlage"].includes(t.art) && new Date(t.beginn) < new Date();
+}
+
+function aufgabeUeberfaellig(a) {
+  return !a.erledigt && a.faellig && parseDate(a.faellig) < startOfDay();
+}
