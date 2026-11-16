@@ -6,8 +6,8 @@
 
 window.WIWANG_CONFIG = {
   // z. B. "https://abcdefghijkl.supabase.co"
-  supabaseUrl: "",
+  supabaseUrl: "https://btpgnraeumxortphkpgz.supabase.co",
 
   // der "anon public" bzw. "publishable" Key (NICHT der service_role / secret Key!)
-  supabaseKey: "",
+  supabaseKey: "sb_publishable_obvQnplL7s-ddncy_lNmug_80dGX5sO",
 };
