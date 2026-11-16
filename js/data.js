@@ -34,8 +34,9 @@ const DEFAULT_SETTINGS = {
 
 // ---------- Zustand ----------
 const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "beweise", "termine",
-                "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen"];
-const PK = { profiles: "user_id" };
+                "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen",
+                "raenge", "personalakte", "personal_vermerke"];
+const PK = { profiles: "user_id", personalakte: "user_id" };
 const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
 const PROTOKOLL_LIMIT = 500;
 
@@ -73,6 +74,7 @@ async function loadAll() {
   state.protokoll = data;
   applySettings();
   state.loaded = true;
+  state.rechteSig = RECHTE.map((r) => (darf(r.key) ? 1 : 0)).join("");
 }
 
 // Fehlt eine Tabelle/Spalte, wurde supabase-update-2.sql noch nicht ausgeführt
@@ -115,6 +117,19 @@ function applyChange(table, payload) {
     upsertLocal(table, payload.new);
   }
   if (table === "einstellungen") applySettings();
+  // Haben sich meine Rechte geändert (Rang, Status, Rang-Rechte)? Dann alles neu laden,
+  // damit z. B. die Buchhaltung sofort sichtbar wird.
+  if (table === "raenge" || (table === "profiles" && payload.new && state.me && payload.new.user_id === state.me.id)) {
+    const sig = RECHTE.map((r) => (darf(r.key) ? 1 : 0)).join("");
+    if (state.rechteSig !== undefined && sig !== state.rechteSig) {
+      clearTimeout(state.reloadTimer);
+      state.reloadTimer = setTimeout(async () => {
+        try { await loadAll(); toast("Deine Berechtigungen wurden geändert."); } catch (e) { console.warn(e); }
+        scheduleRender();
+      }, 300);
+    }
+    state.rechteSig = sig;
+  }
   scheduleRender();
 }
 
@@ -216,7 +231,40 @@ function team() {
 }
 
 function teamOptions() {
-  return team().map((p) => ({ value: p.user_id, label: personName(p.user_id) + (p.titel ? ` (${p.titel})` : "") }));
+  return team().filter((p) => p.status !== "Ausgeschieden")
+    .map((p) => ({ value: p.user_id, label: personName(p.user_id) + (rangName(p) ? ` (${rangName(p)})` : "") }));
+}
+
+// ---------- Ränge & Berechtigungen ----------
+const RECHTE = [
+  { key: "akten_loeschen", label: "Akten löschen" },
+  { key: "rechnungen", label: "Rechnungen erstellen & bearbeiten" },
+  { key: "buchhaltung_sehen", label: "Buchhaltung ansehen" },
+  { key: "buchhaltung_buchen", label: "Buchen & stornieren" },
+  { key: "gesetzbuch", label: "Gesetzbuch & Gebühren bearbeiten" },
+  { key: "personal_sehen", label: "Personalakten ansehen" },
+  { key: "personal_verwalten", label: "Personal verwalten" },
+  { key: "einstellungen", label: "Kanzlei-Einstellungen" },
+];
+const PERSONAL_STATUS = ["Aktiv", "Urlaub", "Krank", "Beurlaubt", "Ausgeschieden"];
+
+function rangVon(p) {
+  return p ? byId("raenge", p.rang_id) : undefined;
+}
+
+// Angezeigter Rang; bei "Sonstiges" der selbst gewählte Name
+function rangName(p) {
+  const r = rangVon(p);
+  if (!r) return p && p.titel ? p.titel : "";
+  return r.ist_sonstiges ? (p.rang_eigen || r.name) : r.name;
+}
+
+// Darf ich das? (Die Datenbank prüft es zusätzlich selbst.)
+function darf(recht) {
+  if (state.isAdmin) return true;
+  const p = myProfile();
+  const r = rangVon(p);
+  return !!(r && p.status !== "Ausgeschieden" && (r.berechtigungen || []).includes(recht));
 }
 
 function isMe(idOrEmail) {

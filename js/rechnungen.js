@@ -23,9 +23,9 @@ function rechnungTabelle(list, { akte = true } = {}) {
           <td>${rechnungStatusBadge(r)}${r.status === "Bezahlt" && r.bezahlt_am ? html`<div class="small muted">${fmt.datum(r.bezahlt_am)}</div>` : ""}</td>
           <td class="row-actions">
             <button class="btn small" data-action="rechnung-drucken" data-id="${r.id}" title="Drucken / PDF">Drucken</button>
-            ${r.status === "Offen" ? html`<button class="btn small gold" data-action="rechnung-bezahlt" data-id="${r.id}" title="Als bezahlt markieren">Bezahlt</button>` : ""}
+            ${r.status === "Offen" && darf("rechnungen") ? html`<button class="btn small gold" data-action="rechnung-bezahlt" data-id="${r.id}" title="Als bezahlt markieren">Bezahlt</button>` : ""}
             ${rechnungUeberfaellig(r) ? html`<button class="btn small" data-action="rechnung-erinnerung" data-id="${r.id}">Erinnerung</button>` : ""}
-            <button class="icon-btn" data-action="rechnung-bearbeiten" data-id="${r.id}" title="Bearbeiten">✎</button>
+            ${darf("rechnungen") ? html`<button class="icon-btn" data-action="rechnung-bearbeiten" data-id="${r.id}" title="Bearbeiten">✎</button>` : ""}
           </td>
         </tr>`;
       })}</tbody>
@@ -205,7 +205,7 @@ VIEWS.rechnungen = () => {
     <div class="page">
       <div class="page-head">
         <div><h1>Rechnungen</h1><p class="muted">Rechnungen erstellen, drucken und den Zahlungseingang verfolgen.</p></div>
-        <button class="btn primary" data-action="rechnung-neu">+ Neue Rechnung</button>
+        ${darf("rechnungen") ? html`<button class="btn primary" data-action="rechnung-neu">+ Neue Rechnung</button>` : ""}
       </div>
       <div class="kpis">
         <a class="kpi" href="#/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(sum(offen))}</span><span class="label">${offen.length} offen</span></a>
@@ -226,14 +226,14 @@ VIEWS.rechnungen = () => {
       <div class="card">
         <div class="card-head">
           <div><h2>Gebührenkatalog</h2><p class="muted small" style="margin:0">Feste Preise der Kanzlei – in Rechnungen mit einem Klick übernehmen.</p></div>
-          <button class="btn small primary" data-action="gebuehr-neu">+ Gebühr</button>
+          ${darf("gesetzbuch") ? html`<button class="btn small primary" data-action="gebuehr-neu">+ Gebühr</button>` : ""}
         </div>
         ${state.gebuehren.length ? html`
           <div class="table-wrap"><table class="table">
             <thead><tr><th>Leistung</th><th class="num">Preis</th><th></th></tr></thead>
             <tbody>${[...state.gebuehren].sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung, "de")).map((g) => html`
               <tr><td>${g.bezeichnung}</td><td class="num">${fmt.geld(g.preis)}</td>
-                <td class="row-actions"><button class="icon-btn" data-action="gebuehr-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button></td></tr>`)}
+                <td class="row-actions">${darf("gesetzbuch") ? html`<button class="icon-btn" data-action="gebuehr-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button>` : ""}</td></tr>`)}
             </tbody></table></div>` : html`<p class="empty">Noch keine Gebühren hinterlegt, z. B. „Beratung U-Haft – $50.000“.</p>`}
       </div>
     </div>`;

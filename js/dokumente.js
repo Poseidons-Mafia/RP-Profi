@@ -10,7 +10,7 @@ function briefkopf() {
   return html`
     <div class="doc-letterhead">
       <div class="sender">${s().kanzlei} · ${s().ort}${s().telefon ? ` · Tel. ${s().telefon}` : ""}</div>
-      <img src="assets/logo.png?v=12" alt="${s().kanzlei}">
+      <img src="assets/logo.png?v=13" alt="${s().kanzlei}">
     </div>`;
 }
 
@@ -21,7 +21,7 @@ function ortDatum(datum = new Date()) {
 function anwaltVon(akte) {
   const id = (akte && akte.zustaendig_id) || state.me.id;
   const p = profileOf(id) || {};
-  return { name: personName(id, myName()), titel: p.titel || "Rechtsanwalt" };
+  return { name: personName(id, myName()), titel: rangName(p) || "Rechtsanwalt" };
 }
 
 function unterschrift(person, datum) {
@@ -242,7 +242,7 @@ function posGesamt(p) {
 }
 
 function rechnungDokument(r) {
-  const unterzeichner = { name: personName(r.unterzeichner || state.me.id), titel: (profileOf(r.unterzeichner || state.me.id) || {}).titel || "Rechtsanwalt" };
+  const unterzeichner = { name: personName(r.unterzeichner || state.me.id), titel: rangName(profileOf(r.unterzeichner || state.me.id)) || "Rechtsanwalt" };
   const a = byId("akten", r.akte_id);
   return html`
     ${briefkopf()}

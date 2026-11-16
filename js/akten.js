@@ -150,7 +150,7 @@ function renderAkteDetail(a, sub) {
           <button class="btn small" data-action="dokument-waehlen" data-id="${a.id}">Dokument erstellen</button>
           <button class="btn small" data-action="aktenblatt" data-id="${a.id}">Aktenblatt drucken</button>
           <button class="btn small" data-action="akte-link" data-id="${a.id}">Link kopieren</button>
-          <button class="btn small danger" data-action="akte-loeschen" data-id="${a.id}">Löschen</button>
+          ${darf("akten_loeschen") ? html`<button class="btn small danger" data-action="akte-loeschen" data-id="${a.id}">Löschen</button>` : ""}
         </div>
         ${k.length ? html`
           <div class="box warning" style="margin:12px 0 0">
@@ -415,7 +415,7 @@ function tabRechnungen(a) {
   return html`
     <div class="card-head">
       <p class="muted small" style="margin:0">${list.length ? html`Offen: <strong>${fmt.geld(offen)}</strong>` : "Noch keine Rechnungen zu dieser Akte."}</p>
-      <button class="btn small primary" data-action="rechnung-neu" data-akte="${a.id}">+ Rechnung</button>
+      ${darf("rechnungen") ? html`<button class="btn small primary" data-action="rechnung-neu" data-akte="${a.id}">+ Rechnung</button>` : ""}
     </div>
     ${list.length ? rechnungTabelle(list, { akte: false }) : ""}`;
 }

@@ -33,7 +33,7 @@ const NAV = [
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
   { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
-  { page: "team", label: "Team", href: "#/team" },
+  { page: "team", label: "Personal", href: "#/team" },
 ];
 
 // ---------- Routing ----------
@@ -105,7 +105,8 @@ function renderNav(route) {
     + state.termine.filter(terminUeberfaellig).length;
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
   const badges = { kalender: heute, rechnungen: offen };
-  $("nav").innerHTML = String(html`${NAV.map((n) => html`
+  const sichtbar = NAV.filter((n) => n.page !== "buchhaltung" || darf("buchhaltung_sehen"));
+  $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
       ${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}
     </a>`)}`);
@@ -167,6 +168,7 @@ async function onSession(session) {
   }
   const { data: admin } = await db.rpc("is_admin");
   state.isAdmin = admin === true;
+  state.rechteSig = RECHTE.map((r) => (darf(r.key) ? 1 : 0)).join("");
   if (!profileOf(state.me.id)) {
     await attempt(() => insertRow("profiles", { user_id: state.me.id }));
   }
