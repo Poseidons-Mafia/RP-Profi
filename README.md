@@ -45,6 +45,16 @@ wird im System als Name angezeigt (z. B. `max`).
 
 Danach die Website neu laden. Es erscheint die Anmeldung.
 
+### 6. Nutzerverwaltung in der Website (optional)
+Damit du Mitglieder direkt im Aktensystem anlegen kannst statt in Supabase:
+1. In Supabase den **SQL Editor** öffnen.
+2. Den kompletten Inhalt von [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql) einfügen und **Run** klicken.
+3. Unten erscheint die E-Mail des Admins. Das ist der Account, der **als erstes** angelegt wurde.
+
+Danach sieht der Admin oben den Knopf **„Nutzer“**. Dort kann er Nutzer anlegen, Passwörter
+ändern und Nutzer löschen. Alle anderen sehen den Knopf nicht. Die Datenbank prüft bei jedem
+Aufruf selbst, ob jemand Admin ist.
+
 ## Bedienung
 - **+ Neue Akte**: Aktenzeichen werden automatisch vergeben (`WL-2026-001` …).
 - **Verlauf**: Einträge mit Datum und Name des Verfassers.

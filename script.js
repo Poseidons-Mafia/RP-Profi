@@ -178,7 +178,9 @@ function onSession(session) {
     showScreen("app");
     loadCases();
     startLiveUpdates();
+    checkAdmin();
   } else {
+    $("btn-users").hidden = true;
     stopLiveUpdates();
     cases = [];
     selectedId = null;
@@ -343,6 +345,118 @@ $("input-import").addEventListener("change", async (e) => {
   }
   alert(`${ok} von ${imported.length} Akten importiert.`);
   loadCases();
+});
+
+// ---------- Nutzerverwaltung (nur Admin) ----------
+// Die eigentliche Prüfung, ob jemand Admin ist, macht die Datenbank.
+// Hier wird nur der Knopf ein- oder ausgeblendet.
+async function checkAdmin() {
+  const { data, error } = await db.rpc("is_admin");
+  $("btn-users").hidden = !!error || data !== true;
+}
+
+const usersDialog = $("users-dialog");
+const userForm = $("user-form");
+
+function showUserMsg(text, ok) {
+  const el = $("user-msg");
+  el.textContent = text;
+  el.className = "user-msg " + (ok ? "ok" : "error");
+  el.hidden = false;
+}
+
+// Datenbank-Fehlermeldungen etwas freundlicher machen
+function dbMessage(error) {
+  if (/function .* does not exist|Could not find the function/i.test(error.message)) {
+    return "Die Nutzerverwaltung ist in Supabase noch nicht eingerichtet (supabase-nutzerverwaltung.sql).";
+  }
+  return error.message;
+}
+
+function randomPassword() {
+  const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(10));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+async function loadUsers() {
+  const listEl = $("user-list");
+  const { data, error } = await db.rpc("admin_list_users");
+  if (error) {
+    listEl.innerHTML = `<li class="error">${escapeHtml(dbMessage(error))}</li>`;
+    return;
+  }
+  listEl.innerHTML = data
+    .map(
+      (u) => `
+      <li>
+        <div class="user-info">
+          <strong>${escapeHtml(u.email)}</strong>
+          ${u.is_admin ? '<span class="badge admin">Admin</span>' : ""}
+          <span class="muted small">
+            angelegt ${formatDate(u.created_at)} ·
+            ${u.last_sign_in_at ? "zuletzt angemeldet " + formatDate(u.last_sign_in_at) : "noch nie angemeldet"}
+          </span>
+        </div>
+        <div class="user-actions">
+          <button class="btn ghost small" data-action="password" data-id="${u.id}" data-email="${escapeHtml(u.email)}">Passwort ändern</button>
+          ${u.is_admin ? "" : `<button class="btn danger small" data-action="delete" data-id="${u.id}" data-email="${escapeHtml(u.email)}">Löschen</button>`}
+        </div>
+      </li>`
+    )
+    .join("");
+}
+
+$("btn-users").addEventListener("click", () => {
+  userForm.reset();
+  $("user-msg").hidden = true;
+  $("user-list").innerHTML = `<li class="muted">Lade …</li>`;
+  usersDialog.showModal();
+  loadUsers();
+});
+
+$("btn-users-close").addEventListener("click", () => usersDialog.close());
+
+$("btn-gen-pw").addEventListener("click", () => {
+  userForm.elements.password.value = randomPassword();
+});
+
+userForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = userForm.elements.email.value.trim();
+  const password = userForm.elements.password.value;
+  const button = userForm.querySelector("[type=submit]");
+  button.disabled = true;
+
+  const { error } = await db.rpc("admin_create_user", { p_email: email, p_password: password });
+  button.disabled = false;
+
+  if (error) return showUserMsg(dbMessage(error), false);
+  showUserMsg(`Nutzer angelegt: ${email} · Passwort: ${password}  →  Bitte notieren und weitergeben!`, true);
+  userForm.reset();
+  loadUsers();
+});
+
+$("user-list").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+  const { id, email, action } = btn.dataset;
+
+  if (action === "password") {
+    const pw = prompt(`Neues Passwort für ${email} (mind. 6 Zeichen):`, randomPassword());
+    if (pw === null) return;
+    const { error } = await db.rpc("admin_set_password", { p_user_id: id, p_password: pw });
+    if (error) return showUserMsg(dbMessage(error), false);
+    showUserMsg(`Neues Passwort für ${email}: ${pw}  →  Bitte notieren und weitergeben!`, true);
+  }
+
+  if (action === "delete") {
+    if (!confirm(`${email} wirklich löschen? Die Person kann sich danach nicht mehr anmelden. Ihre Akten und Einträge bleiben erhalten.`)) return;
+    const { error } = await db.rpc("admin_delete_user", { p_user_id: id });
+    if (error) return showUserMsg(dbMessage(error), false);
+    showUserMsg(`${email} wurde gelöscht.`, true);
+    loadUsers();
+  }
 });
 
 // ---------- Start ----------
