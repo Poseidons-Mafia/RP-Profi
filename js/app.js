@@ -118,6 +118,7 @@ function showScreen(name) {
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
   $("topbar-actions").hidden = !inApp;
+  document.body.classList.toggle("in-app", inApp);
 }
 
 // ---------- Anmeldung ----------
