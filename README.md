@@ -30,14 +30,16 @@ und Änderungen erscheinen bei allen sofort.
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
   dann drucken oder als PDF speichern.
-- **Team:** Profile mit Anzeigename und Position, Nutzerverwaltung (nur Admin),
-  Kanzlei-Einstellungen, Komplettsicherung als Datei.
+- **Personal:** Ränge mit frei einstellbaren Berechtigungen (Rechte-Matrix), Rang „Sonstiges“ mit
+  selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
+  vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
+  Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
 
 ## Update von einer älteren Version
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung). Bestehende Daten bleiben erhalten:
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) und [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte). Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
 ## Neueinrichtung (ca. 10 Minuten)
@@ -45,10 +47,10 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
-   Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Team** an.
+   Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
 5. **Project URL** und **anon/publishable Key** (Project Settings → API) in [`config.js`](config.js) eintragen.
    Den **service_role/secret Key niemals** eintragen.
 

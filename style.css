@@ -594,6 +594,12 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .journal tr.storno td { background: #fff6f3; }
 .doc-t table td { padding: 1mm 2mm; text-align: left; }
 
+/* ---------- Personal: Rechte-Matrix ---------- */
+.rights-table th.rt { white-space: normal; text-align: center; font-size: 0.64rem; line-height: 1.25; min-width: 78px; vertical-align: bottom; }
+.rights-table td.center { text-align: center; vertical-align: middle; }
+.rights-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
+.rights-table input[type="checkbox"]:disabled { cursor: default; opacity: 0.7; }
+
 /* ---------- Formulare & Dialoge ---------- */
 dialog {
   border: none;

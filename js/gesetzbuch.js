@@ -43,9 +43,9 @@ VIEWS.gesetzbuch = () => {
         <div><h1>Gesetzbuch & Strafrechner</h1>
           <p class="muted">Das Gesetzbuch eures Servers – Haken setzen, und der Strafrahmen wird automatisch ausgerechnet.</p></div>
         <div class="actions-row">
-          <button class="btn" data-action="gesetze-import">Massenimport</button>
+          ${darf("gesetzbuch") ? html`<button class="btn" data-action="gesetze-import">Massenimport</button>` : ""}
           ${state.gesetze.length ? html`<button class="btn" data-action="gesetze-export">Export (CSV)</button>` : ""}
-          <button class="btn primary" data-action="gesetz-neu">+ Paragraph</button>
+          ${darf("gesetzbuch") ? html`<button class="btn primary" data-action="gesetz-neu">+ Paragraph</button>` : ""}
         </div>
       </div>
       <div class="card">
@@ -59,7 +59,7 @@ VIEWS.gesetzbuch = () => {
         </div>
         ${state.gesetze.length ? "" : html`
           <div class="box info">
-            <strong>Das Gesetzbuch ist noch leer.</strong> Am schnellsten geht es mit dem <button class="link-btn" data-action="gesetze-import">Massenimport</button>:
+            <strong>Das Gesetzbuch ist noch leer.</strong> Am schnellsten geht es mit dem Massenimport:
             Kopiere das Gesetzbuch eures Servers (z. B. aus Google Sheets oder einem Dokument) und füge es ein – eine Zeile pro Paragraph.
           </div>`}
         ${[...gruppen.entries()].map(([kat, items]) => html`
@@ -78,7 +78,7 @@ VIEWS.gesetzbuch = () => {
                 <td class="num">${g.geldstrafe ? fmt.geld(g.geldstrafe) : "–"}</td>
                 <td class="num">${g.haft ? fmt.haft(g.haft) : "–"}</td>
                 <td class="small">${g.bemerkung || ""}</td>
-                <td class="row-actions"><button class="icon-btn" data-action="gesetz-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button></td>
+                <td class="row-actions">${darf("gesetzbuch") ? html`<button class="icon-btn" data-action="gesetz-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button>` : ""}</td>
               </tr>`;
             })}</tbody>
           </table></div>`)}

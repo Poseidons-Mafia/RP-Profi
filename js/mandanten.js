@@ -138,7 +138,7 @@ function mandantDetail(m) {
           </div>
           <div class="actions-row" style="align-items:flex-start">
             <button class="btn primary" data-action="akte-neu" data-mandant="${m.name}">+ Neue Akte</button>
-            <button class="btn" data-action="rechnung-neu" data-mandant="${m.id}">+ Rechnung</button>
+            ${darf("rechnungen") ? html`<button class="btn" data-action="rechnung-neu" data-mandant="${m.id}">+ Rechnung</button>` : ""}
             <button class="btn" data-action="mandant-bearbeiten" data-id="${m.id}">Bearbeiten</button>
           </div>
         </div>

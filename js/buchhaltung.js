@@ -103,6 +103,9 @@ function tKonto({ titel, sub, links, rechts, lt = "Soll", rt = "Haben", saldo, a
 
 // ---------- Seite ----------
 VIEWS.buchhaltung = () => {
+  if (!darf("buchhaltung_sehen")) {
+    return html`<div class="page"><div class="card empty-state"><h2>Kein Zugriff</h2><p>Dein Rang erlaubt es nicht, die Buchhaltung anzusehen.</p></div></div>`;
+  }
   const b = ui.buch;
   const tab = BUCH_TABS.some((t) => t.key === b.tab) ? b.tab : "bilanz";
   const body = { bilanz: tabBilanz, grundbuch: tabGrundbuch, hauptbuch: tabHauptbuch, salden: tabSalden, konten: tabKontenplan }[tab];
@@ -116,7 +119,7 @@ VIEWS.buchhaltung = () => {
             <select id="buch-jahr" data-change="buch-jahr" style="width:auto;margin-left:6px">
               ${buchJahre().map((y) => html`<option ${y === b.jahr ? "selected" : ""}>${y}</option>`)}
             </select></label>
-          ${state.isAdmin ? html`<button class="btn primary" data-action="buchung-neu">+ Buchung</button>` : ""}
+          ${darf("buchhaltung_buchen") ? html`<button class="btn primary" data-action="buchung-neu">+ Buchung</button>` : ""}
         </div>
       </div>
       <nav class="tabs" style="margin:0 0 16px;padding:0">
@@ -181,7 +184,7 @@ function tabGrundbuch() {
         <button class="btn small" data-action="grundbuch-export">Export (CSV)</button>
         <span class="muted small">${list.length} Buchungen · ${fmt.geld(summe)}</span>
       </div>
-      ${state.isAdmin ? "" : html`<p class="muted small" style="margin-top:0">Buchen und stornieren kann nur der Admin. Rechnungen werden automatisch gebucht.</p>`}
+      ${darf("buchhaltung_buchen") ? "" : html`<p class="muted small" style="margin-top:0">Buchen und stornieren darfst du mit deinem Rang nicht. Rechnungen werden automatisch gebucht.</p>`}
       ${list.length ? html`<div class="table-wrap"><table class="table journal">
         <thead><tr><th>Nr.</th><th>Datum</th><th>Beleg</th><th>Buchungstext</th><th>Soll</th><th>Haben</th><th class="num">Betrag</th><th></th></tr></thead>
         <tbody>${list.map((b) => html`<tr class="${storniert.has(b.id) ? "storniert" : ""} ${b.storno_von ? "storno" : ""}">
@@ -193,7 +196,7 @@ function tabGrundbuch() {
           <td class="nowrap small">${kontoText(byId("konten", b.soll))}</td>
           <td class="nowrap small">${kontoText(byId("konten", b.haben))}</td>
           <td class="num">${fmt.geld(b.betrag)}</td>
-          <td class="row-actions">${state.isAdmin && !b.storno_von && !storniert.has(b.id) ? html`<button class="btn small danger" data-action="buchung-storno" data-id="${b.id}">Storno</button>` : ""}</td>
+          <td class="row-actions">${darf("buchhaltung_buchen") && !b.storno_von && !storniert.has(b.id) ? html`<button class="btn small danger" data-action="buchung-storno" data-id="${b.id}">Storno</button>` : ""}</td>
         </tr>`)}</tbody>
       </table></div>` : html`<p class="empty">Keine Buchungen in ${ui.buch.jahr}${ui.buch.q ? " für diese Suche" : ""}.</p>`}
     </div>`;
@@ -279,7 +282,7 @@ function tabKontenplan() {
     <div class="card">
       <div class="card-head"><div><h2>Kontenplan</h2>
         <p class="muted small" style="margin:0">Aktiv- und Passivkonten (Bestandskonten) bilden die Bilanz, Aufwands- und Ertragskonten (Erfolgskonten) die GuV. Konten mit 2xxx gelten als Eigenkapital.</p></div>
-        ${state.isAdmin ? html`<button class="btn small primary" data-action="konto-neu">+ Konto</button>` : ""}</div>
+        ${darf("buchhaltung_buchen") ? html`<button class="btn small primary" data-action="konto-neu">+ Konto</button>` : ""}</div>
       ${["Aktiv", "Passiv", "Aufwand", "Ertrag"].map((typ) => html`
         <div class="group-title">${typ === "Aktiv" ? "Aktivkonten" : typ === "Passiv" ? "Passivkonten" : typ === "Aufwand" ? "Aufwandskonten" : "Ertragskonten"}</div>
         <div class="table-wrap"><table class="table">
@@ -287,7 +290,7 @@ function tabKontenplan() {
             <td class="nowrap" style="width:70px"><strong>${k.nummer}</strong></td>
             <td>${k.name}${istEK(k) ? html` <span class="badge gold">Eigenkapital</span>` : ""}</td>
             <td class="num small muted">${anzahl.get(k.id) || 0} Buchungen</td>
-            <td class="row-actions">${state.isAdmin ? html`<button class="icon-btn" data-action="konto-bearbeiten" data-id="${k.id}" title="Umbenennen">✎</button>` : ""}</td>
+            <td class="row-actions">${darf("buchhaltung_buchen") ? html`<button class="icon-btn" data-action="konto-bearbeiten" data-id="${k.id}" title="Umbenennen">✎</button>` : ""}</td>
           </tr>`)}</tbody></table></div>`)}
     </div>`;
 }
