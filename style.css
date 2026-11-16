@@ -275,6 +275,43 @@ dialog input, dialog select, dialog textarea {
 .row { display: flex; gap: 12px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
+/* ---------- Nutzerverwaltung ---------- */
+.users-dialog { width: min(680px, calc(100% - 32px)); }
+.users-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.users-head h2 { margin: 0; }
+.users-dialog h3 { margin-top: 20px; }
+
+.pw-field { display: flex; gap: 6px; margin-top: 4px; }
+.pw-field input { margin-top: 0 !important; flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; }
+
+.user-msg {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 4px 0 0;
+  word-break: break-word;
+}
+.user-msg.ok { background: #eef7e8; color: #2f5d1a; border: 1px solid #cfe5c0; }
+.user-msg.error { background: #fbeaea; color: var(--red); border: 1px solid #efc6c6; }
+
+.user-list { list-style: none; padding: 0; margin: 0; }
+.user-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.user-list li:last-child { border-bottom: none; }
+.user-info { display: flex; flex-direction: column; gap: 2px; }
+.user-info strong { word-break: break-all; }
+.user-actions { display: flex; gap: 6px; }
+.small { font-size: 0.78rem; }
+.btn.small { padding: 5px 10px; font-size: 0.8rem; }
+.badge.admin { background: var(--red); color: #fff; align-self: flex-start; }
+
 /* ---------- Login & Hinweise ---------- */
 .center-screen {
   display: grid;

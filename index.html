@@ -22,6 +22,7 @@
         Import
         <input id="input-import" type="file" accept="application/json" hidden>
       </label>
+      <button id="btn-users" class="btn ghost" hidden>Nutzer</button>
       <button id="btn-logout" class="btn ghost">Abmelden</button>
       <button id="btn-new" class="btn primary">+ Neue Akte</button>
     </div>
@@ -156,6 +157,36 @@
         <button type="submit" class="btn primary">Speichern</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Nutzerverwaltung (nur für Admins sichtbar) -->
+  <dialog id="users-dialog" class="users-dialog">
+    <div class="users-head">
+      <h2>Nutzerverwaltung</h2>
+      <button type="button" id="btn-users-close" class="btn ghost" aria-label="Schließen">✕</button>
+    </div>
+
+    <form id="user-form" class="user-form">
+      <h3>Neuen Nutzer anlegen</h3>
+      <div class="row">
+        <label>E-Mail
+          <input name="email" type="email" required placeholder="z. B. max@wiwang.de" autocomplete="off">
+        </label>
+        <label>Passwort
+          <span class="pw-field">
+            <input name="password" type="text" required minlength="6" placeholder="mind. 6 Zeichen" autocomplete="off">
+            <button type="button" id="btn-gen-pw" class="btn ghost" title="Zufälliges Passwort erzeugen">Zufall</button>
+          </span>
+        </label>
+      </div>
+      <p id="user-msg" class="user-msg" hidden></p>
+      <div class="dialog-actions">
+        <button type="submit" class="btn primary">Nutzer anlegen</button>
+      </div>
+    </form>
+
+    <h3>Alle Nutzer</h3>
+    <ul id="user-list" class="user-list"></ul>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
