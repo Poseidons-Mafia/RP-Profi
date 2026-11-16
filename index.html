@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiwang Law – Aktensystem</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">W</span>
+      <div>
+        <h1>Wiwang Law</h1>
+        <p>Aktensystem</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="btn-export" class="btn ghost" title="Alle Akten als Datei speichern">Export</button>
+      <label class="btn ghost" title="Akten aus Datei laden">
+        Import
+        <input id="input-import" type="file" accept="application/json" hidden>
+      </label>
+      <button id="btn-new" class="btn primary">+ Neue Akte</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Linke Spalte: Aktenliste -->
+    <aside class="sidebar">
+      <input id="search" type="search" placeholder="Suchen (Name, Aktenzeichen …)">
+      <div class="filters" id="filters">
+        <button class="chip active" data-status="alle">Alle</button>
+        <button class="chip" data-status="Offen">Offen</button>
+        <button class="chip" data-status="In Bearbeitung">In Bearbeitung</button>
+        <button class="chip" data-status="Geschlossen">Geschlossen</button>
+      </div>
+      <ul id="case-list" class="case-list"></ul>
+      <p id="list-empty" class="muted center">Keine Akten gefunden.</p>
+    </aside>
+
+    <!-- Rechte Spalte: Detailansicht -->
+    <section id="detail" class="detail">
+      <div id="detail-empty" class="placeholder">
+        <p>Wähle links eine Akte aus<br>oder lege eine neue an.</p>
+      </div>
+
+      <div id="detail-view" hidden>
+        <div class="detail-head">
+          <div>
+            <span id="d-number" class="case-number"></span>
+            <h2 id="d-title"></h2>
+          </div>
+          <div class="detail-actions">
+            <button id="btn-edit" class="btn ghost">Bearbeiten</button>
+            <button id="btn-delete" class="btn danger">Löschen</button>
+          </div>
+        </div>
+
+        <dl class="facts">
+          <div><dt>Mandant</dt><dd id="d-client"></dd></div>
+          <div><dt>Gegenpartei</dt><dd id="d-opponent"></dd></div>
+          <div><dt>Rechtsgebiet</dt><dd id="d-area"></dd></div>
+          <div><dt>Zuständig</dt><dd id="d-lawyer"></dd></div>
+          <div><dt>Status</dt><dd id="d-status"></dd></div>
+          <div><dt>Angelegt</dt><dd id="d-created"></dd></div>
+        </dl>
+
+        <h3>Sachverhalt</h3>
+        <p id="d-summary" class="summary"></p>
+
+        <h3>Verlauf</h3>
+        <form id="note-form" class="note-form">
+          <textarea id="note-text" rows="2" placeholder="Neuer Eintrag (z. B. Gespräch mit Mandant, Gerichtstermin …)" required></textarea>
+          <button class="btn primary" type="submit">Eintragen</button>
+        </form>
+        <ul id="d-notes" class="notes"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Formular zum Anlegen / Bearbeiten -->
+  <dialog id="case-dialog">
+    <form id="case-form" method="dialog">
+      <h2 id="form-heading">Neue Akte</h2>
+
+      <label>Titel / Betreff
+        <input name="title" required placeholder="z. B. Verkehrsunfall Vinewood Blvd.">
+      </label>
+      <div class="row">
+        <label>Mandant
+          <input name="client" required placeholder="Vor- und Nachname">
+        </label>
+        <label>Gegenpartei
+          <input name="opponent" placeholder="optional">
+        </label>
+      </div>
+      <div class="row">
+        <label>Rechtsgebiet
+          <select name="area">
+            <option>Strafrecht</option>
+            <option>Zivilrecht</option>
+            <option>Verkehrsrecht</option>
+            <option>Arbeitsrecht</option>
+            <option>Vertragsrecht</option>
+            <option>Sonstiges</option>
+          </select>
+        </label>
+        <label>Status
+          <select name="status">
+            <option>Offen</option>
+            <option>In Bearbeitung</option>
+            <option>Geschlossen</option>
+          </select>
+        </label>
+      </div>
+      <label>Zuständiger Anwalt
+        <input name="lawyer" placeholder="z. B. RA Wiwang">
+      </label>
+      <label>Sachverhalt
+        <textarea name="summary" rows="4" placeholder="Kurze Beschreibung des Falls"></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" id="btn-cancel" class="btn ghost">Abbrechen</button>
+        <button type="submit" class="btn primary">Speichern</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
