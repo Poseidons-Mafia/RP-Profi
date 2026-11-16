@@ -34,7 +34,7 @@ const DEFAULT_SETTINGS = {
 
 // ---------- Zustand ----------
 const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "beweise", "termine",
-                "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen"];
+                "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen"];
 const PK = { profiles: "user_id" };
 const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
 const PROTOKOLL_LIMIT = 500;
