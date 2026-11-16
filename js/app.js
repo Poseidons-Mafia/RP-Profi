@@ -33,7 +33,6 @@ const NAV = [
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
   { page: "team", label: "Team", href: "#/team" },
-  { page: "leitfaden", label: "Leitfaden Straftat ↗", href: "leitfaden/straftat.html?v=9" },
 ];
 
 // ---------- Routing ----------
