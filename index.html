@@ -15,17 +15,45 @@
         <p>Aktensystem</p>
       </div>
     </div>
-    <div class="topbar-actions">
-      <button id="btn-export" class="btn ghost" title="Alle Akten als Datei speichern">Export</button>
-      <label class="btn ghost" title="Akten aus Datei laden">
+    <div id="topbar-actions" class="topbar-actions" hidden>
+      <span id="user-name" class="user-name"></span>
+      <button id="btn-export" class="btn ghost" title="Alle Akten als Sicherungskopie speichern">Export</button>
+      <label class="btn ghost" title="Akten aus einer Datei hinzufügen">
         Import
         <input id="input-import" type="file" accept="application/json" hidden>
       </label>
+      <button id="btn-logout" class="btn ghost">Abmelden</button>
       <button id="btn-new" class="btn primary">+ Neue Akte</button>
     </div>
   </header>
 
-  <main class="layout">
+  <!-- Hinweis, falls config.js noch nicht ausgefüllt ist -->
+  <section id="setup-screen" class="center-screen" hidden>
+    <div class="card">
+      <h2>Noch nicht eingerichtet</h2>
+      <p>Das Aktensystem ist noch nicht mit der gemeinsamen Datenbank verbunden.
+        Trage in <code>config.js</code> die Supabase-URL und den Key ein.
+        Die Schritt-für-Schritt-Anleitung steht in der <code>README.md</code>.</p>
+    </div>
+  </section>
+
+  <!-- Login -->
+  <section id="login-screen" class="center-screen" hidden>
+    <form id="login-form" class="card">
+      <h2>Anmelden</h2>
+      <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
+      <label>E-Mail
+        <input name="email" type="email" required autocomplete="username">
+      </label>
+      <label>Passwort
+        <input name="password" type="password" required autocomplete="current-password">
+      </label>
+      <p id="login-error" class="error" hidden></p>
+      <button class="btn primary full" type="submit">Anmelden</button>
+    </form>
+  </section>
+
+  <main id="app" class="layout" hidden>
     <!-- Linke Spalte: Aktenliste -->
     <aside class="sidebar">
       <input id="search" type="search" placeholder="Suchen (Name, Aktenzeichen …)">
@@ -64,6 +92,7 @@
           <div><dt>Zuständig</dt><dd id="d-lawyer"></dd></div>
           <div><dt>Status</dt><dd id="d-status"></dd></div>
           <div><dt>Angelegt</dt><dd id="d-created"></dd></div>
+          <div><dt>Angelegt von</dt><dd id="d-created-by"></dd></div>
         </dl>
 
         <h3>Sachverhalt</h3>
@@ -128,6 +157,8 @@
     </form>
   </dialog>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

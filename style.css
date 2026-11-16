@@ -248,6 +248,52 @@ dialog input, dialog select, dialog textarea {
 .row { display: flex; gap: 12px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
+/* ---------- Login & Hinweise ---------- */
+.user-name {
+  align-self: center;
+  font-family: system-ui, sans-serif;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-right: 4px;
+}
+
+.center-screen {
+  display: grid;
+  place-items: center;
+  padding: 60px 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 28px;
+  width: min(420px, 100%);
+}
+.card h2 { margin-top: 0; }
+
+.card label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-family: system-ui, sans-serif;
+  margin-bottom: 12px;
+}
+.card input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.btn.full { width: 100%; }
+.error { color: var(--danger); font-family: system-ui, sans-serif; font-size: 0.9rem; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+
+.notes .author { font-weight: 600; }
+
 /* ---------- Handy ---------- */
 @media (max-width: 760px) {
   .layout { grid-template-columns: 1fr; padding: 0 12px; }

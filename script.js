@@ -1,47 +1,31 @@
 // Wiwang Law – Aktensystem
-// Alle Akten werden im Browser gespeichert (localStorage).
+// Alle Akten liegen in einer gemeinsamen Supabase-Datenbank.
+// Jedes Kanzlei-Mitglied meldet sich an und sieht dieselben Akten – live.
 
-const STORAGE_KEY = "wiwang-law-akten";
+const $ = (id) => document.getElementById(id);
 
-let cases = loadCases();
+const config = window.WIWANG_CONFIG || {};
+let db = null;
+
+let cases = [];
 let selectedId = null;
 let editingId = null;
 let statusFilter = "alle";
+let liveChannel = null;
 
-// ---------- Elemente ----------
-const $ = (id) => document.getElementById(id);
 const listEl = $("case-list");
 const dialog = $("case-dialog");
 const form = $("case-form");
 
-// ---------- Speichern & Laden ----------
-function loadCases() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-function saveCases() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-  } catch {
-    alert("Speichern im Browser nicht möglich. Bitte regelmäßig exportieren.");
-  }
+// ---------- Bildschirme umschalten ----------
+function showScreen(name) {
+  $("setup-screen").hidden = name !== "setup";
+  $("login-screen").hidden = name !== "login";
+  $("app").hidden = name !== "app";
+  $("topbar-actions").hidden = name !== "app";
 }
 
 // ---------- Hilfsfunktionen ----------
-function nextCaseNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `WL-${year}-`;
-  const highest = cases
-    .filter((c) => c.number.startsWith(prefix))
-    .map((c) => parseInt(c.number.slice(prefix.length), 10))
-    .reduce((max, n) => Math.max(max, n), 0);
-  return prefix + String(highest + 1).padStart(3, "0");
-}
-
 function formatDate(iso) {
   return new Date(iso).toLocaleString("de-DE", {
     day: "2-digit", month: "2-digit", year: "numeric",
@@ -50,7 +34,7 @@ function formatDate(iso) {
 }
 
 function badge(status) {
-  const cls = status.toLowerCase().replace(/\s+/g, "-");
+  const cls = (status || "").toLowerCase().replace(/\s+/g, "-");
   return `<span class="badge ${cls}">${escapeHtml(status)}</span>`;
 }
 
@@ -58,6 +42,54 @@ function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text ?? "";
   return div.innerHTML;
+}
+
+// "max.mustermann@mail.de" → "max.mustermann"
+function shortName(email) {
+  return email ? email.split("@")[0] : "unbekannt";
+}
+
+function showError(action, error) {
+  console.error(error);
+  alert(`${action} hat nicht geklappt:\n${error.message || error}`);
+}
+
+// ---------- Daten laden ----------
+async function loadCases() {
+  const { data, error } = await db
+    .from("akten")
+    .select("*, eintraege(*)")
+    .order("created_at", { ascending: false });
+
+  if (error) return showError("Laden der Akten", error);
+
+  cases = data.map((c) => ({
+    ...c,
+    eintraege: (c.eintraege || []).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+  }));
+  if (selectedId && !cases.some((c) => c.id === selectedId)) selectedId = null;
+  render();
+}
+
+// Wenn jemand anderes etwas ändert, kurz warten und neu laden
+let reloadTimer = null;
+function scheduleReload() {
+  clearTimeout(reloadTimer);
+  reloadTimer = setTimeout(loadCases, 300);
+}
+
+function startLiveUpdates() {
+  stopLiveUpdates();
+  liveChannel = db
+    .channel("wiwang-akten")
+    .on("postgres_changes", { event: "*", schema: "public", table: "akten" }, scheduleReload)
+    .on("postgres_changes", { event: "*", schema: "public", table: "eintraege" }, scheduleReload)
+    .subscribe();
+}
+
+function stopLiveUpdates() {
+  if (liveChannel) db.removeChannel(liveChannel);
+  liveChannel = null;
 }
 
 // ---------- Liste anzeigen ----------
@@ -71,8 +103,7 @@ function renderList() {
         .join(" ")
         .toLowerCase()
         .includes(query)
-    )
-    .sort((a, b) => b.created.localeCompare(a.created));
+    );
 
   listEl.innerHTML = visible
     .map(
@@ -99,20 +130,21 @@ function renderDetail() {
   $("d-title").textContent = c.title;
   $("d-client").textContent = c.client;
   $("d-opponent").textContent = c.opponent || "–";
-  $("d-area").textContent = c.area;
+  $("d-area").textContent = c.area || "–";
   $("d-lawyer").textContent = c.lawyer || "–";
   $("d-status").innerHTML = badge(c.status);
-  $("d-created").textContent = formatDate(c.created);
+  $("d-created").textContent = formatDate(c.created_at);
+  $("d-created-by").textContent = shortName(c.created_by);
   $("d-summary").textContent = c.summary || "Kein Sachverhalt eingetragen.";
 
-  $("d-notes").innerHTML = c.notes.length
-    ? c.notes
+  $("d-notes").innerHTML = c.eintraege.length
+    ? c.eintraege
         .map(
-          (n, i) => `
+          (n) => `
         <li>
-          <time>${formatDate(n.date)}</time>
+          <time>${formatDate(n.created_at)} · <span class="author">${escapeHtml(shortName(n.author))}</span></time>
           <p>${escapeHtml(n.text)}</p>
-          <button class="remove" data-index="${i}" title="Eintrag löschen">×</button>
+          <button class="remove" data-id="${n.id}" title="Eintrag löschen">×</button>
         </li>`
         )
         .join("")
@@ -124,38 +156,61 @@ function render() {
   renderDetail();
 }
 
-// ---------- Formular ----------
+// ---------- Anmelden / Abmelden ----------
+$("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { email, password } = Object.fromEntries(new FormData(e.target));
+  const errorEl = $("login-error");
+  errorEl.hidden = true;
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) {
+    errorEl.textContent = "Anmeldung fehlgeschlagen. E-Mail oder Passwort falsch?";
+    errorEl.hidden = false;
+  }
+});
+
+$("btn-logout").addEventListener("click", () => db.auth.signOut());
+
+function onSession(session) {
+  if (session) {
+    $("user-name").textContent = shortName(session.user.email);
+    showScreen("app");
+    loadCases();
+    startLiveUpdates();
+  } else {
+    stopLiveUpdates();
+    cases = [];
+    selectedId = null;
+    showScreen("login");
+  }
+}
+
+// ---------- Formular (Akte anlegen / bearbeiten) ----------
+const FIELDS = ["title", "client", "opponent", "area", "status", "lawyer", "summary"];
+
 function openForm(c = null) {
   editingId = c ? c.id : null;
   $("form-heading").textContent = c ? `Akte ${c.number} bearbeiten` : "Neue Akte";
   form.reset();
   if (c) {
-    for (const field of ["title", "client", "opponent", "area", "status", "lawyer", "summary"]) {
-      form.elements[field].value = c[field] || "";
-    }
+    for (const field of FIELDS) form.elements[field].value = c[field] || "";
   }
   dialog.showModal();
 }
 
-form.addEventListener("submit", () => {
+form.addEventListener("submit", async () => {
   const data = Object.fromEntries(new FormData(form));
 
   if (editingId) {
-    const c = cases.find((x) => x.id === editingId);
-    Object.assign(c, data);
+    const { error } = await db.from("akten").update(data).eq("id", editingId);
+    if (error) return showError("Speichern", error);
   } else {
-    const c = {
-      id: Date.now().toString(36),
-      number: nextCaseNumber(),
-      created: new Date().toISOString(),
-      notes: [],
-      ...data,
-    };
-    cases.push(c);
-    selectedId = c.id;
+    const { data: created, error } = await db.from("akten").insert(data).select().single();
+    if (error) return showError("Anlegen der Akte", error);
+    selectedId = created.id;
   }
-  saveCases();
-  render();
+  loadCases();
 });
 
 $("btn-cancel").addEventListener("click", () => dialog.close());
@@ -167,13 +222,13 @@ $("btn-edit").addEventListener("click", () => {
   openForm(cases.find((x) => x.id === selectedId));
 });
 
-$("btn-delete").addEventListener("click", () => {
+$("btn-delete").addEventListener("click", async () => {
   const c = cases.find((x) => x.id === selectedId);
-  if (!confirm(`Akte ${c.number} „${c.title}“ wirklich löschen?`)) return;
-  cases = cases.filter((x) => x.id !== selectedId);
+  if (!confirm(`Akte ${c.number} „${c.title}“ wirklich für ALLE löschen?`)) return;
+  const { error } = await db.from("akten").delete().eq("id", c.id);
+  if (error) return showError("Löschen", error);
   selectedId = null;
-  saveCases();
-  render();
+  loadCases();
 });
 
 listEl.addEventListener("click", (e) => {
@@ -194,30 +249,41 @@ $("filters").addEventListener("click", (e) => {
   renderList();
 });
 
-// ---------- Verlauf / Notizen ----------
-$("note-form").addEventListener("submit", (e) => {
+// ---------- Verlauf / Einträge ----------
+$("note-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const text = $("note-text").value.trim();
-  if (!text) return;
-  const c = cases.find((x) => x.id === selectedId);
-  c.notes.unshift({ date: new Date().toISOString(), text });
+  if (!text || !selectedId) return;
+  const { error } = await db.from("eintraege").insert({ akte_id: selectedId, text });
+  if (error) return showError("Eintragen", error);
   $("note-text").value = "";
-  saveCases();
-  renderDetail();
+  loadCases();
 });
 
-$("d-notes").addEventListener("click", (e) => {
+$("d-notes").addEventListener("click", async (e) => {
   const btn = e.target.closest(".remove");
-  if (!btn || !confirm("Eintrag löschen?")) return;
-  const c = cases.find((x) => x.id === selectedId);
-  c.notes.splice(Number(btn.dataset.index), 1);
-  saveCases();
-  renderDetail();
+  if (!btn || !confirm("Eintrag für alle löschen?")) return;
+  const { error } = await db.from("eintraege").delete().eq("id", btn.dataset.id);
+  if (error) return showError("Löschen des Eintrags", error);
+  loadCases();
 });
 
-// ---------- Export & Import ----------
+// ---------- Export (Sicherungskopie) ----------
 $("btn-export").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(cases, null, 2)], { type: "application/json" });
+  const backup = cases.map((c) => ({
+    number: c.number,
+    title: c.title,
+    client: c.client,
+    opponent: c.opponent,
+    area: c.area,
+    status: c.status,
+    lawyer: c.lawyer,
+    summary: c.summary,
+    created: c.created_at,
+    created_by: c.created_by,
+    notes: c.eintraege.map((n) => ({ date: n.created_at, text: n.text, author: n.author })),
+  }));
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `wiwang-law-akten-${new Date().toISOString().slice(0, 10)}.json`;
@@ -225,23 +291,76 @@ $("btn-export").addEventListener("click", () => {
   URL.revokeObjectURL(a.href);
 });
 
+// ---------- Import (z. B. alte Akten aus der ersten Version) ----------
 $("input-import").addEventListener("change", async (e) => {
   const file = e.target.files[0];
+  e.target.value = "";
   if (!file) return;
+
+  let imported;
   try {
-    const imported = JSON.parse(await file.text());
+    imported = JSON.parse(await file.text());
     if (!Array.isArray(imported)) throw new Error();
-    if (!confirm(`${imported.length} Akten laden? Die aktuellen Akten werden ersetzt.`)) return;
-    cases = imported;
-    selectedId = null;
-    saveCases();
-    render();
   } catch {
-    alert("Die Datei konnte nicht gelesen werden.");
-  } finally {
-    e.target.value = "";
+    return alert("Die Datei konnte nicht gelesen werden.");
   }
+  if (!confirm(`${imported.length} Akten zur gemeinsamen Datenbank HINZUFÜGEN?`)) return;
+
+  let ok = 0;
+  for (const item of imported) {
+    const row = {
+      title: item.title || "Ohne Titel",
+      client: item.client || "Unbekannt",
+      opponent: item.opponent || null,
+      area: item.area || null,
+      status: item.status || "Offen",
+      lawyer: item.lawyer || null,
+      summary: item.summary || null,
+      ...(item.created ? { created_at: item.created } : {}),
+    };
+
+    // Erst mit dem alten Aktenzeichen versuchen; ist es schon vergeben, ein neues nehmen
+    let result = await db.from("akten").insert({ ...row, number: item.number || null }).select().single();
+    if (result.error && result.error.code === "23505") {
+      result = await db.from("akten").insert(row).select().single();
+    }
+    if (result.error) {
+      showError(`Import von „${row.title}“`, result.error);
+      continue;
+    }
+
+    const notes = (item.notes || []).map((n) => ({
+      akte_id: result.data.id,
+      text: n.text,
+      ...(n.date ? { created_at: n.date } : {}),
+      ...(n.author ? { author: n.author } : {}),
+    }));
+    if (notes.length) {
+      const { error } = await db.from("eintraege").insert(notes);
+      if (error) showError(`Import der Einträge von „${row.title}“`, error);
+    }
+    ok++;
+  }
+  alert(`${ok} von ${imported.length} Akten importiert.`);
+  loadCases();
 });
 
 // ---------- Start ----------
-render();
+function start() {
+  if (!config.supabaseUrl || !config.supabaseKey || !window.supabase) {
+    showScreen("setup");
+    return;
+  }
+  db = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+
+  let currentUserId;
+  db.auth.onAuthStateChange((event, session) => {
+    const userId = session?.user?.id ?? null;
+    if (userId === currentUserId) return; // nichts Neues (z. B. Token erneuert)
+    currentUserId = userId;
+    // setTimeout: Supabase empfiehlt, hier keine Abfragen direkt zu starten
+    setTimeout(() => onSession(session), 0);
+  });
+}
+
+start();
