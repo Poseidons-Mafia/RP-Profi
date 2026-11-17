@@ -34,7 +34,6 @@ const NAV = [
   { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
   { page: "team", label: "Personal", href: "#/team" },
-  { page: "assistent", label: "KI-Assistent", href: "#/assistent" },
 ];
 
 // ---------- Rechte für Seiten und Aktionen ----------
@@ -42,7 +41,6 @@ const NAV = [
 const SEITEN_RECHTE = {
   akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
   rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen",
-  assistent: "ki_assistent",
 };
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
@@ -60,7 +58,8 @@ const AKTIONS_RECHTE = {
   "nutzer-neu": "personal_schreiben", "nutzer-passwort": "personal_schreiben", "nutzer-sperren": "personal_schreiben",
   "personalakte-bearbeiten": "personal_schreiben", "vermerk-neu": "personal_schreiben", "vermerk-loeschen": "personal_schreiben",
   "einstellungen-bearbeiten": "einstellungen_schreiben",
-  "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-in-verlauf": "akten_schreiben",
+  "ki-oeffnen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
+  "ki-in-verlauf": "akten_schreiben",
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
 };
 const AENDERUNGS_RECHTE = {
@@ -156,6 +155,7 @@ function render() {
   renderNav(route);
   document.querySelectorAll(".topbar [data-action]").forEach((el) => { el.hidden = !erlaubt(AKTIONS_RECHTE[el.dataset.action]); });
   rechteAnwenden(main);
+  if (typeof kiAktualisieren === "function") kiAktualisieren();
   document.title = `${(NAV.find((n) => n.page === route.page) || NAV[0]).label} – Wiwang Law`;
 }
 
