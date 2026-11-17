@@ -247,7 +247,10 @@ const BEREICHE = [
   { key: "personal", label: "Personalakten", text: "Lesen = Gehalt & Vermerke aller sehen; Bearbeiten = Personal verwalten" },
   { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle", nurSchreiben: true },
 ];
-const SONDERRECHTE = [{ key: "akten_loeschen", label: "Akten löschen" }];
+const SONDERRECHTE = [
+  { key: "akten_loeschen", label: "Akten löschen" },
+  { key: "ki_assistent", label: "KI-Assistent" },
+];
 // Alle einzelnen Rechte (für Vergleiche)
 const RECHTE = [
   ...BEREICHE.flatMap((b) => [

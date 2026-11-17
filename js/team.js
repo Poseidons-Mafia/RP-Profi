@@ -253,6 +253,7 @@ function tabRaenge() {
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
         <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
+        <li><strong>KI-Assistent</strong>: Chat mit der KI (Google Gemini). Sie sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an Google.</li>
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
         <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
       </ul>
