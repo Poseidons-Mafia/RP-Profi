@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./tools/supabase-sql.sh:*)",
+      "Bash(bash tools/supabase-sql.sh:*)"
+    ]
+  }
+}
