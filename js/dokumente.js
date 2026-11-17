@@ -292,7 +292,7 @@ function zahlungserinnerung(r) {
 // ---------- Aktenblatt ----------
 function aktenblatt(a) {
   const m = byId("mandanten", a.mandant_id) || {};
-  const sum = vorwurfSumme(a.vorwuerfe);
+  const sum = strafrahmen(a.vorwuerfe);
   const eintraege = kinder("eintraege", a.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at));
   const termine = kinder("termine", a.id).sort((x, y) => new Date(x.beginn) - new Date(y.beginn));
   const zeile = (label, value) => (value ? html`<tr><td style="width:48mm;color:#555">${label}</td><td>${value}</td></tr>` : "");
@@ -315,11 +315,15 @@ function aktenblatt(a) {
     <p>${a.summary ? multiline(a.summary) : "–"}</p>
     ${(a.vorwuerfe || []).length ? html`
       <h3>Tatvorwürfe</h3>
-      <table class="doc-table"><thead><tr><th>Vorwurf</th><th>Anzahl</th><th>Geldstrafe</th><th>Haft</th></tr></thead><tbody>
-        ${a.vorwuerfe.map((v) => html`<tr><td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}</td><td>${v.anzahl || 1}</td>
-          <td>${fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1))}</td><td>${fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1))}</td></tr>`)}
-        <tr class="total"><td>Strafrahmen gesamt</td><td></td><td>${fmt.geld(sum.geld)}</td><td>${fmt.haft(sum.haft)}</td></tr>
-      </tbody></table>` : ""}
+      <table class="doc-table"><thead><tr><th>Vorwurf</th><th>Anzahl</th><th>Haft</th><th>Geldstrafe</th></tr></thead><tbody>
+        ${a.vorwuerfe.map((v) => { const st = strafe(v), n = Number(v.anzahl) || 1; return html`<tr>
+          <td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}${v.deliktsart === "Verbrechen" ? " (Verbrechen)" : ""}</td><td>${n}</td>
+          <td>${st.hatHaft ? fmt.haftSpanne(st.hMin * n, st.hMax === null ? null : st.hMax * n) : "–"}</td>
+          <td>${st.hatGeld ? `${st.alternativ ? "oder " : ""}${fmt.geldSpanne(st.gMin * n, st.gMax * n)}` : "–"}</td></tr>`; })}
+        <tr class="total"><td>Strafrahmen gesamt (§ 3 StGB)</td><td>${sum.n}</td>
+          <td>${sum.hMax ? fmt.haftSpanne(sum.hMin, sum.hMax) : "–"}</td><td>${sum.gMax ? fmt.geldSpanne(sum.gMin, sum.gMax) : "–"}</td></tr>
+      </tbody></table>
+      ${strafrahmenHinweise(sum).length ? html`<ul class="doc-small">${strafrahmenHinweise(sum).map((h) => html`<li>${h}</li>`)}</ul>` : ""}` : ""}
     ${kinder("beteiligte", a.id).length ? html`<h3>Beteiligte</h3><ul>${kinder("beteiligte", a.id).map((b) => html`<li><strong>${b.rolle}:</strong> ${b.name}${b.kontakt ? ` (${b.kontakt})` : ""}${b.notiz ? ` – ${b.notiz}` : ""}</li>`)}</ul>` : ""}
     ${kinder("beweise", a.id).length ? html`<h3>Beweismittel</h3><ul>${kinder("beweise", a.id).map((b) => html`<li><strong>${b.art}:</strong> ${b.titel}${b.link ? html` – <span class="doc-small">${b.link}</span>` : ""}${b.beschreibung ? ` – ${b.beschreibung}` : ""}</li>`)}</ul>` : ""}
     ${termine.length ? html`<h3>Termine</h3><ul>${termine.map((t) => html`<li>${fmt.datumZeit(t.beginn)} – ${t.art}: ${t.titel}${t.ort ? ` (${t.ort})` : ""}${t.erledigt ? " ✓" : ""}</li>`)}</ul>` : ""}

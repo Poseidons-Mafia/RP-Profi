@@ -184,7 +184,37 @@ const fmt = {
     const e = (typeof state !== "undefined" && state.settings && state.settings.haft_einheit) || "HE";
     return `${fmt.zahl(n || 0)} ${e}`;
   },
+  // Strafrahmen: "bis 20 HE", "ab 45 HE", "15–30 HE", "10 HE"
+  haftSpanne(min, max) {
+    const e = (typeof state !== "undefined" && state.settings && state.settings.haft_einheit) || "HE";
+    if (!min && !max) return "–";
+    if (!min) return `bis ${fmt.zahl(max)} ${e}`;
+    if (!max) return `ab ${fmt.zahl(min)} ${e}`;
+    if (min === max) return `${fmt.zahl(min)} ${e}`;
+    return `${fmt.zahl(min)}–${fmt.zahl(max)} ${e}`;
+  },
+  // "bis $60.000", "$10.000", "$10.000–$20.000"
+  geldSpanne(min, max) {
+    if (!min && !max) return "–";
+    if (!min) return `bis ${fmt.geld(max)}`;
+    if (!max || min === max) return fmt.geld(min);
+    return `${fmt.geld(min)}–${fmt.geld(max)}`;
+  },
 };
+
+// Strafrahmen aus Text lesen: "15-30", "15 – 30", "bis 20", "ab 45", "nicht unter 45", "10"
+// Ergebnis [von, bis]; eine einzelne Zahl gilt als feste Strafe.
+function parseSpanne(value) {
+  const s = String(value ?? "").trim();
+  if (!s || /^[-–]$/.test(s)) return [null, null];
+  const zahl = (t) => { const n = parseNumber(t); return n && n > 0 ? n : null; };
+  let m = s.match(/^(.*\d.*?)\s*(?:-|–|—|bis)\s*(.*\d.*)$/i);
+  if (m && !/^(bis|max)/i.test(s)) return [zahl(m[1]), zahl(m[2])];
+  if (/^(bis|max|höchstens|<=?|≤)/i.test(s)) return [null, zahl(s)];
+  if (/^(ab|mind|nicht unter|>=?|≥)/i.test(s) || /\+$/.test(s)) return [zahl(s), null];
+  const n = zahl(s);
+  return [n, n];
+}
 
 // Zahl aus Eingaben wie "$50.000", "50,5" oder "1.250,00" lesen
 function parseNumber(value) {

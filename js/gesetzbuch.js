@@ -11,16 +11,30 @@ function kategorien() {
   return [...new Set(state.gesetze.map((g) => g.kategorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"));
 }
 
+// Momentaufnahme eines Paragraphen für die Tatvorwürfe einer Akte
+function vorwurfAusGesetz(g, anzahl = 1) {
+  return { gesetz_id: g.id, paragraph: g.paragraph, titel: g.titel,
+    haft_min: g.haft_min ?? null, haft: g.haft ?? null, geldstrafe_min: g.geldstrafe_min ?? null, geldstrafe: g.geldstrafe ?? null,
+    deliktsart: g.deliktsart || null, gesamt_erhoeht: !!g.gesamt_erhoeht, anzahl };
+}
+
 function auswahlSumme() {
-  let geld = 0, haft = 0, n = 0;
-  for (const [id, anzahl] of Object.entries(ui.gesetze.auswahl)) {
-    const g = byId("gesetze", id);
-    if (!g) continue;
-    n += anzahl;
-    geld += (Number(g.geldstrafe) || 0) * anzahl;
-    haft += (Number(g.haft) || 0) * anzahl;
-  }
-  return { geld, haft, n };
+  const list = Object.entries(ui.gesetze.auswahl)
+    .map(([id, anzahl]) => { const g = byId("gesetze", id); return g ? vorwurfAusGesetz(g, anzahl) : null; })
+    .filter(Boolean);
+  return strafrahmen(list);
+}
+
+const deliktBadge = (g) => (g.deliktsart === "Verbrechen" ? html` <span class="badge verbrechen" title="Verbrechen (§ 5 StGB): Mindeststrafe 15 HE oder mehr, Versuch stets strafbar">Verbrechen</span>` : "");
+
+// Gesamter Strafrahmen als dunkle Leiste (Strafrechner, Akte)
+function strafrahmenLeiste(r, extra = "") {
+  const hinweise = strafrahmenHinweise(r);
+  return html`
+    <span>Haft <strong>${r.hMax ? fmt.haftSpanne(r.hMin, r.hMax) : "keine"}</strong></span>
+    <span>Geldstrafe <strong>${r.gMax ? fmt.geldSpanne(r.gMin, r.gMax) : "keine"}</strong></span>
+    ${extra}
+    ${hinweise.length ? html`<ul class="sum-hints">${hinweise.map((h) => html`<li>${h}</li>`)}</ul>` : ""}`;
 }
 
 VIEWS.gesetzbuch = () => {
@@ -41,7 +55,7 @@ VIEWS.gesetzbuch = () => {
     <div class="page">
       <div class="page-head">
         <div><h1>Gesetzbuch & Strafrechner</h1>
-          <p class="muted">Das Gesetzbuch eures Servers – Haken setzen, und der Strafrahmen wird automatisch ausgerechnet.</p></div>
+          <p class="muted">Das Gesetzbuch eures Servers – Haken setzen, und der Strafrahmen (von – bis) wird nach § 3 StGB ausgerechnet.</p></div>
         <div class="actions-row">
           ${darf("gesetzbuch") ? html`<button class="btn" data-action="gesetze-import">Massenimport</button>` : ""}
           ${state.gesetze.length ? html`<button class="btn" data-action="gesetze-export">Export (CSV)</button>` : ""}
@@ -62,21 +76,26 @@ VIEWS.gesetzbuch = () => {
             <strong>Das Gesetzbuch ist noch leer.</strong> Am schnellsten geht es mit dem Massenimport:
             Kopiere das Gesetzbuch eures Servers (z. B. aus Google Sheets oder einem Dokument) und füge es ein – eine Zeile pro Paragraph.
           </div>`}
+        ${state.gesetze.length ? html`
+          <p class="muted small" style="margin:0 0 10px">„bis“ = Höchststrafe, „ab“ = Mindeststrafe („nicht unter“), „oder“ = Haft oder Geldstrafe.
+            Nicht bezifferte Geldstrafen sind nach § 13 Abs. 2 StGB mit höchstens 3.000 $ je HE eingetragen.
+            Gesamtstrafe höchstens 120 HE, bei Taten gegen Leben/körperliche Unversehrtheit, Verfassungsordnung und Terror 180 HE (§ 3 Abs. 2); Geldstrafen werden addiert.</p>` : ""}
         ${[...gruppen.entries()].map(([kat, items]) => html`
           <div class="group-title">${kat}</div>
           <div class="table-wrap"><table class="table law-table">
-            <thead><tr><th></th><th>Paragraph</th><th>Delikt</th><th class="num">Geldstrafe</th><th class="num">Haft</th><th>Bemerkung</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Paragraph</th><th>Delikt</th><th class="num">Haft</th><th class="num">Geldstrafe</th><th>Bemerkung</th><th></th></tr></thead>
             <tbody>${items.map((g) => {
               const anzahl = f.auswahl[g.id];
               return html`<tr class="${anzahl ? "selected" : ""}">
                 <td><input type="checkbox" data-change="gesetz-wahl" data-id="${g.id}" ${anzahl ? "checked" : ""} title="Für den Strafrechner auswählen"></td>
                 <td class="nowrap"><strong>${g.paragraph || "–"}</strong></td>
-                <td>${g.titel}
+                <td>${g.titel}${deliktBadge(g)}
                   ${anzahl ? html`<div class="stepper" style="margin-top:4px">
                     <button data-action="gesetz-anzahl" data-id="${g.id}" data-delta="-1">−</button><span>${anzahl}×</span>
                     <button data-action="gesetz-anzahl" data-id="${g.id}" data-delta="1">+</button></div>` : ""}</td>
-                <td class="num">${g.geldstrafe ? fmt.geld(g.geldstrafe) : "–"}</td>
-                <td class="num">${g.haft ? fmt.haft(g.haft) : "–"}</td>
+                ${(() => { const s = strafe(g); return html`
+                <td class="num nowrap">${s.hatHaft ? fmt.haftSpanne(s.hMin, s.hMax) : "–"}</td>
+                <td class="num nowrap">${s.hatGeld ? `${s.alternativ ? "oder " : ""}${fmt.geldSpanne(s.gMin, s.gMax)}` : "–"}</td>`; })()}
                 <td class="small">${g.bemerkung || ""}</td>
                 <td class="row-actions">${darf("gesetzbuch") ? html`<button class="icon-btn" data-action="gesetz-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button>` : ""}</td>
               </tr>`;
@@ -87,11 +106,9 @@ VIEWS.gesetzbuch = () => {
       ${sum.n ? html`
         <div class="sum-bar calc-bar">
           <span><strong>${sum.n}</strong> ${sum.n === 1 ? "Delikt" : "Delikte"}</span>
-          <span>Geldstrafe <strong>${fmt.geld(sum.geld)}</strong></span>
-          <span>Haft <strong>${fmt.haft(sum.haft)}</strong></span>
-          <span class="spacer"></span>
+          ${strafrahmenLeiste(sum, html`<span class="spacer"></span>
           <button class="btn small" style="color:#fff;border-color:#555" data-action="auswahl-leeren">Leeren</button>
-          <button class="btn small gold" data-action="auswahl-in-akte">In Akte übernehmen</button>
+          <button class="btn small gold" data-action="auswahl-in-akte">In Akte übernehmen</button>`)}
         </div>` : ""}
     </div>`;
 };
@@ -108,14 +125,31 @@ function gesetzFields() {
   return [
     { name: "paragraph", label: "Paragraph", third: true, placeholder: "§ 12 StGB" },
     { name: "titel", label: "Delikt", required: true, placeholder: "z. B. Körperverletzung", half: false, full: false },
-    { name: "kategorie", label: "Kategorie", half: true, list: kategorien, placeholder: "z. B. Gewaltdelikte, Verkehr" },
-    { name: "geldstrafe", label: "Geldstrafe", type: "money", third: true },
-    { name: "haft", label: `Haft (${state.settings.haft_einheit})`, type: "number", third: true },
-    { name: "bemerkung", label: "Bemerkung", placeholder: "z. B. Führerscheinentzug, nur bei Vorsatz" },
+    { name: "kategorie", label: "Kategorie", half: true, list: kategorien, placeholder: "z. B. Straftaten gegen das Vermögen" },
+    { name: "deliktsart", label: "Deliktsart", type: "select", half: true, empty: true, emptyLabel: "–",
+      options: [{ value: "Vergehen", label: "Vergehen" }, { value: "Verbrechen", label: "Verbrechen (mind. 15 HE, § 5 StGB)" }] },
+    { type: "section", label: "Strafrahmen" },
+    { type: "info", text: "Nur „bis“ = „bis zu …“; nur „von“ = „nicht unter …“; von = bis = feste Strafe. Haft und Geldstrafe zusammen bedeuten Haft ODER Geldstrafe. Ist die Geldstrafe im Gesetz nicht beziffert: höchstens 3.000 $ je HE (§ 13 Abs. 2 StGB)." },
+    { name: "haft_min", label: `Haft von (${state.settings.haft_einheit})`, type: "number", half: true },
+    { name: "haft", label: `Haft bis (${state.settings.haft_einheit})`, type: "number", half: true },
+    { name: "geldstrafe_min", label: "Geldstrafe von", type: "money", half: true, placeholder: "" },
+    { name: "geldstrafe", label: "Geldstrafe bis", type: "money", half: true, placeholder: "" },
+    { name: "gesamt_erhoeht", label: "Gesamtstrafe bis 180 statt 120 HE (§ 3 Abs. 2 StGB: Tat gegen Leben, körperliche Unversehrtheit oder Verfassungsordnung, Terror)", type: "checkbox", full: true },
+    { name: "bemerkung", label: "Bemerkung", placeholder: "z. B. Versuch strafbar, Antragsdelikt, Führerscheinentzug" },
   ];
 }
 
-// "Paragraph; Delikt; Kategorie; Geldstrafe; Haft; Bemerkung" – Tab oder ; getrennt
+function gesetzWerte(v) {
+  // "von" größer als "bis"? Dann tauschen.
+  for (const [a, b] of [["haft_min", "haft"], ["geldstrafe_min", "geldstrafe"]]) {
+    if (v[a] && v[b] && v[a] > v[b]) [v[a], v[b]] = [v[b], v[a]];
+  }
+  v.deliktsart = v.deliktsart || null;
+  return v;
+}
+
+// "Paragraph; Delikt; Kategorie; Geldstrafe; Haft; Bemerkung; Deliktsart" – Tab oder ; getrennt.
+// Geldstrafe und Haft als Rahmen: "15-30", "bis 20", "ab 45" oder eine feste Zahl.
 function parseGesetze(text) {
   const rows = [];
   for (const raw of text.split(/\r?\n/)) {
@@ -123,12 +157,15 @@ function parseGesetze(text) {
     if (!line) continue;
     const parts = (line.includes("\t") ? line.split("\t") : line.split(/;|\|/)).map((p) => p.trim());
     if (/^(paragraph|§)$/i.test(parts[0]) && /delikt|bezeichnung|titel/i.test(parts[1] || "")) continue; // Kopfzeile
-    let [paragraph, titel, kategorie, geldstrafe, haft, bemerkung] = parts;
+    let [paragraph, titel, kategorie, geldstrafe, haft, bemerkung, deliktsart] = parts;
     if (parts.length === 1) { titel = paragraph; paragraph = null; }
     if (!titel) continue;
+    const [geldstrafe_min, geldstrafe_max] = parseSpanne(geldstrafe);
+    const [haft_min, haft_max] = parseSpanne(haft);
+    deliktsart = /verbrechen/i.test(deliktsart || "") ? "Verbrechen" : /vergehen/i.test(deliktsart || "") ? "Vergehen" : null;
     rows.push({
       paragraph: paragraph || null, titel, kategorie: kategorie || null,
-      geldstrafe: parseNumber(geldstrafe), haft: parseNumber(haft), bemerkung: bemerkung || null,
+      geldstrafe_min, geldstrafe: geldstrafe_max, haft_min, haft: haft_max, bemerkung: bemerkung || null, deliktsart,
     });
   }
   return rows;
@@ -139,7 +176,7 @@ Object.assign(ACTIONS, {
     title: "Paragraph hinzufügen",
     fields: gesetzFields(),
     values: { kategorie: ui.gesetze.kategorie || "" },
-    onSubmit: async (v) => { await insertRow("gesetze", v); toast(`${v.paragraph || v.titel} gespeichert`); },
+    onSubmit: async (v) => { await insertRow("gesetze", gesetzWerte(v)); toast(`${v.paragraph || v.titel} gespeichert`); },
   }),
   "gesetz-bearbeiten": (d) => {
     const g = byId("gesetze", d.id);
@@ -147,7 +184,7 @@ Object.assign(ACTIONS, {
       title: "Paragraph bearbeiten",
       fields: gesetzFields(),
       values: g,
-      onSubmit: async (v) => { await updateRow("gesetze", g.id, v); toast("Gespeichert"); },
+      onSubmit: async (v) => { await updateRow("gesetze", g.id, gesetzWerte(v)); toast("Gespeichert"); },
       onDelete: async () => {
         if (!confirm(`${g.paragraph || ""} ${g.titel} löschen?`)) return false;
         await deleteRow("gesetze", g.id);
@@ -178,7 +215,7 @@ Object.assign(ACTIONS, {
           if (!g) continue;
           const i = list.findIndex((x) => x.gesetz_id === g.id);
           if (i >= 0) list[i] = { ...list[i], anzahl: (Number(list[i].anzahl) || 1) + anzahl };
-          else list.push({ gesetz_id: g.id, paragraph: g.paragraph, titel: g.titel, geldstrafe: g.geldstrafe, haft: g.haft, anzahl });
+          else list.push(vorwurfAusGesetz(g, anzahl));
         }
         await updateRow("akten", a.id, { vorwuerfe: list });
         ui.gesetze.auswahl = {};
@@ -193,8 +230,11 @@ Object.assign(ACTIONS, {
       wide: true,
       body: html`
         <p style="margin-top:0">Eine Zeile pro Paragraph. Spalten getrennt durch <strong>Tab</strong> (direkt aus Google Sheets/Excel kopiert) oder <strong>Semikolon</strong>:</p>
-        <p><code>Paragraph; Delikt; Kategorie; Geldstrafe; Haft; Bemerkung</code></p>
-        <p class="muted small">Beispiel:<br><code>§ 12 StGB; Körperverletzung; Gewaltdelikte; 5000; 10</code><br><code>§ 3 StVO; Geschwindigkeitsüberschreitung; Verkehr; 1500; 0; ab 50 km/h zu schnell</code></p>
+        <p><code>Paragraph; Delikt; Kategorie; Geldstrafe; Haft; Bemerkung; Deliktsart</code></p>
+        <p class="muted small">Geldstrafe und Haft als Strafrahmen: <code>bis 20</code>, <code>ab 45</code> (nicht unter), <code>15-30</code> oder eine feste Zahl. Leer = keine. Bemerkung und Deliktsart (Vergehen/Verbrechen) sind optional.<br>
+          Beispiel:<br><code>§ 21 StGB; Körperverletzung; Straftaten gegen die körperliche Unversehrtheit; bis 60000; bis 20; Versuch strafbar</code><br>
+          <code>§ 18 StGB; Mord; Straftaten gegen das Leben; ; ab 45; ; Verbrechen</code><br>
+          <code>§ 50 StGB; Fahren ohne Fahrerlaubnis; Verkehr; 20000; bis 10</code></p>
         <textarea id="import-text" rows="12" placeholder="Hier einfügen …"></textarea>
         <p id="import-info" class="muted small"></p>`,
       footer: html`<div class="dialog-actions"><span class="spacer"></span><button class="btn" data-close>Abbrechen</button><button class="btn primary" id="import-go" disabled>Importieren</button></div>`,
@@ -208,7 +248,7 @@ Object.assign(ACTIONS, {
       const rows = parseGesetze(ta.value);
       neue = rows.filter((r) => !vorhanden.has(norm(`${r.paragraph}|${r.titel}`)));
       info.textContent = rows.length
-        ? `${rows.length} Zeilen erkannt, davon ${neue.length} neu${rows.length - neue.length ? ` (${rows.length - neue.length} schon vorhanden)` : ""}. Erste Zeile: ${rows[0].paragraph || ""} ${rows[0].titel} · ${rows[0].geldstrafe ? fmt.geld(rows[0].geldstrafe) : "keine Geldstrafe"} · ${rows[0].haft ? fmt.haft(rows[0].haft) : "keine Haft"}`
+        ? `${rows.length} Zeilen erkannt, davon ${neue.length} neu${rows.length - neue.length ? ` (${rows.length - neue.length} schon vorhanden)` : ""}. Erste Zeile: ${rows[0].paragraph || ""} ${rows[0].titel} · ${strafText(rows[0])}`
         : "";
       go_.disabled = !neue.length;
     });
@@ -222,10 +262,13 @@ Object.assign(ACTIONS, {
     });
   },
   "gesetze-export": () => {
-    const head = "Paragraph;Delikt;Kategorie;Geldstrafe;Haft;Bemerkung";
+    const head = "Paragraph;Delikt;Kategorie;Geldstrafe;Haft;Bemerkung;Deliktsart";
     const clean = (v) => String(v ?? "").replace(/[;\r\n]+/g, " ");
+    // Strafrahmen im Importformat: "bis 20", "ab 45", "15-30", "10"
+    const spanne = (min, max) => (!min && !max ? "" : !min ? `bis ${max}` : !max ? `ab ${min}` : min === max ? `${min}` : `${min}-${max}`);
     const lines = [...state.gesetze].sort(gesetzSort)
-      .map((g) => [g.paragraph, g.titel, g.kategorie, g.geldstrafe, g.haft, g.bemerkung].map(clean).join(";"));
+      .map((g) => [g.paragraph, g.titel, g.kategorie, spanne(g.geldstrafe_min, g.geldstrafe), spanne(g.haft_min, g.haft), g.bemerkung, g.deliktsart]
+        .map(clean).join(";"));
     downloadFile(`wiwang-gesetzbuch-${ymd(new Date())}.csv`, "﻿" + [head, ...lines].join("\r\n"), "text/csv");
   },
 });

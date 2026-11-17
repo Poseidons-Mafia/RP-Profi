@@ -70,7 +70,7 @@ function globaleSuche(q) {
   add("Rechnungen", state.rechnungen.filter((r) => matches(q, r.nummer, r.empfaenger, r.betreff)).map((r) => ({
     href: r.akte_id ? `#/akten/${r.akte_id}/rechnungen` : "#/rechnungen", titel: `${r.nummer} · ${r.empfaenger}`, sub: `${fmt.geld(r.summe)} · ${r.status}` })));
   add("Gesetzbuch", state.gesetze.filter((g) => matches(q, g.paragraph, g.titel, g.kategorie)).map((g) => ({
-    href: "#/gesetzbuch", titel: `${g.paragraph || ""} ${g.titel}`, sub: [g.geldstrafe ? fmt.geld(g.geldstrafe) : "", g.haft ? fmt.haft(g.haft) : ""].filter(Boolean).join(" · ") })));
+    href: "#/gesetzbuch", titel: `${g.paragraph || ""} ${g.titel}`, sub: strafText(g) })));
   return gruppen;
 }
 

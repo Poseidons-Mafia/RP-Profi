@@ -851,3 +851,8 @@ body.in-app .guide-btn span { display: none; }
   #print-area .doc-page { box-shadow: none; margin: 0; width: 210mm; min-height: 297mm; page-break-after: always; }
   #print-area .doc-page:last-child { page-break-after: auto; }
 }
+
+/* ---------- Strafrahmen ---------- */
+.badge.verbrechen { background: var(--red-soft); color: var(--red); margin-left: 4px; vertical-align: 1px; }
+.sum-hints { flex-basis: 100%; margin: 2px 0 0; padding-left: 18px; font-size: 0.8rem; color: #d8cfb0; }
+.sum-hints li + li { margin-top: 1px; }

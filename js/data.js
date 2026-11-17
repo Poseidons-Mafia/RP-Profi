@@ -330,14 +330,84 @@ function naechsterTermin(akteId) {
     .sort((a, b) => new Date(a.beginn) - new Date(b.beginn))[0];
 }
 
-function vorwurfSumme(vorwuerfe) {
-  let geld = 0, haft = 0;
+// ---------- Strafrahmen (StGB) ----------
+// Gesetzbuch und Tatvorwürfe speichern den Rahmen als von/bis:
+//   haft_min / haft             Freiheitsstrafe von / bis
+//   geldstrafe_min / geldstrafe Geldstrafe von / bis
+// Nur "bis" = "bis zu …", nur "von" = "nicht unter …", beides gleich = feste Strafe.
+// Haft und Geldstrafe zusammen = Haft ODER Geldstrafe.
+const GESAMTSTRAFE = { normal: 120, erhoeht: 180 }; // § 3 Abs. 2 StGB
+
+function zahlOderNull(v) {
+  const n = Number(v);
+  return v === null || v === undefined || v === "" || !isFinite(n) || n <= 0 ? null : n;
+}
+
+function strafe(v) {
+  const hMin = zahlOderNull(v.haft_min), hMax = zahlOderNull(v.haft);
+  const gMin = zahlOderNull(v.geldstrafe_min), gMax = zahlOderNull(v.geldstrafe);
+  const hatHaft = !!(hMin || hMax), hatGeld = !!(gMin || gMax);
+  return {
+    hMin: hMin || 0, hMax, hatHaft, hatGeld,
+    hOffen: hatHaft && !hMax,                   // "nicht unter …"
+    gMin: gMin || 0, gMax: gMax || gMin,
+    alternativ: hatHaft && hatGeld,             // Haft ODER Geldstrafe
+  };
+}
+
+// "bis 20 HE oder bis $60.000", "ab 45 HE", "15–30 HE", "$10.000"
+function strafText(v, anzahl = 1) {
+  const s = strafe(v);
+  const n = Number(anzahl) || 1;
+  const teile = [];
+  if (s.hatHaft) teile.push(fmt.haftSpanne(s.hMin * n, s.hMax === null ? null : s.hMax * n));
+  if (s.hatGeld) teile.push(fmt.geldSpanne(s.gMin * n, s.gMax * n));
+  return teile.join(" oder ") || "–";
+}
+
+// Gesamter Strafrahmen mehrerer Tatvorwürfe (§ 3 StGB):
+// Haft wird bis zur Gesamtstrafe (120 bzw. 180 HE) summiert, Geldstrafen werden addiert.
+// Bei "Haft oder Geldstrafe" fällt je Delikt nur eins von beiden an – daher zählt
+// die Mindesthaft nur bei reinen Haft-Delikten, die Mindestgeldstrafe nur bei reinen Geld-Delikten.
+function strafrahmen(vorwuerfe) {
+  const r = { hMin: 0, hMax: 0, gMin: 0, gMax: 0, offen: false, alternativ: 0, erhoeht: false,
+    verbrechen: false, verbrechen45: false, n: 0 };
   for (const v of vorwuerfe || []) {
     const n = Number(v.anzahl) || 1;
-    geld += (Number(v.geldstrafe) || 0) * n;
-    haft += (Number(v.haft) || 0) * n;
+    const s = strafe(v);
+    r.n += n;
+    if (v.gesamt_erhoeht) r.erhoeht = true;
+    if (v.deliktsart === "Verbrechen") {
+      r.verbrechen = true;
+      if ((s.hMax === null ? Infinity : s.hMax * n) >= 45) r.verbrechen45 = true;
+    }
+    if (s.alternativ) r.alternativ += n;
+    if (s.hatHaft) {
+      r.hMax += (s.hMax ?? s.hMin) * n;
+      if (s.hOffen) r.offen = true;
+      if (!s.hatGeld) r.hMin += s.hMin * n;
+    }
+    if (s.hatGeld) {
+      r.gMax += s.gMax * n;
+      if (!s.hatHaft) r.gMin += s.gMin * n;
+    }
   }
-  return { geld, haft };
+  r.deckel = r.erhoeht ? GESAMTSTRAFE.erhoeht : GESAMTSTRAFE.normal;
+  r.gekappt = r.offen || r.hMax > r.deckel;
+  r.hMaxRoh = r.hMax;
+  r.hMax = r.gekappt ? r.deckel : r.hMax;
+  r.hMin = Math.min(r.hMin, r.deckel);
+  return r;
+}
+
+// Kurze Hinweise zum Strafrahmen (für Strafrechner, Akte, Aktenblatt)
+function strafrahmenHinweise(r) {
+  const out = [];
+  if (r.gekappt) out.push(`Gesamtstrafe höchstens ${fmt.haft(r.deckel)} (§ 3 Abs. 2 StGB)${r.erhoeht ? " – erhöht wegen Tat gegen Leben/körperliche Unversehrtheit, Verfassungsordnung oder Terror" : ""}.`);
+  if (r.alternativ) out.push(`${r.alternativ === 1 ? "Ein Delikt ist" : `${r.alternativ} Delikte sind`} mit Haft ODER Geldstrafe bedroht – je Delikt wird nur eins verhängt.`);
+  if (r.verbrechen) out.push("Enthält ein Verbrechen (§ 5 StGB): Der Versuch ist stets strafbar (§ 9 Abs. 1).");
+  if (r.verbrechen45) out.push("Bei Verurteilung wegen eines Verbrechens zu mind. 45 HE: Verlust von Wählbarkeit und Amtsfähigkeit für zwei Wochen (§§ 14, 15 StGB).");
+  return out;
 }
 
 function gegnerNamen(akte) {

@@ -233,30 +233,30 @@ function tabUeberblick(a) {
 
 function vorwurfTabelle(a) {
   const list = a.vorwuerfe || [];
-  if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
-  const sum = vorwurfSumme(list);
+  if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – der Strafrahmen (von – bis) wird nach § 3 StGB automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
+  const sum = strafrahmen(list);
   return html`
     <div class="table-wrap"><table class="table">
-      <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th><th></th></tr></thead>
+      <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Haft</th><th class="num">Geldstrafe</th><th></th></tr></thead>
       <tbody>${list.map((v, i) => html`
         <tr>
           <td class="nowrap">${v.paragraph || "–"}</td>
-          <td>${v.titel}</td>
+          <td>${v.titel}${deliktBadge(v)}</td>
           <td><span class="stepper">
             <button data-action="vorwurf-anzahl" data-id="${a.id}" data-i="${i}" data-delta="-1" title="weniger">−</button>
             <span>${v.anzahl || 1}</span>
             <button data-action="vorwurf-anzahl" data-id="${a.id}" data-i="${i}" data-delta="1" title="mehr">+</button>
           </span></td>
-          <td class="num">${v.geldstrafe ? fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1)) : "–"}</td>
-          <td class="num">${v.haft ? fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1)) : "–"}</td>
+          ${(() => { const st = strafe(v), n = Number(v.anzahl) || 1; return html`
+          <td class="num nowrap">${st.hatHaft ? fmt.haftSpanne(st.hMin * n, st.hMax === null ? null : st.hMax * n) : "–"}</td>
+          <td class="num nowrap">${st.hatGeld ? `${st.alternativ ? "oder " : ""}${fmt.geldSpanne(st.gMin * n, st.gMax * n)}` : "–"}</td>`; })()}
           <td class="row-actions"><button class="icon-btn" data-action="vorwurf-entfernen" data-id="${a.id}" data-i="${i}" title="Entfernen">✕</button></td>
         </tr>`)}
       </tbody>
     </table></div>
     <div class="sum-bar">
       <span>Strafrahmen gesamt:</span>
-      <span>Geldstrafe <strong>${fmt.geld(sum.geld)}</strong></span>
-      <span>Haft <strong>${fmt.haft(sum.haft)}</strong></span>
+      ${strafrahmenLeiste(sum)}
     </div>`;
 }
 
@@ -504,6 +504,10 @@ function openAbschlussForm(akte) {
     fields: [
       { name: "ergebnis", label: "Ergebnis", type: "select", options: OPTIONEN.ergebnis, required: true, half: true },
       { name: "ergebnis_datum", label: "Datum", type: "date", half: true },
+      ...((akte.vorwuerfe || []).length ? [{ type: "info", text: (() => {
+        const r = strafrahmen(akte.vorwuerfe);
+        return `Strafrahmen laut Tatvorwürfen: Haft ${r.hMax ? fmt.haftSpanne(r.hMin, r.hMax) : "keine"}, Geldstrafe ${r.gMax ? fmt.geldSpanne(r.gMin, r.gMax) : "keine"} (§ 3 StGB).`;
+      })() }] : []),
       { name: "ergebnis_details", label: "Strafmaß / Details", type: "textarea", rows: 4, placeholder: "z. B. 20 HE Haft, $15.000 Geldstrafe; Deal mit StA …" },
       { name: "schliessen", label: "Akte auf „Geschlossen“ setzen", type: "checkbox" },
     ],
@@ -541,9 +545,10 @@ function openVorwurfPicker(akteId) {
       <form id="vw-free" class="form-grid" style="padding:8px 0 0">
         <div class="field third"><label class="label">Paragraph</label><input name="paragraph" placeholder="§ 12 StGB"></div>
         <div class="field" style="grid-column: span 4"><label class="label">Vorwurf <span class="req">*</span></label><input name="titel" required placeholder="z. B. Körperverletzung"></div>
-        <div class="field third"><label class="label">Geldstrafe</label><input name="geldstrafe" inputmode="decimal" placeholder="0"></div>
-        <div class="field third"><label class="label">Haft (${state.settings.haft_einheit})</label><input name="haft" inputmode="decimal" placeholder="0"></div>
+        <div class="field third"><label class="label">Haft (${state.settings.haft_einheit})</label><input name="haft" placeholder="bis 20 · ab 45 · 15-30"></div>
+        <div class="field third"><label class="label">Geldstrafe</label><input name="geldstrafe" placeholder="bis 60000 · 20000"></div>
         <div class="field third" style="align-self:end"><button class="btn full" type="submit">Hinzufügen</button></div>
+        <small class="help" style="grid-column:1/-1">Strafrahmen: „bis 20“ = höchstens, „ab 45“ = nicht unter, „15-30“ = von–bis, eine Zahl = feste Strafe. Haft und Geldstrafe zusammen = Haft oder Geldstrafe.</small>
       </form>`,
     footer: html`<div class="dialog-actions"><a class="btn" href="#/gesetzbuch">Gesetzbuch öffnen</a><span class="spacer"></span><button class="btn primary" data-close>Fertig</button></div>`,
   });
@@ -558,8 +563,8 @@ function openVorwurfPicker(akteId) {
       .slice(0, 150);
     listEl.innerHTML = String(items.length ? html`${items.map((g) => html`
       <button type="button" data-gid="${g.id}">
-        <span><strong>${g.paragraph || ""}</strong> ${g.titel}<span class="sub">${g.kategorie || ""}</span></span>
-        <span class="right">${g.geldstrafe ? fmt.geld(g.geldstrafe) : ""}${g.haft ? html`<br>${fmt.haft(g.haft)}` : ""}
+        <span><strong>${g.paragraph || ""}</strong> ${g.titel}${deliktBadge(g)}<span class="sub">${g.kategorie || ""}</span></span>
+        <span class="right">${strafText(g).split(" oder ").map((t, i) => html`${i ? html`<br>oder ` : ""}${t}`)}
           ${vorhanden.has(g.id) ? html`<br><strong class="ok-text">✓ ${vorhanden.get(g.id)}×</strong>` : ""}</span>
       </button>`)}`
       : html`<p class="empty" style="padding:10px 12px">${state.gesetze.length ? "Nichts gefunden." : "Das Gesetzbuch ist noch leer. Lege es unter „Gesetzbuch“ an oder gib den Vorwurf unten frei ein."}</p>`);
@@ -570,14 +575,17 @@ function openVorwurfPicker(akteId) {
     const b = e.target.closest("button[data-gid]");
     if (!b) return;
     const g = byId("gesetze", b.dataset.gid);
-    await attempt(() => addVorwurf(akteId, { gesetz_id: g.id, paragraph: g.paragraph, titel: g.titel, geldstrafe: g.geldstrafe, haft: g.haft }),
+    const { anzahl, ...v } = vorwurfAusGesetz(g);
+    await attempt(() => addVorwurf(akteId, v),
       `${g.paragraph || g.titel} hinzugefügt`);
     draw();
   });
   dlg.querySelector("#vw-free").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = e.target.elements;
-    const v = { paragraph: f.paragraph.value.trim() || null, titel: f.titel.value.trim(), geldstrafe: parseNumber(f.geldstrafe.value), haft: parseNumber(f.haft.value) };
+    const [haft_min, haft] = parseSpanne(f.haft.value);
+    const [geldstrafe_min, geldstrafe] = parseSpanne(f.geldstrafe.value);
+    const v = { paragraph: f.paragraph.value.trim() || null, titel: f.titel.value.trim(), haft_min, haft, geldstrafe_min, geldstrafe };
     if (!v.titel) return;
     const ok = await attempt(() => addVorwurf(akteId, v), "Vorwurf hinzugefügt");
     if (ok !== undefined) e.target.reset();

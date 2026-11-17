@@ -12,7 +12,7 @@ und Änderungen erscheinen bei allen sofort.
   und eine **Suche über alles** (Taste `/`).
 - **Akten** mit Tabs:
   - **Überblick:** Mandant, Gegenpartei, Mandatsart, Priorität, Zuständige/r, Aktenzeichen von Polizei/StA/Gericht,
-    Haft-Status, **Tatvorwürfe mit Strafrechner** (Geldstrafe und Haft werden summiert), Ergebnis
+    Haft-Status, **Tatvorwürfe mit Strafrechner** (Strafrahmen von – bis, Gesamtstrafe nach § 3 StGB), Ergebnis
   - **Verlauf:** Einträge nach Art (Telefonat, Gericht, Polizei …), als „wichtig“ markierbar
   - **Beteiligte:** Zeugen, Beamte, Richter, Staatsanwaltschaft, Gegenseite
   - **Beweise:** Links zu Screenshots und Clips, mit Bildvorschau
@@ -26,7 +26,12 @@ und Änderungen erscheinen bei allen sofort.
 - **Buchhaltung** (doppelte Buchführung): Kontenrahmen, Grundbuch mit unveränderbaren Buchungen
   (Korrektur nur per Storno), Hauptbuch mit T-Konten, Summen- und Saldenliste, Bilanz und GuV.
   Rechnungen und Zahlungseingänge werden automatisch gebucht. Buchen darf nur der Admin.
-- **Gesetzbuch & Strafrechner:** Paragraphen eures Servers, Massenimport aus Google Sheets/Excel.
+- **Gesetzbuch & Strafrechner:** Das komplette StGB (§§ 18–109) ist hinterlegt, jeweils mit Strafrahmen
+  (Haft und Geldstrafe von – bis, „nicht unter“, feste Strafen, „Haft oder Geldstrafe“), Vergehen/Verbrechen
+  und Varianten je Absatz (z. B. besonders schwere Fälle). Der Strafrechner bildet die Gesamtstrafe nach § 3 StGB
+  (höchstens 120 HE, bei Taten gegen Leben/körperliche Unversehrtheit, Verfassungsordnung und Terror 180 HE;
+  Geldstrafen werden addiert) und weist auf §§ 5, 9, 14, 15 StGB hin. Massenimport aus Google Sheets/Excel
+  mit Strafrahmen wie `bis 20`, `ab 45`, `15-30`.
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
   dann drucken oder als PDF speichern.
@@ -40,7 +45,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte) und [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte). Bestehende Daten bleiben erhalten:
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte) und [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte) und [`supabase-update-6.sql`](supabase-update-6.sql) (Strafrahmen und StGB). Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
 ## Neueinrichtung (ca. 10 Minuten)
@@ -48,7 +53,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
