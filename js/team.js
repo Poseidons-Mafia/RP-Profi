@@ -208,26 +208,39 @@ function tabMitglieder() {
     </div>`;
 }
 
+function hatRangRecht(r, key) {
+  const liste = r.berechtigungen || [];
+  return liste.some((b) => b === key || ALTE_RECHTE[b] === key);
+}
+
 function tabRaenge() {
   const admin = state.isAdmin;
   const raenge = rangeSortiert();
+  const zelle = (r, key, label) => html`<td class="center"><input type="checkbox" title="${r.name}: ${label}"
+    data-change="rang-recht" data-id="${r.id}" data-key="${key}" ${hatRangRecht(r, key) ? "checked" : ""} ${admin ? "" : "disabled"}></td>`;
   return html`
     <div class="card">
       <div class="card-head">
         <div><h2>Ränge & Berechtigungen</h2>
-          <p class="muted small" style="margin:0">Haken setzen = Rang bekommt das Recht. Die Datenbank prüft jede Aktion selbst.
-            Der Admin (Inhaber) hat immer alle Rechte. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
+          <p class="muted small" style="margin:0">Für jeden Bereich getrennt: <strong>Lesen</strong> (ansehen) und <strong>Bearbeiten</strong> (anlegen, ändern – schließt Lesen ein).
+            Die Datenbank prüft jede Aktion selbst. Der Admin (Inhaber) hat immer alle Rechte. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
         ${admin ? html`<button class="btn small primary" data-action="rang-neu">+ Rang</button>` : ""}
       </div>
       <div class="table-wrap"><table class="table rights-table">
-        <thead><tr><th>Rang</th><th class="num">Mitglieder</th>${RECHTE.map((r) => html`<th class="rt">${r.label}</th>`)}${admin ? html`<th></th>` : ""}</tr></thead>
+        <thead>
+          <tr><th rowspan="2">Rang</th><th rowspan="2" class="num">Mitgl.</th>
+            ${BEREICHE.map((b) => html`<th class="rt grp" colspan="${b.nurSchreiben ? 1 : 2}" title="${b.text}">${b.label}</th>`)}
+            ${SONDERRECHTE.map((x) => html`<th class="rt grp" rowspan="2">${x.label}</th>`)}
+            ${admin ? html`<th rowspan="2"></th>` : ""}</tr>
+          <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>` : html`<th class="rt sub">Lesen</th><th class="rt sub">Bearb.</th>`)}</tr>
+        </thead>
         <tbody>${raenge.map((r, i) => {
           const n = state.profiles.filter((p) => p.rang_id === r.id && p.status !== "Ausgeschieden").length;
           return html`<tr>
-            <td><strong>${r.name}</strong>${r.ist_sonstiges ? html`<div class="small muted">Mitglied benennt den Rang selbst</div>` : ""}</td>
+            <td><strong>${r.name}</strong>${r.ist_sonstiges ? html`<div class="small muted">benennt sich selbst</div>` : ""}</td>
             <td class="num">${n}</td>
-            ${RECHTE.map((x) => html`<td class="center"><input type="checkbox" title="${x.label}" data-change="rang-recht" data-id="${r.id}" data-key="${x.key}"
-              ${(r.berechtigungen || []).includes(x.key) ? "checked" : ""} ${admin ? "" : "disabled"}></td>`)}
+            ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, `${b.key}_lesen`, `${b.label} lesen`)}${zelle(r, `${b.key}_schreiben`, `${b.label} bearbeiten`)}`)}
+            ${SONDERRECHTE.map((x) => zelle(r, x.key, x.label))}
             ${admin ? html`<td class="row-actions">
               <button class="icon-btn" title="Nach oben" data-action="rang-sort" data-id="${r.id}" data-delta="-1" ${i === 0 ? "disabled" : ""}>↑</button>
               <button class="icon-btn" title="Nach unten" data-action="rang-sort" data-id="${r.id}" data-delta="1" ${i === raenge.length - 1 ? "disabled" : ""}>↓</button>
@@ -236,12 +249,12 @@ function tabRaenge() {
           </tr>`;
         })}</tbody>
       </table></div>
-      <h3 class="section-title" style="margin-top:18px">Was die Rechte bedeuten</h3>
+      <h3 class="section-title" style="margin-top:18px">Die Bereiche</h3>
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
-        <li>Ohne besondere Rechte kann jedes Mitglied Akten, Mandanten, Termine, Aufgaben und Beweise anlegen und bearbeiten.</li>
-        <li><strong>Personal verwalten</strong>: Mitglieder einstellen, Rang & Status ändern, Passwörter zurücksetzen, sperren. Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
-        <li><strong>Personalakten ansehen</strong>: Gehalt, Notizen und Vermerke aller Mitglieder lesen. Die eigene Akte sieht jeder.</li>
-        <li>Ränge und Rechte ändern sowie Mitglieder endgültig löschen kann nur der Admin.</li>
+        ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
+        <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
+        <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
+        <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
       </ul>
     </div>`;
 }
@@ -332,8 +345,8 @@ function personalDetail(p) {
         <h3 class="section-title">Rechte</h3>
         <div class="badges" style="margin-bottom:18px">
           ${rechte === null ? html`<span class="badge alert">Alle Rechte (Inhaber)</span>`
-            : rechte.length ? RECHTE.filter((x) => rechte.includes(x.key)).map((x) => html`<span class="badge gold">${x.label}</span>`)
-            : html`<span class="muted small">Grundrechte: Akten, Mandanten, Termine und Aufgaben bearbeiten.</span>`}
+            : rechteText(r).length ? rechteText(r).map((x) => html`<span class="badge ${x.stufe === "Bearbeiten" ? "gold" : "blue"}">${x.label}: ${x.stufe}</span>`)
+            : html`<span class="muted small">Keine Rechte – sieht nur die eigene Personalakte.</span>`}
         </div>
 
         <div class="kpis">
@@ -381,6 +394,17 @@ function personalDetail(p) {
           </div>` : ""}
       </div>
     </div>`;
+}
+
+function rechteText(r) {
+  if (!r) return [];
+  const out = [];
+  for (const b of BEREICHE) {
+    if (hatRangRecht(r, `${b.key}_schreiben`)) out.push({ label: b.label, stufe: "Bearbeiten" });
+    else if (!b.nurSchreiben && hatRangRecht(r, `${b.key}_lesen`)) out.push({ label: b.label, stufe: "Lesen" });
+  }
+  for (const x of SONDERRECHTE) if (hatRangRecht(r, x.key)) out.push({ label: x.label, stufe: "Bearbeiten" });
+  return out;
 }
 
 function isMe2(a, b) {
@@ -508,11 +532,18 @@ Object.assign(ACTIONS, {
 
 CHANGES["rang-recht"] = async (el) => {
   const r = byId("raenge", el.dataset.id);
-  const set = new Set(r.berechtigungen || []);
-  if (el.checked) set.add(el.dataset.key);
-  else set.delete(el.dataset.key);
+  const key = el.dataset.key;
+  // alte Namen übersetzen, dann ändern
+  const set = new Set((r.berechtigungen || []).map((b) => ALTE_RECHTE[b] || b));
+  if (el.checked) {
+    set.add(key);
+    if (key.endsWith("_schreiben") && !key.startsWith("einstellungen")) set.add(key.replace(/_schreiben$/, "_lesen"));
+  } else {
+    set.delete(key);
+    if (key.endsWith("_lesen")) set.delete(key.replace(/_lesen$/, "_schreiben"));
+  }
   const liste = RECHTE.map((x) => x.key).filter((k) => set.has(k));
-  const label = RECHTE.find((x) => x.key === el.dataset.key).label;
+  const label = (RECHTE.find((x) => x.key === key) || { label: key }).label;
   await attempt(() => updateRow("raenge", r.id, { berechtigungen: liste }), `${r.name}: „${label}“ ${el.checked ? "erlaubt" : "entzogen"}`);
 };
 
@@ -522,14 +553,14 @@ function openRangForm(r) {
     fields: [
       { name: "name", label: "Name", required: true, placeholder: "z. B. Senior Partner" },
       { name: "ist_sonstiges", label: "Mitglieder mit diesem Rang benennen ihn selbst (wie „Sonstiges“)", type: "checkbox" },
-      { name: "berechtigungen", label: "Rechte", type: "checks", options: RECHTE.map((x) => ({ value: x.key, label: x.label })) },
+      { type: "info", text: "Die Rechte setzt du danach in der Tabelle per Häkchen (Lesen / Bearbeiten je Bereich)." },
     ],
-    values: r || { berechtigungen: [], ist_sonstiges: false },
+    values: r || { ist_sonstiges: false },
     onSubmit: async (v) => {
       const doppelt = state.raenge.find((x) => norm(x.name) === norm(v.name) && (!r || x.id !== r.id));
       if (doppelt) throw new Error(`Den Rang „${v.name}“ gibt es schon.`);
       if (r) await updateRow("raenge", r.id, v);
-      else await insertRow("raenge", { ...v, sortierung: Math.max(0, ...state.raenge.map((x) => x.sortierung)) + 10 });
+      else await insertRow("raenge", { ...v, berechtigungen: [], sortierung: Math.max(0, ...state.raenge.map((x) => x.sortierung)) + 10 });
       toast("Rang gespeichert");
     },
     onDelete: r ? async () => {

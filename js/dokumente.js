@@ -10,7 +10,7 @@ function briefkopf() {
   return html`
     <div class="doc-letterhead">
       <div class="sender">${s().kanzlei} · ${s().ort}${s().telefon ? ` · Tel. ${s().telefon}` : ""}</div>
-      <img src="assets/logo.png?v=13" alt="${s().kanzlei}">
+      <img src="assets/logo.png?v=14" alt="${s().kanzlei}">
     </div>`;
 }
 
@@ -45,6 +45,7 @@ function aktenzeichenZeile(a) {
 
 // ---------- Dokument-Dialog ----------
 function openDocument({ title, content, onPrinted, verlaufAkte, verlaufText }) {
+  if (!darf("akten_schreiben")) verlaufAkte = null;
   const dlg = openDialog({
     id: "doc-dialog",
     wide: true,

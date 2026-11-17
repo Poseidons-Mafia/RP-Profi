@@ -597,6 +597,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 /* ---------- Personal: Rechte-Matrix ---------- */
 .rights-table th.rt { white-space: normal; text-align: center; font-size: 0.64rem; line-height: 1.25; min-width: 78px; vertical-align: bottom; }
 .rights-table td.center { text-align: center; vertical-align: middle; }
+.rights-table th.grp { border-left: 1px solid var(--line); text-align: center; font-weight: bold; color: var(--text); }
+.rights-table th.sub { font-size: 0.6rem; min-width: 44px; }
+.rights-table th.rt { min-width: 44px; }
 .rights-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
 .rights-table input[type="checkbox"]:disabled { cursor: default; opacity: 0.7; }
 

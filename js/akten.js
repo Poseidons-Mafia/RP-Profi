@@ -205,7 +205,7 @@ function tabUeberblick(a) {
     </dl>
 
     <h3 class="section-title">Sachverhalt</h3>
-    <p class="pre" style="margin-top:0">${a.summary || html`<span class="muted">Noch kein Sachverhalt. Über „Bearbeiten“ eintragen.</span>`}</p>
+    <p class="pre" style="margin-top:0">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt. Über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
 
     ${wichtige.length ? html`
       <h3 class="section-title" style="margin-top:20px">Wichtige Einträge</h3>
@@ -233,7 +233,7 @@ function tabUeberblick(a) {
 
 function vorwurfTabelle(a) {
   const list = a.vorwuerfe || [];
-  if (!list.length) return html`<p class="empty">Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet.</p>`;
+  if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
   const sum = vorwurfSumme(list);
   return html`
     <div class="table-wrap"><table class="table">

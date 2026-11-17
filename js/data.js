@@ -236,16 +236,32 @@ function teamOptions() {
 }
 
 // ---------- Ränge & Berechtigungen ----------
-const RECHTE = [
-  { key: "akten_loeschen", label: "Akten löschen" },
-  { key: "rechnungen", label: "Rechnungen erstellen & bearbeiten" },
-  { key: "buchhaltung_sehen", label: "Buchhaltung ansehen" },
-  { key: "buchhaltung_buchen", label: "Buchen & stornieren" },
-  { key: "gesetzbuch", label: "Gesetzbuch & Gebühren bearbeiten" },
-  { key: "personal_sehen", label: "Personalakten ansehen" },
-  { key: "personal_verwalten", label: "Personal verwalten" },
-  { key: "einstellungen", label: "Kanzlei-Einstellungen" },
+// Bereiche mit getrennten Rechten: Lesen und Bearbeiten (Bearbeiten schließt Lesen ein)
+const BEREICHE = [
+  { key: "akten", label: "Akten", text: "inkl. Verlauf, Beteiligte, Beweise, Tatvorwürfe" },
+  { key: "mandanten", label: "Mandanten", text: "Mandantenkartei" },
+  { key: "termine", label: "Termine & Aufgaben", text: "Kalender und Aufgaben" },
+  { key: "rechnungen", label: "Rechnungen", text: "Bearbeiten = erstellen, ändern, als bezahlt markieren" },
+  { key: "buchhaltung", label: "Buchhaltung", text: "Bearbeiten = buchen, stornieren, Konten anlegen" },
+  { key: "gesetzbuch", label: "Gesetzbuch & Gebühren", text: "Gesetzbuch und Gebührenkatalog" },
+  { key: "personal", label: "Personalakten", text: "Lesen = Gehalt & Vermerke aller sehen; Bearbeiten = Personal verwalten" },
+  { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle", nurSchreiben: true },
 ];
+const SONDERRECHTE = [{ key: "akten_loeschen", label: "Akten löschen" }];
+// Alle einzelnen Rechte (für Vergleiche)
+const RECHTE = [
+  ...BEREICHE.flatMap((b) => [
+    ...(b.nurSchreiben ? [] : [{ key: `${b.key}_lesen`, label: `${b.label} lesen` }]),
+    { key: `${b.key}_schreiben`, label: `${b.label} bearbeiten` },
+  ]),
+  ...SONDERRECHTE,
+];
+// Alte Rechtenamen (vor Update 5)
+const ALTE_RECHTE = {
+  personal_verwalten: "personal_schreiben", personal_sehen: "personal_lesen", rechnungen: "rechnungen_schreiben",
+  buchhaltung_sehen: "buchhaltung_lesen", buchhaltung_buchen: "buchhaltung_schreiben",
+  gesetzbuch: "gesetzbuch_schreiben", einstellungen: "einstellungen_schreiben",
+};
 const PERSONAL_STATUS = ["Aktiv", "Urlaub", "Krank", "Beurlaubt", "Ausgeschieden"];
 
 function rangVon(p) {
@@ -264,7 +280,10 @@ function darf(recht) {
   if (state.isAdmin) return true;
   const p = myProfile();
   const r = rangVon(p);
-  return !!(r && p.status !== "Ausgeschieden" && (r.berechtigungen || []).includes(recht));
+  if (!r || p.status === "Ausgeschieden") return false;
+  const k = ALTE_RECHTE[recht] || recht;
+  const hat = (x) => (r.berechtigungen || []).some((b) => b === x || ALTE_RECHTE[b] === x);
+  return hat(k) || (k.endsWith("_lesen") && hat(k.replace(/_lesen$/, "_schreiben")));
 }
 
 function isMe(idOrEmail) {
