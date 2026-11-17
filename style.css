@@ -1044,7 +1044,8 @@ body.in-app .guide-btn span { display: none; }
 /* ---------- KI-Assistent: faltbares iFruit-Smartphone ---------- */
 /* Eingesteckt schaut das zugeklappte Gerät schräg aus der Ecke. Herausgeholt lässt es sich
    auf- und zuklappen: Die linke Hälfte (Klappe) dreht sich in 3D ums Scharnier. Ihre Vorderseite
-   ist das linke Innendisplay, ihre Rückseite das Außendisplay. */
+   ist das linke Innendisplay (Kontext), ihre Rückseite das Außendisplay. Der Chat-Bildschirm ist
+   außen und rechts innen gleich groß und gleich aufgebaut – so springt beim Falten nichts. */
 .ki-phone {
   --H: min(600px, calc(100vh - 40px));
   --W: min(calc(var(--H) * 0.71), calc((100vw - 64px) / 2), 430px);
@@ -1052,6 +1053,7 @@ body.in-app .guide-btn span { display: none; }
   --peek: 112px;     /* so viel schaut eingesteckt heraus */
   --falten: 0.72s;
   --glas: 0.3s;
+  --ki-bg: #fbf7ea;
   position: fixed;
   right: max(26px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
@@ -1080,19 +1082,22 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   background: linear-gradient(150deg, #4a4744 0%, #1b1a19 30%, #0b0b0b 70%, #2a2826 100%);
   box-shadow: inset 0 0 0 1.5px #6b6763, inset 0 0 0 3.5px #0a0a0a, 0 0 0 1px rgba(204, 158, 0, 0.45), 0 26px 50px rgba(60, 25, 0, 0.3);
 }
-.ki-haelfte-rechts {
-  position: absolute; inset: 0;
-  transition: padding 0.22s 0.6s, border-radius 0.22s 0.6s;
+.ki-haelfte-rechts { position: absolute; inset: 0; transition: border-radius 0.2s 0.55s; }
+.ki-phone.auf .ki-haelfte-rechts { border-top-left-radius: 0; border-bottom-left-radius: 0; transition: border-radius 0.15s; }
+/* Naht: aufgeklappt läuft das Display über das Scharnier – ohne dass sich die Breite ändert */
+.ki-naht {
+  position: absolute; top: 7px; bottom: 7px; left: 0; width: 7px; z-index: 2;
+  background: linear-gradient(90deg, #f2ecda, #fffdf6 40%, #e9e1cb 62%, var(--ki-bg)); /* deckend, sonst scheint der Rahmen durch */
+  opacity: 0;
+  transition: opacity 0.12s;
 }
-/* Aufgeklappt bilden beide Hälften ein durchgehendes Display */
-.ki-phone.auf .ki-haelfte-rechts { padding-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; transition: padding 0.18s, border-radius 0.18s; }
+.ki-phone.auf .ki-naht { opacity: 1; transition: opacity 0.2s 0.25s; }
 .ki-btn-side { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #3a3836, #6b6763); }
 .ki-btn-touch { right: -3px; top: 16%; height: 10%; }  /* Seitentaste mit Fingerabdruck */
 .ki-btn-vol1 { right: -3px; top: 29%; height: 7%; }
 .ki-btn-vol2 { right: -3px; top: 38%; height: 7%; }
-.ki-seite-aussen .ki-btn-side { display: none; }
 
-/* Scharnier: zugeklappt der Rücken links, aufgeklappt kaum sichtbar */
+/* Scharnier: zugeklappt der Rücken links, aufgeklappt unsichtbar */
 .ki-scharnier {
   position: absolute; top: 18px; bottom: 18px; left: -7px; width: 12px;
   border-radius: 6px;
@@ -1114,7 +1119,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 }
 .ki-phone.auf .ki-klappe { transform: rotateY(0deg); }
 .ki-seite { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
-.ki-seite-innen { padding-right: 0; border-radius: 32px 0 0 32px; }
+.ki-seite-innen { padding-right: 0; border-radius: 32px 0 0 32px; clip-path: inset(-80px 0 -80px -80px); } /* kein Schatten über den Knick */
 .ki-seite-aussen { transform: rotateY(180deg); }
 
 /* Displays */
@@ -1124,26 +1129,19 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   height: 100%;
   overflow: hidden;
   border-radius: 26px;
-  background: var(--bg);
+  background: var(--ki-bg);
   isolation: isolate;
 }
 .ki-screen::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
-  background: url("assets/symbol.png") center 58% / 70% no-repeat;
-  opacity: 0.07;
+  background: url("assets/symbol.png") center 55% / 78% no-repeat;
+  opacity: 0.06;
 }
-.ki-innen-links { border-radius: 26px 0 0 26px; background: linear-gradient(180deg, var(--panel), var(--bg)); }
+.ki-innen-links { border-radius: 26px 0 0 26px; background: linear-gradient(180deg, #fffdf7, #f6f0de); }
 .ki-innen-links::before { display: none; }
-.ki-innen-rechts { transition: border-radius 0.22s 0.6s; }
-.ki-phone.auf .ki-innen-rechts { border-top-left-radius: 0; border-bottom-left-radius: 0; transition: border-radius 0.18s; }
-/* Knick in der Mitte des aufgeklappten Displays */
-.ki-innen-rechts::after {
-  content: "";
-  position: absolute; top: 0; bottom: 0; left: 0; width: 10px; z-index: 6;
-  pointer-events: none;
-  background: linear-gradient(90deg, rgba(80, 50, 0, 0.1), rgba(255, 255, 255, 0.5) 30%, rgba(80, 50, 0, 0.06) 70%, transparent);
-}
+.ki-innen-rechts { transition: border-radius 0.2s 0.55s; }
+.ki-phone.auf .ki-innen-rechts { border-top-left-radius: 0; border-bottom-left-radius: 0; transition: border-radius 0.15s; }
 
 /* Glas: Beim Falten wird das Außendisplay durchsichtig – man schaut hindurch auf das
    Innendisplay. Vom Gehäuse bleibt nur der Rahmen (Ring) sichtbar. */
@@ -1162,21 +1160,20 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-seite-aussen { background: #121110; transition: background-color 0s linear var(--glas); }
 .ki-phone.glas .ki-seite-aussen { background-color: transparent; transition-delay: 0s; }
 .ki-cover { transition: background-color var(--glas) ease; }
-.ki-cover::before, .ki-cover > :not(.ki-lock) { transition: opacity var(--glas) ease, transform var(--glas) ease, filter var(--glas) ease; }
+.ki-cover::before, .ki-cover > :not(.ki-lock) { transition: opacity var(--glas) ease; }
 .ki-phone.glas .ki-cover { background-color: transparent; }
-.ki-phone.glas .ki-cover::before { opacity: 0; }
-.ki-phone.glas .ki-cover > :not(.ki-lock) { opacity: 0; transform: scale(1.025); filter: blur(3px); }
-/* leichter Glanz auf dem Glas, während es sich dreht */
+.ki-phone.glas .ki-cover::before, .ki-phone.glas .ki-cover > :not(.ki-lock) { opacity: 0; }
 .ki-phone.glas .ki-cover::after {
   content: "";
   position: absolute; inset: 0; z-index: 25; pointer-events: none;
-  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.22) 48%, rgba(255, 255, 255, 0) 64%);
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.2) 48%, rgba(255, 255, 255, 0) 64%);
 }
 
 /* Standbild eines Displays während des Übergangs */
 .ki-abbild { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; pointer-events: none; }
+.ki-abbild, .ki-abbild * { animation: none !important; transition: none !important; }
 
-/* Scharnier glänzt beim Falten kurz auf */
+/* Scharnier glänzt beim Falten kurz auf; Herausholen mit leichter Drehung */
 .ki-phone.fx-falten .ki-glanz { animation: ki-glanz 0.7s ease-in-out 0.1s; }
 .ki-phone.fx-falten .ki-scharnier { opacity: 1; transition: none; }
 .ki-phone.fx-raus .ki-geraet { animation: ki-fx-raus 0.6s cubic-bezier(0.3, 0, 0.3, 1); }
@@ -1188,16 +1185,17 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   position: relative; z-index: 3;
   flex: none;
   display: flex; align-items: center; justify-content: space-between;
-  height: 38px; padding: 2px 22px 0 26px;
-  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.01em;
+  height: 36px; padding: 2px 22px 0 26px;
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.01em;
   color: var(--black);
-  transition: color 0.3s;
 }
 .ki-phone:not(.offen) .ki-cover .ki-statusbar { color: #fff; }
-.ki-kamera { position: absolute; left: 50%; top: 12px; width: 13px; height: 13px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle at 40% 40%, #2b3a55 0 25%, #050505 45%); box-shadow: 0 0 0 1.5px #000; }
-.ki-status-icons svg { width: 54px; height: 12px; display: block; }
+.ki-kamera { position: absolute; left: 50%; top: 11px; width: 12px; height: 12px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle at 40% 40%, #2b3a55 0 25%, #050505 45%); box-shadow: 0 0 0 1.5px #000; }
+.ki-status-icons svg { width: 52px; height: 12px; display: block; }
 .ki-innen-links .ki-status-icons { visibility: hidden; }
-.ki-innen-rechts .ki-statusbar { justify-content: flex-end; }
+/* Aufgeklappt steht die Uhr nur links (wie bei einem durchgehenden Display) */
+.ki-innen-rechts .ki-uhr { transition: opacity 0.2s; }
+.ki-phone.auf .ki-innen-rechts .ki-uhr { opacity: 0; transition: opacity 0.2s 0.4s; }
 
 /* Sperrbildschirm auf dem Außendisplay (nur eingesteckt) */
 .ki-lock {
@@ -1229,153 +1227,193 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-notification img { width: 36px; height: 36px; border-radius: 9px; background: #fff; flex: none; object-fit: contain; }
 .ki-notification strong { display: block; font-size: 0.9rem; }
 
-/* Bewegliche Bereiche */
-.ki-slot { display: flex; flex-direction: column; min-height: 0; }
-.ki-slot[data-slot="steuer-innen"], .ki-slot[data-slot="chat-innen"], .ki-slot[data-slot="chat-cover"] { flex: 1; }
-.ki-steuer, .ki-chatblock { display: flex; flex-direction: column; min-height: 0; flex: 1; }
-.ki-slot[data-slot="steuer-cover"] .ki-steuer { flex: none; border-bottom: 1px solid var(--line); background: rgba(255, 253, 246, 0.85); }
+/* ===== Chat-Bildschirm ===== */
+.ki-slot { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.ki-chatblock { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 
-/* Kopf */
-.ki-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 2px 10px 10px 16px; }
-.ki-avatar { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; flex: none; }
-.ki-head-text { flex: 1; min-width: 0; line-height: 1.2; }
-.ki-head-text strong { display: block; font-size: 1rem; }
-.ki-head-text span { display: block; font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ki-head-btns { display: flex; flex: none; }
-.ki-innen-links .ki-head-btns { display: none; }
+/* Kopfzeile */
+.ki-appbar {
+  flex: none;
+  display: flex; align-items: center; gap: 10px;
+  padding: 2px 8px 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.ki-avatar { width: 38px; height: 38px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; flex: none; }
+.ki-appbar-text { flex: 1; min-width: 0; line-height: 1.2; }
+.ki-appbar-text > strong { display: flex; align-items: center; gap: 7px; font-size: 0.95rem; }
+.ki-online { display: inline-flex; align-items: center; gap: 4px; font-size: 0.66rem; font-weight: 600; color: var(--green); }
+.ki-online::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.ki-online.tippt { color: var(--gold-text); }
+.ki-online.tippt::before { animation: ki-puls 1s ease-in-out infinite; }
+@keyframes ki-puls { 50% { opacity: 0.25; } }
+.ki-pill {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 4px;
+  max-width: 100%;
+  margin-top: 4px; padding: 2px 6px 2px 7px;
+  border-radius: 999px;
+  background: var(--gold-soft); color: var(--gold-text);
+  font-size: 0.72rem; font-weight: 700;
+  cursor: pointer;
+}
+.ki-pill:hover { background: #f1e1a8; }
+.ki-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ki-pill svg { width: 13px; height: 13px; flex: none; }
+.ki-pill select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.ki-appbar-btns { display: flex; flex: none; }
 .ki-icon-btn {
   flex: none; display: grid; place-items: center;
-  width: 34px; height: 34px; border: 0; border-radius: 50%;
+  width: 32px; height: 32px; border: 0; border-radius: 50%;
   background: transparent; color: var(--text); cursor: pointer;
   transition: background 0.15s, color 0.15s, transform 0.15s;
 }
 .ki-icon-btn:hover { background: var(--line-soft); }
 .ki-icon-btn:active { transform: scale(0.9); }
 .ki-icon-btn svg { width: 19px; height: 19px; }
-.ki-icon-btn[data-action="ki-klappen"] { color: var(--red); }
+.ki-klapp-btn { color: var(--red); }
 
-.ki-kontext {
-  flex: none; display: flex; align-items: center; gap: 6px;
-  margin: 0 14px 10px; padding: 0 4px 0 10px;
-  border: 1px solid var(--line); border-radius: 12px; background: #fff;
-  color: var(--muted);
-}
-.ki-kontext svg { width: 16px; height: 16px; flex: none; }
-.ki-kontext select { flex: 1; min-width: 0; padding: 7px 2px; border: 0; background: transparent; font-size: 0.8rem; color: var(--text); cursor: pointer; }
-.ki-kontext select:focus { outline: none; }
-.ki-kontext:focus-within { border-color: var(--gold); }
-
-/* Akte-Karte, Schnellaktionen, Fuß (nur aufgeklappt) */
-.ki-akte-karte {
-  flex: none;
-  margin: 0 14px 12px; padding: 11px 13px;
-  border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 12px;
-  background: #fff; font-size: 0.8rem;
-}
-.ki-akte-nr { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; color: var(--red); }
-.ki-akte-titel { font-weight: 700; margin: 1px 0 6px; line-height: 1.3; }
-.ki-akte-karte dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0 0 6px; }
-.ki-akte-karte dt { color: var(--muted); }
-.ki-akte-karte dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ki-akte-karte a { font-size: 0.76rem; font-weight: 700; text-decoration: none; }
-.ki-akte-karte:has(.ki-akte-leer) { border-left-color: var(--gold); }
-.ki-akte-leer { margin: 0; color: var(--muted); line-height: 1.4; }
-.ki-label { flex: none; margin: 0 16px 6px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.ki-links-fuss { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px 14px; font-size: 0.7rem; color: var(--muted); }
-.ki-marke { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); opacity: 0.55; }
-
-.ki-chips { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: stretch; gap: 6px; overflow-y: auto; padding: 0 14px 8px; }
-.ki-chip {
-  flex: none; text-align: left;
-  padding: 8px 12px;
-  border: 1px solid var(--line); border-radius: 12px;
-  background: #fff; color: var(--text);
-  font-size: 0.8rem; cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, transform 0.15s;
-}
-.ki-chip:hover { border-color: var(--red); color: var(--red); }
-.ki-chip:active { transform: scale(0.97); }
-.ki-chip.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); font-weight: 700; }
-.ki-chip:disabled { opacity: 0.5; cursor: default; }
-
-/* Zugeklappt (Außendisplay): kompakt – Vorschläge als Reihe, keine Karte */
-.ki-cover .ki-akte-karte, .ki-cover .ki-label, .ki-cover .ki-links-fuss, .ki-cover .ki-chat-kopf { display: none; }
-.ki-cover .ki-chips { flex: none; flex-direction: row; overflow-x: auto; padding: 0 14px 10px; scrollbar-width: none; }
-.ki-cover .ki-chips::-webkit-scrollbar { display: none; }
-.ki-cover .ki-chip { white-space: nowrap; border-radius: 999px; padding: 6px 12px; font-size: 0.76rem; }
-
-/* Chat */
-.ki-chat-kopf { flex: none; display: flex; align-items: center; gap: 2px; padding: 0 10px 6px 16px; }
-.ki-chat-kopf strong { flex: 1; font-size: 0.95rem; }
+/* Nachrichten */
 .ki-chat {
   flex: 1; min-height: 0;
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
   overflow-y: auto; overscroll-behavior: contain;
-  padding: 8px 14px 6px;
+  padding: 10px 14px 8px;
+  scrollbar-width: thin;
 }
-.ki-msg { display: flex; flex-direction: column; max-width: 86%; animation: ki-msg-rein 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.ki-tag { align-self: center; margin: 0 0 4px; padding: 2px 10px; border-radius: 999px; background: rgba(123, 114, 98, 0.1); color: var(--muted); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; }
+.ki-msg { display: flex; flex-direction: column; max-width: 86%; }
 .ki-msg.ich { align-self: flex-end; align-items: flex-end; transform-origin: 100% 100%; }
 .ki-msg.ki { align-self: flex-start; transform-origin: 0 100%; }
-.ki-chat .ki-msg:not(:last-child):not(:nth-last-child(2)) { animation: none; }
-@keyframes ki-msg-rein { from { opacity: 0; transform: translateY(8px) scale(0.92); } to { opacity: 1; transform: none; } }
-.ki-bubble {
-  padding: 8px 12px;
-  border-radius: 18px;
-  font-size: 0.88rem; line-height: 1.42;
-  overflow-wrap: anywhere;
-}
-.ki-msg.ich .ki-bubble { background: var(--red); color: #fff; border-bottom-right-radius: 5px; }
-.ki-msg.ki .ki-bubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; box-shadow: 0 1px 2px rgba(80, 50, 0, 0.06); }
+.ki-msg.neu { animation: ki-msg-rein 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+@keyframes ki-msg-rein { from { opacity: 0; transform: translateY(6px) scale(0.94); } to { opacity: 1; transform: none; } }
+.ki-bubble { padding: 8px 12px; border-radius: 18px; font-size: 0.87rem; line-height: 1.45; overflow-wrap: anywhere; }
+.ki-msg.ich .ki-bubble { background: linear-gradient(170deg, #b50f0f, var(--red-dark)); color: #fff; border-bottom-right-radius: 6px; }
+.ki-msg.ki .ki-bubble { background: #fff; border-bottom-left-radius: 6px; box-shadow: 0 0 0 1px var(--line-soft), 0 2px 6px rgba(80, 50, 0, 0.06); }
 .ki-bubble p { margin: 0 0 6px; }
 .ki-bubble p:last-child { margin-bottom: 0; }
-.ki-bubble .ki-h { font-weight: 700; color: var(--red-dark); margin-top: 4px; }
+.ki-bubble .ki-h { font-weight: 700; color: var(--red-dark); margin-top: 6px; }
 .ki-bubble ul, .ki-bubble ol { margin: 2px 0 6px; padding-left: 18px; }
-.ki-bubble li { margin: 1px 0; }
+.ki-bubble li { margin: 2px 0; }
+.ki-bubble li::marker { color: var(--gold); }
 .ki-bubble code { font-size: 0.82em; }
-.ki-msg time { font-size: 0.66rem; color: var(--muted); margin: 2px 6px 0; }
+.ki-msg time { font-size: 0.64rem; color: var(--muted); margin: 3px 6px 0; }
 .ki-msg-aktionen { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
 .ki-msg-aktionen time { margin-right: 4px; }
 .ki-msg-aktionen button {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 6px; border: 0; border-radius: 6px;
-  background: transparent; color: var(--muted); font-size: 0.7rem; cursor: pointer;
+  background: transparent; color: var(--muted); font-size: 0.68rem; cursor: pointer;
 }
 .ki-msg-aktionen button:hover { background: var(--line-soft); color: var(--red); }
-.ki-msg-aktionen svg { width: 13px; height: 13px; }
-
+.ki-msg-aktionen svg { width: 12px; height: 12px; }
 .ki-tippt { display: flex; gap: 4px; padding: 12px 14px; }
 .ki-tippt span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: ki-tippt 1.2s infinite ease-in-out; }
 .ki-tippt span:nth-child(2) { animation-delay: 0.15s; }
 .ki-tippt span:nth-child(3) { animation-delay: 0.3s; }
 @keyframes ki-tippt { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-4px); opacity: 1; } }
 
-.ki-leer { margin: auto 8px; text-align: center; font-size: 0.85rem; color: var(--muted); }
-.ki-leer img { width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; }
-.ki-leer p { margin: 6px 0; }
-.ki-leer strong { color: var(--text); font-size: 1rem; }
-.ki-hinweis { font-size: 0.72rem; opacity: 0.8; }
+/* Leerer Chat */
+.ki-leer { margin: auto 6px; text-align: center; font-size: 0.84rem; color: var(--muted); }
+.ki-leer img { width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; box-shadow: 0 6px 18px rgba(163, 0, 0, 0.15); }
+.ki-leer p { margin: 4px 0; }
+.ki-gruss { margin-top: 10px !important; color: var(--text); font-size: 1.12rem; font-weight: 700; }
+.ki-weiss { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.ki-weiss li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; background: #fff; box-shadow: 0 0 0 1px var(--line); color: var(--text); font-size: 0.74rem; font-weight: 600; }
+.ki-weiss svg { width: 13px; height: 13px; color: var(--red); }
 
-.ki-eingabe { flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 6px 14px 2px; }
+/* Unten: Vorschläge + Eingabe */
+.ki-unten { flex: none; padding-top: 8px; border-top: 1px solid var(--line-soft); }
+.ki-chips { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 8px; scrollbar-width: none; }
+.ki-chips::-webkit-scrollbar { display: none; }
+.ki-chips:empty { display: none; }
+.ki-chip {
+  flex: none; white-space: nowrap;
+  padding: 5px 11px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: #fff; color: var(--text);
+  font-size: 0.74rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.ki-chip:hover { border-color: var(--red); color: var(--red); }
+.ki-chip:active { transform: scale(0.96); }
+.ki-chip.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); }
+.ki-chip:disabled { opacity: 0.5; cursor: default; }
+.ki-eingabe {
+  display: flex; align-items: flex-end; gap: 6px;
+  margin: 0 10px;
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--line); border-radius: 22px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ki-eingabe:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(204, 158, 0, 0.15); }
 .ki-eingabe textarea {
   flex: 1; min-width: 0;
   max-height: 120px; resize: none;
-  padding: 9px 15px;
-  border: 1px solid var(--line); border-radius: 21px;
-  background: #fff; line-height: 1.35; font-size: 0.9rem;
+  padding: 7px 0;
+  border: 0; background: transparent; outline: none;
+  line-height: 1.35; font-size: 0.88rem;
 }
-.ki-eingabe textarea:focus { outline: none; border-color: var(--gold); }
 .ki-senden {
   flex: none; display: grid; place-items: center;
-  width: 39px; height: 39px; border: 0; border-radius: 50%;
+  width: 34px; height: 34px; border: 0; border-radius: 50%;
   background: var(--red); color: #fff; cursor: pointer;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.15s, transform 0.15s, opacity 0.15s;
 }
 .ki-senden:hover { background: var(--red-dark); }
 .ki-senden:active { transform: scale(0.92); }
-.ki-senden:disabled { opacity: 0.45; cursor: default; }
-.ki-senden svg { width: 20px; height: 20px; }
-.ki-home { flex: none; position: relative; z-index: 3; width: 110px; height: 5px; margin: 6px auto 7px; border-radius: 3px; background: var(--black); opacity: 0.85; }
+.ki-senden:disabled { opacity: 0.4; cursor: default; }
+.ki-senden svg { width: 18px; height: 18px; }
+.ki-home { flex: none; position: relative; z-index: 3; width: 110px; height: 5px; margin: 8px auto 7px; border-radius: 3px; background: var(--black); opacity: 0.8; }
 .ki-phone:not(.offen) .ki-cover .ki-home { background: #fff; z-index: 11; }
+
+/* ===== Linkes Innendisplay: Kontext ===== */
+.ki-panel { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px 14px 14px 16px; scrollbar-width: thin; }
+.ki-panel-kopf { display: flex; align-items: center; justify-content: space-between; }
+.ki-panel-titel { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.01em; }
+.ki-marke { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: var(--text); opacity: 0.5; }
+.ki-karte { padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--line-soft), 0 2px 8px rgba(80, 50, 0, 0.05); font-size: 0.8rem; }
+.ki-karte h3 { margin: 8px 0 6px; font-size: 0.98rem; line-height: 1.3; }
+.ki-akte-oben { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ki-badge { display: inline-block; padding: 2px 7px; border-radius: 6px; background: var(--red-soft); color: var(--red); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; white-space: nowrap; }
+.ki-status { padding: 2px 8px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-size: 0.68rem; font-weight: 700; }
+.ki-status.s-in-bearbeitung { background: var(--gold-soft); color: var(--gold-text); }
+.ki-status.s-geschlossen { background: var(--line-soft); color: var(--muted); }
+.ki-karte dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0 0 8px; }
+.ki-karte dt { color: var(--muted); }
+.ki-karte dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.ki-mini-titel { margin: 10px 0 4px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.ki-vorwuerfe { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ki-vorwuerfe li { display: flex; gap: 6px; align-items: baseline; line-height: 1.3; }
+.ki-vorwuerfe li span { flex: none; padding: 0 5px; border-radius: 4px; background: var(--bg); color: var(--red-dark); font-size: 0.7rem; font-weight: 700; }
+.ki-vorwuerfe li.mehr { color: var(--muted); }
+.ki-leise { margin: 4px 0 0; color: var(--muted); font-size: 0.76rem; line-height: 1.4; }
+.ki-karte-aktionen { display: flex; gap: 6px; margin-top: 12px; }
+.ki-knopf {
+  flex: 1; display: block;
+  padding: 7px 10px; border: 1px solid var(--red); border-radius: 10px;
+  background: var(--red); color: #fff;
+  font-size: 0.78rem; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer;
+}
+.ki-knopf:hover { background: var(--red-dark); }
+.ki-knopf.leise { background: transparent; border-color: var(--line); color: var(--text); }
+.ki-knopf.leise:hover { border-color: var(--red); color: var(--red); }
+.ki-aktenliste { display: grid; gap: 4px; margin-top: 10px; }
+.ki-aktenliste button {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 8px; border: 0; border-radius: 10px;
+  background: var(--bg); text-align: left; cursor: pointer; font-size: 0.78rem;
+}
+.ki-aktenliste button:hover { background: var(--gold-soft); }
+.ki-aktenliste .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ki-tipps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 0.76rem; color: var(--muted); }
+.ki-tipps li { display: flex; align-items: center; gap: 8px; }
+.ki-tipps kbd { min-width: 22px; padding: 1px 6px; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 1px 0 1px var(--line-soft); color: var(--text); font: 700 0.7rem/1.5 inherit; text-align: center; }
+.ki-panel-fuss { margin-top: auto; padding-top: 6px; }
+.ki-nutzung { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); }
+.ki-nutzung strong { color: var(--text); }
+.ki-balken { height: 6px; margin: 5px 0 6px; border-radius: 3px; background: var(--line-soft); overflow: hidden; }
+.ki-balken span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width 0.4s; }
 
 /* Handy: kein Aufklappen; herausgeholt füllt das Außendisplay den ganzen Bildschirm */
 @media (max-width: 700px) {
@@ -1385,12 +1423,14 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   .ki-phone.offen { inset: 0; width: auto; height: auto; }
   .ki-phone.offen .ki-geraet { perspective: none; }
   .ki-phone.offen .ki-haelfte { padding: 0; border-radius: 0; box-shadow: none; }
+  .ki-phone.offen .ki-seite-aussen::before { display: none; }
   .ki-phone.offen .ki-screen { border-radius: 0; }
   .ki-phone.offen .ki-cover { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
-  .ki-phone.offen .ki-btn-side, .ki-phone.offen .ki-statusbar, .ki-phone.offen .ki-home, .ki-phone.offen .ki-scharnier { display: none; }
-  .ki-phone.offen .ki-head { padding-top: 10px; }
-  .ki-icon-btn[data-action="ki-klappen"] { display: none; }
-  .ki-eingabe textarea { font-size: 16px; } /* verhindert Zoom auf dem iPhone */
+  .ki-phone.offen .ki-btn-side, .ki-phone.offen .ki-statusbar, .ki-phone.offen .ki-scharnier, .ki-phone.offen .ki-home { display: none; }
+  .ki-phone.offen .ki-unten { padding-bottom: 10px; }
+  .ki-phone.offen .ki-appbar { padding-top: 10px; }
+  .ki-klapp-btn { display: none; }
+  .ki-eingabe textarea, .ki-pill select { font-size: 16px; } /* verhindert Zoom auf dem iPhone */
 }
 @media (prefers-reduced-motion: reduce) {
   .ki-phone, .ki-phone * { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
