@@ -169,78 +169,48 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
 .btn.small { padding: 4px 10px; font-size: 0.8rem; }
 .btn.full { width: 100%; justify-content: center; }
 
-/* ---------- Werkzeugleiste der Akte: Icon-Buttons mit Tooltip ---------- */
-.akte-werkzeuge {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 4px;
-  margin-top: 12px;
-}
-.werkzeug-gruppe {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-right: 8px;
-  margin-right: 4px;
-  border-right: 1px solid var(--line);
-}
-.werkzeug-gruppe:last-child { border-right: none; padding-right: 0; margin-right: 0; }
-.werkzeug-gruppe.rechts { margin-left: auto; }
-.werkzeug {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-.werkzeug svg { width: 18px; height: 18px; }
-.werkzeug:hover,
-.werkzeug:focus-visible { background: var(--gold-soft); border-color: var(--gold); }
-.werkzeug:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.werkzeug.danger { color: var(--red); border-color: #e9c2c2; }
-.werkzeug.danger:hover,
-.werkzeug.danger:focus-visible { background: var(--red-soft); border-color: var(--red); }
+/* ---------- Buttons mit Icon, Menü „Weitere Aktionen“ ---------- */
+.btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.btn.icon-only { padding: 0; width: 36px; height: 36px; justify-content: center; }
+.btn.ruhig { border-color: transparent; color: var(--muted); }
+.btn.ruhig:hover { color: var(--text); }
 
-/* Tooltip (liegt über allem, verschiebt nichts) */
-.werkzeug::after {
-  content: attr(data-tip);
+.mehr { position: relative; }
+.mehr > summary { list-style: none; }
+.mehr > summary::-webkit-details-marker { display: none; }
+.mehr[open] > summary { background: var(--gold-soft); border-color: var(--gold); }
+.mehr-menue {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  z-index: 30;
-  width: max-content;
-  max-width: 230px;
-  padding: 6px 9px;
-  border-radius: 6px;
-  background: var(--black, #1d1a14);
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: bold;
-  line-height: 1.3;
-  text-align: left;
-  white-space: pre-line;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -3px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 40;
+  min-width: 240px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
 }
-.werkzeug[data-hinweis]::after { content: attr(data-tip) "\A" attr(data-hinweis); }
-.werkzeug:hover::after,
-.werkzeug:focus-visible::after { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.25s; }
-/* rechts außen: Tooltip nach links ausrichten, damit er nicht aus der Karte ragt */
-.werkzeug-gruppe.rechts .werkzeug::after { left: auto; right: 0; transform: translateY(-3px); }
-.werkzeug-gruppe.rechts .werkzeug:hover::after,
-.werkzeug-gruppe.rechts .werkzeug:focus-visible::after { transform: translateY(0); }
-@media (hover: none) { .werkzeug::after { display: none; } }
+.mehr-menue hr { border: none; border-top: 1px solid var(--line); margin: 6px 4px; }
+.menue-punkt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.menue-punkt svg { width: 17px; height: 17px; color: var(--muted); flex: 0 0 auto; }
+.menue-punkt:hover, .menue-punkt:focus-visible { background: var(--gold-soft); outline: none; }
+.menue-punkt.danger, .menue-punkt.danger svg { color: var(--red); }
+.menue-punkt.danger:hover, .menue-punkt.danger:focus-visible { background: var(--red-soft); }
 
 /* „Nigel fragen“: nur das Porträt – beim Überfahren verneigt sich Nigel
    und sein Angebot gleitet als Fähnchen heraus. Das Fähnchen liegt absolut
@@ -357,7 +327,7 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
   .nigel-btn::after { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nigel-btn, .nigel-btn *, .nigel-btn::after, .werkzeug, .werkzeug::after { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
+  .nigel-btn, .nigel-btn *, .nigel-btn::after { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
 }
 .icon-btn {
   border: none;
@@ -527,42 +497,14 @@ input:focus, select:focus, textarea:focus {
 }
 .list-pane .toolbar { margin-bottom: 8px; }
 .list-scroll { overflow-y: auto; margin: 0 -6px; padding: 0 6px; flex: 1; }
-.list-count { font-size: 0.78rem; color: var(--muted); margin: 2px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.liste-zu-btn { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); text-decoration: none; font-size: 0.78rem; }
-.liste-zu-btn:hover, .liste-zu-btn:focus-visible { color: var(--red); }
-.liste-zu-btn svg { width: 15px; height: 15px; }
+.list-count { font-size: 0.78rem; color: var(--muted); margin: 2px 0 8px; }
 
-/* Aktenseite darf auf großen Bildschirmen breiter werden */
-.page.page-breit { max-width: 1840px; }
+/* Aktenseite nutzt große Bildschirme besser aus */
+.page.page-breit { max-width: 1680px; }
 
-/* Eingeklappte Aktenliste: schmale Leiste mit Blättern, Suche und Neu */
-.list-rail { display: none; }
-.split.liste-zu { grid-template-columns: 52px minmax(0, 1fr); }
+/* Aktenliste ausgeblendet: die Akte bekommt die volle Breite (und damit den Aktenspiegel) */
+.split.liste-zu { grid-template-columns: minmax(0, 1fr); }
 .split.liste-zu .list-pane { display: none; }
-.split.liste-zu .list-rail {
-  position: sticky;
-  top: 58px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 0;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--red);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  z-index: 5;
-}
-.list-rail .werkzeug { width: 34px; height: 34px; text-decoration: none; }
-.list-rail .werkzeug.aus { opacity: 0.3; cursor: default; }
-.list-rail .werkzeug.aus:hover { background: transparent; border-color: var(--line); }
-.list-rail .werkzeug::after { top: 50%; left: calc(100% + 10px); transform: translate(-3px, -50%); }
-.list-rail .werkzeug:hover::after,
-.list-rail .werkzeug:focus-visible::after { transform: translate(0, -50%); }
-.rail-trenner { width: 24px; border-top: 1px solid var(--line); margin: 2px 0; }
-.rail-pos { display: flex; flex-direction: column; align-items: center; font-weight: bold; font-size: 0.9rem; line-height: 1.1; }
-.rail-pos small { font-weight: normal; font-size: 0.66rem; color: var(--muted); }
 
 .item-list { list-style: none; margin: 0; padding: 0; }
 .item-list a.item {
@@ -592,9 +534,14 @@ input:focus, select:focus, textarea:focus {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.detail-head { padding: 16px 18px 14px; border-bottom: 1px solid var(--line); }
-.detail-card > .konflikt { margin: 12px 18px 0; }
-.detail-head .top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.detail-card { container: akte / inline-size; }
+.detail-head { padding: 16px 18px 0; }
+.detail-head .top { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.liste-umschalten { flex: 0 0 auto; color: var(--muted); }
+.liste-umschalten[aria-pressed="true"] { color: var(--red); border-color: var(--red); }
+.kopf-titel { flex: 1 1 260px; min-width: 0; }
+.kopf-aktionen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.kopf-aktionen .nigel-btn { --nb-size: 36px; margin-left: 4px; }
 .detail-head h2 { margin: 4px 0 2px; font-size: 1.35rem; }
 .case-number { font-family: ui-monospace, Menlo, monospace; color: var(--red); font-size: 0.85rem; font-weight: bold; }
 .head-sub { font-size: 0.9rem; color: var(--muted); }
@@ -625,121 +572,70 @@ input:focus, select:focus, textarea:focus {
 .tabs .count { font-size: 0.72rem; background: var(--line-soft); color: var(--muted); border-radius: 999px; padding: 0 6px; margin-left: 4px; }
 .tab-body { padding: 18px; min-width: 0; }
 
-/* Menü der Akte: Bereiche (Tabs) und Aktionen.
-   Schmal: Icon-Leiste über waagerechten Tabs. Breit: festes Seitenmenü links. */
-.akte-menu { display: flex; flex-direction: column; }
-.akte-menu .akte-werkzeuge { order: -1; padding: 0 18px; }
-.akte-menu .tabs { margin-top: 12px; }
-.wz-label { display: none; }
-.werkzeug-gruppe.anlegen { display: none; }
+/* ---------- Aktenspiegel (rechte Spalte, nur wenn die Akte breit genug ist) ---------- */
+.aktenspiegel { display: none; }
 
-@media (min-width: 1200px) {
-  .akte-rumpf { display: grid; grid-template-columns: 216px minmax(0, 1fr); align-items: start; }
-  .akte-menu {
+@container akte (min-width: 940px) {
+  .nur-schmal { display: none !important; }
+  .akte-rumpf { display: grid; grid-template-columns: minmax(0, 1fr) 290px; align-items: start; }
+  .tab-body { padding: 20px 24px; }
+  .aktenspiegel {
+    display: block;
     position: sticky;
     top: 58px;
     max-height: calc(100vh - 70px);
     overflow-y: auto;
-    padding: 12px 10px 16px;
-    border-right: 1px solid var(--line);
+    padding: 18px 18px 20px;
+    border-left: 1px solid var(--line);
     scrollbar-width: thin;
   }
-  .akte-menu .akte-werkzeuge { order: 0; padding: 0; margin-top: 4px; display: block; }
-  /* Bereiche als senkrechte Navigation */
-  .akte-menu .tabs {
-    flex-direction: column;
-    gap: 1px;
-    margin: 0;
-    padding: 0;
-    border-bottom: none;
-    overflow: visible;
-  }
-  .akte-menu .tabs a {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 10px;
-    margin: 0;
-    border-bottom: none;
-    border-left: 3px solid transparent;
-    border-radius: 0 6px 6px 0;
-  }
-  .akte-menu .tabs a:hover { background: var(--bg); }
-  .akte-menu .tabs a.active { background: var(--gold-soft); border-left-color: var(--red); }
-  /* Aktionen als beschriftete Zeilen, nach Zweck gruppiert */
-  .akte-menu .werkzeug-gruppe,
-  .akte-menu .werkzeug-gruppe.anlegen {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1px;
-    padding: 10px 0 0;
-    margin: 10px 0 0;
-    border-right: none;
-    border-top: 1px solid var(--line);
-  }
-  .akte-menu .werkzeug-gruppe.anlegen { display: grid; grid-template-columns: 1fr 1fr; }
-  .akte-menu .werkzeug-gruppe.anlegen .werkzeug { padding: 5px 6px; gap: 5px; }
-  .akte-menu .werkzeug-gruppe.anlegen .werkzeug svg { width: 15px; height: 15px; }
-  .akte-menu .werkzeug-gruppe[data-titel]::before {
-    grid-column: 1 / -1;
-    content: attr(data-titel);
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    padding: 0 10px 4px;
-  }
-  .akte-menu .werkzeug-gruppe.rechts { margin-left: 0; }
-  .akte-menu .werkzeug {
-    width: 100%;
-    height: auto;
-    justify-content: flex-start;
-    gap: 9px;
-    padding: 5px 10px;
-    border-color: transparent;
-    border-radius: 6px;
-    font: inherit;
-    font-size: 0.86rem;
-    text-align: left;
-    text-decoration: none;
-  }
-  .akte-menu .werkzeug svg { width: 17px; height: 17px; flex: 0 0 auto; color: var(--muted); }
-  .akte-menu .werkzeug:hover svg, .akte-menu .werkzeug:focus-visible svg { color: var(--text); }
-  .akte-menu .werkzeug.danger svg { color: var(--red); }
-  .akte-menu .werkzeug.danger { border-color: transparent; }
-  .akte-menu .wz-label { display: inline; }
-  .akte-menu .werkzeug:not([data-hinweis])::after { display: none; }
-  /* Hinweis erscheint rechts neben dem Menü */
-  .akte-menu .werkzeug[data-hinweis]::after { content: attr(data-hinweis); top: 50%; left: calc(100% + 10px); transform: translate(-3px, -50%); }
-  .akte-menu .werkzeug[data-hinweis]:hover::after,
-  .akte-menu .werkzeug[data-hinweis]:focus-visible::after { transform: translate(0, -50%); }
-  /* Nigel: Porträt mit dauerhaft sichtbarer Beschriftung */
-  .akte-menu .nigel-btn {
-    --nb-size: 28px;
-    width: 100%;
-    height: auto;
-    gap: 8px;
-    padding: 3px 10px 3px 4px;
-    border-radius: 999px;
-    background: var(--gold-soft);
-  }
-  .akte-menu .nigel-btn::after { left: 24px; top: 0; }
-  .akte-menu .nigel-btn-text {
-    position: static;
-    height: auto;
-    padding: 0;
-    border: none;
-    background: none;
-    box-shadow: none;
-    opacity: 1;
-    clip-path: none;
-    font-size: 0.86rem;
-  }
-  .akte-menu .nigel-btn-text small { opacity: 1; transform: none; }
-  /* Termine/Aufgaben im Überblick auf breiten Bildschirmen nebeneinander lassen, Fakten dichter */
-  .tab-body { padding: 18px 22px; }
 }
+
+/* Nigel: eigener, ruhiger Platz oben im Aktenspiegel */
+.nigel-karte {
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e8d48f;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--gold-soft), transparent 140%);
+}
+.nigel-karte-kopf { display: flex; align-items: center; gap: 10px; }
+.nigel-karte-kopf strong { display: block; font-size: 0.95rem; }
+.nigel-karte-kopf small { display: block; color: var(--gold-text); font-style: italic; font-size: 0.78rem; line-height: 1.3; }
+.nigel-karte-bild {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--gold);
+  background: var(--panel);
+}
+.nigel-karte-bild img { display: block; width: 100%; height: 100%; }
+.nigel-karte-aktionen { display: flex; gap: 6px; margin-top: 10px; }
+.nigel-karte-aktionen .btn { flex: 1 1 auto; justify-content: center; background: var(--panel); }
+.nigel-karte-aktionen .btn.ruhig { background: transparent; }
+
+.spiegel-titel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.spiegel-daten { margin: 0; }
+.spiegel-daten > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+.spiegel-daten > div:last-child { border-bottom: none; }
+.spiegel-daten dt { color: var(--muted); }
+.spiegel-daten dd { margin: 0; overflow-wrap: anywhere; }
 
 .facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 14px 18px; margin: 0 0 18px; }
 .facts dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
@@ -1337,10 +1233,7 @@ body.in-app .guide-btn span { display: none; }
   .split { grid-template-columns: 1fr; }
   .list-pane { position: static; max-height: none; }
   .split.has-detail .list-pane { display: none; }
-  .split.liste-zu { grid-template-columns: 1fr; }
-  .split.liste-zu .list-rail { display: none; }
-  .split.liste-zu:not(.has-detail) .list-pane { display: flex; }
-  .liste-zu-btn { display: none; }
+  .liste-umschalten { display: none; }
   .split:not(.has-detail) .detail-pane { display: none; }
   .back-link { display: inline-block; }
   .grid-3 { grid-template-columns: 1fr 1fr; }
@@ -1362,9 +1255,10 @@ body.in-app .guide-btn span { display: none; }
   .dialog-head, .dialog-body { padding-left: 16px; padding-right: 16px; }
   .dialog-actions { padding: 12px 16px; }
   .tab-body { padding: 14px; }
-  .detail-head { padding: 14px; }
-  .akte-menu .akte-werkzeuge { padding: 0 14px; }
-  .detail-card > .konflikt { margin: 12px 14px 0; }
+  .detail-head { padding: 14px 14px 0; }
+  .kopf-aktionen { position: relative; }
+  .mehr { position: static; }
+  .mehr-menue { left: 0; right: 0; min-width: 0; }
   .bar-row { grid-template-columns: 100px 1fr 50px; }
   .day-cell { min-height: 64px; padding: 3px; }
   .cal-item { font-size: 0.62rem; padding: 0 2px; }
@@ -2303,3 +2197,6 @@ body.nw-seite .guide-btn { display: none; }
 
 .nw-kosten { margin-left: auto; padding: 0 7px; border-radius: 999px; background: var(--line-soft); color: var(--muted); font-size: 0.68rem; font-variant-numeric: tabular-nums; }
 .nw-msg-meta .badge + .nw-kosten { margin-left: 0; }
+
+/* Fließtext in der Akte nicht über die volle Breite ziehen (besser lesbar) */
+.tab-body p.pre { max-width: 90ch; }
