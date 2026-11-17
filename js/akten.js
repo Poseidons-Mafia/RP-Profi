@@ -150,6 +150,7 @@ function renderAkteDetail(a, sub) {
           <button class="btn small" data-action="dokument-waehlen" data-id="${a.id}">Dokument erstellen</button>
           <button class="btn small" data-action="aktenblatt" data-id="${a.id}">Aktenblatt drucken</button>
           <button class="btn small" data-action="akte-link" data-id="${a.id}">Link kopieren</button>
+          ${darf("ki_assistent") ? html`<a class="btn small" href="#/assistent/${a.id}">KI-Assistent</a>` : ""}
           ${darf("akten_loeschen") ? html`<button class="btn small danger" data-action="akte-loeschen" data-id="${a.id}">Löschen</button>` : ""}
         </div>
         ${k.length ? html`
