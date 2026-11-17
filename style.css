@@ -353,7 +353,7 @@ input:focus, select:focus, textarea:focus {
 .item .num { font-family: ui-monospace, Menlo, monospace; font-size: 0.74rem; color: var(--red); }
 .item .title { display: block; font-weight: bold; }
 .item .meta { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: var(--muted); align-items: center; }
-.item .sub { font-size: 0.78rem; color: var(--muted); }
+.item .sub { display: block; font-size: 0.78rem; color: var(--muted); }
 
 .detail-pane { min-width: 0; }
 .back-link { display: none; margin-bottom: 10px; text-decoration: none; font-size: 0.9rem; }
@@ -408,6 +408,8 @@ input:focus, select:focus, textarea:focus {
 .box.ok { background: var(--green-soft); border: 1px solid #cfe5c0; color: var(--green); }
 .box.dark { background: var(--black); color: #f3eccf; }
 .box.dark strong { color: var(--gold); }
+.box.dark .btn.on-dark { background: transparent; color: #f3eccf; border-color: rgba(255, 255, 255, 0.35); }
+.box.dark .btn.on-dark:hover { background: rgba(255, 255, 255, 0.1); }
 .box ul { margin: 6px 0 0; padding-left: 18px; }
 .box .actions-row { margin-top: 8px; }
 
@@ -476,6 +478,97 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .timeline .head strong { color: var(--text); }
 .timeline p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .timeline .tools { position: absolute; top: 4px; right: 4px; display: flex; }
+
+/* ---------- Chronik ---------- */
+.kat-mandat { --kat: var(--blue); }
+.kat-haft { --kat: var(--black); }
+.kat-ermittlung { --kat: #8a6d1f; }
+.kat-kommunikation { --kat: #a59d86; }
+.kat-schriftsatz { --kat: #6b5aa6; }
+.kat-verhandeln { --kat: var(--green); }
+.kat-gericht { --kat: var(--red); }
+.kat-frist { --kat: #e39b17; }
+.kat-beweis { --kat: var(--gold); }
+.kat-intern { --kat: #d5c9a6; }
+.kat-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; background: var(--kat, var(--line)); }
+.chip .n { font-size: 0.72rem; opacity: 0.65; margin-left: 2px; }
+.chronik-tools { display: grid; gap: 8px; margin: 4px 0 10px; }
+.chronik-tools .search { flex: 1 1 200px; }
+.chronik-tools select { width: auto; max-width: 100%; }
+
+.ev-list { list-style: none; margin: 0; padding: 0; }
+.ev { display: flex; gap: 10px; align-items: stretch; }
+.ev-when { width: 64px; flex-shrink: 0; font-size: 0.76rem; color: var(--muted); padding-top: 7px; text-align: right; }
+.ev-when strong { display: block; color: var(--text); font-size: 0.8rem; }
+.ev-body { flex: 1; min-width: 0; border-left: 3px solid var(--kat, var(--line)); padding: 5px 0 5px 12px; }
+.ev-head { cursor: pointer; border-radius: 6px; padding: 2px 6px; margin: 0 -6px; }
+.ev-head:hover { background: var(--bg); }
+.ev-title { font-weight: bold; overflow-wrap: anywhere; line-height: 1.35; }
+.ev-title .badge { margin-left: 4px; vertical-align: 1px; }
+.ev-meta { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+.ev-meta strong { color: var(--text); font-weight: normal; }
+.pin { color: var(--red); margin-right: 4px; }
+.ev.wichtig > .ev-body { background: linear-gradient(90deg, #fff3ee, rgba(255, 243, 238, 0) 75%); }
+.ev.open > .ev-body { background: var(--bg); border-radius: 0 8px 8px 0; padding-right: 10px; margin: 4px 0; }
+.ev-detail { margin-top: 8px; }
+.ev-detail > p { margin: 0 0 8px; overflow-wrap: anywhere; }
+.ev-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; margin: 0 0 8px; }
+.ev-facts dt { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.ev-facts dd { margin: 0; font-size: 0.88rem; overflow-wrap: anywhere; }
+.ev-links { font-size: 0.84rem; margin-bottom: 6px; overflow-wrap: anywhere; }
+.ev-thread { list-style: none; margin: 6px 0 8px; padding: 0 0 0 12px; border-left: 2px dashed var(--line); }
+.ev-thread li { position: relative; padding: 5px 34px 6px 0; }
+.ev-thread li + li { border-top: 1px solid var(--line-soft); }
+.ev-thread .tools { position: absolute; top: 2px; right: 0; }
+.ev-thread p { margin: 3px 0 0; font-size: 0.88rem; overflow-wrap: anywhere; }
+.ev-foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 8px; margin-top: 6px; }
+.ev.sys .ev-body { border-left: 3px dotted var(--line); padding-top: 3px; padding-bottom: 3px; font-size: 0.8rem; color: var(--muted); }
+.ev.sys .ev-when { padding-top: 3px; }
+.ev.sys .sys-text { color: #5d5647; overflow-wrap: anywhere; }
+.ev.sys.neben .sys-text { color: var(--muted); font-style: italic; }
+
+.phase-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; width: 100%; background: none; border: none; border-bottom: 2px solid var(--gold);
+  padding: 8px 2px 4px; margin: 14px 0 4px; font: inherit; font-weight: bold; cursor: pointer; text-align: left; color: var(--text); }
+.phase-head:first-child { margin-top: 0; }
+.phase-head .muted { font-weight: normal; margin-left: auto; }
+.phase-head:not(.auf) { border-bottom-color: var(--line); color: var(--muted); }
+.phase-head .chev { width: 12px; color: var(--muted); }
+.ueberblick-chronik .ev-when { width: 54px; }
+
+/* ---------- Phasenleiste ---------- */
+.phasebar { list-style: none; display: flex; margin: 12px 0 0; padding: 0; overflow-x: auto; scrollbar-width: none; }
+.phasebar::-webkit-scrollbar { display: none; }
+.phasebar li { flex: 1 0 auto; }
+.phasebar li + li { margin-left: -3px; }
+.phasebar li > * {
+  display: block; width: 100%; text-align: center; font: inherit; font-size: 0.74rem; line-height: 1.3; padding: 5px 14px 5px 16px;
+  background: var(--line-soft); color: var(--muted); border: none; white-space: nowrap;
+  clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%, 9px 50%);
+}
+.phasebar li:first-child > * { clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 0 100%); border-radius: 6px 0 0 6px; padding-left: 10px; }
+.phasebar li.done > * { background: var(--gold-soft); color: var(--gold-text); }
+.phasebar li.current > * { background: var(--red); color: #fff; font-weight: bold; }
+.phasebar li.current.ende > * { background: var(--black); color: var(--gold); }
+.phasebar button { cursor: pointer; }
+.phasebar button:hover { text-decoration: underline; }
+.phasebar li.extra { flex: 0 0 auto; margin-left: 6px; }
+.phasebar li.extra > * { background: none; color: var(--red); clip-path: none; padding: 5px 6px; }
+
+/* ---------- Lagebild ---------- */
+.lagebild { border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 8px; padding: 8px 14px 6px; margin-bottom: 14px; background: #fff; }
+.lb-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+.lb-label { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: bold; color: var(--red); }
+.lb-row { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px; padding: 5px 0; border-top: 1px solid var(--line-soft); font-size: 0.92rem; }
+.lb-k { color: var(--muted); font-size: 0.8rem; padding-top: 2px; }
+.lb-v { overflow-wrap: anywhere; }
+.lb-offen { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+
+/* ---------- Tatvorwürfe: Stand ---------- */
+.mini-select { width: auto; padding: 2px 4px; font-size: 0.8rem; }
+.vorwurf-table tr.inaktiv td { color: var(--muted); }
+.vorwurf-table tr.inaktiv td:nth-child(2), .vorwurf-table tr.inaktiv td.num { text-decoration: line-through; }
+.mini-select.vs-fallengelassen, .mini-select.vs-eingestellt, .mini-select.vs-freigesprochen { color: var(--green); }
+.mini-select.vs-verurteilt { color: var(--red); }
 
 /* ---------- Karten-Raster (Beweise, Beteiligte) ---------- */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
@@ -839,6 +932,10 @@ body.in-app .guide-btn span { display: none; }
   .quick-add select, .quick-add input[type="date"] { width: 100%; max-width: none; }
   .quick-add .btn { grid-column: 1 / -1; justify-content: center; }
   .rows .when { min-width: 58px; }
+  .ev-when { width: 50px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lb-row { grid-template-columns: 1fr; gap: 0; }
+  .chronik-tools .actions-row > * { flex: 1 1 100%; }
 }
 
 /* ---------- Druck ---------- */

@@ -177,7 +177,7 @@ Object.assign(ACTIONS, {
           const g = byId("gesetze", id);
           if (!g) continue;
           const i = list.findIndex((x) => x.gesetz_id === g.id);
-          if (i >= 0) list[i] = { ...list[i], anzahl: (Number(list[i].anzahl) || 1) + anzahl };
+          if (i >= 0) list[i] = vorwurfAktiv(list[i]) ? { ...list[i], anzahl: (Number(list[i].anzahl) || 1) + anzahl } : { ...list[i], status: "Erhoben", anzahl };
           else list.push({ gesetz_id: g.id, paragraph: g.paragraph, titel: g.titel, geldstrafe: g.geldstrafe, haft: g.haft, anzahl });
         }
         await updateRow("akten", a.id, { vorwuerfe: list });

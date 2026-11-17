@@ -14,6 +14,9 @@ const ui = {
   globalQ: "",
   drafts: {},
   historie: {},     // Änderungsprotokoll je Akte (nachgeladen)
+  chronik: { akte: null, kat: "", wichtig: false, q: "", offen: {}, phasen: {},
+             ansicht: (() => { try { return localStorage.getItem("wiwang-chronik-ansicht") || "standard"; } catch { return "standard"; } })() },
+  scrollTo: null,   // Element-ID, zu der nach dem Zeichnen gescrollt wird
   adminUsers: null, // Login-Infos für den Admin
 };
 
@@ -45,7 +48,10 @@ const SEITEN_RECHTE = {
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
   "haft-ende": "akten_schreiben", "vorwurf-hinzufuegen": "akten_schreiben", "vorwurf-anzahl": "akten_schreiben",
-  "vorwurf-entfernen": "akten_schreiben", "eintrag-bearbeiten": "akten_schreiben", "eintrag-loeschen": "akten_schreiben",
+  "vorwurf-entfernen": "akten_schreiben", "ereignis-neu": "akten_schreiben", "ereignis-details": "akten_schreiben",
+  "ereignis-bearbeiten": "akten_schreiben", "ereignis-folge": "akten_schreiben", "ereignis-wichtig": "akten_schreiben",
+  "akte-phase": "akten_schreiben", "akte-stand": "akten_schreiben", "akte-verknuepfen": "akten_schreiben",
+  "akte-entknuepfen": "akten_schreiben", "akte-neu-verknuepft": "akten_schreiben",
   "beteiligter-neu": "akten_schreiben", "beteiligter-bearbeiten": "akten_schreiben", "beweis-neu": "akten_schreiben",
   "beweis-bearbeiten": "akten_schreiben", "auswahl-in-akte": "akten_schreiben", "akte-loeschen": "akten_loeschen",
   "mandant-neu": "mandanten_schreiben", "mandant-bearbeiten": "mandanten_schreiben",
@@ -61,7 +67,7 @@ const AKTIONS_RECHTE = {
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
 };
 const AENDERUNGS_RECHTE = {
-  "akte-status": "akten_schreiben", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
+  "akte-status": "akten_schreiben", "vorwurf-status": "akten_schreiben", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
 };
 const FORMULAR_RECHTE = { eintrag: "akten_schreiben", "aufgabe-schnell": "termine_schreiben" };
 
@@ -91,7 +97,7 @@ function rechteAnwenden(root = document) {
 // ---------- Routing ----------
 function parseRoute() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
-  return { page: parts[0] || "uebersicht", id: parts[1] || null, sub: parts[2] || null };
+  return { page: parts[0] || "uebersicht", id: parts[1] || null, sub: parts[2] || null, ev: parts[3] || null };
 }
 
 function go(path) {
@@ -150,9 +156,21 @@ function render() {
       try { if (focus.start !== null && focus.start !== undefined) el.setSelectionRange(focus.start, focus.end); } catch {}
     }
   }
+  if (ui.scrollTo) {
+    const el = document.getElementById(ui.scrollTo);
+    ui.scrollTo = null;
+    if (el) requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: "smooth" }));
+  }
   renderNav(route);
   document.querySelectorAll(".topbar [data-action]").forEach((el) => { el.hidden = !erlaubt(AKTIONS_RECHTE[el.dataset.action]); });
   rechteAnwenden(main);
+  // Phasenleiste (auf dem Handy scrollbar) auf die aktuelle Phase ausrichten
+  main.querySelectorAll(".phasebar").forEach((pb) => {
+    const c = pb.querySelector(".current");
+    if (c && pb.scrollWidth > pb.clientWidth) {
+      pb.scrollLeft += c.getBoundingClientRect().left - pb.getBoundingClientRect().left - pb.clientWidth / 2 + c.clientWidth / 2;
+    }
+  });
   document.title = `${(NAV.find((n) => n.page === route.page) || NAV[0]).label} – Wiwang Law`;
 }
 

@@ -3,7 +3,7 @@
 // =============================================================
 
 const TABELLEN_NAMEN = {
-  akten: "Akte", eintraege: "Verlaufseintrag", beteiligte: "Beteiligte/n", beweise: "Beweismittel",
+  akten: "Akte", eintraege: "Chronik-Eintrag", beteiligte: "Beteiligte/n", beweise: "Beweismittel",
   termine: "Termin", aufgaben: "Aufgabe", rechnungen: "Rechnung", mandanten: "Mandant", buchungen: "Buchung",
 };
 const FELD_NAMEN = {
@@ -13,7 +13,10 @@ const FELD_NAMEN = {
   beginn: "Zeitpunkt", text: "Text", titel: "Titel", summe: "Summe", positionen: "Leistungen", name: "Name",
   telefon: "Telefon", notizen: "Notizen", markierungen: "Markierungen", client: "Mandant", mandant_id: "Mandant",
   verantwortlich: "Verantwortlich", zustaendig: "Zuständig", faellig: "Fälligkeit", ort: "Ort", link: "Link",
-  bezahlt_am: "Bezahlt am", wichtig: "wichtig", art: "Art", rolle: "Rolle", kontakt: "Kontakt",
+  bezahlt_am: "Bezahlt am", wichtig: "angeheftet", art: "Art", rolle: "Rolle", kontakt: "Kontakt",
+  phase: "Phase", stand: "Lagebild", stand_am: "Lagebild", naechster_schritt: "Nächster Schritt", verbunden: "Verbundene Akten",
+  zeitpunkt: "Zeitpunkt", daten: "Angaben", bezug: "Bezug", eltern_id: "Strang",
+  ergebnis_datum: "Ergebnis-Datum", beschreibung: "Beschreibung", notiz: "Notiz",
 };
 
 function aenderungText(p) {
@@ -23,6 +26,8 @@ function aenderungText(p) {
   if (ch.erledigt) return ch.erledigt[1] === "true" ? "als erledigt markiert" : "wieder geöffnet";
   if (ch.in_haft) return ch.in_haft[1] === "true" ? "Mandant in Haft vermerkt" : "Haft beendet";
   if (ch.ergebnis && ch.ergebnis[1]) return `Ergebnis: ${ch.ergebnis[1]}`;
+  if (ch.phase) { const a = byId("akten", p.akte_id); if (a) return `Phase: ${phaseName(a, ch.phase[0])} → ${phaseName(a, ch.phase[1])}`; }
+  if (ch.vorwuerfe && p.tabelle === "akten") { const t = vorwurfAenderung(ch.vorwuerfe[0], ch.vorwuerfe[1]); if (t.length) return truncate(t[0], 120); }
   return keys.map((k) => FELD_NAMEN[k] || k).join(", ");
 }
 
@@ -48,7 +53,7 @@ function protokollZeile(p, { akte = true } = {}) {
 function globaleSuche(q) {
   const gruppen = [];
   const add = (titel, items) => items.length && gruppen.push({ titel, items: items.slice(0, 8), mehr: Math.max(0, items.length - 8) });
-  add("Akten", state.akten.filter((a) => matches(q, a.number, a.title, mandantName(a), a.opponent, a.az_extern, a.summary,
+  add("Akten", state.akten.filter((a) => matches(q, a.number, a.title, mandantName(a), a.opponent, a.az_extern, a.summary, a.stand,
     (a.vorwuerfe || []).map((v) => `${v.paragraph || ""} ${v.titel}`))).map((a) => ({
     href: `#/akten/${a.id}`, titel: `${a.number} · ${a.title}`, sub: `${mandantName(a)} · ${a.status}` })));
   add("Mandanten", state.mandanten.filter((m) => matches(q, m.name, m.telefon, m.discord, m.notizen)).map((m) => ({
@@ -57,10 +62,12 @@ function globaleSuche(q) {
     const a = byId("akten", b.akte_id);
     return { href: `#/akten/${b.akte_id}/beteiligte`, titel: `${b.name} (${b.rolle})`, sub: a ? `${a.number} · ${a.title}` : "" };
   }));
-  add("Verlauf", state.eintraege.filter((e) => matches(q, e.text)).map((e) => {
-    const a = byId("akten", e.akte_id);
-    return { href: `#/akten/${e.akte_id}/verlauf`, titel: truncate(e.text, 90), sub: `${a ? a.number : ""} · ${fmt.datum(e.created_at)} · ${personName(e.author)}` };
-  }));
+  add("Chronik", state.eintraege.filter((e) => { const a = byId("akten", e.akte_id); return a && matches(q, ereignisSuchtext(e, a)); })
+    .sort((x, y) => nachZeitAuf(y, x)).map((e) => {
+      const a = byId("akten", e.akte_id);
+      return { href: `#/akten/${e.akte_id}/chronik/${e.id}`, titel: truncate(ereignisTitel(e, a), 90),
+        sub: `${a.number} · ${ereignisTyp(e).label} · ${fmt.datum(zeitVon(e))} · ${personName(e.author)}` };
+    }));
   add("Beweismittel", state.beweise.filter((b) => matches(q, b.titel, b.beschreibung, b.art)).map((b) => {
     const a = byId("akten", b.akte_id);
     return { href: `#/akten/${b.akte_id}/beweise`, titel: `${b.art}: ${b.titel}`, sub: a ? `${a.number} · ${a.title}` : "" };
@@ -147,7 +154,7 @@ VIEWS.uebersicht = () => {
           <h1>${gruss}${profil && profil.anzeigename ? `, ${firstName(profil.anzeigename)}` : ""}</h1>
           <p class="muted">${fmt.tagLang(now)} · ${state.settings.kanzlei}</p>
         </div>
-        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise … (Taste /)"></div>
+        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Chronik, Beweise … (Taste /)"></div>
       </div>
 
       ${profil && !profil.anzeigename ? html`

@@ -54,7 +54,7 @@ function openDocument({ title, content, onPrinted, verlaufAkte, verlaufText }) {
       <div class="doc-toolbar">
         <span class="muted small">Text direkt im Dokument anklicken und ändern. Gelb markierte Stellen ergänzen.</span>
         <span class="spacer"></span>
-        ${verlaufAkte ? html`<label class="check small"><input type="checkbox" id="doc-verlauf" checked> Im Verlauf vermerken</label>` : ""}
+        ${verlaufAkte ? html`<label class="check small"><input type="checkbox" id="doc-verlauf" checked> In der Chronik vermerken</label>` : ""}
         <button class="btn primary" type="button" data-doc="print">Drucken / PDF</button>
       </div>
       <div class="doc-preview"><div class="doc-page" contenteditable="true" spellcheck="true">${content}</div></div>`,
@@ -66,7 +66,8 @@ function openDocument({ title, content, onPrinted, verlaufAkte, verlaufText }) {
     const box = dlg.querySelector("#doc-verlauf");
     if (verlaufAkte && box && box.checked && !vermerkt) {
       vermerkt = true;
-      attempt(() => insertRow("eintraege", { akte_id: verlaufAkte, art: "Schriftverkehr", text: verlaufText || `Dokument erstellt: ${title}` }));
+      attempt(() => insertRow("eintraege", { akte_id: verlaufAkte, typ: "schriftverkehr", art: "Schriftverkehr",
+        titel: verlaufText || `Dokument erstellt: ${title}`, daten: { richtung: "Gesendet" } }));
     }
     if (onPrinted) onPrinted();
     setTimeout(() => window.print(), 60);
@@ -80,7 +81,7 @@ function akteKontext(a) {
 }
 
 function vorwurfListe(a) {
-  const list = a.vorwuerfe || [];
+  const list = (a.vorwuerfe || []).filter(vorwurfAktiv);
   if (!list.length) return "";
   return html`<ul>${list.map((v) => html`<li>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}${(v.anzahl || 1) > 1 ? ` (${v.anzahl}×)` : ""}</li>`)}</ul>`;
 }
@@ -156,7 +157,7 @@ const VORLAGEN = [
       </ol>
       <h3>Begründung</h3>
       <p>${a.summary ? multiline(a.summary) : platzhalter("Sachverhalt aus Sicht des Mandanten")}</p>
-      ${(a.vorwuerfe || []).length ? html`<p>Meinem Mandanten wird Folgendes vorgeworfen:</p>${vorwurfListe(a)}` : ""}
+      ${(a.vorwuerfe || []).some(vorwurfAktiv) ? html`<p>Meinem Mandanten wird Folgendes vorgeworfen:</p>${vorwurfListe(a)}` : ""}
       <p>Ein Haftgrund liegt nicht vor. Insbesondere besteht weder Flucht- noch Verdunkelungsgefahr: ${platzhalter("z. B. fester Wohnsitz, Arbeitsplatz, Kooperation mit den Behörden")}. Die Fortdauer der Haft wäre unverhältnismäßig.</p>
       ${unterschrift(anwalt)}`,
   },
@@ -293,7 +294,17 @@ function zahlungserinnerung(r) {
 function aktenblatt(a) {
   const m = byId("mandanten", a.mandant_id) || {};
   const sum = vorwurfSumme(a.vorwuerfe);
-  const eintraege = kinder("eintraege", a.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at));
+  const chronik = chronikWurzeln(a.id).sort(nachZeitAuf);
+  const ereignisZeileDruck = (e) => {
+    const t = ereignisTyp(e);
+    const badge = ereignisBadge(e);
+    const fakten = ereignisFakten(e);
+    const titel = ereignisTitel(e, a);
+    const textIstTitel = t.textTitel && !e.titel && e.text && !e.text.includes("\n") && e.text.length <= 110;
+    return html`<span class="doc-small">${fmt.datumZeit(zeitVon(e))} · ${t.label} · ${personName(e.author)}${e.wichtig ? " · ★" : ""}</span><br>
+      <strong>${titel}</strong>${badge ? ` – ${badge}` : ""}${fakten.length ? ` (${fakten.join(", ")})` : ""}
+      ${e.text && !textIstTitel ? html`<br>${multiline(e.text)}` : ""}`;
+  };
   const termine = kinder("termine", a.id).sort((x, y) => new Date(x.beginn) - new Date(y.beginn));
   const zeile = (label, value) => (value ? html`<tr><td style="width:48mm;color:#555">${label}</td><td>${value}</td></tr>` : "");
   return html`
@@ -306,24 +317,31 @@ function aktenblatt(a) {
       ${zeile("Gegenpartei", a.opponent)}
       ${zeile("Rechtsgebiet / Mandatsart", [a.area, a.typ].filter(Boolean).join(" / "))}
       ${zeile("Status / Priorität", `${a.status} / ${a.prioritaet || "Normal"}`)}
+      ${zeile("Phase", a.status === "Geschlossen" ? "Abgeschlossen" : phaseName(a))}
       ${zeile("Zuständig", personName(a.zustaendig_id, a.lawyer || ""))}
       ${zeile("Az. Behörde / Gericht", a.az_extern)}
       ${zeile("Haft", a.in_haft ? `in Haft${a.haft_bis ? ` bis ${fmt.datumZeit(a.haft_bis)}` : ""}` : "")}
       ${zeile("Ergebnis", a.ergebnis ? `${a.ergebnis}${a.ergebnis_details ? ` – ${a.ergebnis_details}` : ""}` : "")}
     </tbody></table>
+    ${a.stand || a.naechster_schritt ? html`
+      <h3>Lagebild${a.stand_am ? html` <span class="doc-small">(${fmt.datum(a.stand_am)})</span>` : ""}</h3>
+      ${a.stand ? html`<p>${multiline(a.stand)}</p>` : ""}
+      ${a.naechster_schritt ? html`<p><strong>Nächster Schritt:</strong> ${a.naechster_schritt}</p>` : ""}` : ""}
     <h3>Sachverhalt</h3>
     <p>${a.summary ? multiline(a.summary) : "–"}</p>
     ${(a.vorwuerfe || []).length ? html`
       <h3>Tatvorwürfe</h3>
-      <table class="doc-table"><thead><tr><th>Vorwurf</th><th>Anzahl</th><th>Geldstrafe</th><th>Haft</th></tr></thead><tbody>
-        ${a.vorwuerfe.map((v) => html`<tr><td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}</td><td>${v.anzahl || 1}</td>
+      <table class="doc-table"><thead><tr><th>Vorwurf</th><th>Stand</th><th>Anzahl</th><th>Geldstrafe</th><th>Haft</th></tr></thead><tbody>
+        ${a.vorwuerfe.map((v) => html`<tr><td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}</td><td>${v.status || "Erhoben"}</td><td>${v.anzahl || 1}</td>
           <td>${fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1))}</td><td>${fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1))}</td></tr>`)}
-        <tr class="total"><td>Strafrahmen gesamt</td><td></td><td>${fmt.geld(sum.geld)}</td><td>${fmt.haft(sum.haft)}</td></tr>
+        <tr class="total"><td>Strafrahmen (offene/verurteilte)</td><td></td><td></td><td>${fmt.geld(sum.geld)}</td><td>${fmt.haft(sum.haft)}</td></tr>
       </tbody></table>` : ""}
     ${kinder("beteiligte", a.id).length ? html`<h3>Beteiligte</h3><ul>${kinder("beteiligte", a.id).map((b) => html`<li><strong>${b.rolle}:</strong> ${b.name}${b.kontakt ? ` (${b.kontakt})` : ""}${b.notiz ? ` – ${b.notiz}` : ""}</li>`)}</ul>` : ""}
     ${kinder("beweise", a.id).length ? html`<h3>Beweismittel</h3><ul>${kinder("beweise", a.id).map((b) => html`<li><strong>${b.art}:</strong> ${b.titel}${b.link ? html` – <span class="doc-small">${b.link}</span>` : ""}${b.beschreibung ? ` – ${b.beschreibung}` : ""}</li>`)}</ul>` : ""}
     ${termine.length ? html`<h3>Termine</h3><ul>${termine.map((t) => html`<li>${fmt.datumZeit(t.beginn)} – ${t.art}: ${t.titel}${t.ort ? ` (${t.ort})` : ""}${t.erledigt ? " ✓" : ""}</li>`)}</ul>` : ""}
-    ${eintraege.length ? html`<h3>Verlauf</h3>${eintraege.map((e) => html`<p><span class="doc-small">${fmt.datumZeit(e.created_at)} · ${e.art || "Notiz"} · ${personName(e.author)}${e.wichtig ? " · WICHTIG" : ""}</span><br>${multiline(e.text)}</p>`)}` : ""}`;
+    ${verbundeneAkten(a).length ? html`<h3>Verbundene Akten</h3><ul>${verbundeneAkten(a).map((v) => html`<li>${v.number} – ${v.title} (${v.status})</li>`)}</ul>` : ""}
+    ${chronik.length ? html`<h3>Chronik</h3>${chronik.map((e) => html`<p>${ereignisZeileDruck(e)}
+      ${chronikKinder(a.id, e.id).map((x) => html`<span style="display:block;margin:1mm 0 0 6mm">↳ ${ereignisZeileDruck(x)}</span>`)}</p>`)}` : ""}`;
 }
 
 // ---------- Aktionen ----------

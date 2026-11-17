@@ -27,9 +27,14 @@ function renderField(f, value) {
       break;
     case "select": {
       const opts = optionList(typeof f.options === "function" ? f.options() : f.options);
+      const option = (o) => html`<option value="${o.value}" ${String(o.value) === String(v) ? "selected" : ""}>${o.label}</option>`;
+      // Optionen mit "group" werden in Gruppen (optgroup) angezeigt
+      const gruppen = [...new Set(opts.map((o) => o.group).filter(Boolean))];
       input = html`<select id="${id}" name="${f.name}" ${req}>
         ${!f.required || f.empty ? html`<option value="">${f.emptyLabel || "—"}</option>` : ""}
-        ${opts.map((o) => html`<option value="${o.value}" ${String(o.value) === String(v) ? "selected" : ""}>${o.label}</option>`)}
+        ${gruppen.length
+          ? gruppen.map((g) => html`<optgroup label="${g}">${opts.filter((o) => o.group === g).map(option)}</optgroup>`)
+          : opts.map(option)}
       </select>`;
       break;
     }

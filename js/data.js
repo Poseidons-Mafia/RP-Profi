@@ -330,9 +330,14 @@ function naechsterTermin(akteId) {
     .sort((a, b) => new Date(a.beginn) - new Date(b.beginn))[0];
 }
 
+// Fallengelassene, eingestellte und freigesprochene Vorwürfe zählen nicht mehr zum Strafrahmen
+function vorwurfAktiv(v) {
+  return ["Erhoben", "Verurteilt"].includes(v.status || "Erhoben");
+}
+
 function vorwurfSumme(vorwuerfe) {
   let geld = 0, haft = 0;
-  for (const v of vorwuerfe || []) {
+  for (const v of (vorwuerfe || []).filter(vorwurfAktiv)) {
     const n = Number(v.anzahl) || 1;
     geld += (Number(v.geldstrafe) || 0) * n;
     haft += (Number(v.haft) || 0) * n;

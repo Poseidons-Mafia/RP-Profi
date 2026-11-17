@@ -134,6 +134,7 @@ function openTerminForm(termin, preset = {}) {
       if (termin) await updateRow("termine", termin.id, v);
       else await insertRow("termine", v);
       toast(termin ? "Termin gespeichert" : "Termin angelegt");
+      if (termin && v.erledigt && !termin.erledigt) setTimeout(() => nachTerminErledigt(byId("termine", termin.id)), 120);
     },
     onDelete: termin ? async () => {
       if (!confirm(`Termin „${termin.titel}“ löschen?`)) return false;
@@ -326,8 +327,9 @@ Object.assign(ACTIONS, {
 });
 
 CHANGES["kalender-meine"] = (el) => { ui.kalender.meine = el.checked; render(); };
-CHANGES["termin-erledigt"] = (el) => {
-  attempt(() => updateRow("termine", el.dataset.id, { erledigt: el.checked }), el.checked ? "Termin erledigt" : null);
+CHANGES["termin-erledigt"] = async (el) => {
+  const ok = await attempt(() => updateRow("termine", el.dataset.id, { erledigt: el.checked }), el.checked ? "Termin erledigt" : null);
+  if (ok !== undefined && el.checked) nachTerminErledigt(byId("termine", el.dataset.id));
 };
 CHANGES["aufgabe-erledigt"] = (el) => {
   attempt(() => updateRow("aufgaben", el.dataset.id, { erledigt: el.checked, erledigt_am: el.checked ? new Date().toISOString() : null }),

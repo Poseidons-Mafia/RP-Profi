@@ -5,14 +5,14 @@
 
 const AKTE_TABS = [
   { key: "", label: "Überblick" },
-  { key: "verlauf", label: "Verlauf", count: (id) => kinder("eintraege", id).length },
+  { key: "chronik", label: "Chronik", count: (id) => chronikWurzeln(id).length },
   { key: "beteiligte", label: "Beteiligte", count: (id) => kinder("beteiligte", id).length },
   { key: "beweise", label: "Beweise", count: (id) => kinder("beweise", id).length },
   { key: "termine", label: "Termine", count: (id) => kinder("termine", id).filter((t) => !t.erledigt).length },
   { key: "aufgaben", label: "Aufgaben", count: (id) => kinder("aufgaben", id).filter((t) => !t.erledigt).length },
   { key: "rechnungen", label: "Rechnungen", count: (id) => state.rechnungen.filter((r) => r.akte_id === id).length },
-  { key: "historie", label: "Historie" },
 ];
+const VORWURF_STATUS = ["Erhoben", "Fallengelassen", "Eingestellt", "Freigesprochen", "Verurteilt"];
 
 const statusClass = (s) => norm(s).replace(/\s+/g, "-");
 const statusBadge = (s) => html`<span class="badge ${statusClass(s)}">${s}</span>`;
@@ -31,7 +31,7 @@ function gefilterteAkten() {
     if (f.meine && a.zustaendig_id !== state.me.id) return false;
     if (!f.q) return true;
     return matches(f.q, a.number, a.title, mandantName(a), a.client, a.opponent, a.az_extern, a.area, a.typ,
-      a.summary, a.lawyer, personName(a.zustaendig_id, ""),
+      a.summary, a.stand, a.naechster_schritt, a.lawyer, personName(a.zustaendig_id, ""),
       (a.vorwuerfe || []).map((v) => `${v.paragraph || ""} ${v.titel || ""}`),
       kinder("beteiligte", a.id).map((b) => b.name));
   });
@@ -56,6 +56,7 @@ function akteListItem(a, activeId) {
       <span class="num"><span class="dot ${statusClass(a.prioritaet)}"></span>${a.number}</span>
       <span class="title">${a.title}</span>
       <span class="meta"><span>${mandantName(a)}</span><span class="badges">${haftBadge(a)}${statusBadge(a.status)}</span></span>
+      ${a.status !== "Geschlossen" && (a.phase || a.stand) ? html`<span class="sub"><strong>${phaseName(a)}</strong>${a.stand ? ` · ${truncate(a.stand.replace(/\s+/g, " "), 80)}` : ""}</span>` : ""}
       ${nt ? html`<span class="sub">Nächster Termin: ${fmt.tag(nt.beginn)}, ${fmt.zeit(nt.beginn)} · ${nt.titel}</span>` : ""}
     </a>`;
 }
@@ -96,7 +97,7 @@ VIEWS.akten = (route) => {
         </aside>
         <section class="detail-pane">
           ${route.id
-            ? akte ? renderAkteDetail(akte, route.sub)
+            ? akte ? renderAkteDetail(akte, route.sub, route.ev)
                    : html`<div class="card empty-state"><h2>Akte nicht gefunden</h2><p>Vielleicht wurde sie gelöscht.</p><a class="btn" href="#/akten">Zur Aktenliste</a></div>`
             : html`<div class="card empty-state">
                 <h2>Wähle eine Akte aus</h2>
@@ -115,13 +116,16 @@ CHANGES["akten-filter"] = (el) => {
 };
 
 // ---------- Detail ----------
-function renderAkteDetail(a, sub) {
+function renderAkteDetail(a, sub, ev) {
+  // alte Links (#/…/verlauf, #/…/historie) führen in die Chronik
+  if (sub === "historie" && ui.chronik.akte !== a.id) ui.chronik.ansicht = "alles";
+  if (sub === "verlauf" || sub === "historie") sub = "chronik";
   const tab = AKTE_TABS.some((t) => t.key === (sub || "")) ? sub || "" : "";
   const k = konflikte(a);
   const m = byId("mandanten", a.mandant_id);
   const body = {
-    "": tabUeberblick, verlauf: tabVerlauf, beteiligte: tabBeteiligte, beweise: tabBeweise,
-    termine: tabTermine, aufgaben: tabAufgaben, rechnungen: tabRechnungen, historie: tabHistorie,
+    "": tabUeberblick, chronik: (x) => tabChronik(x, ev), beteiligte: tabBeteiligte, beweise: tabBeweise,
+    termine: tabTermine, aufgaben: tabAufgaben, rechnungen: tabRechnungen,
   }[tab];
 
   return html`
@@ -146,6 +150,7 @@ function renderAkteDetail(a, sub) {
             <button class="btn" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button>
           </div>
         </div>
+        ${phasenLeiste(a)}
         <div class="actions-row" style="margin-top:10px">
           <button class="btn small" data-action="dokument-waehlen" data-id="${a.id}">Dokument erstellen</button>
           <button class="btn small" data-action="aktenblatt" data-id="${a.id}">Aktenblatt drucken</button>
@@ -169,18 +174,27 @@ function renderAkteDetail(a, sub) {
 }
 
 // ---------- Tab: Überblick ----------
+// Reihenfolge: erst "Wo stehen wir?", dann was zuletzt passiert ist, dann Stammdaten
 function tabUeberblick(a) {
   const m = byId("mandanten", a.mandant_id);
   const termine = kinder("termine", a.id).filter((t) => !t.erledigt).sort((x, y) => new Date(x.beginn) - new Date(y.beginn)).slice(0, 4);
-  const aufgaben = kinder("aufgaben", a.id).filter((t) => !t.erledigt).slice(0, 5);
-  const wichtige = kinder("eintraege", a.id).filter((e) => e.wichtig).sort((x, y) => new Date(y.created_at) - new Date(x.created_at)).slice(0, 3);
+  const aufgaben = kinder("aufgaben", a.id).filter((t) => !t.erledigt).sort(sortAufgaben).slice(0, 5);
+  const wurzeln = chronikWurzeln(a.id).sort((x, y) => nachZeitAuf(y, x));
+  const angeheftet = wurzeln.filter((e) => e.wichtig || chronikKinder(a.id, e.id).some((x) => x.wichtig)).slice(0, 6);
+  const zuletzt = wurzeln.filter((e) => !angeheftet.includes(e)).slice(0, 4);
+  const verbunden = verbundeneAkten(a);
 
   return html`
+    ${lagebild(a)}
+
     ${a.in_haft ? html`
       <div class="box dark">
         <strong>Mandant in Haft</strong>
         ${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}
-        <div class="actions-row"><button class="btn small gold" data-action="haft-ende" data-id="${a.id}">Ist entlassen</button></div>
+        <div class="actions-row">
+          <button class="btn small gold" data-action="haft-ende" data-id="${a.id}">Ist entlassen</button>
+          <button class="btn small on-dark" data-action="ereignis-neu" data-akte="${a.id}" data-typ="haftpruefung_antrag">Haftprüfung beantragt</button>
+        </div>
       </div>` : ""}
     ${a.ergebnis ? html`
       <div class="box ${ERFOLGE.includes(a.ergebnis) ? "ok" : "info"}">
@@ -192,24 +206,19 @@ function tabUeberblick(a) {
         <div class="actions-row"><button class="btn small gold" data-action="akte-abschluss" data-id="${a.id}">Ergebnis eintragen</button></div>
       </div>` : ""}
 
-    <dl class="facts">
-      <div><dt>Mandant</dt><dd>${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>${m.telefon ? html`<br><span class="small muted">${m.telefon}</span>` : ""}` : a.client}</dd></div>
-      <div><dt>Gegenpartei</dt><dd>${a.opponent || "–"}</dd></div>
-      <div><dt>Rechtsgebiet</dt><dd>${a.area || "–"}</dd></div>
-      <div><dt>Mandatsart</dt><dd>${a.typ || "–"}</dd></div>
-      <div><dt>Zuständig</dt><dd>${personName(a.zustaendig_id, a.lawyer || "–")}</dd></div>
-      <div><dt>Priorität</dt><dd>${a.prioritaet || "Normal"}</dd></div>
-      <div><dt>Az. Polizei / StA / Gericht</dt><dd>${a.az_extern || "–"}</dd></div>
-      <div><dt>Angelegt</dt><dd>${fmt.datum(a.created_at)} von ${personName(a.created_by)}</dd></div>
-      <div><dt>Zuletzt aktiv</dt><dd>${fmt.relativ(zuletztAktiv(a))}</dd></div>
-    </dl>
-
-    <h3 class="section-title">Sachverhalt</h3>
-    <p class="pre" style="margin-top:0">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt. Über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
-
-    ${wichtige.length ? html`
-      <h3 class="section-title" style="margin-top:20px">Wichtige Einträge</h3>
-      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${e.text}</p></li>`)}</ul>` : ""}
+    <div class="grid-2 ueberblick-chronik">
+      <div>
+        <div class="card-head"><h3 class="section-title" style="margin:0">★ Angeheftet</h3></div>
+        ${angeheftet.length ? chronikListe(angeheftet.map((e) => ({ e })), a, { kompakt: true })
+          : html`<p class="empty">Wichtige Ereignisse in der Chronik anheften – sie erscheinen dann hier.</p>`}
+      </div>
+      <div>
+        <div class="card-head"><h3 class="section-title" style="margin:0">Zuletzt passiert</h3>
+          <a class="btn small" href="#/akten/${a.id}/chronik">Ganze Chronik</a></div>
+        ${zuletzt.length ? chronikListe(zuletzt.map((e) => ({ e })), a, { kompakt: true })
+          : html`<p class="empty">${angeheftet.length ? "Sonst nichts." : "Noch nichts in der Chronik."}</p>`}
+      </div>
+    </div>
 
     <div class="card-head" style="margin-top:20px">
       <h3 class="section-title" style="margin:0">Tatvorwürfe & Strafrahmen</h3>
@@ -228,20 +237,55 @@ function tabUeberblick(a) {
           <a class="btn small" href="#/akten/${a.id}/aufgaben">Alle</a></div>
         ${aufgaben.length ? html`<ul class="rows">${aufgaben.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
       </div>
-    </div>`;
+    </div>
+
+    <h3 class="section-title" style="margin-top:20px">Sachverhalt</h3>
+    <p class="pre" style="margin-top:0">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt. Über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
+
+    <h3 class="section-title" style="margin-top:20px">Stammdaten</h3>
+    <dl class="facts">
+      <div><dt>Mandant</dt><dd>${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>${m.telefon ? html`<br><span class="small muted">${m.telefon}</span>` : ""}` : a.client}</dd></div>
+      <div><dt>Gegenpartei</dt><dd>${a.opponent || "–"}</dd></div>
+      <div><dt>Rechtsgebiet</dt><dd>${a.area || "–"}</dd></div>
+      <div><dt>Mandatsart</dt><dd>${a.typ || "–"}</dd></div>
+      <div><dt>Zuständig</dt><dd>${personName(a.zustaendig_id, a.lawyer || "–")}</dd></div>
+      <div><dt>Priorität</dt><dd>${a.prioritaet || "Normal"}</dd></div>
+      <div><dt>Az. Polizei / StA / Gericht</dt><dd>${a.az_extern || "–"}</dd></div>
+      <div><dt>Angelegt</dt><dd>${fmt.datum(a.created_at)} von ${personName(a.created_by)}</dd></div>
+      <div><dt>Zuletzt aktiv</dt><dd>${fmt.relativ(zuletztAktiv(a))}</dd></div>
+    </dl>
+
+    <div class="card-head" style="margin-top:8px">
+      <h3 class="section-title" style="margin:0">Verbundene Akten</h3>
+      <div class="actions-row">
+        <button class="btn small" data-action="akte-verknuepfen" data-id="${a.id}">+ Verknüpfen</button>
+        <button class="btn small" data-action="akte-neu-verknuepft" data-id="${a.id}" title="Z. B. erneute Festnahme in anderer Sache">+ Neue Akte für ${truncate(mandantName(a), 24)}</button>
+      </div>
+    </div>
+    ${verbunden.length ? html`<ul class="rows">${verbunden.map((v) => html`
+      <li>
+        <div class="grow"><div class="title"><a href="#/akten/${v.id}">${v.number} · ${v.title}</a></div>
+          <div class="meta">${joinHtml([mandantName(v), v.status, v.status !== "Geschlossen" ? phaseName(v) : v.ergebnis])}</div></div>
+        <div class="tools"><button class="icon-btn" title="Verknüpfung entfernen" data-action="akte-entknuepfen" data-id="${a.id}" data-ziel="${v.id}">✕</button></div>
+      </li>`)}</ul>` : html`<p class="empty">Keine. Eine Akte = ein Vorgang – andere Sachen desselben Mandanten als eigene, verknüpfte Akte anlegen.</p>`}`;
 }
 
 function vorwurfTabelle(a) {
   const list = a.vorwuerfe || [];
   if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
   const sum = vorwurfSumme(list);
+  const zahl = {};
+  for (const v of list) zahl[v.status || "Erhoben"] = (zahl[v.status || "Erhoben"] || 0) + 1;
   return html`
-    <div class="table-wrap"><table class="table">
-      <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th><th></th></tr></thead>
+    <div class="table-wrap"><table class="table vorwurf-table">
+      <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Stand</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th><th></th></tr></thead>
       <tbody>${list.map((v, i) => html`
-        <tr>
+        <tr class="${vorwurfAktiv(v) ? "" : "inaktiv"}">
           <td class="nowrap">${v.paragraph || "–"}</td>
           <td>${v.titel}</td>
+          <td><select class="mini-select vs-${norm(v.status || "Erhoben")}" id="vs-${a.id}-${i}" data-change="vorwurf-status" data-id="${a.id}" data-i="${i}" title="Stand des Vorwurfs">
+            ${VORWURF_STATUS.map((st) => html`<option ${(v.status || "Erhoben") === st ? "selected" : ""}>${st}</option>`)}
+          </select></td>
           <td><span class="stepper">
             <button data-action="vorwurf-anzahl" data-id="${a.id}" data-i="${i}" data-delta="-1" title="weniger">−</button>
             <span>${v.anzahl || 1}</span>
@@ -254,65 +298,14 @@ function vorwurfTabelle(a) {
       </tbody>
     </table></div>
     <div class="sum-bar">
-      <span>Strafrahmen gesamt:</span>
+      <span>${VORWURF_STATUS.filter((st) => zahl[st]).map((st) => `${zahl[st]} ${st.toLowerCase()}`).join(" · ")}</span>
+      <span>Strafrahmen${Object.keys(zahl).some((st) => !["Erhoben", "Verurteilt"].includes(st)) ? " (nur offene/verurteilte)" : ""}:</span>
       <span>Geldstrafe <strong>${fmt.geld(sum.geld)}</strong></span>
       <span>Haft <strong>${fmt.haft(sum.haft)}</strong></span>
     </div>`;
 }
 
-// ---------- Tab: Verlauf ----------
-function tabVerlauf(a) {
-  const textId = `draft-${a.id}`, artId = `art-${a.id}`, wichtigId = `wichtig-${a.id}`;
-  const entries = kinder("eintraege", a.id).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
-  return html`
-    <form class="entry-form" data-submit="eintrag" data-id="${a.id}">
-      <textarea id="${textId}" name="text" rows="3" data-input="draft" required
-        placeholder="Neuer Eintrag … z. B. Gespräch mit Mandant, Anruf bei der Staatsanwaltschaft, Ergebnis der Vernehmung">${ui.drafts[textId] || ""}</textarea>
-      <div class="actions-row">
-        <div class="actions-row">
-          <select id="${artId}" name="art" data-input="draft">
-            ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || "Notiz") === o ? "selected" : ""}>${o}</option>`)}
-          </select>
-          <label class="check"><input type="checkbox" id="${wichtigId}" name="wichtig" data-input="draft" ${ui.drafts[wichtigId] ? "checked" : ""}> Wichtig</label>
-        </div>
-        <button class="btn primary" type="submit">Eintragen</button>
-      </div>
-    </form>
-    ${entries.length ? html`<ul class="timeline">${entries.map((e) => html`
-      <li class="${e.wichtig ? "wichtig" : ""}">
-        <div class="head">
-          <span class="badge gold">${e.art || "Notiz"}</span>
-          ${e.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
-          <strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}
-        </div>
-        <p>${e.text}</p>
-        <div class="tools">
-          <button class="icon-btn" title="Bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>
-          <button class="icon-btn" title="Löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
-        </div>
-      </li>`)}</ul>` : html`<p class="empty">Noch keine Einträge. Halte hier alles fest, was im Fall passiert.</p>`}`;
-}
-
 INPUTS.draft = (el) => { ui.drafts[el.id] = el.type === "checkbox" ? el.checked : el.value; };
-
-SUBMITS.eintrag = async (form) => {
-  const id = form.dataset.id;
-  const text = form.elements.text.value.trim();
-  if (!text) return;
-  const button = form.querySelector('[type="submit"]');
-  button.disabled = true;
-  const ok = await attempt(() => insertRow("eintraege", {
-    akte_id: id, text, art: form.elements.art.value, wichtig: form.elements.wichtig.checked,
-  }));
-  button.disabled = false;
-  if (ok) {
-    delete ui.drafts[`draft-${id}`];
-    delete ui.drafts[`wichtig-${id}`];
-    form.elements.text.value = "";
-    form.elements.wichtig.checked = false;
-    toast("Eintrag gespeichert");
-  }
-};
 
 // ---------- Tab: Beteiligte ----------
 function tabBeteiligte(a) {
@@ -420,22 +413,11 @@ function tabRechnungen(a) {
     ${list.length ? rechnungTabelle(list, { akte: false }) : ""}`;
 }
 
-// ---------- Tab: Historie ----------
-function tabHistorie(a) {
-  const list = ui.historie[a.id];
-  if (!list) {
-    ladeHistorie(a.id);
-    return html`<p class="empty">Historie wird geladen …</p>`;
-  }
-  return html`
-    <p class="muted small" style="margin-top:0">Jede Änderung an dieser Akte – automatisch von der Datenbank aufgezeichnet.</p>
-    ${list.length ? html`<ul class="rows">${list.map((p) => protokollZeile(p, { akte: false }))}</ul>` : html`<p class="empty">Noch keine Änderungen aufgezeichnet.</p>`}`;
-}
-
+// ---------- Änderungsprotokoll einer Akte (für die Chronik nachgeladen) ----------
 async function ladeHistorie(id) {
   if (ui.historieLaedt === id) return;
   ui.historieLaedt = id;
-  const { data, error } = await db.from("protokoll").select("*").eq("akte_id", id).order("id", { ascending: false }).limit(300);
+  const { data, error } = await db.from("protokoll").select("*").eq("akte_id", id).order("id", { ascending: false }).limit(1000);
   ui.historieLaedt = null;
   ui.historie[id] = error ? [] : data;
   if (error) toast(errorText(error), "error");
@@ -470,7 +452,7 @@ async function mandantFuerName(name) {
 function openAkteForm(akte, preset = {}) {
   const values = akte
     ? { ...akte, mandant: mandantName(akte) }
-    : { status: "Offen", prioritaet: "Normal", area: "Strafrecht", zustaendig_id: state.me.id, ...preset };
+    : { status: "Offen", prioritaet: "Normal", area: "Strafrecht", typ: "Verteidigung", zustaendig_id: state.me.id, ...preset };
   openForm({
     title: akte ? `Akte ${akte.number} bearbeiten` : "Neue Akte",
     fields: akteFields(),
@@ -488,6 +470,7 @@ function openAkteForm(akte, preset = {}) {
         await updateRow("akten", akte.id, row);
         toast("Akte gespeichert");
       } else {
+        if (preset.verbunden) row.verbunden = preset.verbunden;
         const created = await insertRow("akten", row);
         go(`akten/${created.id}`);
         toast(`Akte ${created.number} angelegt`);
@@ -497,7 +480,7 @@ function openAkteForm(akte, preset = {}) {
   });
 }
 
-function openAbschlussForm(akte) {
+function openAbschlussForm(akte, preset = {}) {
   openForm({
     title: `Ergebnis – ${akte.number}`,
     intro: "Wie ist der Fall ausgegangen? Das fließt auch in die Statistik ein.",
@@ -507,12 +490,17 @@ function openAbschlussForm(akte) {
       { name: "ergebnis_details", label: "Strafmaß / Details", type: "textarea", rows: 4, placeholder: "z. B. 20 HE Haft, $15.000 Geldstrafe; Deal mit StA …" },
       { name: "schliessen", label: "Akte auf „Geschlossen“ setzen", type: "checkbox" },
     ],
-    values: { ...akte, ergebnis_datum: akte.ergebnis_datum || ymd(new Date()), schliessen: true },
+    values: { ...akte, ergebnis_datum: akte.ergebnis_datum || ymd(new Date()), schliessen: true, ...preset },
     onSubmit: async (v) => {
       const row = { ergebnis: v.ergebnis, ergebnis_datum: v.ergebnis_datum, ergebnis_details: v.ergebnis_details };
       if (v.schliessen) {
         row.status = "Geschlossen";
         row.in_haft = false;
+        // offene Vorwürfe bekommen den Ausgang
+        const st = { Freispruch: "Freigesprochen", Einstellung: "Eingestellt", Verurteilung: "Verurteilt", "Strafmilderung / Deal": "Verurteilt" }[v.ergebnis];
+        if (st && (akte.vorwuerfe || []).some((x) => (x.status || "Erhoben") === "Erhoben")) {
+          row.vorwuerfe = akte.vorwuerfe.map((x) => ((x.status || "Erhoben") === "Erhoben" ? { ...x, status: st } : x));
+        }
       }
       await updateRow("akten", akte.id, row);
       toast("Ergebnis gespeichert");
@@ -526,7 +514,7 @@ async function addVorwurf(akteId, v) {
   const list = [...(a.vorwuerfe || [])];
   const i = list.findIndex((x) => (v.gesetz_id && x.gesetz_id === v.gesetz_id)
     || (!v.gesetz_id && norm(x.titel) === norm(v.titel) && norm(x.paragraph) === norm(v.paragraph)));
-  if (i >= 0) list[i] = { ...list[i], anzahl: (Number(list[i].anzahl) || 1) + 1 };
+  if (i >= 0) list[i] = vorwurfAktiv(list[i]) ? { ...list[i], anzahl: (Number(list[i].anzahl) || 1) + 1 } : { ...list[i], status: "Erhoben" };
   else list.push({ ...v, anzahl: 1 });
   await updateRow("akten", akteId, { vorwuerfe: list });
 }
@@ -614,28 +602,6 @@ Object.assign(ACTIONS, {
     const list = (a.vorwuerfe || []).filter((_, i) => i !== +d.i);
     attempt(() => updateRow("akten", a.id, { vorwuerfe: list }));
   },
-  "eintrag-bearbeiten": (d) => {
-    const e = byId("eintraege", d.id);
-    openForm({
-      title: "Eintrag bearbeiten",
-      fields: [
-        { name: "art", label: "Art", type: "select", options: OPTIONEN.eintragArt, required: true, half: true },
-        { name: "wichtig", label: "Wichtig", type: "checkbox", half: true },
-        { name: "text", label: "Text", type: "textarea", rows: 6, required: true },
-      ],
-      values: e,
-      onSubmit: async (v) => { await updateRow("eintraege", e.id, v); toast("Eintrag gespeichert"); },
-      onDelete: async () => {
-        if (!confirm("Eintrag löschen?")) return false;
-        await deleteRow("eintraege", e.id);
-        toast("Eintrag gelöscht");
-      },
-    });
-  },
-  "eintrag-loeschen": async (d) => {
-    if (!confirm("Eintrag für alle löschen?")) return;
-    attempt(() => deleteRow("eintraege", d.id), "Eintrag gelöscht");
-  },
   "beteiligter-neu": (d) => openForm({
     title: "Person hinzufügen",
     fields: beteiligterFields(),
@@ -675,6 +641,15 @@ Object.assign(ACTIONS, {
     });
   },
 });
+
+CHANGES["vorwurf-status"] = (el) => {
+  const a = byId("akten", el.dataset.id);
+  const list = [...(a.vorwuerfe || [])];
+  const i = +el.dataset.i;
+  if (!list[i]) return;
+  list[i] = { ...list[i], status: el.value };
+  attempt(() => updateRow("akten", a.id, { vorwuerfe: list }), `${list[i].paragraph || list[i].titel}: ${el.value}`);
+};
 
 CHANGES["akte-status"] = async (el) => {
   const a = byId("akten", el.dataset.id);
