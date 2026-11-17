@@ -1141,6 +1141,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-innen-links { border-radius: 26px 0 0 26px; background: linear-gradient(180deg, #fffdf7, #f6f0de); }
 .ki-innen-links::before { display: none; }
 .ki-innen-rechts { border-radius: 0 26px 26px 0; }
+.ki-cover { border-radius: 0 26px 26px 0; } /* Display füllt die eckige Scharnierseite aus */
 
 /* Glas: Beim Falten wird das Außendisplay durchsichtig – man schaut hindurch auf das
    Innendisplay. Vom Gehäuse bleibt nur der Rahmen (Ring) sichtbar. */
