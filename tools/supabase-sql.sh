@@ -12,8 +12,9 @@ set -euo pipefail
 REF="btpgnraeumxortphkpgz"   # Projekt "Wiwang Law Akten"
 if [ $# -ne 1 ]; then echo "Aufruf: $0 <datei.sql | \"SQL\">" >&2; exit 1; fi
 if [ -f "$1" ]; then SQL=$(cat "$1"); else SQL="$1"; fi
-BODY=$(python3 -c 'import json,sys; print(json.dumps({"query": sys.stdin.read()}))' <<< "$SQL")
+# Body über stdin übergeben – große Dateien sprengen sonst die Befehlszeile
+python3 -c 'import json,sys; print(json.dumps({"query": sys.stdin.read()}))' <<< "$SQL" |
 curl -sS -m 180 --fail-with-body -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
   -H "Authorization: Bearer proxy-injected" -H "Content-Type: application/json" \
-  --data-binary "$BODY"
+  --data-binary @-
 echo

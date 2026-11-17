@@ -48,8 +48,8 @@ und Änderungen erscheinen bei allen sofort.
   **Kacheln** – ein Gesetzbuch je Kachel. Darin die Paragraphen nach Abschnitten mit Inhaltsverzeichnis, Suche
   (auch über alle Gesetze), Link je Paragraph und „KI fragen“. Gesetzestext lässt sich per **Massenimport** einfach
   einfügen (jede Zeile mit `§ …`/`Art. …` beginnt einen Paragraphen, „Erster Abschnitt …“/„# …“ setzt den Abschnitt).
-  Bereits eingepflegt: **BGB** (Bürgerliches Gesetzbuch), **LPolG** (Landespolizeigesetz), **BtMG**
-  (Betäubungsmittelgesetz), **GewO** (Gewerbeordnung) und **LuftVO** (Luftverkehrsordnung). Die Texte liegen im
+  Bereits eingepflegt: **Verf** (Verfassung des Staates San Andreas), **StGB**, **StPO**, **BGB**, **LPolG**
+  (Landespolizeigesetz), **StVO**, **WaffG**, **BtMG**, **GewO** und **LuftVO** (Luftverkehrsordnung). Die Texte liegen im
   Ordner [`gesetze/`](gesetze); `python3 tools/gesetze-sql.py` erzeugt daraus [`supabase-gesetze.sql`](supabase-gesetze.sql),
   die die Gesetzbücher anlegt bzw. ihre Paragraphen vollständig ersetzt (beliebig oft ausführbar).
 - **Strafkatalog & Strafrechner:** Delikte eures Servers mit Geldstrafe und Haft, Massenimport aus Google Sheets/Excel.

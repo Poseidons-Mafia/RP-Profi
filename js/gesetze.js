@@ -27,8 +27,14 @@ function paragraphNorm(nummer) {
     .toLowerCase();
 }
 
+// Präambel vorn, Anlagen hinten, dazwischen nach Nummer
+function paragraphRang(nummer) {
+  return /^\s*pr(ä|ae)ambel/i.test(nummer || "") ? 0 : /^\s*anlage/i.test(nummer || "") ? 2 : 1;
+}
+
 function paragraphSort(a, b) {
-  return paragraphNorm(a.nummer).localeCompare(paragraphNorm(b.nummer), "de", { numeric: true })
+  return paragraphRang(a.nummer) - paragraphRang(b.nummer)
+    || paragraphNorm(a.nummer).localeCompare(paragraphNorm(b.nummer), "de", { numeric: true })
     || String(a.nummer).localeCompare(String(b.nummer), "de");
 }
 

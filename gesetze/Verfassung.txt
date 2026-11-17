@@ -1,0 +1,723 @@
+Inhaltsübersicht
+Inhaltsübersicht
+
+Präambel
+
+Abschnitt I - Grundlagen und Staatsform
+
+Abschnitt II – Grundrechte
+
+Abschnitt III – Die Legislative
+
+Abschnitt IV – Gesetzgebungsverfahren
+
+Abschnitt V – Select Committee
+
+Abschnitt VI – Die Exekutive
+
+Abschnitt VII – Die Judikative
+
+Abschnitt VIII – Das Constitutional Court
+
+Abschnitt IX – Die San Andreas National Guard
+
+Abschnitt X – Übergangs- und Schlussbestimmungen
+
+Präambel
+“Wir, das Volk des Staates San Andreas, von der Absicht geleitet, unseren Bund zu vervollkommnen, die Gerechtigkeit zu verwirklichen, die Ruhe im Innern zu sichern, für die Landesverteidigung zu sorgen, das allgemeine Wohl zu fördern und das Glück der Freiheit uns selbst und unseren Nachkommen zu bewahren, setzen und begründen diese Verfassung für den Staat San Andreas.”
+
+Abschnitt I. - Grundlagen und Staatsform
+
+
+
+Abschnitt I – Grundlagen und Staatsform
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 1 – Verfassung und Serverleitung (OOC)
+
+Artikel 2 – Staatsform und Staatsgewalt
+
+Artikel 3 – Vorrang der Verfassung
+
+Artikel 4 – Amtseid
+
+
+
+Artikel 1 – Verfassung und Serverleitung (OOC)
+(1) Diese Verfassung ist eine Ergänzung des Regelwerks. Sie legt die wesentlichen Abläufe der Rechtsschaffung und der Rechtsfindung fest. Ein Verstoß gegen die Abläufe dieser Verfassung kann einen Regelbruch (FailRP) darstellen.
+
+(2) Die verfassungsmäßige Gewalt liegt bei der Serverleitung. Die in dieser Verfassung festgehaltenen Grundsätze sind in deren Namen formuliert.
+
+(3) Ausnahmen von dieser Verfassung können, ebenso wie vom Hauptregelwerk selbst, von hierzu ermächtigten Administratoren (Teamleitung+) ausgesprochen werden.
+
+Artikel 2 – Staatsform und Staatsgewalt
+(1) Der Staat San Andreas ist ein demokratischer und sozialer Bundesstaat.
+
+(2) Alle Staatsgewalt geht vom Volke aus. Sie wird vom Volke in Wahlen sowie durch besondere Organe der Gesetzgebung, der vollziehenden Gewalt und der Rechtsprechung ausgeübt.
+
+(3) Die Gesetzgebung ist an die verfassungsmäßige Ordnung, die vollziehende Gewalt und die Rechtsprechung sind an Gesetz und Recht gebunden.
+
+Artikel 3 – Vorrang der Verfassung
+(1) Diese Verfassung ist das oberste Gesetz des Staates. Alle Staatsgewalt und alle Gerichte sind ungeachtet entgegenstehender Bestimmungen in Gesetzen an sie gebunden.
+
+(2) Gesetze und sonstiges Recht dürfen dieser Verfassung nicht widersprechen. Ein Widerspruch wird nach den Vorschriften über das Constitutional Court (Abschnitt VIII) aufgelöst.
+
+Artikel 4 – Amtseid
+(1) Die Verwaltungs- und Justizbeamten des Staates San Andreas verpflichten sich durch Eid oder Gelöbnis zur Wahrung dieser Verfassung.
+
+(2) Ein religiöser Bekenntnisakt darf niemals zur Bedingung für den Antritt eines Amtes oder einer öffentlichen Vertrauensstellung gemacht werden.
+
+Abschnitt II – Grundrechte
+
+
+
+Abschnitt II – Grundrechte
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 5 – Grundrechte
+
+Artikel 6 – Schutz vor willkürlicher Durchsuchung und Beschlagnahme
+
+Artikel 7 – Anklageprinzip
+
+Artikel 8 – Rechte im Strafverfahren
+
+Artikel 9 – Staatsbürgerschaft, Gleichbehandlung und rechtliches Gehör
+
+
+
+Artikel 5 – Grundrechte
+(1) Jeder hat das Recht auf:
+
+Meinungsfreiheit; das Recht, seine Meinung in Wort, Schrift und Bild frei zu äußern und zu verbreiten.
+Informationsfreiheit; das Recht, sich aus allgemein zugänglichen Quellen ungehindert zu informieren.
+Pressefreiheit; die Freiheit der Presse sowie die Freiheit der Berichterstattung.
+Versammlungsfreiheit; das Recht, sich friedlich und ohne Waffen zu versammeln.
+Berufsfreiheit; das Recht, Beruf, Arbeitsplatz und Ausbildung frei zu wählen.
+Eigentumsfreiheit; das Recht, Eigentum zu erwerben, zu besitzen, zu nutzen und darüber zu verfügen.
+Unverletzlichkeit der Wohnung; das Recht auf Schutz der eigenen Wohnung und private Räume.
+Gleichheit vor dem Gesetz; das Recht auf Gleichbehandlung und Schutz vor ungerechtfertigter Benachteiligung.
+Recht auf Leben und körperliche Unversehrtheit; das Recht, vor rechtswidrigen Eingriffen in das Leben und körperliche Unversehrtheit geschützt zu werden.
+Schutz der Menschenwürde; das Recht auf Achtung und Schutz der persönlichen Würde.
+Recht auf effektiven Rechtsschutz; das Recht, staatliche Entscheidungen und Maßnahmen durch unabhängige Gerichte überprüfen zu lassen.
+Recht auf ein faires Verfahren; das Recht auf ein unabhängiges und unparteiisches Gerichtsverfahren sowie auf rechtliches Gehör.
+Unschuldsvermutung; jeder gilt bis zum rechtskräftigen Nachweis seiner Schuld als unschuldig.
+Schutz der Privatsphäre; das Recht auf Achtung des persönlichen und privaten Lebensbereichs.
+Wahlfreiheit und politische Mitwirkung; das Recht, an demokratischen Wahlen und politischen Willensbildungsprozessen nach Maßgabe der Verfassung teilzunehmen.
+(2) Die Ausübung dieser Rechte darf nur aufgrund eines Gesetzes und nur insoweit eingeschränkt werden, wie dies zum Schutz der Rechte anderer, der öffentlichen Sicherheit oder anderer in dieser Verfassung anerkannter Rechtsgüter erforderlich ist.
+
+(3) Jede staatliche Gewalt ist verpflichtet, die in dieser Verfassung garantierten Grundrechte zu achten, zu schützen und zu gewährleisten.
+
+Artikel 6 – Schutz vor willkürlicher Durchsuchung und Beschlagnahme
+Das Recht des Volkes auf Sicherheit der Person, der Wohnung, der Urkunden und des Eigentums vor willkürlicher Durchsuchung, Verhaftung und Beschlagnahme darf nicht verletzt werden. Haussuchungs- und Haftbefehle dürfen nur bei Vorliegen eines eidlich oder eidesstattlich erhärteten Rechtsgrundes ausgestellt werden und müssen die zu durchsuchende Örtlichkeit sowie die in Gewahrsam zu nehmenden Personen oder Gegenstände genau bezeichnen, soweit durch Gesetz nichts anderes geregelt ist.
+
+Artikel 7 – Anklageprinzip
+Niemand darf wegen eines Kapitalverbrechens oder eines sonstigen schweren Verbrechens zur Verantwortung gezogen werden, es sei denn auf Grund einer Anklage oder eines Strafbefehls des Office of the San Andreas Attorney General oder eines auf ihren Antrag ergangenen gerichtlichen Beschlusses.
+
+Artikel 8 – Rechte im Strafverfahren
+(1) In allen Strafverfahren hat der Angeklagte Anspruch auf einen unverzüglichen und öffentlichen Prozess vor einem unparteiischen Gericht, sofern ein Richter verfügbar ist und gesetzlich nichts anderes bestimmt ist.
+
+(2) Der Angeklagte hat ferner Anspruch darauf,
+
+1. über die Art und die Gründe der Anklage unterrichtet zu werden,
+
+2. den anwesenden Belastungszeugen gegenübergestellt zu werden,
+
+3. sich selbst nicht zu belasten,
+
+3. nicht doppelt für eine Tat bestraft zu werden,
+
+4. die Zwangsvorladung von Entlastungszeugen zu verlangen und
+
+5. einen Rechtsbeistand zu seiner Verteidigung zu erhalten, sofern einer verfügbar ist.
+
+Artikel 9 – Staatsbürgerschaft, Gleichbehandlung und rechtliches Gehör
+(1) Alle Personen, die im Staat San Andreas geboren oder eingebürgert sind und seiner Gesetzeshoheit unterstehen, sind vollwertige Bürger des Staates San Andreas.
+
+(2) Es dürfen keine Gesetze erlassen oder durchgeführt werden, ohne verfassungsrechtliche Rechtfertigung im Sinne des Artikels 5 Absatz 2  beschränken.
+
+(3) Niemandem darf innerhalb des Hoheitsbereichs des Staates der gleiche Schutz durch das Gesetz versagt werden, sofern diese Verfassung nicht ausdrücklich etwas anderes bestimmt.
+
+Abschnitt III – Die Legislative
+
+
+
+Abschnitt III – Die Legislative
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 10 – Das Parliament of San Andreas
+
+Artikel 11 – Zusammensetzung des San Andreas Parliament
+
+Artikel 12 – Wahl und Amtszeit
+
+Artikel 13 – Der Speaker of Parliament
+
+Artikel 14 – Rechte und Immunität der Member of Parliament
+
+Artikel 15 – Der San Andreas Council als Wächterkammer
+
+Artikel 16 – Aufgaben des San Andreas Parliaments
+
+Artikel 17 – Der National Security Council
+
+
+Artikel 10 – Das Parliament of San Andreas
+(1) Das Parliament of San Andreas ist die gesetzgebende Gewalt des Staates San Andreas. Es besteht aus zwei Kammern:
+
+1. dem San Andreas Parliament als gesetzgebende Kammer,
+
+2. dem San Andreas Council als Wächterkammer.
+
+(2) Das San Andreas Parliament beschließt Gesetze. Der San Andreas Council wirkt ausschließlich nach Maßgabe dieser Verfassung am Gesetzgebungsverfahren mit.
+
+(3) Beide Kammern handeln im Rahmen ihrer verfassungsmäßigen Zuständigkeiten unabhängig voneinander und sind ausschließlich an diese Verfassung gebunden.
+
+(4) Das Parliament wird durch die Parlamentsordnung reguliert, welche durch diese erlassen wird.
+
+Artikel 11 – Zusammensetzung des San Andreas Parliament
+(1) Das San Andreas Parliament besteht aus 50 gewählten und entsandten Members of Parliament.
+
+(2) Je zwei Sitze entsenden als Staatsfraktion:
+
+das Los Santos Police Department,
+die San Andreas Medical Services.
+(3) Je einen Sitz entsenden als Staatsfraktion:
+
+das National Office of Security Enforcement,
+das Office of the San Andreas Attorney General,
+die Judicial Branch,
+die National Guard,
+das San Andreas Printing Office.
+(4) Die übrigen Sitze stehen den demokratisch gewählten Parteien zu.
+
+Artikel 12 – Wahl und Amtszeit
+(1) Die Wahlen zum San Andreas Parliament finden alle drei Monate statt. Mit jeder Wahl werden auch die entsandten Member of Parliament der Staatsfraktionen bestätigt oder ausgetauscht.
+
+(2) Zur Wahl darf sich nur aufstellen, wem die Wählbarkeit nicht durch ein Gesetz aberkannt wurde.
+
+(3) Pro Legislaturperiode darf ein Member of Parliament nur einen Sitz wahrnehmen.
+
+(4) Gibt ein Member of Parliament seinen Sitz freiwillig auf oder sollte dies Kraft Gesetzes, durch Tod oder dauerhafte Abwesenheit geschehen, so darf dieser von einem Parteiangehörigen oder der jeweiligen Staatsfraktion einmalig neu besetzt werden. Ein nachträglicher Austausch von Membern of Parliament ist darüber hinaus nicht möglich; das ausgeschiedene Member darf nicht erneut ins San Andreas Parliament einziehen.
+
+(5) Wird eine Partei aufgelöst, so werden ihre Sitze auf die bestehenden Parteien aufgeteilt und können neu besetzt werden. Die Aufteilung übernimmt hierbei der Chairman of the San Andreas Council.
+
+Artikel 13 – Der Speaker of Parliament
+(1) Der Speaker of Parliament wird von allen anwesenden Members of Parliament in der ersten Sitzung mit einfacher Mehrheit gewählt.
+
+(2) Der Speaker of Parliament plant und leitet die Sitzungen, verschriftlicht, unterzeichnet und verkündet die Beschlüsse und übernimmt die allgemeinen Verwaltungsaufgaben des San Andreas Parliament.
+
+(3) Das San Andreas Parliament kann den Speaker abwählen und eine Neuwahl beantragen. Hierzu sind mindestens 66 Prozent der gesamten Stimmen erforderlich.
+
+Artikel 14 – Rechte und Immunität der Member of Parliament
+(1) Gegen einen im Dienst befindlichen Member of Parliament darf kein Straf- oder Disziplinarverfahren eröffnet werden. Die Eröffnung eines solchen Verfahrens ist beim Speaker of Parliament oder beim Chairman of the San Andreas Council zu beantragen.
+
+(2) Gegen den Speaker of Parliament und den Chairman of the San Andreas Council ist die Eröffnung eines Strafverfahrens nicht möglich.
+
+(3) Auf Antrag beim Speaker of Parliament oder beim Chairman of the San Andreas Council kann einem Member of Parliament ein Parliamentary Agent als Personenschutz zugewiesen werden. Dieser darf seine Tätigkeit nur wahrnehmen, wenn er sein Member of Parliament begleitet oder das San Andreas Parlamentsgebäude schützt.
+
+Artikel 15 – Der San Andreas Council als Wächterkammer
+(1) Der San Andreas Council verkörpert die verfassungs- und regelwahrende Kontrolle der Serverleitung. Seine Aufgabe ist ausschließlich die Kontrolle der Verfassungsmäßigkeit und der serverseitigen Interessen im Gesetzgebungsverfahren.
+
+(2) Der San Andreas Council greift nicht in die laufende San Andreas Parlamentarische Arbeit ein. Er besitzt kein Stimmrecht.
+
+(3) Der San Andreas Council darf jederzeit an den Sitzungen des San Andreas Parliaments teilnehmen. Ihm stehen ein Rede- und ein Empfehlungsrecht zu.
+
+(4) Die Zusammensetzung und die Ernennung der Mitglieder des San Andreas Council erfolgen ausschließlich durch dessen Chairman. Der Chairman wird durch die Serverleitung bestimmt.
+
+(5) Der Chairman of the San Andreas Council ist zugleich Staatsoberhaupt des Staates San Andreas und die höchste Instanz des Parliaments. Er ist befugt, Gesetze zu erlassen, sofern diese mit dieser Verfassung vereinbar sind.
+
+(6) Der Chairman of the San Andreas Council ist berechtigt, Entscheidungen in Haushaltsangelegenheiten, die er für bedenklich oder nicht vertretbar hält, durch Einlegung eines Vetos zu blockieren.
+
+Artikel 16 – Aufgaben des San Andreas Parliaments
+(1) Das San Andreas Parliament übernimmt seine Aufgaben durch Beschlüsse, die es in öffentlich angekündigten Sitzungen fasst. Das Fassen eines Beschlusses kann nur bei Anwesenheit eines Drittels des Parliaments geschehen.
+
+(2) Es beschließt insbesondere über:
+
+1. die Gesetzgebung: das Ändern, Hinzufügen oder Entfernen von Gesetzen; erfordert mindestens 51 Prozent der anwesenden Stimmen,
+
+2. den Bundeshaushalt: das Zuteilen von Geldern aus Fraktionskassen für staatliche Zwecke; der Kontostand einer Fraktion darf dabei 5 Millionen Dollar nicht unterschreiten; erfordert mindestens 66 Prozent der anwesenden Stimmen,
+
+3. Übungsanfragen: das Genehmigen von Übungen der Staatsfraktionen; erfordert mindestens 33 Prozent der anwesenden Stimmen,
+
+4. das Ausrufen der National Guard: beim Vorliegen der Voraussetzungen des Artikels 41; erfordert mindestens 33 Prozent der anwesenden Stimmen.
+
+(3) Die San Andreas Parliament greift nicht in die Staatsfraktionen ein und ist deren Überwachungsbehörde. Die Member of Parliament sind im Dienst jedoch befugt, das Office of the San Andreas Attorney General und ihre Ermittlungspersonen zur Durchführung eines Strafverfahrens zu ersuchen.
+
+(4) Auf Antrag beim Speaker of Parliament oder beim Chairman of the San Andreas Council kann einem Member of Parliament die Erlaubnis erteilt werden,
+
+sämtliche oder durch den Speaker of Parliament oder dem Chairman of the San Andreas Council bestimmte Staatsgebäude zu betreten und bei sämtlichen Vorgängen zuzuschauen oder
+die National Guard sofort auszurufen.
+Artikel 17 – Der National Security Council
+(1) Der National Security Council ist ein parlamentarisch angebundenes Gremium.
+
+(2) Die nähere Organisation, Leitung, Zusammensetzung, die Abberufung von Mitgliedern sowie die Arbeitsweise des National Security Councils werden durch die San Andreas Parlamentsordnung geregelt.
+
+(3) Die Aufsicht über den National Security Council obliegt dem Präsidium des San Andreas Parliament im Rahmen der San Andreas Parlamentsordnung.
+
+Abschnitt IV – Gesetzgebungsverfahren
+
+
+
+Abschnitt IV – Gesetzgebungsverfahren
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 18 – Beschluss und Verkündung
+
+Artikel 19 – Verfassungsrechtliche Bedenken des San Andreas Councils
+
+Artikel 20 – Entscheidung des Constitutional Courts
+
+
+Artikel 18 – Beschluss und Verkündung
+(1) Gesetze werden ausschließlich durch das San Andreas Parliament beschlossen. Mit dem Beschluss gelten sie als angenommen.
+
+(2) Der Speaker of Parliament oder Chairman of the San Andreas Council verkündet das Gesetz.
+
+(3) Gesetze treten grundsätzlich mit ihrer Verkündung in Kraft, soweit sie keinen abweichenden Zeitpunkt bestimmen.
+
+Artikel 19 – Verfassungsrechtliche Bedenken des San Andreas Councils
+(1) Der San Andreas Council kann innerhalb von sieben Tagen nach der Verkündung eines Gesetzes verfassungsrechtliche Bedenken erheben.
+
+(2) Zur Klärung seiner Bedenken kann der San Andreas Council das Constitutional Court anrufen.
+
+(3) Die Einleitung eines Prüfungsverfahrens setzt das Gesetz grundsätzlich nicht außer Kraft.
+
+Artikel 20 – Entscheidung des Constitutional Courts
+(1) Für Verfahren und Entscheidungen gilt Abschnitt VIII.
+
+Abschnitt V – Select Committee
+
+
+
+Abschnitt V – Select Committee
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 21 – Einsetzung
+
+Artikel 22 – Aufgabe und Kontrollfunktion
+
+Artikel 23 – Befugnisse
+
+Artikel 24 – Mitwirkungspflicht der Behörden
+
+Artikel 25 – Ergebnis und Veröffentlichung
+
+
+Artikel 21 – Einsetzung
+(1) Das San Andreas Parliament hat das Recht, das Select Committee einzusetzen. Die Einsetzung erfolgt durch Beschluss mit 33 Prozent der anwesenden Stimmen.
+
+(2) Der Einsetzungsbeschluss bestimmt den Untersuchungsgegenstand. Dieser darf nachträglich nur durch das San Andreas Parliament erweitert oder geändert werden.
+
+Artikel 22 – Aufgabe und Kontrollfunktion
+(1) Das Select Committee dient der San Andreas Parlamentarischen Kontrolle. Er klärt Sachverhalte auf, an deren Aufklärung ein öffentliches Interesse besteht, insbesondere mögliche Missstände im Handeln staatlicher Organe und Behörden.
+
+(2) Das Select Committee übt kein richterliches Amt aus. Die Feststellung strafrechtlicher Schuld bleibt den Gerichten vorbehalten.
+
+Artikel 23 – Befugnisse
+(1) Das Select Committee kann die zur Aufklärung des Untersuchungsgegenstands erforderlichen Beweise erheben. Er kann insbesondere
+
+1. Zeugen laden und befragen,
+
+2. Auskünfte einholen und
+
+3. Einsicht in Akten und Unterlagen verlangen.
+
+(2) Zeugen sind zur Aussage verpflichtet. Ein Zeugnisverweigerungsrecht besteht in den durch die Strafprozessordnung bestimmten Fällen entsprechend.
+
+(3) Die Akteneinsicht und die Zeugenladung finden ihre Grenze in den gesetzlich geschützten Geheimhaltungsinteressen, insbesondere in den Sicherheitsfreigaben der Sicherheitsbehörden.
+
+Artikel 24 – Mitwirkungspflicht der Behörden
+(1) Alle staatlichen Behörden sind verpflichtet, dem Select Committee die erforderlichen Auskünfte zu erteilen, Akten vorzulegen und die Aufklärung zu unterstützen.
+
+(2) Die Mitwirkung darf nur verweigert werden, soweit überwiegende Geheimhaltungsinteressen der nationalen Sicherheit entgegenstehen. Die Verweigerung ist gegenüber dem Ausschuss zu begründen.
+
+(3) (Entfallen)
+
+Artikel 25 – Ergebnis und Veröffentlichung
+(1) Der Select Committee fasst das Ergebnis seiner Untersuchung in einem schriftlichen Abschlussbericht zusammen.
+
+(2) Der Abschlussbericht wird dem San Andreas Parliament vorgelegt und veröffentlicht.
+
+(3) Von der Veröffentlichung ausgenommen sind Inhalte, deren Bekanntwerden geschützte Geheimhaltungsinteressen oder die nationale Sicherheit gefährden würde.
+
+Abschnitt VI – Die Exekutive
+
+
+
+Abschnitt VI – Die Exekutive
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 26 – Das Office of the San Andreas Attorney General
+
+Artikel 27 – Die Strafverfolgungsbehörden
+
+Artikel 28 – Selbstverwaltung der Staatsfraktionen
+
+Artikel 29 – Das National Office of Security Enforcement
+
+Artikel 30 – Gebühren
+
+
+Artikel 26 – Das Office of the San Andreas Attorney General
+(1) Das Office of the San Andreas Attorney General ist eine Exekutivbehörde und die rechtliche Vertretung des Staates. Sie ist als Einzige befugt, Strafen im Sinne des Strafgesetzbuches für Bürger zu fordern. Sie ist ein unabhängiges Organ und nur innerhalb des Office of the San Andreas Attorney General weisungsgebunden.
+
+(2) Das Office of the San Andreas Attorney General ist Herrin des Ermittlungsverfahrens und nach der Strafprozessordnung für jegliche Strafverfolgung zuständig. Sie entscheidet über die Fortführung und die Beendigung sämtlicher Maßnahmen der Strafverfolgungsbehörden, soweit die Strafprozessordnung nichts anderes bestimmt.
+
+Artikel 27 – Die Strafverfolgungsbehörden
+(1) Das Office of the San Andreas Attorney General (OotSAAG), das National Office of Security Enforcement (NOOSE) und das Los Santos Police Department (LSPD) sind für die Wahrung der Ordnung und Sicherheit im Staat San Andreas verantwortlich. Ihre Zuständigkeiten können durch einen Zuständigkeitskatalog eingeschränkt werden.
+
+(2) Die Parliamentary Agents sind für den Schutz der San Andreas Parlamentsgebäude und des ihnen zugewiesenen Member of Parliament zuständig und übernehmen in diesem Rahmen Rechte der Strafverfolgungsbehörden. Sie dürfen ihre Rechte nur in Begleitung ihres Member of Parliament oder beim Schutz des San Andreas Parlamentsgebäude wahrnehmen.
+
+(3) Für diese Aufgaben stellt der Staat den Strafverfolgungsbehörden Gesetze und Ausrüstung zur Verfügung.
+
+(4) Verantwortlich für die Einhaltung dieser Verfassung und die geltenden Gesetze bei der Strafverfolgung ist die Leitung der jeweiligen Behörde, deren Ausbleiben das Office of the San Andreas Attorney General gemäß ihrem Eid.
+
+Artikel 28 – Selbstverwaltung der Staatsfraktionen
+(Entfallen)
+
+Artikel 29 – Das National Office of Security Enforcement
+(1) Das National Office of Security Enforcement (NOOSE) ist eine Sicherheitsbehörde des Staates San Andreas. Es dient dem Schutz der nationalen Sicherheit, der verfassungsmäßigen Ordnung sowie der inneren Stabilität des Staates.
+
+(2) Das NOOSE ist eine Exekutivbehörde mit besonderen sicherheitsbehördlichen und nachrichtendienstlichen Befugnissen. Seine Zuständigkeit umfasst insbesondere Maßnahmen des Heimatschutzes, der Gefahrenabwehr gegen staatsgefährdende Bestrebungen sowie die Bekämpfung schwerer organisierter Kriminalität, sofern diese die nationale Sicherheit, staatliche Einrichtungen oder die verfassungsmäßige Ordnung beeinträchtigt.
+
+(3) Zur Wahrnehmung seiner Aufgaben ist das NOOSE befugt, nachrichtendienstliche Erkenntnisse zu erheben, auszuwerten und zu verarbeiten, soweit diese dem Schutz der nationalen Sicherheit oder der Abwehr schwerer Gefahren für den Staat dienen. In diesem Zusammenhang ist das NOOSE berechtigt, eigene Sicherheits- und Gefährdungsstufen festzulegen und eigenständig zu bestimmen, welche Personen Zugriff auf entsprechende Informationen erhalten. Ausgenommen hiervon ist der Chairman of the San Andreas Council.
+
+(4) Das NOOSE kann behördenübergreifende Ermittlungen koordinieren, gemeinsame Taskforces bilden und sicherheitsrelevante Einsatzlagen leiten, sofern diese einen Bezug zur nationalen Sicherheit oder zu staatlichen Institutionen aufweisen.
+
+(5) Bei Gefahren für die nationale Sicherheit, bei terroristischen Bedrohungslagen, bei Angriffen auf staatliche Einrichtungen oder bei vergleichbaren sicherheitsrelevanten Einsatzlagen besitzt das NOOSE ein Koordinationsrecht gegenüber sämtlichen staatlichen Behörden und Einrichtungen des Staates San Andreas, ausgenommen das Parliament of San Andreas, die Gerichte, das Constitutional Court und das Office of the San Andreas Attorney General. Sollte die National Guard ausgerufen werden, so greift Artikel 40, Abs. 3.
+
+(6) Sämtliche Behörden mit Ausnahme des Parliament of San Andreas, der Gerichte und des Constitutional Courts und das Office of the San Andreas Attorney General sind verpflichtet, mit dem NOOSE zusammenzuarbeiten, angeforderte Informationen bereitzustellen sowie abgestimmte Maßnahmen im Rahmen ihrer gesetzlichen Zuständigkeit umzusetzen, soweit dem keine rechtlichen Hindernisse entgegenstehen.
+
+(7) Die operative Einsatzleitung kann in Fällen, in denen die nationale Sicherheit unmittelbar betroffen ist, durch das NOOSE übernommen werden.
+
+(8) Das NOOSE ist darüber hinaus zuständig für
+
+1. den Schutz staatlicher Institutionen und sensibler Einrichtungen,
+
+2. die Aufklärung und Abwehr von Inlandsterrorismus,
+
+3. Maßnahmen des Verfassungsschutzes,
+
+4. sicherheitsrelevante Lage- und Risikoanalysen,
+
+5. die Unterstützung anderer Behörden bei außergewöhnlichen Gefahrenlagen.
+
+Artikel 30 – Gebühren
+(1) Alle Gebühren, die von staatlichen Institutionen im Rahmen der Ausstellung von Berechtigungen, amtlichen Dokumenten oder bei der Erbringung von Dienstleistungen erhoben werden, unterliegen einer gesetzlichen Deckelung.
+
+(2) Die maximale Höhe einzelner Gebühren wird durch die jeweilige Behörde im Einvernehmen mit dem San Andreas Parliament festgelegt.
+
+(3) Staatliche Institutionen sind verpflichtet, für die Einführung neuer gebührenpflichtiger Berechtigungen, amtlicher Dokumente oder Dienstleistungen sowie für jede Anpassung bestehender Gebühren einen Antrag beim San Andreas Parliament einzureichen. Die Gebührenobergrenzen werden durch das San Andreas Parliament festgelegt.
+
+Abschnitt VII – Die Judikative
+
+
+
+Abschnitt VII – Die Judikative
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 31 – Richterliche Gewalt und Unabhängigkeit
+
+Artikel 32 – Instanzenzug
+
+Artikel 33 – Anerkennung, Rechtsmittel und Bindungswirkung
+
+Artikel 34 – US Special Judicial Authority
+
+
+Artikel 31 – Richterliche Gewalt und Unabhängigkeit
+(1) Die richterliche Gewalt des Staates San Andreas wird durch die Gerichte ausgeübt. Die Richter sind unabhängig und nur dem Gesetz unterworfen.
+
+(2) Die richterliche Gewalt erstreckt sich auf alle Fälle, die sich aus dieser Verfassung und den Gesetzen des Staates San Andreas ergeben.
+
+Artikel 32 – Instanzenzug
+(1) Die ordentliche Gerichtsbarkeit gliedert sich in drei Instanzen:
+
+1. den District Court als Eingangsinstanz,
+
+2. den Court of Appeals als Berufungsinstanz,
+
+3. den Supreme Court als höchste Instanz.
+
+(2) Der District Court ist für die Verhandlung und Entscheidung sämtlicher erstinstanzlicher Verfahren in Zivil- und Strafsachen zuständig. Er kann in Fachbereiche, insbesondere Zivil- und Strafkammern, gegliedert werden.
+
+(3) Der Court of Appeals überprüft Entscheidungen des District Court über Neuverhandlung. Im Mittelpunkt seiner Tätigkeit steht die Überprüfung der angefochtenen Entscheidung. Er kann in Fällen mit höherem Streitwert oder besonderer Bedeutung als Erstinstanz tätig werden, näheres regelt die Gerichtsordnung.
+
+(4) Der Supreme Court ist das höchste Gericht des Staates und die letzte Instanz. Er entscheidet über Verfahren von grundsätzlicher Bedeutung und sichert die einheitliche Rechtsprechung. Er wählt die Fälle aus, die er zur Entscheidung annimmt.
+
+(5) An der Spitze des Supreme Court steht der Chief Justice. Er repräsentiert die Gerichtsbarkeit nach außen und trägt die Gesamtverantwortung für die einheitliche Rechtsprechung. Das Nähere zu Aufbau, Rängen, Besetzung, sowie weiteren Aufgaben und Spruchkörpern der Gerichte regelt die Gerichtsordnung.
+
+Artikel 33 – Anerkennung, Rechtsmittel und Bindungswirkung
+(1) Gesetze und richterliche Entscheidungen genießen volle Würdigung und Anerkennung.
+
+(2) Ein Widerspruch gegen eine geltende richterliche Entscheidung kann nur bei der nächsthöheren richterlichen Instanz erhoben werden.
+
+(3) Die Urteile des Supreme Court sind endgültig und für alle nachgeordneten Gerichte bindend.
+
+(4) Die Prüfung von Gesetzen auf ihre Vereinbarkeit mit dieser Verfassung obliegt nicht den Gerichten der ordentlichen Gerichtsbarkeit, sondern ausschließlich dem Constitutional Court (Abschnitt  VIII).
+
+Artikel 34 – US Special Judicial Authority
+(1) Das US Special Judicial Authority (USSJA) ist ein Sondergericht außerhalb der regulären, öffentlich einsehbaren Gerichtsbarkeit. Es besitzt die Befugnis, gesetzliche Ausnahmeregelungen für Bürger und Behörden bei berechtigtem Interesse zu prüfen und zu genehmigen.
+
+(2) Das USSJA entscheidet über Anträge auf Abweichung von der geltenden Gesetzeslage, wenn ein berechtigtes Interesse vorliegt, das eine solche Ausnahme rechtfertigt. Es prüft die Rechtmäßigkeit und Angemessenheit des Antrags.
+
+(3) Das USSJA verfügt über keine gesondert ernannte Judicial Branch. Sein Spruchkörper besteht kraft seines Amtes aus den Mitgliedern des Supreme Court sowie den Leitungen des District Court und des Court of Appeals; einer gesonderten Erwähnung bedarf es nicht.
+
+(4) Beschlüsse des USSJA werden mit absoluter Mehrheit der Mitglieder des Spruchkörpers gefasst und mit dieser Mehrheit rechtswirksam.
+
+(5) (OOC) Bei jedem Antrag wird die Teamleitung informiert. Die Teamleitung besitzt ein Vetorecht. Legt sie ihr Veto ein, so ist der Antrag abgelehnt; eine zustimmende Abstimmung der Teamleitung ist für die Genehmigung hingegen nicht erforderlich.
+
+(6) Gegen Entscheidungen des USSJA ist kein Rechtsmittel vorgesehen. Das USSJA behält sich das Recht vor, eigene Beschlüsse zu prüfen und gegebenenfalls aufzuheben.
+
+(7) Ausnahmen von Abschnitt II sowie von dieser Verfassung selbst sind unzulässig. Genehmigungen sind zu befristet, schriftlich zu begründen und dem Constitutional Court zur Kenntnis zu geben. Die Verfassungsbeschwerde nach Artikel 39 bleibt unberührt
+
+Abschnitt VIII – Das Constitutional Court
+
+
+
+Abschnitt VIII – Das Constitutional Court
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 35 – Stellung und Zusammensetzung
+
+Artikel 36 – Zuständigkeiten
+
+Artikel 37 – Antragsberechtigte und Verfahren
+
+Artikel 38 – Entscheidungswirkung und einstweilige Anordnung
+
+Artikel 39 – Verfassungsbeschwerde
+
+
+Artikel 35 – Stellung und Zusammensetzung
+(1) Das Constitutional Court ist das oberste Organ zur Wahrung dieser Verfassung. Es steht insoweit über die ordentliche Gerichtsbarkeit.
+
+(2) Das Constitutional Court besteht aus
+
+1. einem der Chairman of the San Andreas Council als Hauptrichter und
+
+2. dem Chief Justice sowie dem Deputy Chief Justice des Supreme Court als Nebenrichter.
+
+(3) Den Vorsitz im Constitutional Court führt der Hauptrichter.
+
+(4) Der Hauptrichter kann ein Verfahren allein entscheiden oder es einem oder beiden Nebenrichtern zur Bearbeitung und Entscheidung übertragen. Entscheidet das Gericht in voller Besetzung, so gibt bei Stimmengleichheit die Stimme des Hauptrichters den Ausschlag.
+
+(5) Das Constitutional Court greift nicht in den laufenden Betrieb der ordentlichen Gerichtsbarkeit ein. Es nimmt ausschließlich die ihm         in dieser Verfassung zugewiesenen Aufgaben wahr.
+
+(6) Ist der Chairman of the San Andreas Council Beteiligter des Verfahrens, so führt der Chief Justice den Vorsitz; der Hauptrichter wirkt an der Entscheidung nicht mit.
+
+Artikel 36 – Zuständigkeiten
+Das Constitutional Court entscheidet
+
+1. über die Vereinbarkeit von Gesetzen mit dieser Verfassung (Normenkontrolle),
+
+2. über Streitigkeiten zwischen den obersten Staatsorganen über ihre verfassungsmäßigen Rechte und Pflichten (Organstreitigkeiten),
+
+3. über Verfassungsbeschwerden (Artikel 39) und
+
+4. über die weiteren ihm durch diese Verfassung zugewiesenen Verfahren.
+
+Artikel 37 – Antragsberechtigte und Verfahren
+(1) Antragsberechtigt sind
+
+1. der San Andreas Council,
+
+2. das San Andreas Parliament,
+
+3. der Speaker of Parliament,
+
+4. jede unmittelbar betroffene Staatsfraktion sowie
+
+5. im Verfahren der Verfassungsbeschwerde jede beschwerdeberechtigte Person (Artikel 39).
+
+(2) Der Antrag ist schriftlich zu stellen und zu begründen. Das Constitutional Court klärt den Sachverhalt von Amts wegen auf und gibt den Beteiligten Gelegenheit zur Stellungnahme.
+
+(3) Das Constitutional Court entscheidet durch begründeten Beschluss, soweit diese Verfassung nichts anderes bestimmt.
+
+Artikel 38 – Entscheidungswirkung und einstweilige Anordnung
+(1) Das Constitutional Court kann ein Gesetz ganz oder teilweise für nichtig erklären. Ein für nichtig erklärtes Gesetz ist von der Verkündung der Entscheidung an nicht mehr anzuwenden.
+
+(2) Das Constitutional Court kann bis zur endgültigen Entscheidung eine einstweilige Anordnung erlassen, insbesondere die Anwendung eines Gesetzes ganz oder teilweise vorläufig aussetzen, wenn dies zur Abwehr schwerer Nachteile dringend geboten ist.
+
+(3) Der Constitutional Court kann im Rahmen einer Verfassungsbeschwerde (Artikel 39) Entscheidungen und Akte jeglicher staatlichen Behörden und Gerichte für nicht vereinbar mit der Verfassung erklären. Damit sind diese nicht länger bindend und aufgehoben.
+
+(4) Die Entscheidungen des Constitutional Courts sind für alle Staatsorgane, Behörden und Gerichte bindend.
+
+Artikel 39 – Verfassungsbeschwerde
+(1) Jede Person kann mit der Behauptung, durch die öffentliche Gewalt in einem ihrer Grundrechte (Abschnitt  II) verletzt zu sein, Verfassungsbeschwerde zum Constitutional Court erheben.
+
+(2) Die Verfassungsbeschwerde ist nur zulässig, wenn
+
+1. der ordentliche Rechtsweg zuvor erschöpft wurde und
+
+2. ein schwerwiegender Eingriff in ein Grundrecht geltend gemacht wird.
+
+(3) Das Constitutional Court kann offensichtlich unzulässige oder unbegründete Beschwerden ohne weitere Begründung zurückweisen.
+
+Abschnitt IX – Die San Andreas National Guard
+
+
+
+Abschnitt IX –
+
+Die San Andreas National Guard
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 40 – Die San Andreas National Guard
+
+Artikel 41 – Ausrufung und Mobilisierung
+
+Artikel 42 – Die Militärpolizei
+
+Artikel 43 – Militärische Gerichtsbarkeit
+
+Artikel 44 – Verfahren und Zuständigkeit
+
+Artikel 45 – Militärische Dienstvergehen
+
+
+Artikel 40 – Die San Andreas National Guard
+(1) Die San Andreas National Guard dient der Landesverteidigung und der Sicherheit des Staates San Andreas.
+
+(2) Die San Andreas National Guard ist stets Herr über den Luftraum, sowie die Gewässer des Staates San Andreas und hat dessen Sicherheit zu jeder Zeit zu gewährleisten.
+
+(3) Wird die San Andreas National Guard zu einem laufenden Einsatz hinzugerufen, so übernimmt die ranghöchste anwesende Person der San Andreas National Guard die Einsatzleitung und damit die Verantwortung für das Handeln.
+
+Artikel 41 – Ausrufung und Mobilisierung
+(1) Die San Andreas National Guard kann ausgerufen werden durch
+
+1. die Berechtigten des San Andreas Parliaments oder
+
+2. in Abwesenheit eines Berechtigten durch einen Angehörigen der San Andreas National Guard im Rang eines Majors oder höher, oder
+
+3. den Leitungen der Staatsbehörden in Abwesenheit von obigen Personen.
+
+(2) Ein Mobilisierungsbefehl kann nicht auf eine andere Person übertragen werden. Er muss stets von der amtierenden, hierzu befugten Person ausgerufen werden.
+
+(3) Die Parlamentarische Ausrufung richtet sich nach Artikel 16 Absatz 2 Nummer 4.
+
+Artikel 42 – Die Militärpolizei
+(1) Die Militärpolizei übernimmt innerhalb der San Andreas National Guard die Strafverfolgung. Im Dienst befindliche Angehörige der San Andreas National Guard dürfen ausschließlich in Zusammenarbeit mit der Militärpolizei abgehandelt werden.
+
+(2) Die Militärpolizei dient dem Schutz sämtlicher militärischer Einrichtungen.
+
+(3) Außerhalb des militärischen Geländes oder militärischer Einsätze nimmt die Militärpolizei keine Rechte der Strafverfolgung gegenüber Zivilisten wahr.
+
+(4) Das LSPD und das NOOSE sind berechtigt, Militärfahrzeuge anzuhalten und nach dem Militärausweis zu kontrollieren. Sie müssen die Militärpolizei hierüber in Kenntnis setzen und alle erhobenen Informationen gegenüber der Militärpolizei offenlegen.
+
+(5) Der National Security Council kann in Zusammenarbeit mit dem Office of the San Andreas Attorney General die Ermittlungsbehörden in Einzelfällen von der Pflicht zur Verfolgung eines Vergehens befreien.
+
+Artikel 43 – Militärische Gerichtsbarkeit
+(1) Straftaten, die ein Angehöriger der San Andreas National Guard im Dienst begeht, unterliegen der militärischen Gerichtsbarkeit. Diese wird durch eine Militärkammer des District Court ausgeübt.
+
+(2) Straftaten, die ein Angehöriger der San Andreas National Guard außerhalb des Dienstes begeht, sowie Straftaten ohne militärischen Bezug unterliegen der allgemeinen Gerichtsbarkeit.
+
+(3) In Zweifelsfällen über die Zuständigkeit ist auf den überwiegenden Bezug der Tat zum Dienst abzustellen.
+
+Artikel 44 – Verfahren und Zuständigkeit
+(1) Die Ermittlungen gegen einen im Dienst befindlichen Angehörigen der San Andreas National Guard führt das Office of the San Andreas Attorney General. Die Militärpolizei ist bei jedem Verfahren gegen einen solchen Angehörigen einzubeziehen.
+
+(2) Die Anklage vertritt das Office of the San Andreas Attorney General.
+
+(3) Gegen Entscheidungen der Militärkammer stehen die allgemeinen Rechtsmittel offen. Berufung und Revision richten sich nach dem Instanzenzug des Artikels 32; über sie entscheiden der Court of Appeals und der Supreme Court.
+
+Artikel 45 – Militärische Dienstvergehen
+(1) Militärische Dienstvergehen, die keinen Straftatbestand erfüllen, werden innerhalb der San Andreas National Guard disziplinarisch geahndet. Für sie ist die militärische Gerichtsbarkeit nicht zuständig.
+
+(2) Disziplinarmaßnahmen der San Andreas National Guard und die strafrechtliche Verfolgung derselben Tat schließen einander nicht aus.
+
+(3) Führt eine Straftat nach Artikel 43 zugleich zu dienstrechtlichen Folgen, so richten sich diese nach den für die San Andreas National Guard geltenden Vorschriften.
+
+Abschnitt X – Übergangs- und Schlussbestimmungen
+
+
+
+Abschnitt X –
+
+Übergangs- und Schlussbestimmungen
+
+der Verfassung des Staates San Andreas
+
+
+
+Inhaltsverzeichnis
+Inhaltsverzeichnis
+
+Artikel 46 – Änderung der Verfassung
+
+Artikel 47 – Vorrang und Fortgeltung des Rechts
+
+Artikel 48 – Salvatorische Klausel
+
+
+Artikel 46 – Änderung der Verfassung
+(1) Eine Änderung dieser Verfassung bedarf eines Beschlusses des San Andreas Parliaments mit mindestens 66 Prozent der Stimmen (absolute Mehrheit).
+
+(2) Der San Andreas Council kann gegen eine Verfassungsänderung innerhalb von sieben Tagen verfassungsrechtliche oder das Regelwerk betreffende Bedenken erheben und das Constitutional Court oder die Teamleitung anrufen.
+
+(3) Die verfassungsmäßige Gewalt der Serverleitung nach Artikel 1 bleibt unberührt. Die Serverleitung kann diese Verfassung sowie einzelne ihrer Bestimmungen jederzeit ändern, ergänzen oder außer Kraft setzen.
+
+Artikel 47 – Vorrang und Fortgeltung des Rechts
+(1) Diese Verfassung tritt mit ihrer Verkündung in Kraft und ersetzt die bisherige Verfassung des Staates San Andreas.
+
+(2) Die auf Grundlage der bisherigen Verfassung erlassenen Gesetze bleiben in Kraft, soweit sie dieser Verfassung nicht widersprechen.
+
+(3) Soweit Gesetze auf Vorschriften der bisherigen Verfassung verweisen, gelten die entsprechenden Vorschriften dieser Verfassung.
+
+Artikel 48 – Salvatorische Klausel
+Ist eine Bestimmung dieser Verfassung ganz oder teilweise unwirksam oder undurchführbar, so bleibt die Wirksamkeit der übrigen Bestimmungen unberührt. An die Stelle der unwirksamen Bestimmung tritt eine Regelung, die dem verfolgten Zweck möglichst nahekommt. In unklaren Fällen entscheidet der Chairman of the San Andreas Council.

@@ -1,0 +1,1238 @@
+Inhaltsübersicht
+Abschnitt 1 – Allgemeine Vorschriften
+
+Abschnitt 2 – Das Gericht
+
+Abschnitt 3 – Ermittlungsmaßnahmen und Beweismittel
+
+Abschnitt 4 – Zeugen und Sachverständige
+
+Abschnitt 5 – Der Beschuldigte: Vernehmung und Verteidigung
+
+Abschnitt 6 – Festnahme und Untersuchungshaft
+
+Abschnitt 7 – Öffentliche Klage und Einstellung des Verfahrens
+
+Abschnitt 8 – Vereinfachtes Verfahren
+
+Abschnitt 9 – Hauptverhandlung
+
+Abschnitt 10 – Rechtsmittel
+
+Abschnitt 11 – Beteiligung des Verletzten
+
+Abschnitt 12 – Wiederaufnahme des Verfahrens
+
+Abschnitt 13 – Strafvollstreckung, Bewährung und Kosten
+
+Abschnitt 14 – Verjährung
+
+Abschnitt 15 – Besondere Verfahrensarten
+
+Abschnitt 16 – Befristete Anordnungen auf Antrag der Polizeibehörden
+
+
+
+
+
+Abschnitt 1 – Allgemeine Vorschriften
+Inhaltsverzeichnis
+§ 1 – Anwendungsbereich und Zweck
+
+§ 2 – Verhältnis zu anderen Gesetzen
+
+§ 3 – Stellung der Staatsanwaltschaft
+
+§ 4 – Anordnungsbefugnisse und Richtervorbehalt
+
+§ 5 – Gefahr im Verzug
+
+§ 6 – Verhältnismäßigkeit
+
+§ 7 – Begriffsbestimmungen
+
+
+§ 1 – Anwendungsbereich und Zweck
+(1) Diese Verordnung regelt das Verfahren zur Verfolgung von Straftaten im Staat San Andreas, von der Ermittlung bis zur Vollstreckung.
+
+(2) Das Verfahren dient der Erforschung der Wahrheit, der Durchsetzung des staatlichen Strafanspruchs und der Wahrung der Rechte des Beschuldigten in gleichem Maße.
+
+§ 2 – Verhältnis zu anderen Gesetzen
+(1) Maßnahmen, die der Verfolgung einer Straftat oder der Sicherung von Beweisen dienen, richten sich ausschließlich nach dieser Verordnung.
+
+(2) Maßnahmen, die allein der Abwehr einer gegenwärtigen oder drohenden Gefahr dienen, richten sich nach dem Polizeigesetz. Wird eine polizeiliche Maßnahme der Gefahrenabwehr zum Zweck der Strafverfolgung fortgeführt, gelten ab diesem Zeitpunkt die Vorschriften dieser Verordnung.
+
+(3) Bei Zweifeln über die Anwendbarkeit ist auf den überwiegenden Zweck der Maßnahme abzustellen.
+
+(4) Das Gericht kann auf Antrag einer Polizeibehörde die in Abschnitt 16 geregelten befristeten Anordnungen treffen; diese richten sich nach dieser Verordnung.
+
+§ 3 – Stellung der Staatsanwaltschaft
+(1) Die Staatsanwaltschaft ist Herrin des Ermittlungsverfahrens. Sie leitet die Ermittlungen und entscheidet über deren Fortführung und Beendigung.
+
+(2) Die Staatsanwaltschaft ordnet die ihr nach dieser Verordnung zugewiesenen Maßnahmen aus eigener Befugnis an. Ihre Befugnis besteht unabhängig davon, ob ein Gericht erreichbar oder anwesend ist, soweit die Maßnahme nicht nach § 4 einem Richter vorbehalten ist.
+
+(3) Zur Erforschung des Sachverhalts ist die Staatsanwaltschaft befugt, von allen Behörden Auskunft zu verlangen und Ermittlungen jeder Art entweder selbst vorzunehmen oder durch die Behörden und Beamten des Polizeidienstes vornehmen zu lassen, soweit nicht andere gesetzliche Vorschriften ihre Befugnisse besonders regeln. Die Behörden und Beamten des Polizeidienstes sind verpflichtet, dem Ersuchen oder Auftrag der Staatsanwaltschaft zu genügen, und in diesem Fall befugt, von allen Behörden Auskunft zu verlangen.
+
+§ 4 – Anordnungsbefugnisse und Richtervorbehalt
+(1) Dem Gericht vorbehalten, bei Gefahr im Verzug auch durch die Staatsanwaltschaft anzuordnen, sind:
+
+1. die Durchsuchung von Wohnungen,
+
+2. die Durchsuchung von Fahrzeugen und sonstigen Räumen sowie von abgelegten Sachen,
+
+3. die Beschlagnahme von Gegenständen,
+
+4. die Überwachung des Inhalts der Telekommunikation,
+
+5. die längerfristige Observation (§ 17),
+
+6. der Einsatz eines verdeckten Ermittlers gegen eine bestimmte Person oder zum Betreten einer nicht allgemein zugänglichen Wohnung (§ 18),
+
+7. die Einrichtung von Kontrollstellen (§ 19),
+
+8. die Zulässigkeit und Fortdauer von Freiheitsentziehungen.
+
+(2) Die Staatsanwaltschaft und ihre Ermittlungspersonen sind aus eigener Befugnis, ohne dass es einer richterlichen Anordnung bedarf, zuständig für:
+
+1. die Feststellung der Identität und erkennungsdienstliche Maßnahmen,
+
+2. die Durchsuchung von Personen und am Körper geführten Sachen (§ 14),
+
+3. die vorläufige Festnahme (§ 40),
+
+4. die Sicherstellung von Gegenständen, deren Besitz verboten ist oder die freiwillig herausgegeben werden (§ 13),
+
+5. das Herstellen von Bildaufnahmen außerhalb von Wohnraum (§ 15),
+
+6. die Ermittlung des Standorts eines mobilen Endgeräts (§ 16),
+
+7. die Ausschreibung zur Festnahme oder Aufenthaltsermittlung auf Grundlage eines bestehenden Haft- oder Strafbefehls (§ 47).
+
+(3) Ordnet die Staatsanwaltschaft eine Maßnahme nach Absatz 1 bei Gefahr im Verzug an, so bedarf es der gerichtlichen Bestätigung nur, wenn der Beschuldigte die Tat nicht gesteht. Das Geständnis lässt die Bestätigungspflicht auch bei späterem Widerruf entfallen; in diesem Fall ist die Bestätigung unverzüglich nachzuholen. Wird die Bestätigung verweigert, ist die Maßnahme zu beenden; bereits erlangte Erkenntnisse dürfen nicht verwertet werden.
+
+§ 5 – Gefahr im Verzug
+Gefahr im Verzug liegt vor, wenn der mit der Einholung einer richterlichen Entscheidung verbundene Zeitverlust den Erfolg der Maßnahme gefährden würde, insbesondere durch drohenden Verlust von Beweismitteln oder die Flucht des Beschuldigten.
+
+§ 6 – Verhältnismäßigkeit
+(1) Von mehreren geeigneten Maßnahmen ist diejenige zu wählen, die den Betroffenen am wenigsten beeinträchtigt.
+
+(2) Eine Maßnahme ist nur zulässig, solange ihr Zweck es erfordert, und unverzüglich zu beenden, sobald ihr Zweck erreicht ist oder nicht mehr erreicht werden kann.
+
+(3) Eine Maßnahme darf nicht außer Verhältnis zur Bedeutung der Sache und zur zu erwartenden Strafe stehen.
+
+§ 7 – Begriffsbestimmungen
+Im Sinne dieser Verordnung ist oder sind
+
+1. Beschuldigter: die Person, gegen die ein Ermittlungsverfahren geführt wird;
+
+2. Angeklagter: der Beschuldigte, gegen den die Eröffnung des Hauptverfahrens beschlossen ist;
+
+3. Polizeibehörden: alle Strafverfolgungsbehörden, die Militärpolizei sowie die besonders ernannten Ermittlungspersonen der Staatsanwaltschaft;
+
+4. Straftat von erheblicher Bedeutung: jedes Verbrechen im Sinne des § 5 Strafgesetzbuch sowie jede Straftat, die den unerlaubten Umgang mit Betäubungsmitteln oder Waffen, den Staatsschutz oder die nationale Sicherheit, Leib, Leben oder die persönliche Freiheit eines Menschen oder das gewerbs-, gewohnheits- oder bandenmäßige oder in sonstiger Weise organisierte Begehen von Straftaten betrifft;
+
+5. öffentlicher Raum: jede nicht umfriedete Fläche, die dem öffentlichen Gebrauch dient, sowie Flächen und Räumlichkeiten in Privatbesitz, die der Öffentlichkeit gewollt zugänglich gemacht werden.
+
+
+Abschnitt 2 – Das Gericht
+Inhaltsverzeichnis
+§ 8 – Missachtung des Gerichts
+
+§ 9 – Ausschließung des Richters
+
+§ 10 – Rechtliches Gehör
+
+§ 11 – Bekanntmachung von Entscheidungen
+
+§ 12 – Elektronische Aktenführung
+
+
+§ 8 – Missachtung des Gerichts
+Das Gericht und dessen Sitzungspolizei ist befugt, die Missachtung der Autorität des Gerichts nach eigenem Ermessen mit Geld- oder Freiheitsstrafe oder beidem zu ahnden, wenn
+
+Fehlverhalten, einer Person in seiner Gegenwart oder einer außenstehenden Person, die die rechtspflege behindert,
+Fehlverhalten eines Bediensteten in Ausübung seiner Amtstätigkeit vor bei Gericht oder
+Ungehorsam oder Widerstand gegen ein rechtmäßiges Schriftstück, einen Prozess, einen Befehl oder eine Anordnung
+vorliegt.
+
+§ 9 – Ausschließung des Richters
+(1) Ein Richter ist von der Ausübung seines Amtes kraft Gesetzes ausgeschlossen, wenn er
+
+1. selbst durch die Straftat verletzt ist,
+
+2. Ehegatte, Lebenspartner, Vormund oder Betreuer des Beschuldigten oder des Verletzten ist oder war,
+
+3. mit dem Beschuldigten oder dem Verletzten in gerader Linie verwandt oder verschwägert oder in der Seitenlinie bis zum dritten Grad verwandt oder bis zum zweiten Grad verschwägert ist oder war,
+
+4. in der Sache als Zeuge oder Sachverständiger vernommen worden ist.
+
+(2) Der Verwandtschafts- und Schwägerschaftsgrad bestimmt sich nach dem Bürgerlichen Gesetzbuch.
+
+§ 10 – Rechtliches Gehör
+(1) Eine Entscheidung, die in der Hauptverhandlung ergeht, wird nach Anhörung der Beteiligten erlassen.
+
+(2) Eine Entscheidung außerhalb der Hauptverhandlung wird nach Erklärung der Staatsanwaltschaft erlassen. Ein anderer Beteiligter ist zu hören, bevor zu seinem Nachteil Tatsachen oder Beweisergebnisse verwertet werden, zu denen er noch nicht gehört wurde.
+
+(3) Absatz 2 Satz 2 gilt nicht bei der Anordnung der Untersuchungshaft, der Beschlagnahme oder anderer Maßnahmen, wenn die vorherige Anhörung deren Zweck gefährden würde.
+
+§ 11 – Bekanntmachung von Entscheidungen
+(1) Entscheidungen, die in Anwesenheit des Betroffenen ergehen, werden durch Verkündung bekanntgemacht; andere durch Zustellung.
+
+(2) Wird durch die Bekanntmachung eine Frist in Lauf gesetzt oder kann die Entscheidung mit einem befristeten Rechtsmittel angefochten werden, ist der Betroffene über Form und Frist der Anfechtung zu belehren.
+
+(3) Einer nicht auf freiem Fuß befindlichen Person ist das zugestellte Schriftstück auf Verlangen vorzulesen.
+
+§ 12 – Elektronische Aktenführung
+(1) Die Akten können elektronisch geführt werden.
+
+(2) Eine elektronisch geführte Akte ist auch dann beweiskräftig, wenn ihr Inhalt stichpunktartig aufgeführt ist. Tathergang und Beweismittel müssen nachvollziehbar, müssen jedoch nicht begründet sein.
+
+(3) Angewandte Zwangsmittel sind nur zu protokollieren, soweit dies dem Tathergang dienlich ist; einer Begründung bedarf es nicht.
+
+Abschnitt 3 – Ermittlungsmaßnahmen und Beweismittel
+Inhaltsverzeichnis
+§ 13 – Sicherstellung und Beschlagnahme
+
+§ 14 – Durchsuchung
+
+§ 15 – Bildaufnahmen und technische Observationsmittel außerhalb von Wohnraum
+
+§ 16 – Standortermittlung mobiler Endgeräte
+
+§ 17 – Längerfristige Observation
+
+§ 18 – Verdeckter Ermittler
+
+§ 19 – Kontrollstellen und Großkontrollen
+
+§ 20 – Sicherung der Einziehung
+
+
+§ 13 – Sicherstellung und Beschlagnahme
+(1) Gegenstände, die als Beweismittel von Bedeutung sein können oder der Einziehung unterliegen, sind sicherzustellen.
+
+(2) Werden sie nicht freiwillig herausgegeben, bedarf es der Beschlagnahme. Diese ordnet das Gericht an, bei Gefahr im Verzug die Staatsanwaltschaft und ihre Ermittlungspersonen.
+
+(3) Wer einen solchen Gegenstand in Gewahrsam hat, ist verpflichtet, ihn auf Verlangen vorzulegen und herauszugeben. Kommt er dem nicht nach, so können gegen ihn ein Ordnungsgeld und zur Erzwingung der Herausgabe Zwangsmittel festgesetzt werden; die Anordnung von Haft bleibt dem Gericht vorbehalten und darf die Beendigung des Verfahrens nicht überdauern.
+
+(4) Die Vorlage amtlich verwahrter Schriftstücke darf nicht gefordert werden, wenn deren oberste Dienstbehörde erklärt, dass ihr Bekanntwerden dem Wohl des Staates San Andreas Nachteile bereiten würde. Die Staatsanwaltschaft kann die Sperre dem San Andreas Supreme Court zur Überprüfung vorlegen; dieser entscheidet unanfechtbar, ob die Sperrerklärung aufrechterhalten bleibt.
+
+(5) Werden bei einer Durchsuchung Gegenstände gefunden, die auf eine andere Straftat hindeuten, sind sie einstweilen sicherzustellen; die Staatsanwaltschaft ist hiervon in Kenntnis zu setzen.
+
+§ 14 – Durchsuchung
+(1) Bei einem Beschuldigten ist die Durchsuchung seiner Person, seiner Räume, seines Fahrzeugs und der ihm gehörenden Sachen zulässig, wenn sie seiner Ergreifung dient oder zu vermuten ist, dass sie zur Auffindung von Beweismitteln führt.
+
+(2) Bei anderen Personen ist die Durchsuchung nur zur Ergreifung des Beschuldigten, zur Verfolgung von Spuren oder zur Beschlagnahme bestimmter Gegenstände und nur dann zulässig, wenn Tatsachen den Schluss rechtfertigen, dass sich die gesuchte Person, Spur oder Sache in den zu durchsuchenden Räumen befindet.
+
+(3) Die Durchsuchung von Wohnungen, sonstigen Räumen, Fahrzeugen und abgelegten Sachen ordnet das Gericht an, bei Gefahr im Verzug die Staatsanwaltschaft und ihre Ermittlungspersonen. Die Durchsuchung einer Person und der von ihr am Körper geführten Sachen bedarf keiner richterlichen Anordnung.
+
+(4) Dem Betroffenen ist auf Verlangen nach Beendigung eine schriftliche Mitteilung über Grund und Ergebnis der Durchsuchung auszustellen.
+
+§ 15 – Bildaufnahmen und technische Observationsmittel außerhalb von Wohnraum
+(1) Außerhalb von Wohnungen dürfen ohne Wissen der betroffenen Person Bildaufnahmen hergestellt und sonstige für Observationszwecke bestimmte technische Mittel eingesetzt werden, wenn die Erforschung des Sachverhalts oder die Ermittlung des Aufenthaltsorts eines Beschuldigten auf andere Weise weniger erfolgversprechend oder erschwert wäre.
+
+(2) Der Einsatz technischer Mittel nach Absatz 1 ist nur bei einer Straftat von erheblicher Bedeutung zulässig.
+
+(3) Die Maßnahme darf sich gegen andere Personen als den Beschuldigten nur richten, wenn anzunehmen ist, dass sie mit ihm in Verbindung stehen und die Maßnahme sonst aussichtslos wäre. Dritte dürfen unvermeidbar mitbetroffen werden.
+
+§ 16 – Standortermittlung mobiler Endgeräte
+Begründen bestimmte Tatsachen den Verdacht, dass jemand eine Straftat von erheblicher Bedeutung begangen hat, so darf der Standort seines mobilen Endgeräts durch technische Mittel ermittelt werden, soweit dies für die Erforschung des Sachverhalts oder die Ermittlung seines Aufenthaltsorts erforderlich ist. Daten Dritter dürfen dabei nur erhoben werden, soweit dies technisch unvermeidbar ist.
+
+§ 17 – Längerfristige Observation
+(1) Liegen zureichende tatsächliche Anhaltspunkte dafür vor, dass eine Straftat von erheblicher Bedeutung begangen worden ist, so darf eine planmäßige Beobachtung des Beschuldigten angeordnet werden, die durchgehend länger als zwölf Stunden dauern oder an mehr als zwei Tagen stattfinden soll.
+
+(2) Die Maßnahme darf nur angeordnet werden, wenn die Ermittlung auf andere Weise erheblich weniger erfolgversprechend oder wesentlich erschwert wäre. Gegen andere Personen ist sie unter den Voraussetzungen des § 15 Abs. 3 zulässig.
+
+(3) Die Anordnung trifft das Gericht, bei Gefahr im Verzug die Staatsanwaltschaft und ihre Ermittlungspersonen.
+
+§ 18 – Verdeckter Ermittler
+(1) Verdeckte Ermittler sind Beamte des Polizeidienstes, die unter einer ihnen verliehenen, auf Dauer angelegten veränderten Identität (Legende) ermitteln. Sie dürfen unter der Legende am Rechtsverkehr teilnehmen und, soweit für die Legende unerlässlich, entsprechende Urkunden herstellen und gebrauchen.
+
+(2) Ihr Einsatz ist zulässig zur Aufklärung einer Straftat von erheblicher Bedeutung, wenn die Aufklärung auf andere Weise aussichtslos oder wesentlich erschwert wäre.
+
+(3) Der Einsatz bedarf der Zustimmung der Staatsanwaltschaft. Richtet er sich gegen eine bestimmte Person oder ist mit dem Betreten einer nicht allgemein zugänglichen Wohnung verbunden, bedarf er der Zustimmung des Gerichts, bei Gefahr im Verzug der Staatsanwaltschaft.
+
+(4) Ein verdeckter Ermittler darf eine Wohnung mit Einverständnis des Berechtigten betreten; das Einverständnis darf nicht durch ein über die Nutzung der Legende hinausgehendes Vortäuschen eines Zutrittsrechts herbeigeführt werden.
+
+(5) Die Identität des verdeckten Ermittlers kann auch nach Beendigung des Einsatzes geheim gehalten werden.
+
+§ 19 – Kontrollstellen und Großkontrollen
+Kontrollstellen und Großkontrollen dienen der Ergreifung von Tätern und der Sicherstellung von Beweismitteln. Ihre Voraussetzungen, ihre Anordnung und ihre Befristung richten sich nach Abschnitt 16.
+
+§ 20 – Sicherung der Einziehung
+Ist die Annahme begründet, dass ein Gegenstand der Einziehung unterliegt, so kann er zur Sicherung der Vollstreckung beschlagnahmt werden. § 13 gilt entsprechend.
+
+
+
+
+Abschnitt 4 – Zeugen und Sachverständige
+Inhaltsverzeichnis
+§ 21 – Zeugenpflicht
+
+§ 22 – Zeugnis- und Auskunftsverweigerungsrecht
+
+§ 23 – Belehrung und Wahrheitspflicht
+
+§ 24 – Vernehmung
+
+§ 25 – Zeugenschutz
+
+§ 26 – Schriftliche Zeugenaussage
+
+§ 27 – Vernehmung des Vorsitzenden des Bundesrats
+
+§ 28 – Vereidigung
+
+§ 29 – Folgen unberechtigter Verweigerung
+
+§ 30 – Sachverständige
+
+
+§ 21 – Zeugenpflicht
+(1) Zeugen sind verpflichtet, zu dem zu ihrer Vernehmung bestimmten Termin zu erscheinen und zur Sache auszusagen, wenn keine gesetzliche Ausnahme vorliegt.
+
+(2) Zur Ladung von Zeugen berechtigt sind das Gericht, die Staatsanwaltschaft sowie deren Ermittlungspersonen, wenn der Ladung ein Auftrag der Staatsanwaltschaft zugrunde liegt.
+
+(3) Die eidliche Vernehmung bleibt dem Gericht vorbehalten.
+
+§ 22 – Zeugnis- und Auskunftsverweigerungsrecht
+(1) Ein Zeuge kann die Auskunft auf Fragen verweigern, deren Beantwortung ihn selbst oder einen Angehörigen der Gefahr aussetzen würde, wegen einer Straftat verfolgt zu werden.
+
+(2) Zur Verweigerung des gesamten Zeugnisses berechtigt sind der Verlobte und der Ehegatte des Beschuldigten.
+
+(3) Der Zeuge ist vor der Vernehmung über sein Verweigerungsrecht zu belehren. Er kann den Verzicht auf dieses Recht jederzeit widerrufen.
+
+§ 23 – Belehrung und Wahrheitspflicht
+Vor der Vernehmung wird der Zeuge zur Wahrheit ermahnt und über die strafrechtlichen Folgen einer falschen Aussage belehrt. Auf die Möglichkeit der Vereidigung wird er hingewiesen.
+
+§ 24 – Vernehmung
+(1) Die Zeugen werden einzeln und in Abwesenheit der später zu hörenden Zeugen vernommen.
+
+(2) Hat ein Zeuge die Aussage eines zuvor vernommenen Zeugen mitangehört, so entscheidet das Gericht nach Würdigung des Einzelfalls über seine Zulassung.
+
+(3) Der Zeuge wird zunächst zu seiner Person, sodann zur Sache vernommen. Er ist zu veranlassen, sein Wissen im Zusammenhang anzugeben.
+
+(4) Die Vernehmung kann in Bild und Ton aufgezeichnet werden. Die Aufzeichnung ist nur für Zwecke der Strafverfolgung zu verwenden.
+
+§ 25 – Zeugenschutz
+(1) Besteht begründeter Anlass zur Besorgnis, dass durch die Offenbarung der Identität oder des Aufenthaltsorts eines Zeugen Leben, Leib oder Freiheit einer Person gefährdet wird, so kann ihm gestattet werden, keine oder nur Angaben über eine frühere Identität zu machen.
+
+(2) Unter den Voraussetzungen des Absatzes 1 darf der Zeuge sein Gesicht ganz oder teilweise verhüllen; auf diese Befugnis ist er vor der Hauptverhandlung hinzuweisen.
+
+(3) Die Absätze 1 und 2 gelten auch nach Abschluss der Vernehmung. Bei Auskünften aus und Einsicht in Akten ist sicherzustellen, dass geschützte Daten nicht bekannt werden.
+
+§ 26 – Schriftliche Zeugenaussage
+(1) Liegt eine schriftliche Zeugenaussage vor, kann das Gericht den geladenen Zeugen auf Antrag von der Pflicht zum persönlichen Erscheinen in der Hauptverhandlung entbinden.
+
+(2) Die Gegenpartei kann beim Gericht einen begründeten Antrag auf persönliche Ladung des Zeugen stellen, sofern sie darlegt, dass dessen persönliche Vernehmung zur Sachverhaltsaufklärung erforderlich ist. Über den Antrag entscheidet das Gericht.
+
+(3) Die schriftliche Aussage ist dem Gericht vor Beginn der Hauptverhandlung vorzulegen und der Zeuge zu benennen. Über ihre Zulassung entscheidet das Gericht unter Würdigung aller Umstände.
+
+(4) Die Belehrung des Zeugen obliegt dem Gericht und kann mündlich oder schriftlich erfolgen.
+
+§ 27 – Vernehmung des Vorsitzenden des Bundesrats
+Der Vorsitzende des Bundesrats wird an einem Ort seiner Wahl vernommen. Zur Hauptverhandlung wird er nicht geladen; das Protokoll über seine Vernehmung ist in der Hauptverhandlung zu verlesen.
+
+§ 28 – Vereidigung
+(1) Zeugen werden nur vereidigt, wenn das Gericht dies wegen der ausschlaggebenden Bedeutung der Aussage oder zur Herbeiführung einer wahren Aussage für erforderlich hält.
+
+(2) Die Vereidigung erfolgt einzeln nach der Vernehmung. Der Eid kann mit oder ohne religiöse Beteuerung geleistet werden.
+
+(3) Gibt ein Zeuge an, aus Glaubens- oder Gewissensgründen keinen Eid leisten zu wollen, so tritt an dessen Stelle die eidesgleiche Bekräftigung der Wahrheit. Sie steht dem Eid gleich.
+
+(4) Wird ein bereits vereidigter Zeuge im selben Verfahren erneut vernommen, kann das Gericht ihn die Richtigkeit seiner Aussage unter Berufung auf den früheren Eid versichern lassen.
+
+§ 29 – Folgen unberechtigter Verweigerung
+(1) Verweigert ein Zeuge ohne gesetzlichen Grund das Zeugnis oder die Eidesleistung, werden ihm die dadurch verursachten Kosten auferlegt und ein Ordnungsgeld festgesetzt.
+
+(2) Zur Erzwingung des Zeugnisses kann Haft angeordnet werden, nicht jedoch über die Beendigung des Verfahrens und nicht über 120 Hafteinheiten hinaus. Die Anordnung der Haft steht dem Gericht zu.
+
+§ 30 – Sachverständige
+(1) Für Sachverständige gelten die Vorschriften über Zeugen entsprechend, soweit nachfolgend nichts anderes bestimmt ist.
+
+(2) Die Auswahl der Sachverständigen und die Bestimmung ihrer Anzahl erfolgt durch das Gericht oder, im Ermittlungsverfahren, durch die Staatsanwaltschaft.
+
+(3) Verlesen werden können die ein Gutachten enthaltenden Erklärungen öffentlicher Behörden, ärztliche Atteste über Körperverletzungen sowie Berichte über die Entnahme von Blutproben.
+
+Abschnitt 5 – Der Beschuldigte: Vernehmung und Verteidigung
+Inhaltsverzeichnis
+§ 31 – Ladung und Vorführung
+
+§ 32 – Vernehmung zur Sache
+
+§ 33 – Verbotene Vernehmungsmethoden
+
+§ 34 – Belehrung des festgenommenen Beschuldigten
+
+§ 35 – Recht auf Verteidigung
+
+§ 36 – Ausschließung des Verteidigers
+
+§ 37 – Verkehr mit dem Verteidiger
+
+§ 38 – Akteneinsicht
+
+§ 39 – Kronzeuge
+
+
+§ 31 – Ladung und Vorführung
+(1) Der Beschuldigte ist zur Vernehmung schriftlich oder mündlich zu laden. Die Ladung kann unter der Androhung erfolgen, dass bei Ausbleiben die Vorführung angeordnet wird.
+
+(2) Die Vorführung des Beschuldigten kann verfügt werden, wenn Gründe vorliegen, die den Erlass eines Haftbefehls rechtfertigen würden. Im Vorführungsbefehl sind der Beschuldigte, die ihm zur Last gelegte Tat und der Grund der Vorführung zu bezeichnen.
+
+§ 32 – Vernehmung zur Sache
+(1) Zu Beginn der Vernehmung ist dem Beschuldigten zu eröffnen, welche Tat ihm zur Last gelegt wird und welche Strafvorschriften in Betracht kommen.
+
+(2) Er ist darauf hinzuweisen, dass es ihm freisteht,
+
+1. sich zur Beschuldigung zu äußern oder nicht zur Sache auszusagen,
+
+2. jederzeit, auch schon vor der Vernehmung, einen Verteidiger seiner Wahl zu befragen, und
+
+3. zu seiner Entlastung einzelne Beweiserhebungen zu beantragen.
+
+(3) Die Vernehmung soll dem Beschuldigten Gelegenheit geben, die Verdachtsgründe zu beseitigen und die zu seinen Gunsten sprechenden Tatsachen geltend zu machen.
+
+§ 33 – Verbotene Vernehmungsmethoden
+(1) Die Freiheit der Willensentschließung und Willensbetätigung des Beschuldigten darf nicht beeinträchtigt werden durch Misshandlung, Ermüdung, körperlichen Eingriff, Verabreichung von Mitteln, Quälerei, Täuschung oder Hypnose. Zwang ist nur zulässig, soweit das Verfahrensrecht ihn gestattet.
+
+(2) Die Drohung mit einer unzulässigen Maßnahme und das Versprechen eines gesetzlich nicht vorgesehenen Vorteils sind verboten.
+
+(3) Das Verbot gilt ohne Rücksicht auf die Einwilligung des Beschuldigten. Aussagen, die unter Verletzung dieses Verbots zustande gekommen sind, dürfen auch mit seiner Zustimmung nicht verwertet werden.
+
+§ 34 – Belehrung des festgenommenen Beschuldigten
+(1) Der festgenommene Beschuldigte ist unverzüglich in einer für ihn verständlichen Sprache über seine Rechte zu belehren. Verweigert er die Bestätigung der Belehrung, ist dies zu dokumentieren.
+
+(2) Er ist darauf hinzuweisen, dass er
+
+1. das Recht hat, sich zu äußern oder zu schweigen,
+
+2. jederzeit einen Verteidiger seiner Wahl befragen kann,
+
+3. zu seiner Entlastung Beweiserhebungen beantragen kann,
+
+4. eine ärztliche Untersuchung verlangen kann,
+
+5. einen Angehörigen oder eine Vertrauensperson benachrichtigen kann, soweit der Untersuchungszweck nicht erheblich gefährdet wird, und
+
+6. bei Aufrechterhaltung der Untersuchungshaft eine Haftprüfung beantragen kann.
+
+§ 35 – Recht auf Verteidigung
+(1) Der Beschuldigte kann sich in jeder Lage des Verfahrens des Beistands eines Verteidigers bedienen.
+
+(2) Zu Verteidigern können Rechtsanwälte gewählt werden. Andere Personen bedürfen der Genehmigung des Gerichts.
+
+(3) Das Recht auf Verteidigung schränkt die Gerichtsordnung nicht ein.
+
+§ 36 – Ausschließung des Verteidigers
+(1) Ein Verteidiger ist von der Mitwirkung auszuschließen, wenn er dringend verdächtig ist, dass er
+
+1. an der Tat beteiligt ist,
+
+2. den Verkehr mit dem nicht auf freiem Fuß befindlichen Beschuldigten dazu missbraucht, Straftaten zu begehen oder die Sicherheit einer Vollzugsanstalt erheblich zu gefährden, oder
+
+3. eine Handlung begangen hat, die im Falle der Verurteilung des Beschuldigten Begünstigung, Strafvereitelung oder Hehlerei wäre.
+
+(2) Über die Ausschließung wird nach mündlicher Verhandlung entschieden. Der Verteidiger ist zu laden; die Verhandlung kann bei ordnungsgemäßer Ladung auch in seiner Abwesenheit durchgeführt werden.
+
+(3) Gegen die ausschließende Entscheidung ist die Beschwerde zulässig; eine die Ausschließung ablehnende Entscheidung ist nicht anfechtbar.
+
+§ 37 – Verkehr mit dem Verteidiger
+(1) Dem Beschuldigten ist, auch wenn er sich nicht auf freiem Fuß befindet, schriftlicher und mündlicher Verkehr mit dem Verteidiger gestattet.
+
+(2) Der Verkehr kann versagt werden, wenn ein dringender Grund zur Annahme besteht, dass er die Aufklärung des Sachverhalts erheblich erschwert. Die Versagung ist schriftlich zu begründen.
+
+§ 38 – Akteneinsicht
+(1) Der Verteidiger ist befugt, die Akten einzusehen und amtlich verwahrte Beweisstücke zu besichtigen.
+
+(2) Vor Abschluss der Ermittlungen kann die Einsicht versagt werden, soweit sie den Untersuchungszweck gefährden würde. Befindet sich der Beschuldigte in Untersuchungshaft, sind ihm die für die Beurteilung der Rechtmäßigkeit der Freiheitsentziehung wesentlichen Informationen zugänglich zu machen.
+
+(3) Die Einsicht in Protokolle über die Vernehmung des Beschuldigten und über richterliche Untersuchungshandlungen, bei denen der Verteidiger anwesend sein durfte, darf nicht versagt werden.
+
+(4) Ein Beschuldigter ohne Verteidiger ist in gleichem Umfang zur Akteneinsicht befugt, soweit der Untersuchungszweck nicht gefährdet und überwiegende schutzwürdige Interessen Dritter nicht entgegenstehen.
+
+(5) Über die Akteneinsicht entscheidet im Ermittlungsverfahren die Staatsanwaltschaft, im Übrigen das Gericht.
+
+§ 39 – Kronzeuge
+(1) Eine an der Tat beteiligte Person kann als Kronzeuge in Betracht kommen, wenn sie durch ihre Aussage oder die Offenlegung wesentlicher Informationen dazu beiträgt, andere Beteiligte zu überführen oder erhebliche Straftaten aufzuklären.
+
+(2) Den Status als Kronzeuge gewährt das Gericht auf Antrag der Staatsanwaltschaft. Der Antrag hat Art und Bedeutung der geleisteten Hilfe sowie die Schwere der eigenen Tat darzulegen.
+
+(3) Wird der Status gewährt, kann das Gericht die Strafe mildern oder in besonders schwer aufklärbaren Fällen von Strafe absehen.
+
+(4) Die Regelung entfällt, wenn der Kronzeuge falsche oder irreführende Informationen offenlegt oder wesentliche Tatsachen verschweigt; in diesem Fall wird ein reguläres Verfahren durchgeführt.
+
+Abschnitt 6 – Festnahme und Untersuchungshaft
+Inhaltsverzeichnis
+§ 40 – Vorläufige Festnahme
+
+§ 41 – Voraussetzungen der Untersuchungshaft
+
+§ 42 – Straf- und Haftbefehl
+
+§ 43 – Vorführung vor das Gericht
+
+§ 44 – Haftprüfung
+
+§ 45 – Aufhebung des Haftbefehls
+
+§ 46 – Anrechnung der Untersuchungshaft
+
+§ 47 – Ausschreibung zur Festnahme und Aufenthaltsermittlung
+
+§ 48 – Festnahme von Störern
+
+
+§ 40 – Vorläufige Festnahme
+(1) Wird jemand auf frischer Tat betroffen oder verfolgt, so ist jedermann befugt, ihn ohne richterliche Anordnung vorläufig festzunehmen, wenn er der Flucht verdächtig ist oder seine Identität nicht sofort festgestellt werden kann.
+
+(2) Die Staatsanwaltschaft und die Beamten des Polizeidienstes sind zur vorläufigen Festnahme auch dann befugt, wenn die Voraussetzungen eines Haftbefehls vorliegen und Gefahr im Verzug ist.
+
+(3) Ist eine Straftat nur auf Antrag verfolgbar, so ist die vorläufige Festnahme auch vor Stellung des Antrags zulässig.
+
+(4) Zeiten der vorläufigen Festnahme und Untersuchungshaft sind bei einer späteren Freiheitsstrafe nach Maßgabe des § 46 anzurechnen.
+
+§ 41 – Voraussetzungen der Untersuchungshaft
+(1) Die Untersuchungshaft darf nur durch das Gericht und nur angeordnet werden, wenn der Beschuldigte der Tat dringend verdächtig ist und ein Haftgrund besteht.
+
+(2) Ein Haftgrund besteht, wenn
+
+1. der Beschuldigte flüchtig ist oder sich verborgen hält,
+
+2. bei Würdigung der Umstände die Gefahr besteht, dass er sich dem Verfahren entzieht (Fluchtgefahr), oder
+
+3. sein Verhalten den dringenden Verdacht begründet, er werde Beweismittel beeinträchtigen oder auf Zeugen oder Mitbeschuldigte einwirken (Verdunkelungsgefahr).
+
+(3) Gegen einen Beschuldigten, der einer Straftat dringend verdächtig ist, durch die Leib oder Leben eines anderen gefährdet wurde, darf die Untersuchungshaft auch ohne Haftgrund nach Absatz 2 angeordnet werden.
+
+(4) Die Untersuchungshaft darf nicht angeordnet werden, wenn sie zur Bedeutung der Sache und der zu erwartenden Strafe außer Verhältnis steht. Bei Taten, die nur mit Freiheitsstrafe bis zu 15 Hafteinheiten oder Geldstrafe bedroht sind, darf sie wegen Verdunkelungsgefahr nicht angeordnet werden.
+
+§ 42 – Straf- und Haftbefehl
+(1) Die Staatsanwaltschaft kann gegen den Beschuldigten einen Strafbefehl erlassen, wenn ihm nachweisbare Straftaten zur Last gelegt werden. Die weiteren Voraussetzungen und Grenzen richten sich nach dem vereinfachten Verfahren (§ 60 ff.).
+
+(2) Das Gericht kann einen Haftbefehl schriftlich anordnen, wenn ein Haftgrund vorliegt.
+
+(3) Im Straf- und Haftbefehl sind anzuführen:
+
+1. der Beschuldigte,
+
+2. die Tat, deren er dringend verdächtig ist, sowie Zeit und Ort ihrer Begehung,
+
+3. die anzuwendenden Strafvorschriften,
+
+4. der Haftgrund und
+
+5. die Tatsachen, aus denen sich der dringende Tatverdacht und der Haftgrund ergeben.
+
+(4) Dem Beschuldigten ist der Straf- oder Haftbefehl bei seiner Festnahme bekanntzugeben. Ein Haftbefehl wird unabhängig von seiner Zustimmung nach Maßgabe der §§ 41 bis 45 vollzogen. Bei einem Strafbefehl richten sich das weitere Verfahren, die Vollstreckung und der Einspruch nach den §§ 60 bis 65. Die Ablehnung eines Strafbefehls begründet für sich allein keine Untersuchungshaft.
+
+(5) Die Dauer der angeordneten Untersuchungshaft darf die zu erwartende Strafe nicht überschreiten.
+
+§ 43 – Vorführung vor das Gericht
+(1) Wird der Beschuldigte aufgrund eines Haftbefehls ergriffen, so ist er unverzüglich, sobald es die Umstände zulassen, dem Gericht vorzuführen und über den Gegenstand der Beschuldigung zu vernehmen. Die Vorführung darf nur so lange aufgeschoben werden, wie die Umstände es zwingend erfordern.
+
+(2) Bei der Vernehmung ist ihm Gelegenheit zu geben, die Verdachts- und Haftgründe zu entkräften und die zu seinen Gunsten sprechenden Tatsachen geltend zu machen.
+
+§ 44 – Haftprüfung
+(1) Solange der Beschuldigte in Untersuchungshaft ist, kann er jederzeit die gerichtliche Prüfung beantragen, ob der Haftbefehl aufzuheben oder dessen Vollzug auszusetzen ist.
+
+(2) Über die Haftprüfung wird nach mündlicher Verhandlung entschieden. Sie findet am Ort der Untersuchungshaft statt.
+
+(3) Ein Anspruch auf eine weitere mündliche Verhandlung besteht nur, wenn die Untersuchungshaft seit der letzten Verhandlung mindestens zwölf Stunden gedauert hat.
+
+§ 45 – Aufhebung des Haftbefehls
+(1) Der Haftbefehl ist aufzuheben, sobald die Voraussetzungen der Untersuchungshaft nicht mehr vorliegen, insbesondere wenn der Beschuldigte freigesprochen oder das Verfahren eingestellt wird.
+
+(2) Der Haftbefehl ist auch aufzuheben, wenn die Staatsanwaltschaft es vor Erhebung der öffentlichen Klage beantragt.
+
+(3) Die Einlegung eines Rechtsmittels hält die Freilassung nicht auf.
+
+§ 46 – Anrechnung der Untersuchungshaft
+(1) Die in Untersuchungshaft verbrachte Zeit wird vollständig auf die zu erwartende Freiheitsstrafe angerechnet.
+
+(2) Die Anrechnung entfällt vollständig, wenn der Beschuldigte das Verfahren schuldhaft behindert oder sich diesem zeitweise entzieht. Schweigen, die Verweigerung eines Geständnisses oder die zulässige Wahrnehmung eigener Verfahrensrechte gelten nicht als Verfahrensbehinderung.
+
+(3) Nicht angerechnet werden:
+
+der Fahrweg zur Untersuchungshaft, zum Gericht oder zum Gefängnis,
+der Aufenthalt im San Andreas Medical Service,
+Gerichtsprozesse und Rechtsanwaltsgespräche,
+Zeit, während der der Beschuldigte für das Verfahren nicht zur Verfügung stand.
+(4) Übersteigt die vollständig anzurechnende Untersuchungshaft die zu erwartende Haftzeit, gilt die Strafe ohne Schadensansprüche als abgesessen. In diesem Fall ist der Beschuldigte unverzüglich aus der Untersuchungshaft zu entlassen. Das höchste zu erwartende Strafmaß nach dem FiveNet-Ergebnis und die insgesamt anrechenbare Haftzeit sind zu dokumentieren.
+
+§ 47 – Ausschreibung zur Festnahme und Aufenthaltsermittlung
+(1) Auf Grundlage eines Haftbefehls, eines Strafbefehls oder einer im vereinfachten Verfahren festgesetzten, noch nicht vollstreckten Freiheitsstrafe können das Gericht, die Staatsanwaltschaft und, bei Gefahr im Verzug, ihre Ermittlungspersonen die Ausschreibung zur Festnahme veranlassen.
+
+(2) Ist der Aufenthalt eines Beschuldigten oder Zeugen unbekannt, kann seine Ausschreibung zur Aufenthaltsermittlung angeordnet werden. Bei der Ausschreibung eines Zeugen ist kenntlich zu machen, dass er nicht Beschuldigter ist.
+
+(3) Bei einer Straftat von erheblicher Bedeutung kann zusätzlich eine Öffentlichkeitsfahndung veranlasst werden, wenn andere Formen der Aufenthaltsermittlung erheblich weniger erfolgversprechend wären.
+
+§ 48 – Festnahme von Störern
+Bei Amtshandlungen an Ort und Stelle kann der leitende Beamte Personen, die seine Tätigkeit vorsätzlich stören oder sich seinen Anordnungen widersetzen, festnehmen und bis zur Beendigung der Amtshandlung, längstens jedoch bis zum folgenden Tag, festhalten.
+
+Abschnitt 7 – Öffentliche Klage und Einstellung des Verfahrens
+Inhaltsverzeichnis
+§ 49 – Anklagegrundsatz und Legalitätsprinzip
+
+§ 50 – Pflicht zur Sachverhaltsaufklärung
+
+§ 51 – Entscheidung über die Anklageerhebung
+
+§ 52 – Inhalt der Anklageschrift
+
+§ 53 – Absehen von der Verfolgung bei Geringfügigkeit
+
+§ 54 – Absehen von der Verfolgung unter Auflagen
+
+§ 55 – Absehen von der Verfolgung gegen Kaution
+
+§ 56 – Einstellung mangels hinreichenden Tatverdachts
+
+§ 57 – Teileinstellung bei mehreren Taten
+
+§ 58 – Rücknahme der Klage
+
+§ 59 – Täter-Opfer-Ausgleich
+
+
+§ 49 – Anklagegrundsatz und Legalitätsprinzip
+(1) Die Eröffnung einer gerichtlichen Untersuchung setzt die Erhebung einer Klage voraus. Zur Erhebung der öffentlichen Klage ist nur die Staatsanwaltschaft berufen.
+
+(2) Die Staatsanwaltschaft ist verpflichtet, wegen aller verfolgbaren Straftaten einzuschreiten, sofern zureichende tatsächliche Anhaltspunkte vorliegen und dieses Gesetz nichts anderes bestimmt.
+
+§ 50 – Pflicht zur Sachverhaltsaufklärung
+(1) Erlangt die Staatsanwaltschaft Kenntnis vom Verdacht einer Straftat, so hat sie den Sachverhalt zu erforschen, um über die Erhebung der öffentlichen Klage zu entscheiden.
+
+(2) Sie hat die belastenden wie die entlastenden Umstände zu ermitteln.
+
+§ 51 – Entscheidung über die Anklageerhebung
+(1) Bieten die Ermittlungen genügenden Anlass, erhebt die Staatsanwaltschaft die öffentliche Klage durch Einreichung einer Anklageschrift bei dem zuständigen Gericht.
+
+(2) Andernfalls stellt sie das Verfahren ein und setzt den Beschuldigten hiervon in Kenntnis, wenn er als solcher vernommen wurde, ein Haftbefehl gegen ihn bestand oder er um einen Bescheid gebeten hat.
+
+§ 52 – Inhalt der Anklageschrift
+(1) Die Anklageschrift bezeichnet den Beschuldigten, die ihm zur Last gelegte Tat, Zeit und Ort ihrer Begehung sowie die anzuwendenden Strafvorschriften.
+
+(2) In der Anklageschrift werden die wesentlichen Ermittlungsergebnisse dargestellt.
+
+§ 53 – Absehen von der Verfolgung bei Geringfügigkeit
+(1) Hat das Verfahren ein Vergehen zum Gegenstand und ist die Schuld des Täters gering, so kann die Staatsanwaltschaft mit Zustimmung des Gerichts von der Verfolgung absehen.
+
+(2) Der Zustimmung des Gerichts bedarf es nicht bei einem Vergehen, das nicht mit einer im Mindestmaß erhöhten Strafe bedroht ist und dessen Folgen gering sind.
+
+§ 54 – Absehen von der Verfolgung unter Auflagen
+Mit Zustimmung des Gerichts und des Beschuldigten kann die Staatsanwaltschaft vorläufig von der Klage absehen und dem Beschuldigten Auflagen erteilen, wenn diese geeignet sind, das öffentliche Interesse an der Strafverfolgung zu beseitigen, und die Schwere der Schuld nicht entgegensteht. Als Auflagen kommen insbesondere in Betracht:
+
+1. Wiedergutmachung des durch die Tat verursachten Schadens,
+
+2. Zahlung eines Geldbetrags zugunsten der Staatskasse,
+
+3. Erbringung sonstiger Leistungen,
+
+4. Bemühen um einen Ausgleich mit dem Verletzten.
+
+§ 55 – Absehen von der Verfolgung gegen Geldzahlung
+(1) Bei einer zu erwartenden Haftzeit bis zu 60 Hafteinheiten kann die Staatsanwaltschaft von der Erhebung der öffentlichen Klage absehen, wenn der Beschuldigte eine Geldzahlung leistet.
+
+(2) Die Höhe der Zahlung setzt die Staatsanwaltschaft fest. Maßnahme und Höhe sind zu dokumentieren.
+
+§ 56 – Einstellung mangels hinreichenden Tatverdachts
+(1) Die Staatsanwaltschaft kann ein Verfahren einstellen, wenn eine Verurteilung nicht zu erwarten ist, insbesondere wenn
+
+1. nicht genügend geeignete Zeugen für die Aufklärung der Tat vorhanden sind,
+
+2. Zeugen aufgrund Zeitablaufs keine verwertbare Aussage mehr machen können oder
+
+3. keine oder zu wenige physische Beweise für eine Aufklärung vorliegen.
+
+(2) Ist die öffentliche Klage bereits erhoben, bedarf die Einstellung der Zustimmung des Gerichts.
+
+(3) Eine Einstellung nach dieser Vorschrift kann nur durch die Staatsanwaltschaft oder das Gericht zurückgenommen werden; dies bedarf einer Begründung.
+
+§ 57 – Teileinstellung bei mehreren Taten
+Fällt eine von mehreren Taten für die zu erwartende Strafe nicht beträchtlich ins Gewicht, so kann die Staatsanwaltschaft von ihrer Verfolgung absehen. Ist die Klage bereits erhoben, kann das Gericht das Verfahren insoweit auf Antrag der Staatsanwaltschaft einstellen.
+
+§ 58 – Rücknahme der Klage
+Die öffentliche Klage kann bis zur Eröffnung des Hauptverfahrens zurückgenommen werden, danach nicht mehr.
+
+§ 59 – Täter-Opfer-Ausgleich
+Staatsanwaltschaft und Gericht sollen in jedem Stadium des Verfahrens prüfen, ob ein Ausgleich zwischen Beschuldigtem und Verletztem erreicht werden kann. Gegen den ausdrücklichen Willen des Verletzten darf die Eignung nicht angenommen werden.
+
+Abschnitt 8 – Vereinfachtes Verfahren
+Inhaltsverzeichnis
+§ 60 – Zweck und Anwendungsbereich
+
+§ 61 – Zuständigkeit
+
+§ 62 – Beweisgrundlage
+
+§ 63 – Verfahren und Belehrung
+
+§ 64 – Dokumentation
+
+§ 65 – Vollstreckung und Einspruch
+
+§ 60 – Zweck und Anwendungsbereich
+(1) Das vereinfachte Verfahren dient der unmittelbaren Festsetzung einer Strafe ohne Hauptverhandlung.
+
+(2) Es ist zulässig, wenn
+
+1. der Beschuldigte die Tat gesteht oder
+
+2. der Sachverhalt nach § 62 durch Beweise belegt ist,
+
+und die zu erwartende Strafe eine Geldstrafe oder eine Freiheitsstrafe ist, die 180 Hafteinheiten nicht übersteigt. Innerhalb dieser Grenze bestimmt sich die Befugnis der einzelnen Stellen nach § 61.
+
+§ 61 – Zuständigkeit
+(1) Zur Durchführung des vereinfachten Verfahrens sind befugt:
+
+1. das Gericht bis zu 180 Hafteinheiten oder Geldstrafe,
+
+2. die Staatsanwaltschaft bis zu 120 Hafteinheiten oder Geldstrafe,
+
+3. der sachbearbeitende Beamte einer Polizeibehörde bis zu 120 Hafteinheiten oder Geldstrafe, sofern der Beschuldigte die Tat gesteht. Bis einschließlich 39 Hafteinheiten ist keine vorherige Kontaktaufnahme mit dem Gericht oder der Staatsanwaltschaft erforderlich. Übersteigt die zu erwartende Gesamtfreiheitsstrafe 39 Hafteinheiten, ist die Durchführung nur zulässig, wenn das Gericht und die Staatsanwaltschaft nach Absatz 5 als abwesend gelten.
+
+(2) Führt der sachbearbeitende Beamte einer Polizeibehörde das Verfahren, so ist es nur bei einem Geständnis des Beschuldigten zulässig. Die Festsetzung einer Strafe allein auf Grundlage der Beweise nach § 62, ohne Geständnis, bleibt dem Gericht und der Staatsanwaltschaft vorbehalten.
+
+(3) Liegt kein Geständnis vor, darf die Polizeibehörde im vereinfachten Verfahren keine Strafe festsetzen. Sie hat die Staatsanwaltschaft schriftlich unter Übermittlung des Tatvorwurfs und der vorhandenen Beweismittel in Kenntnis zu setzen. Eine vorläufige Festnahme richtet sich nach § 40. Untersuchungshaft darf nur unter den Voraussetzungen des § 41 durch das Gericht angeordnet oder aufrechterhalten werden. Das fehlende Geständnis und die Abwesenheit des Gerichts oder der Staatsanwaltschaft rechtfertigen für sich allein keine Freiheitsentziehung. Liegt keine Rechtsgrundlage für deren Fortdauer vor, ist der Beschuldigte unverzüglich freizulassen.
+
+(4) Übersteigt die zu erwartende Gesamtfreiheitsstrafe 39 Hafteinheiten und ist ein Richter anwesend oder innerhalb der Frist nach Absatz 5 erreichbar, so führt dieser das vereinfachte Verfahren durch. Ist kein Richter erreichbar, ist die Staatsanwaltschaft zuständig. Die Polizeibehörde darf das Verfahren durchführen, wenn beide Stellen die Übernahme ablehnen oder die Frist nach Absatz 5 ohne Rückmeldung verstrichen ist. Die Kontaktaufnahme und eine etwaige Ablehnung sind zu dokumentieren.
+
+(5) Bei einer zu erwartenden Gesamtfreiheitsstrafe von mehr als 39 Hafteinheiten gelten Gericht beziehungsweise Staatsanwaltschaft jeweils als abwesend, wenn innerhalb von fünfzehn Minuten nach ihrer nachweisbaren Inkenntnissetzung über die Festnahme kein Tätigwerden erfolgt. Zeitpunkt und Art der Kontaktaufnahme sowie eine etwaige Rückmeldung sind zu dokumentieren. Die Wartefrist begründet keine eigenständige Befugnis zur Freiheitsentziehung.
+
+§ 62 – Beweisgrundlage
+(1) Ohne Geständnis darf eine Strafe nur festgesetzt werden, wenn der Sachverhalt durch mindestens zwei der folgenden Beweise belegt ist:
+
+1. Bild- oder Tonaufnahmen,
+
+2. die dienstliche Wahrnehmung von mindestens zwei vereidigten Beamten oder Ermittlungspersonen der Staatsanwaltschaft,
+
+3. sichergestellte physische Beweismittel,
+
+4. die übereinstimmende Aussage von mindestens zwei Zeugen, die den Beschuldigten zweifelsfrei identifizieren.
+
+(2) Die Beweise müssen sich auf das der Tat zugrunde liegende Geschehen beziehen. Ist das Kerngeschehen nach Absatz 1 belegt, so dürfen die aus demselben Lebenssachverhalt stammenden weiteren Vorwürfe mit abgeurteilt werden, ohne dass für jeden einzelnen Vorwurf ein gesonderter Beweis vorliegen muss.
+
+(3) Nicht erfasst sind Vorwürfe, die einer eigenständigen, vom Kerngeschehen unabhängigen Tat entstammen.
+
+§ 63 – Verfahren und Belehrung
+(1) Dem Beschuldigten ist zu eröffnen:
+
+1. welche Taten ihm zur Last gelegt werden,
+
+2. dass ein vereinfachtes Verfahren durchgeführt wird,
+
+3. dass er das Recht hat, die Aussage zu verweigern, und
+
+4. dass er nach § 65 nachträglich Einspruch einlegen kann.
+
+(2) Ihm ist Gelegenheit zur Äußerung zum Sachverhalt zu geben.
+
+§ 64 – Dokumentation
+(1) Das Verfahren ist schriftlich zu dokumentieren. Die Dokumentation enthält mindestens:
+
+1. Namen des Beschuldigten,
+
+2. den Tatvorwurf,
+
+3. die erhobenen Beweismittel,
+
+4. Namen etwaiger Zeugen und
+
+5. das festgesetzte Strafmaß.
+
+§ 65 – Vollstreckung und Einspruch
+(1) Die festgesetzte Strafe wird nach Abschluss des Verfahrens vollstreckt.
+
+(2) Der Beschuldigte kann innerhalb von 5 Tagen nach Durchführung des vereinfachten Verfahrens schriftlich Berufung beim Court of Appeals einlegen. Für die Berufung gelten die Vorschriften des Abschnitts 10 über die reguläre Berufung, soweit dieser Paragraph nichts Abweichendes bestimmt.
+
+(3) Der Einspruch hemmt die Vollstreckung nicht. Eine verhängte Freiheitsstrafe wird auch bei eingelegtem Einspruch vollzogen, eine Geldstrafe eingezogen.
+
+(4) Über die Berufung entscheidet der Court of Appeals in einer Hauptverhandlung. Gegen dessen Urteil stehen die weiteren Rechtsmittel nach Abschnitt 10 offen.
+
+(5) Ist die Berufung verspätet eingelegt oder sonst unzulässig, so wird sie ohne Hauptverhandlung durch Beschluss des Court of Appeals verworfen.
+
+(6) Wird der Beschuldigte in der auf die Berufung folgenden Hauptverhandlung ganz oder teilweise freigesprochen, ist er nach § 84 zu entschädigen.
+
+Abschnitt 9 – Hauptverhandlung
+Inhaltsverzeichnis
+§ 66 – Eröffnung des Hauptverfahrens
+
+§ 67 – Ununterbrochene Gegenwart
+
+§ 68 – Anwesenheit des Angeklagten
+
+§ 69 – Gang der Hauptverhandlung
+
+§ 70 – Leitung und Beweisaufnahme
+
+§ 71 – Fragerecht
+
+§ 72 – Schlussvorträge und letztes Wort
+
+§ 73 – Freie Beweiswürdigung
+
+§ 74 – Urteil
+
+§ 75 – Urteilsgründe
+
+
+§ 66 – Eröffnung des Hauptverfahrens
+(1) Die Hauptverhandlung wird durch Vorlage der Anklageschrift beantragt. Das Gericht entscheidet über die Eröffnung des Hauptverfahrens.
+
+(2) Beschließt das Gericht, das Hauptverfahren nicht zu eröffnen, so muss aus dem Beschluss hervorgehen, ob er auf tatsächlichen oder rechtlichen Gründen beruht. Der Beschluss ist dem Beschuldigten bekanntzumachen.
+
+(3) Die Untersuchung und Entscheidung erstreckt sich nur auf die in der Klage bezeichnete Tat und die beschuldigten Personen. Innerhalb dieser Grenzen ist das Gericht an die gestellten Anträge nicht gebunden.
+
+§ 67 – Ununterbrochene Gegenwart
+Die Hauptverhandlung erfolgt in ununterbrochener Gegenwart der zur Urteilsfindung berufenen Personen sowie der Staatsanwaltschaft.
+
+§ 68 – Anwesenheit des Angeklagten
+(1) Der erschienene Angeklagte darf sich aus der Verhandlung nicht entfernen. Der vorsitzende Richter kann geeignete Maßnahmen treffen, um die Entfernung zu verhindern.
+
+(2) Entfernt der Angeklagte sich dennoch oder bleibt er der Fortsetzung fern, so kann die Verhandlung in seiner Abwesenheit zu Ende geführt werden, wenn er zur Anklage bereits vernommen war und das Gericht seine weitere Anwesenheit nicht für erforderlich hält.
+
+(3) Ist der Angeklagte schuld daran, dass eine Hauptverhandlung binnen sieben Tagen nicht stattfinden kann, so kann sie auch ohne seine Anwesenheit durchgeführt werden. Auf Antrag kann er eine schriftliche Äußerung zum Sachverhalt abgeben, die zu würdigen ist.
+
+(4) Gegen einen ausgebliebenen Angeklagten findet im Übrigen keine Hauptverhandlung statt. Ist sein Ausbleiben nicht hinreichend entschuldigt, ist die Vorführung anzuordnen oder ein Haftbefehl zu erlassen, soweit dies zur Durchführung zwingend erforderlich ist.
+
+§ 69 – Gang der Hauptverhandlung
+(1) Die Hauptverhandlung beginnt mit dem Aufruf der Sache. Der vorsitzende Richter stellt die Anwesenheit fest und vernimmt den Angeklagten zu seinen persönlichen Verhältnissen.
+
+(2) Sodann verliest die Staatsanwaltschaft den Anklagesatz.
+
+(3) Der Angeklagte wird darauf hingewiesen, dass es ihm freisteht, sich zur Anklage zu äußern oder nicht zur Sache auszusagen. Ist er zur Äußerung bereit, wird er zur Sache vernommen.
+
+(4) Es folgt die Beweisaufnahme.
+
+§ 70 – Leitung und Beweisaufnahme
+(1) Die Leitung der Verhandlung, die Vernehmung des Angeklagten und die Aufnahme der Beweise erfolgt durch den vorsitzenden Richter.
+
+(2) Wird eine auf die Sachleitung bezügliche Anordnung des Vorsitzenden als unzulässig beanstandet, entscheidet das Gericht.
+
+(3) Auf übereinstimmenden Antrag der Staatsanwaltschaft und des Verteidigers überlässt der vorsitzende Richter diesen die Vernehmung der von ihnen benannten Zeugen und Sachverständigen. Der Vorsitzende hat auch danach die zur Aufklärung erforderlichen Fragen zu stellen.
+
+§ 71 – Fragerecht
+(1) Der vorsitzende Richter gestattet der Staatsanwaltschaft, dem Angeklagten und dem Verteidiger, Fragen an den Angeklagten, die Zeugen und die Sachverständigen zu stellen. Die unmittelbare Befragung eines Angeklagten durch einen Mitangeklagten ist unzulässig.
+
+(2) Über Zweifel an der Zulässigkeit einer Frage entscheidet auf Einspruch das Gericht.
+
+§ 72 – Schlussvorträge und letztes Wort
+(1) Nach Schluss der Beweisaufnahme erhalten die Staatsanwaltschaft und sodann der Angeklagte das Wort zu ihren Ausführungen und Anträgen.
+
+(2) Der Staatsanwaltschaft steht das Recht der Erwiderung zu; dem Angeklagten gebührt das letzte Wort.
+
+§ 73 – Freie Beweiswürdigung
+Über das Ergebnis der Beweisaufnahme entscheidet das Gericht nach seiner freien, aus dem Inbegriff der Verhandlung geschöpften Überzeugung.
+
+§ 74 – Urteil
+(1) Die Hauptverhandlung schließt mit der auf die Beratung folgenden Verkündung des Urteils. Das Urteil ergeht im Namen des Volkes.
+
+(2) Das Urteil wird durch Verlesung der Urteilsformel und Eröffnung der Urteilsgründe verkündet. Während der Urteilsverkündung haben sich alle Anwesenden zu erheben.
+
+(3) Die Urteilsformel gibt die rechtliche Bezeichnung der Tat an, deren der Angeklagte schuldig gesprochen wird, sowie die verhängte Strafe. Anschließend werden die angewendeten Vorschriften aufgeführt.
+
+§ 75 – Urteilsgründe
+(1) Wird der Angeklagte verurteilt, so geben die Urteilsgründe die für erwiesen erachteten Tatsachen an, in denen die gesetzlichen Merkmale der Straftat gefunden werden, sowie die für die Strafzumessung bestimmenden Umstände.
+
+(2) Wird der Angeklagte freigesprochen, so müssen die Urteilsgründe ergeben, ob er für nicht überführt oder ob die Tat für nicht strafbar erachtet wurde.
+
+Abschnitt 10 – Rechtsmittel
+Inhaltsverzeichnis
+§ 76 – Rechtsmittelberechtigte
+
+§ 77 – Beschwerde
+
+§ 78 – Entscheidung über die Beschwerde
+
+§ 79 – Berufung
+
+§ 80 – Gang der Berufungsverhandlung
+
+§ 81 – Revision
+
+§ 82 – Sprungrevision
+
+§ 83 – Hemmung der Rechtskraft
+
+§ 84 – Kompensation bei Aufhebung des Urteils
+
+
+§ 76 – Rechtsmittelberechtigte
+(1) Die zulässigen Rechtsmittel stehen der Staatsanwaltschaft und dem Beschuldigten zu. Die Staatsanwaltschaft kann sie auch zugunsten des Beschuldigten einlegen.
+
+(2) Für den Beschuldigten kann der Verteidiger Rechtsmittel einlegen, jedoch nicht gegen dessen ausdrücklichen Willen.
+
+§ 77 – Beschwerde
+(1) Die Beschwerde ist gegen Beschlüsse der Gerichte und gegen Verfügungen des Vorsitzenden zulässig, soweit das Gesetz sie nicht ausdrücklich ausschließt.
+
+(2) Entscheidungen der erkennenden Gerichte, die dem Urteil vorausgehen, unterliegen nicht der Beschwerde. Ausgenommen sind Entscheidungen über Verhaftungen, die einstweilige Unterbringung, Beschlagnahmen, die vorläufige Entziehung der Fahrerlaubnis sowie die Festsetzung von Ordnungs- und Zwangsmitteln.
+
+(3) Auch Zeugen, Sachverständige und andere betroffene Personen können gegen sie betreffende Beschlüsse Beschwerde erheben.
+
+(4) Über die Beschwerde entscheidet das nächsthöhere Gericht. Gegen Beschlüsse und Verfügungen des Supreme Court ist keine Beschwerde zulässig.
+
+(5) Die Beschwerde hemmt den Vollzug der angefochtenen Entscheidung nicht.
+
+§ 78 – Entscheidung über die Beschwerde
+(1) Die Entscheidung über die Beschwerde ergeht ohne mündliche Verhandlung, in geeigneten Fällen nach Anhörung der Staatsanwaltschaft.
+
+(2) Wird die Beschwerde für begründet erachtet, so erlässt das entscheidende Gericht zugleich die in der Sache erforderliche Entscheidung.
+
+§ 79 – Berufung
+(1) Gegen ein Urteil des District Court ist die Berufung zulässig. Über sie entscheidet der Court of Appeals.
+
+(2) Die Berufung prüft das Urteil in tatsächlicher und rechtlicher Hinsicht.
+
+(3) Die Berufung ist bei dem Court of Appeals binnen fünf Tagen nach Verkündung des Urteils schriftlich einzulegen. Sie kann auf bestimmte Beschwerdepunkte beschränkt werden; andernfalls gilt das Urteil in vollem Umfang als angefochten.
+
+(4) Ist die Berufung verspätet eingelegt, so verwirft der Court of Appeals sie als unzulässig.
+
+§ 80 – Gang der Berufungsverhandlung
+(1) Nach Beginn der Hauptverhandlung trägt ein Berichterstatter die Ergebnisse des bisherigen Verfahrens vor. Das Urteil des District Court wird verlesen, soweit es für die Berufung von Bedeutung ist.
+
+(2) Sodann erfolgen die Vernehmung des Angeklagten und die Beweisaufnahme. Die Vorschriften über die Hauptverhandlung gelten entsprechend.
+
+(3) Nach Schluss der Beweisaufnahme werden die Beteiligten gehört; der Beschwerdeführer zuerst. Dem Angeklagten gebührt das letzte Wort.
+
+(4) Soweit die Berufung für begründet befunden wird, hebt der Court of Appeals das Urteil auf und entscheidet in der Sache selbst.
+
+§ 81 – Revision
+(1) Gegen ein Urteil des Court of Appeals ist die Revision zulässig. Über sie entscheidet der Supreme Court.
+
+(2) Die Revision kann nur darauf gestützt werden, dass das Urteil auf einer Verletzung des Gesetzes beruht. Das Gesetz ist verletzt, wenn eine Rechtsnorm nicht oder nicht richtig angewendet worden ist.
+
+(3) Die Revision ist bei dem Supreme Court binnen fünf Tagen nach Verkündung des Urteils schriftlich einzulegen und zu begründen. Aus der Begründung muss hervorgehen, ob das Urteil wegen Verletzung einer Verfahrensnorm oder einer anderen Rechtsnorm angefochten wird.
+
+(4) Der Prüfung des Supreme Court unterliegen nur die gestellten Revisionsanträge sowie, bei Verfahrensrügen, die bezeichneten Tatsachen.
+
+(5) Soweit die Revision für begründet erachtet wird, hebt der Supreme Court das Urteil und die davon betroffenen Feststellungen auf.
+
+§ 82 – Sprungrevision
+(1) Der Supreme Court kann ein Verfahren, gegen dessen Urteil des District Court die Berufung zulässig wäre, auf Antrag der Staatsanwaltschaft oder des Beschuldigten zur unmittelbaren Entscheidung an sich ziehen, wenn die Sache ausschließlich Rechtsfragen aufwirft oder von grundsätzlicher Bedeutung ist.
+
+(2) Nimmt der Supreme Court die Sache an, so entscheidet er nach den Vorschriften über die Revision; eine Berufung zum Court of Appeals findet nicht statt.
+
+(3) Lehnt der Supreme Court die Annahme ab, so bleibt die Berufung nach § 79 unberührt; die dort bestimmte Frist läuft ab der Bekanntmachung der Ablehnung erneut.
+
+§ 83 – Hemmung der Rechtskraft
+(1) Durch rechtzeitige Einlegung der Berufung oder der Revision wird die Rechtskraft des Urteils, soweit es angefochten ist, nicht gehemmt.
+
+(2) Dem Beschwerdeführer, dem das Urteil mit Gründen noch nicht zugestellt war, ist es nach Einlegung des Rechtsmittels zuzustellen.
+
+§ 84 – Kompensation bei Aufhebung des Urteils
+(1) Wird ein Angeklagter im Berufungs- oder Revisionsverfahren oder in der auf einen Einspruch folgenden Hauptverhandlung freigesprochen, nachdem zuvor auf Freiheits- oder Geldstrafe erkannt worden war, so steht ihm eine Entschädigung zu.
+
+(2) Die Entschädigung einer erbrachten Geldstrafe richtet sich nach deren Höhe.
+
+(3) Für verbüßte Freiheitsstrafe ist auf 3.000 Dollar pro Hafteinheit zu erkennen.
+
+(4) Beschlagnahmte, nicht verwertete Gegenstände sind herauszugeben. Angeordnete Fahrverbote werden mit der Aufhebung des Urteils nichtig.
+
+Abschnitt 11 – Beteiligung des Verletzten
+Inhaltsverzeichnis
+§ 85 – Nebenklageberechtigung
+
+§ 86 – Anschluss als Nebenkläger
+
+§ 87 – Befugnisse des Nebenklägers
+
+
+§ 85 – Nebenklageberechtigung
+(1) Wer durch eine Straftat gegen Leib oder Leben, gegen die persönliche Freiheit oder gegen die sexuelle Selbstbestimmung verletzt worden ist, kann sich der erhobenen öffentlichen Klage als Nebenkläger anschließen.
+
+(2) Ist der Verletzte durch die Tat getötet worden, so steht das Recht zum Anschluss seinem Ehegatten sowie seinen Verwandten in gerader Linie zu.
+
+(3) Bei anderen als den in Absatz 1 genannten Straftaten ist der Anschluss nur zulässig, wenn er aus besonderen Gründen, insbesondere wegen der schweren Folgen der Tat, zur Wahrnehmung der Interessen des Verletzten geboten erscheint.
+
+§ 86 – Anschluss als Nebenkläger
+(1) Der Anschluss erfolgt durch schriftliche Erklärung gegenüber dem Gericht. Er ist in jeder Lage des Verfahrens nach Erhebung der öffentlichen Klage bis zum rechtskräftigen Abschluss zulässig.
+
+(2) Über die Berechtigung zum Anschluss entscheidet das Gericht. Die Entscheidung ergeht nach Anhörung der Staatsanwaltschaft.
+
+(3) Der Nebenkläger kann sich eines Rechtsanwalts als Beistand bedienen oder sich durch ihn vertreten lassen.
+
+§ 87 – Befugnisse des Nebenklägers
+(1) Der Nebenkläger ist zur Anwesenheit in der Hauptverhandlung berechtigt, auch wenn er als Zeuge vernommen werden soll.
+
+(2) Ihm stehen das Recht zu, Fragen zu stellen, Beweisanträge zu stellen, Erklärungen abzugeben und einen eigenen Schlussvortrag zu halten.
+
+(3) Der Nebenkläger kann gegen das Urteil die zulässigen Rechtsmittel einlegen, soweit es die Tat betrifft, durch die er verletzt ist. Er kann das Urteil nicht allein mit dem Ziel einer anderen Rechtsfolge der Tat anfechten.
+
+(4) Ladungen, Termine und Entscheidungen sind dem Nebenkläger bekanntzugeben.
+
+Abschnitt 12 – Wiederaufnahme des Verfahrens
+
+
+Inhaltsverzeichnis
+§ 88 – Wiederaufnahme zugunsten des Verurteilten
+
+§ 89 – Wiederaufnahme zuungunsten des Angeklagten
+
+§ 90 – Verfahren der Wiederaufnahme
+
+
+§ 88 – Wiederaufnahme zugunsten des Verurteilten
+(1) Das durch rechtskräftiges Urteil abgeschlossene Verfahren kann zugunsten des Verurteilten wiederaufgenommen werden, wenn
+
+1. ein zu seinen Ungunsten verwertetes Beweismittel unecht oder verfälscht war,
+
+2. ein Zeuge oder Sachverständiger sich bei der Aussage einer vorsätzlich oder fahrlässig falschen Aussage schuldig gemacht hat,
+
+3. ein an dem Urteil mitwirkender Richter oder Beamter eine strafbare Verletzung seiner Amtspflichten begangen hat oder
+
+4. neue Tatsachen oder Beweismittel beigebracht werden, die allein oder in Verbindung mit den früher erhobenen Beweisen geeignet sind, den Freispruch des Verurteilten oder eine wesentlich mildere Bestrafung zu begründen.
+
+(2) Die Wiederaufnahme ist auch nach vollständiger Vollstreckung der Strafe und nach dem Tod des Verurteilten zulässig.
+
+§ 89 – (weggefallen)
+§ 90 – Verfahren der Wiederaufnahme
+(1) Der Antrag auf Wiederaufnahme ist schriftlich und unter Angabe der Gründe sowie der Beweismittel zu stellen. Antragsberechtigt sind die Staatsanwaltschaft und der Verurteilte; nach dessen Tod die in § 85 Abs. 2 genannten Angehörigen.
+
+(2) Über den Antrag entscheidet ein anderer Spruchkörper desselben Gerichts oder, wenn ein solcher nicht besteht, das nächsthöhere Gericht.
+
+(3) Wird der Antrag für begründet erachtet, so ordnet das Gericht die Erneuerung der Hauptverhandlung an. Bis zur neuen Entscheidung kann die Vollstreckung ausgesetzt werden.
+
+(4) In der erneuten Hauptverhandlung ist entweder das frühere Urteil aufrechtzuerhalten oder unter seiner Aufhebung neu zu entscheiden. Wird zugunsten des Verurteilten entschieden, findet § 84 auf bereits vollstreckte Strafteile entsprechende Anwendung.
+
+Abschnitt 13 – Strafvollstreckung, Bewährung und Kosten
+Inhaltsverzeichnis
+§ 91 – Vollstreckungsbehörde
+
+§ 92 – Beginn und Durchführung der Vollstreckung
+
+§ 93 – Vollstreckung der Freiheitsstrafe
+
+§ 94 – Vollstreckung der Geldstrafe
+
+§ 95 – Strafaussetzung zur Bewährung
+
+§ 96 – Bewährungsauflagen und Widerruf
+
+§ 97 – Kosten des Verfahrens
+
+§ 91 – Vollstreckungsbehörde
+(1) Vollstreckungsbehörde ist die Staatsanwaltschaft. Sie vollstreckt die rechtskräftig verhängten Strafen.
+
+(2) Die Staatsanwaltschaft kann sich zur Durchführung der Vollstreckung der Polizeibehörden bedienen.
+
+§ 92 – Beginn und Durchführung der Vollstreckung
+(1) Die Vollstreckung darf erst beginnen, wenn das Urteil rechtskräftig ist. Rechtskräftig ist ein Urteil, durch ihre Verkündung.
+
+(2) Ist das Urteil rechtskräftig, so leitet die Staatsanwaltschaft die Vollstreckung unverzüglich ein.
+
+(3) Bestehen Zweifel über die Auslegung eines Urteils oder über die Berechnung der zu vollstreckenden Strafe, so entscheidet das Gericht, das im ersten Rechtszug erkannt hat.
+
+§ 93 – Vollstreckung der Freiheitsstrafe
+(1) Zur Vollstreckung einer Freiheitsstrafe wird der Verurteilte geladen oder, wenn er sich nicht auf freiem Fuß befindet, unmittelbar zugeführt.
+
+(2) Erscheint der geladene Verurteilte nicht und ist sein Ausbleiben nicht hinreichend entschuldigt, so ordnet die Staatsanwaltschaft die Vorführung an; unter den Voraussetzungen eines Haftgrundes kann das Gericht einen Haftbefehl zur Vollstreckung erlassen.
+
+(3) Die nach § 46 anzurechnende Untersuchungshaft wird auf die zu vollstreckende Strafe angerechnet.
+
+§ 94 – Vollstreckung der Geldstrafe
+(1) Die Geldstrafe ist mit Rechtskraft des Urteils fällig. Die Zahlungsfrist stellt hierbei 14 Tage dar.
+
+(2) Wird die Geldstrafe nicht beigetrieben, so tritt an ihre Stelle eine Ersatzfreiheitsstrafe. Je 3.000 Dollar uneinbringlicher Geldstrafe entspricht einer Hafteinheit. Die Anrechnung und der Ausschluss einer doppelten Vollstreckung wegen desselben offenen Strafgeldbetrags richten sich nach § 95 Absatz 4 des Strafgesetzbuches.
+
+(3) Die Ersatzfreiheitsstrafe entfällt, soweit die Geldstrafe nachträglich entrichtet wird.
+
+§ 95 – Strafaussetzung zur Bewährung
+(1) Das Gericht kann die Vollstreckung einer Freiheitsstrafe von bis zu 60 Hafteinheiten zur Bewährung aussetzen, wenn zu erwarten ist, dass sich der Verurteilte schon die Verurteilung zur Warnung dienen lässt und künftig auch ohne die Vollstreckung keine Straftaten mehr begehen wird.
+
+(2) Bei der Entscheidung sind insbesondere die Persönlichkeit des Verurteilten, sein Vorleben, die Umstände der Tat und sein Verhalten nach der Tat zu berücksichtigen.
+
+(3) Das Gericht bestimmt eine Bewährungszeit. Sie darf die Dauer der ausgesetzten Strafe nicht unterschreiten und das Doppelte nicht überschreiten.
+
+§ 96 – Bewährungsauflagen und Widerruf
+(1) Das Gericht kann dem Verurteilten für die Dauer der Bewährungszeit Auflagen und Weisungen erteilen, insbesondere den Schaden wiedergutzumachen, einen Geldbetrag zugunsten der Staatskasse zu zahlen oder bestimmte Personen oder Orte zu meiden.
+
+(2) Das Gericht widerruft die Aussetzung, wenn der Verurteilte
+
+1. während der Bewährungszeit eine Straftat begeht und dadurch zeigt, dass die Erwartung, die der Aussetzung zugrunde lag, sich nicht erfüllt hat, oder
+
+2. gegen Auflagen oder Weisungen gröblich oder beharrlich verstößt.
+
+(3) Wird die Aussetzung widerrufen, so wird die ursprüngliche Strafe vollstreckt. Leistungen, die der Verurteilte zur Erfüllung von Auflagen erbracht hat, werden nicht erstattet.
+
+(4) Widerruft das Gericht die Aussetzung nicht, so erlässt es die Strafe nach Ablauf der Bewährungszeit.
+
+§ 97 – Kosten des Verfahrens
+(1) Die Kosten des Verfahrens trägt, wer verurteilt wird. Zu den Kosten gehören die Auslagen des Verfahrens und die notwendigen Auslagen der Beteiligten.
+
+(2) Wird der Angeklagte freigesprochen oder das Verfahren eingestellt, so trägt die Staatskasse die Kosten des Verfahrens sowie die notwendigen Auslagen des Angeklagten.
+
+(3) Soweit ein Nebenkläger unterliegt, können ihm die durch seinen Anschluss verursachten Kosten auferlegt werden.
+
+(4) Es gilt eine Beschränkung von 120.000 Dollar, alle weitere Ausgaben welche diesen Betrag übersteigen, tragen die Beteiligten selbst. Das Gericht kann in besonders schweren Verfahren die Beschränkung auf 200.000 Dollar anheben.
+
+Abschnitt 14 – Verjährung
+Inhaltsverzeichnis
+§ 98 – Verfolgungsverjährung
+
+§ 99 – Verjährungsfristen
+
+§ 100 – Ruhen und Unterbrechung
+
+§ 101 – Unverjährbarkeit
+
+
+§ 98 – Verfolgungsverjährung
+(1) Die Verjährung schließt die Verfolgung einer Straftat aus. Ist die Verjährung eingetreten, so ist ein Verfahren einzustellen; eine begonnene Verfolgung ist zu beenden.
+
+(2) Die Verjährung beginnt, sobald die Tat beendet ist.
+
+§ 99 – Verjährungsfristen
+Die Verfolgung einer Straftat verjährt in vier Wochen, soweit § 101 nichts anderes bestimmt.
+
+§ 100 – Ruhen und Unterbrechung
+(1) Die Verjährung ruht, solange die Verfolgung aus rechtlichen Gründen nicht begonnen oder nicht fortgesetzt werden kann.
+
+(2) Die Verjährung wird unterbrochen durch
+
+1. die erste Vernehmung des Beschuldigten oder deren Anordnung,
+
+2. den Erlass eines Straf- oder Haftbefehls,
+
+3. die Erhebung der öffentlichen Klage sowie
+
+4. die Eröffnung des Hauptverfahrens.
+
+(3) Nach jeder Unterbrechung beginnt die Verjährung von Neuem.
+
+§ 101 – Unverjährbarkeit
+Die Verfolgung von Mord (§ 18 Strafgesetzbuch), von Terrorstraftaten (§ 88 Strafgesetzbuch) sowie von Hochverrat (§ 87 Strafgesetzbuch) verjährt nicht.
+
+
+Abschnitt 15 – Besondere Verfahrensarten
+Inhaltsverzeichnis
+§ 102 – Besondere Verfahrensregeln bei Terrorstatus
+
+§ 103 – Sammelakten und Sammelverfahren
+
+
+
+
+
+§ 102 – Besondere Verfahrensregeln bei Terrorstatus
+(1) Der Terrorstatus nach § 88 Strafgesetzbuch wird in der Regel durch den Court of Appeals zuerkannt. Dieser prüft die Voraussetzungen und die Notwendigkeit der Maßnahme in eigener Zuständigkeit. Der zuerkannte Terrorstatus ist für die Strafverfolgungsbehörden schriftlich zugänglich zu machen.
+
+(2) Wurde der Terrorstatus zuerkannt, so kann die Staatsanwaltschaft besondere Ermittlungsmaßnahmen anordnen, soweit dies zur Abwehr weiterer Gefahren oder zur Aufklärung der Tat erforderlich ist. Als solche kommen in Betracht:
+
+1. eine verlängerte Untersuchungshaft vor Anklageerhebung, sofern der Court of Appeals sie alle drei Tage bestätigt,
+
+2. der Einsatz verdeckter Ermittler,
+
+3. die Überwachung der Telekommunikation ohne vorherige Benachrichtigung des Betroffenen,
+
+4. die Observation an öffentlichen und privaten Orten unter Einsatz technischer Mittel und
+
+5. Durchsuchungen zu jeder Tages- und Nachtzeit bei Gefahr im Verzug.
+
+(3) Der Court of Appeals kann anordnen, dass bestimmte Verfahrensrechte des Beschuldigten vorübergehend eingeschränkt werden, soweit dies für die Sicherheit des Verfahrens oder den Schutz von Zeugen erforderlich ist. Hierzu zählen die Beschränkung der Akteneinsicht, die Anonymisierung von Belastungszeugen und die Zurückhaltung bestimmter Beweismittel bis zur Hauptverhandlung.
+
+(4) Personen mit Terrorstatus sind in gesicherter Form vorzuführen. Die Verhandlung kann in besonderen Sicherheitsgebäuden oder unter Ausschluss der Öffentlichkeit stattfinden.
+
+(5) Gegen die Zuerkennung des Terrorstatus sowie gegen Anordnungen nach Absatz 3 ist die Revision zum Supreme Court zulässig. Sie hemmt den Vollzug der Maßnahmen nicht.
+
+(6) Der Court of Appeals überprüft den Terrorstatus alle sieben Tage. Entfallen die Voraussetzungen, sind alle mit dem Status verbundenen Beschränkungen unverzüglich aufzuheben.
+
+(7) Im Falle eines Freispruchs sind sämtliche mit dem Terrorstatus verbundenen Daten aus den behördlichen Registern zu löschen, soweit kein anderer gesetzlicher Grund für ihre Speicherung besteht.
+
+§ 103 – Sammelakten und Sammelverfahren
+(1) Bei besonderen Einsatzlagen können mehrere Beschuldigte in einer gemeinsamen Sammelakte erfasst werden. Eine besondere Einsatzlage liegt vor bei Überfällen auf Banken, Geschäfte oder öffentliche Einrichtungen sowie bei sonstigen Ereignissen, bei denen mindestens vier Beschuldigte gemeinschaftlich eine oder mehrere Straftaten begehen.
+
+(2) Allen in der Sammelakte erfassten Beschuldigten werden dieselben Straftaten vorgeworfen; jeder gilt als Mittäter oder Anstifter.
+
+(3) Sammelakten sind prozessfähig.
+
+Abschnitt 16 – Befristete Anordnungen auf Antrag der Polizeibehörden
+Inhaltsverzeichnis
+§ 104 – Allgemeine Vorschriften
+
+§ 105 – Kontrollstellenanordnung
+
+§ 106 – Großkontrollanordnung
+
+§ 107 – Aufenthaltsverbot
+
+§ 108 – Kontaktverbot
+
+§ 109 – Näherungsverbot
+
+§ 110 – Gefährdereinstufung
+
+§ 111 – Waffenverbotszone
+
+§ 112 – Kriminalitätsschwerpunkt
+
+§ 113 – Demonstrationsauflagen
+
+§ 114 – Demonstrationsverbot
+
+§ 115 – Versammlungsverbot
+
+
+§ 104 – Allgemeine Vorschriften
+(1) Auf Antrag einer Polizeibehörde kann das Gericht die in diesem Abschnitt geregelten Anordnungen treffen, um die Verfolgung, Aufklärung oder Unterbindung von Straftaten zu unterstützen. Die Anordnungen verschaffen den Polizeibehörden für ihre Geltungsdauer die jeweils bestimmten erweiterten Befugnisse.
+
+(2) Der Antrag hat die tatsächlichen Umstände, den verfolgten Zweck, den räumlichen und zeitlichen Umfang sowie, soweit einschlägig, die betroffenen Personen zu bezeichnen.
+
+(3) Jede Anordnung ist zu befristen. Die Frist ist so kurz zu bemessen, wie es der Zweck erfordert, und darf sieben Tage nicht überschreiten; sie kann auf erneuten Antrag durch das Gericht verlängert werden, wenn ihre Voraussetzungen fortbestehen.
+
+(4) Räumlich begrenzte Anordnungen gelten nur für das in der Anordnung bezeichnete Gebiet. Personenbezogene Anordnungen benennen die betroffene Person.
+
+(5) Bei Gefahr im Verzug kann die Staatsanwaltschaft die Anordnungen nach den §§ 105, 106, 111 und 112 vorläufig treffen; sie sind dem Gericht unverzüglich zur Bestätigung vorzulegen und ohne Bestätigung binnen 24 Stunden aufzuheben. Die übrigen Anordnungen dieses Abschnitts bleiben dem Gericht vorbehalten.
+
+(6) Das Gericht hebt die Anordnung auf, sobald ihre Voraussetzungen entfallen. Gegen die Anordnung und gegen ihre Ablehnung ist die Beschwerde zulässig; sie hemmt den Vollzug nicht.
+
+(7) Jede Anordnung muss zur Bedeutung der Sache und zum verfolgten Zweck verhältnismäßig sein. Grundrechtseingriffe sind auf das unerlässliche Maß zu beschränken.
+
+§ 105 – Kontrollstellenanordnung
+(1) Das Gericht kann die Einrichtung einer Kontrollstelle an einem öffentlich zugänglichen Ort anordnen, wenn Tatsachen die Annahme rechtfertigen, dass dies zur Ergreifung eines Täters oder zur Sicherstellung von Beweismitteln führt.
+
+(2) An einer Kontrollstelle ist jede Person verpflichtet, ihre Identität feststellen und sich sowie mitgeführte Sachen durchsuchen zu lassen.
+
+§ 106 – Großkontrollanordnung
+(1) Ist die Maßnahme zur Ergreifung eines Täters oder zur Sicherstellung von Beweismitteln in einem größeren Bereich erforderlich, so kann das Gericht innerhalb eines räumlich festgelegten Gebiets mehrere Kontrollstellen zugleich anordnen (Großkontrolle).
+
+(2) Innerhalb des festgelegten Gebiets gelten an jeder eingerichteten Kontrollstelle die Befugnisse nach § 105 Absatz 2.
+
+§ 107 – Aufenthaltsverbot
+(1) Das Gericht kann einer Person, die einer Straftat verdächtig ist oder bei der Tatsachen die Annahme rechtfertigen, dass sie in einem bestimmten Gebiet Straftaten begehen wird, das Betreten oder den Aufenthalt in einem bestimmten Gebiet verbieten, soweit dies zur Verhinderung weiterer Straftaten oder zur Sicherung der Ermittlungen erforderlich ist.
+
+(2) Ausgenommen sind Orte, an denen die betroffene Person wohnt oder einer erlaubten Erwerbstätigkeit nachgeht, sowie Orte, deren Aufsuchen zur Wahrnehmung berechtigter Interessen unerlässlich ist.
+
+§ 108 – Kontaktverbot
+Das Gericht kann einer Person untersagen, zu bestimmten anderen Personen Kontakt aufzunehmen, wenn dies zur Sicherung der Ermittlungen, insbesondere zum Schutz von Zeugen oder Mitbeschuldigten vor Einwirkung, oder zur Verhinderung weiterer Straftaten erforderlich ist.
+
+§ 109 – Näherungsverbot
+Das Gericht kann einer Person untersagen, sich bestimmten Personen oder bestimmten Orten bis auf einen festgelegten Abstand zu nähern, insbesondere zum Schutz von Verletzten und Zeugen.
+
+§ 110 – Gefährdereinstufung
+(1) Das Gericht kann eine Person, bei der aufgrund bestimmter Tatsachen anzunehmen ist, dass sie eine Straftat von erheblicher Bedeutung begehen wird, für die Dauer der Anordnung als Gefährder einstufen.
+
+(2) Für die Dauer der Einstufung dürfen die Identität und die mitgeführten Sachen der eingestuften Person auch ohne besonderen Anlass kontrolliert werden.
+
+(3) Mit der Einstufung können ein Aufenthaltsverbot (§ 107), ein Kontaktverbot (§ 108) oder ein Näherungsverbot (§ 109) verbunden werden.
+
+§ 111 – Waffenverbotszone
+(1) Das Gericht kann für ein bestimmtes Gebiet anordnen, dass das Mitführen von Waffen und gefährlichen Gegenständen verboten ist.
+
+(2) Innerhalb der Zone sind die Polizeibehörden befugt, Personen und mitgeführte Sachen auch ohne besonderen Anlass auf Waffen und gefährliche Gegenstände zu durchsuchen. § 105 Absatz 2 gilt entsprechend.
+
+(3) Der Begriff der Waffe bestimmt sich nach dem Waffengesetz.
+
+§ 112 – Kriminalitätsschwerpunkt
+(1) Das Gericht kann ein Gebiet, in dem wiederholt Straftaten von erheblicher Bedeutung begangen werden, für die Dauer der Anordnung als Kriminalitätsschwerpunkt ausweisen.
+
+(2) Innerhalb des Gebiets dürfen die Polizeibehörden die Identität von Personen feststellen und mitgeführte Sachen durchsuchen, ohne dass ein besonderer Anlass vorliegen muss.
+
+§ 113 – Demonstrationsauflagen
+Das Gericht kann für eine Versammlung unter freiem Himmel Auflagen festlegen, insbesondere zu Ort, Zeit, Streckenführung, Dauer und Teilnehmerzahl, wenn dies zur Abwehr von Gefahren für die öffentliche Sicherheit erforderlich ist. Das Recht, sich zu versammeln, darf nur so weit eingeschränkt werden, wie es der Zweck der Auflage zwingend erfordert.
+
+§ 114 – Demonstrationsverbot
+Das Gericht kann eine bestimmte Versammlung unter freiem Himmel verbieten, wenn nach den erkennbaren Umständen eine unmittelbare Gefahr für Leib, Leben oder bedeutende Sachwerte besteht und mildere Mittel, insbesondere Auflagen nach § 113, nicht ausreichen. Das Verbot ist zu begründen.
+
+§ 115 – Versammlungsverbot
+Das Gericht kann für ein bestimmtes Gebiet und einen bestimmten Zeitraum Versammlungen verbieten, wenn dies zur Abwehr einer unmittelbaren, auf andere Weise nicht abwendbaren Gefahr für die öffentliche Sicherheit unerlässlich ist. Das Verbot ist räumlich und zeitlich eng zu begrenzen.
