@@ -37,8 +37,9 @@ und Änderungen erscheinen bei allen sofort.
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
 - **KI-Assistent** (Google Gemini 3.5 Flash-Lite, Gratis-Kontingent): Akte zusammenfassen, nächste Schritte,
   Strafrahmen, Schriftsatz-Entwürfe, passende Paragraphen aus eurem Gesetzbuch. Eigenes Recht „KI-Assistent“
-  (anfangs nur Chairman). Die KI sieht nur, was das Mitglied selbst lesen darf. Antworten lassen sich in den
-  Verlauf der Akte übernehmen.
+  (anfangs nur Chairman). Der Assistent ist ein Smartphone, das unten rechts aus der Ecke schaut: antippen
+  (oder Taste `K`) holt es heraus, `Esc` steckt es wieder ein. Ist eine Akte geöffnet, nimmt es diese als Kontext.
+  Die KI sieht nur, was das Mitglied selbst lesen darf. Antworten lassen sich in den Verlauf der Akte übernehmen.
 
 ## Update von einer älteren Version
 
@@ -81,7 +82,7 @@ und das Gesetzbuch werden dafür an Google geschickt.
 - Neue Versionen der Website lädt der Browser automatisch (siehe `update-check.js`).
   Bei Änderungen die Versionsnummer in `version.json`, `<meta name="app-version">` und
   bei den `?v=` in `index.html` erhöhen.
-- Tastenkürzel: `/` Suche, `N` neue Akte, `Esc` Dialog schließen.
+- Tastenkürzel: `/` Suche, `N` neue Akte, `K` KI-Assistent, `Esc` Dialog bzw. KI-Assistent schließen.
 
 ## Dateien
 
@@ -95,6 +96,6 @@ und das Gesetzbuch werden dafür an Google geschickt.
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
-| `js/assistent.js` | KI-Assistent (Chat) |
+| `js/assistent.js` | KI-Assistent (Smartphone mit Chat) |
 | `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Kontext, Anfrage an Gemini |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

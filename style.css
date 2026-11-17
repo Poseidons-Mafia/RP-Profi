@@ -841,6 +841,227 @@ body.in-app .guide-btn span { display: none; }
   .rows .when { min-width: 58px; }
 }
 
+/* ---------- KI-Assistent: Smartphone in der Ecke ---------- */
+/* Eingesteckt schaut nur der obere Teil schräg aus der Ecke, angetippt kommt es ganz heraus. */
+.ki-phone {
+  --ki-peek: 118px;
+  position: fixed;
+  right: max(26px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 40;
+  width: 370px;
+  height: min(760px, calc(100vh - 32px));
+  height: min(760px, calc(100dvh - 32px));
+  transform-origin: 100% 100%;
+  transform: translateY(calc(100% - var(--ki-peek))) rotate(-7deg);
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  filter: drop-shadow(0 22px 40px rgba(60, 25, 0, 0.32));
+}
+body:not(.in-app) .ki-phone { display: none; }
+.ki-phone:not(.offen) { cursor: pointer; }
+.ki-phone:not(.offen) .ki-statusbar { pointer-events: none; }
+.ki-phone:not(.offen):hover { transform: translateY(calc(100% - var(--ki-peek) - 26px)) rotate(-4deg); }
+.ki-phone.offen { transform: none; }
+body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left)); }
+
+.ki-frame {
+  position: relative;
+  height: 100%;
+  padding: 11px;
+  border-radius: 54px;
+  background: linear-gradient(150deg, #3a3a3a 0%, #121212 35%, #050505 100%);
+  box-shadow: inset 0 0 0 1.5px #4a4a4a, inset 0 0 0 4px #0a0a0a, 0 0 0 1px rgba(204, 158, 0, 0.55);
+}
+.ki-btn-side { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #2c2c2c, #4a4a4a); }
+.ki-btn-power { right: -3px; top: 170px; height: 78px; }
+.ki-btn-vol1 { left: -3px; top: 140px; height: 50px; }
+.ki-btn-vol2 { left: -3px; top: 202px; height: 50px; }
+
+.ki-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 44px;
+  background: var(--bg);
+  isolation: isolate;
+}
+.ki-screen::before {
+  content: "";
+  position: absolute; inset: 0; z-index: -1;
+  background: url("assets/symbol.png") center 58% / 72% no-repeat;
+  opacity: 0.07;
+}
+
+/* Statusleiste mit Dynamic Island */
+.ki-statusbar {
+  position: relative; z-index: 3;
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 50px; padding: 4px 30px 0 34px;
+  font-size: 0.88rem; font-weight: 700; letter-spacing: 0.01em;
+  color: var(--black);
+  transition: color 0.3s;
+}
+.ki-phone:not(.offen) .ki-statusbar { color: #fff; }
+.ki-island { position: absolute; left: 50%; top: 11px; width: 108px; height: 31px; transform: translateX(-50%); border-radius: 20px; background: #000; }
+.ki-status-icons svg { width: 54px; height: 12px; display: block; }
+
+/* Sperrbildschirm (sichtbar, solange das Handy eingesteckt ist) */
+.ki-lock {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 58px 18px 0;
+  border: 0; border-radius: inherit;
+  color: #fff; text-align: center; cursor: pointer;
+  background:
+    url("assets/symbol.png") center 72% / 80% no-repeat,
+    radial-gradient(120% 80% at 30% 10%, #c81e1e 0%, var(--red) 35%, var(--red-dark) 60%, #2a0505 100%);
+  background-blend-mode: soft-light, normal;
+  transition: opacity 0.35s, transform 0.45s;
+}
+.ki-phone.offen .ki-lock { opacity: 0; transform: translateY(-40px); pointer-events: none; }
+.ki-lock-datum { font-size: 0.95rem; font-weight: 600; opacity: 0.85; text-transform: capitalize; }
+.ki-lock-uhr { font-size: 4.6rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; margin: 2px 0 22px; }
+.ki-notification {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  text-align: left; font-size: 0.82rem; line-height: 1.3;
+}
+.ki-notification img { width: 34px; height: 34px; border-radius: 9px; background: #fff; flex: none; object-fit: contain; }
+.ki-notification strong { display: block; font-size: 0.85rem; }
+
+/* Kopf des Chats */
+.ki-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px 16px; }
+.ki-avatar { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; flex: none; }
+.ki-head-text { flex: 1; min-width: 0; line-height: 1.2; }
+.ki-head-text strong { display: block; font-size: 1rem; }
+.ki-head-text span { display: block; font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ki-icon-btn {
+  flex: none; display: grid; place-items: center;
+  width: 36px; height: 36px; border: 0; border-radius: 50%;
+  background: transparent; color: var(--text); cursor: pointer;
+}
+.ki-icon-btn:hover { background: var(--line-soft); }
+.ki-icon-btn svg { width: 20px; height: 20px; }
+
+.ki-kontext {
+  flex: none; display: flex; align-items: center; gap: 6px;
+  margin: 0 12px 4px; padding: 0 4px 0 10px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+  color: var(--muted);
+}
+.ki-kontext svg { width: 16px; height: 16px; flex: none; }
+.ki-kontext select { flex: 1; min-width: 0; padding: 7px 2px; border: 0; background: transparent; font-size: 0.8rem; color: var(--text); cursor: pointer; }
+.ki-kontext select:focus { outline: none; }
+.ki-kontext:focus-within { border-color: var(--gold); }
+
+/* Nachrichten */
+.ki-chat {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 10px 12px 6px;
+}
+.ki-msg { display: flex; flex-direction: column; max-width: 86%; }
+.ki-msg.ich { align-self: flex-end; align-items: flex-end; }
+.ki-msg.ki { align-self: flex-start; }
+.ki-bubble {
+  padding: 8px 12px;
+  border-radius: 18px;
+  font-size: 0.88rem; line-height: 1.42;
+  overflow-wrap: anywhere;
+}
+.ki-msg.ich .ki-bubble { background: var(--red); color: #fff; border-bottom-right-radius: 5px; }
+.ki-msg.ki .ki-bubble { background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; box-shadow: 0 1px 2px rgba(80, 50, 0, 0.06); }
+.ki-bubble p { margin: 0 0 6px; }
+.ki-bubble p:last-child { margin-bottom: 0; }
+.ki-bubble .ki-h { font-weight: 700; color: var(--red-dark); margin-top: 4px; }
+.ki-bubble ul, .ki-bubble ol { margin: 2px 0 6px; padding-left: 18px; }
+.ki-bubble li { margin: 1px 0; }
+.ki-bubble code { font-size: 0.82em; }
+.ki-msg time { font-size: 0.66rem; color: var(--muted); margin: 2px 6px 0; }
+.ki-msg-aktionen { display: flex; align-items: center; gap: 2px; margin-top: 1px; }
+.ki-msg-aktionen time { margin-right: 4px; }
+.ki-msg-aktionen button {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 6px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--muted); font-size: 0.7rem; cursor: pointer;
+}
+.ki-msg-aktionen button:hover { background: var(--line-soft); color: var(--red); }
+.ki-msg-aktionen svg { width: 13px; height: 13px; }
+
+.ki-tippt { display: flex; gap: 4px; padding: 12px 14px; }
+.ki-tippt span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: ki-tippt 1.2s infinite ease-in-out; }
+.ki-tippt span:nth-child(2) { animation-delay: 0.15s; }
+.ki-tippt span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ki-tippt { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.ki-leer { margin: auto 8px; text-align: center; font-size: 0.85rem; color: var(--muted); }
+.ki-leer img { width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; }
+.ki-leer p { margin: 6px 0; }
+.ki-leer strong { color: var(--text); font-size: 1rem; }
+.ki-hinweis { font-size: 0.72rem; opacity: 0.8; }
+
+/* Vorschläge */
+.ki-chips { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 6px 12px 4px; scrollbar-width: none; }
+.ki-chips::-webkit-scrollbar { display: none; }
+.ki-chips:empty { display: none; }
+.ki-chip {
+  flex: none; white-space: nowrap;
+  padding: 6px 12px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--panel); color: var(--text);
+  font-size: 0.76rem; cursor: pointer;
+}
+.ki-chip:hover { border-color: var(--red); color: var(--red); }
+.ki-chip.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); font-weight: 700; }
+.ki-chip:disabled { opacity: 0.5; cursor: default; }
+
+/* Eingabe */
+.ki-eingabe { flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 6px 12px 4px; }
+.ki-eingabe textarea {
+  flex: 1; min-width: 0;
+  max-height: 120px; resize: none;
+  padding: 9px 15px;
+  border: 1px solid var(--line); border-radius: 21px;
+  background: #fff; line-height: 1.35; font-size: 0.9rem;
+}
+.ki-eingabe textarea:focus { outline: none; border-color: var(--gold); }
+.ki-senden {
+  flex: none; display: grid; place-items: center;
+  width: 39px; height: 39px; border: 0; border-radius: 50%;
+  background: var(--red); color: #fff; cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.ki-senden:hover { background: var(--red-dark); }
+.ki-senden:active { transform: scale(0.92); }
+.ki-senden:disabled { opacity: 0.45; cursor: default; }
+.ki-senden svg { width: 20px; height: 20px; }
+.ki-home { flex: none; width: 130px; height: 5px; margin: 6px auto 8px; border-radius: 3px; background: var(--black); opacity: 0.85; }
+
+/* Kleine Bildschirme: eingesteckt kleiner, herausgeholt füllt das Handy den ganzen Bildschirm */
+@media (max-width: 700px) {
+  .ki-phone:not(.offen) { --ki-peek: 84px; width: 250px; height: 500px; right: -14px; transform: translateY(calc(100% - var(--ki-peek))) rotate(-5deg); }
+  .ki-phone:not(.offen):hover { transform: translateY(calc(100% - var(--ki-peek) - 16px)) rotate(-3deg); }
+  .ki-phone:not(.offen) .ki-lock-uhr { font-size: 3.6rem; }
+  .ki-phone.offen { inset: 0; width: auto; height: auto; filter: none; }
+  .ki-phone.offen .ki-frame { padding: 0; border-radius: 0; box-shadow: none; }
+  .ki-phone.offen .ki-screen { border-radius: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .ki-phone.offen .ki-btn-side, .ki-phone.offen .ki-statusbar, .ki-phone.offen .ki-home { display: none; }
+  .ki-phone.offen .ki-head { padding-top: 10px; }
+  .ki-eingabe textarea { font-size: 16px; } /* verhindert Zoom auf dem iPhone */
+}
+@media (prefers-reduced-motion: reduce) {
+  .ki-phone, .ki-lock { transition: none; }
+  .ki-tippt span { animation: none; }
+}
+
 /* ---------- Druck ---------- */
 @media print {
   @page { size: A4; margin: 0; }
