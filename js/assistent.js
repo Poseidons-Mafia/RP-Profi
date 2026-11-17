@@ -45,7 +45,8 @@ const KI_STATUS = (uhr = true, kamera = false) => `<div class="ki-statusbar">
 
 // ---------- Gerüst (einmal anlegen, danach nur Teile aktualisieren) ----------
 // Aufbau: rechte Hälfte (fest) + Scharnier + Klappe (linke Hälfte, dreht sich ums Scharnier).
-// Die Vorderseite der Klappe ist das linke Innendisplay, ihre Rückseite das Außendisplay.
+// Die Vorderseite der Klappe ist das linke Innendisplay (Kontext), ihre Rückseite das Außendisplay.
+// Der Chat-Bildschirm ist außen und rechts innen pixelgleich und wandert beim Falten mit.
 const kiPhone = document.createElement("aside");
 kiPhone.id = "ki-phone";
 kiPhone.className = "ki-phone";
@@ -55,8 +56,9 @@ kiPhone.innerHTML = `
   <div class="ki-geraet">
     <div class="ki-haelfte ki-haelfte-rechts">
       <span class="ki-btn-side ki-btn-touch"></span><span class="ki-btn-side ki-btn-vol1"></span><span class="ki-btn-side ki-btn-vol2"></span>
+      <span class="ki-naht"></span>
       <div class="ki-screen ki-innen-rechts">
-        ${KI_STATUS(false, true)}
+        ${KI_STATUS(true, true)}
         <div class="ki-slot" data-slot="chat-innen"></div>
         <div class="ki-home"></div>
       </div>
@@ -66,15 +68,13 @@ kiPhone.innerHTML = `
       <div class="ki-seite ki-seite-innen ki-haelfte">
         <div class="ki-screen ki-innen-links">
           ${KI_STATUS(true, false)}
-          <div class="ki-slot" data-slot="steuer-innen"></div>
+          <div class="ki-panel" data-ki="panel"></div>
         </div>
       </div>
       <div class="ki-seite ki-seite-aussen ki-haelfte">
-        <span class="ki-btn-side ki-btn-touch"></span><span class="ki-btn-side ki-btn-vol1"></span><span class="ki-btn-side ki-btn-vol2"></span>
         <div class="ki-screen ki-cover">
           ${KI_STATUS(true, true)}
-          <div class="ki-slot" data-slot="steuer-cover"></div>
-          <div class="ki-slot ki-slot-chat" data-slot="chat-cover"></div>
+          <div class="ki-slot" data-slot="chat-cover"></div>
           <div class="ki-home"></div>
           <button type="button" class="ki-lock" aria-label="KI-Assistent öffnen (Taste K)">
             <span class="ki-lock-marke">${KI_ICON.ifruit}iFruit</span>
@@ -90,67 +90,58 @@ kiPhone.innerHTML = `
     </div>
   </div>`;
 
-// Die beiden beweglichen Bereiche: Steuerung (Kopf, Akte, Vorschläge) und Chat.
-// Sie wandern beim Falten zwischen Innen- und Außendisplay hin und her.
-const kiSteuer = document.createElement("div");
-kiSteuer.className = "ki-steuer";
-kiSteuer.innerHTML = `
-  <header class="ki-head">
+// Der Chat-Bildschirm (wandert zwischen Außendisplay und rechtem Innendisplay)
+const kiChatBlock = document.createElement("div");
+kiChatBlock.className = "ki-chatblock";
+kiChatBlock.innerHTML = `
+  <header class="ki-appbar">
     <img class="ki-avatar" src="assets/icon.png" alt="">
-    <div class="ki-head-text">
-      <strong>KI-Assistent</strong>
-      <span data-ki="untertitel"></span>
+    <div class="ki-appbar-text">
+      <strong>KI-Assistent <span class="ki-online" data-ki="status">bereit</span></strong>
+      <label class="ki-pill" title="Akte als Kontext wählen">
+        ${KI_ICON.akte}<span data-ki="pill"></span><svg class="ki-pfeil" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <select data-change="ki-akte" data-ki="akten" aria-label="Akte als Kontext"></select>
+      </label>
     </div>
-    <div class="ki-head-btns">
-      <button type="button" class="ki-icon-btn ki-klapp-btn" data-action="ki-klappen" title="Aufklappen" aria-label="Aufklappen">${KI_ICON.aufklappen}</button>
+    <div class="ki-appbar-btns">
+      <button type="button" class="ki-icon-btn ki-klapp-btn" data-action="ki-klappen" data-ki="klapp-btn">${KI_ICON.aufklappen}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Einstecken">${KI_ICON.zu}</button>
     </div>
   </header>
-  <div class="ki-kontext">
-    ${KI_ICON.akte}
-    <select data-change="ki-akte" aria-label="Akte als Kontext" data-ki="akten"></select>
-  </div>
-  <div class="ki-akte-karte" data-ki="akte-karte"></div>
-  <p class="ki-label">Schnellaktionen</p>
-  <div class="ki-chips" data-ki="chips"></div>
-  <footer class="ki-links-fuss">
-    <span data-ki="info"></span>
-    <span class="ki-marke">${KI_ICON.ifruit}iFruit</span>
-  </footer>`;
-
-const kiChatBlock = document.createElement("div");
-kiChatBlock.className = "ki-chatblock";
-kiChatBlock.innerHTML = `
-  <div class="ki-chat-kopf">
-    <strong>Chat</strong>
-    <button type="button" class="ki-icon-btn" data-action="ki-klappen" title="Zuklappen" aria-label="Zuklappen">${KI_ICON.zuklappen}</button>
-    <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
-    <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Einstecken">${KI_ICON.zu}</button>
-  </div>
   <div class="ki-chat" data-ki="chat" aria-live="polite"></div>
-  <form class="ki-eingabe" data-submit="ki-frage">
-    <textarea name="text" rows="1" placeholder="Nachricht" aria-label="Nachricht an den KI-Assistenten"></textarea>
-    <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
-  </form>`;
+  <div class="ki-unten">
+    <div class="ki-chips" data-ki="chips"></div>
+    <form class="ki-eingabe" data-submit="ki-frage">
+      <textarea name="text" rows="1" placeholder="Frag den Assistenten …" aria-label="Nachricht an den KI-Assistenten"></textarea>
+      <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
+    </form>
+  </div>`;
 
 document.body.append(kiPhone);
 const kiEl = (name) => kiPhone.querySelector(`[data-ki="${name}"]`);
 const kiSlot = (name) => kiPhone.querySelector(`[data-slot="${name}"]`);
 const kiTextarea = kiChatBlock.querySelector("textarea");
+// Einblend-Animation nur einmal: danach Markierung entfernen, sonst spielt sie beim
+// Verschieben zwischen den Displays erneut ab (Ruckeln)
+kiChatBlock.addEventListener("animationend", (e) => {
+  if (e.target.classList.contains("neu")) e.target.classList.remove("neu");
+});
 
-// Inhalte auf das passende Display legen
+// Chat-Bildschirm auf das passende Display legen
 function kiLayout(modus) {
   const zu = modus !== "auf";
   const chat = kiChatBlock.querySelector(".ki-chat");
   const unten = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40;
+  const scroll = chat.scrollTop;
   const fokus = document.activeElement === kiTextarea;
-  kiSlot(zu ? "steuer-cover" : "steuer-innen").append(kiSteuer);
   kiSlot(zu ? "chat-cover" : "chat-innen").append(kiChatBlock);
   kiPhone.dataset.layout = zu ? "zu" : "auf";
-  const btn = kiSteuer.querySelector(".ki-klapp-btn");
-  btn.title = btn.ariaLabel = "Aufklappen";
-  if (unten) chat.scrollTop = chat.scrollHeight;
+  const btn = kiEl("klapp-btn");
+  btn.innerHTML = zu ? KI_ICON.aufklappen : KI_ICON.zuklappen;
+  btn.title = zu ? "Aufklappen" : "Zuklappen";
+  btn.setAttribute("aria-label", btn.title);
+  chat.scrollTop = unten ? chat.scrollHeight : scroll;
   if (fokus) kiTextarea.focus({ preventScroll: true });
 }
 kiLayout("zu");
@@ -169,6 +160,7 @@ function kiLaden(userId) {
       Object.assign(s, { akteId: d.akteId || "", verlauf: d.verlauf || [], offen: !!d.offen, modus: d.modus === "zu" ? "zu" : "auf" });
     }
   } catch {}
+  kiGezeigt = s.verlauf.length; // gespeicherte Nachrichten nicht einploppen lassen
   kiZustandSofort();
 }
 
@@ -209,6 +201,17 @@ function kiSeitenAkte() {
   return r.page === "akten" && r.id && byId("akten", r.id) ? r.id : "";
 }
 
+function kiOffeneAkten() {
+  return [...state.akten].sort((a, b) =>
+    (a.status === "Geschlossen") - (b.status === "Geschlossen") || String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+}
+
+// Nur neu geänderte Teile ins DOM schreiben (verhindert Flackern und erneutes Einploppen)
+function kiSetzen(el, inhalt) {
+  const h = String(inhalt);
+  if (el.dataset.h !== h) { el.innerHTML = h; el.dataset.h = h; }
+}
+
 // ---------- Aktualisieren (wird bei jedem Neuzeichnen aufgerufen) ----------
 function kiAktualisieren() {
   const sichtbar = state.loaded && !!state.me && darf("ki_assistent");
@@ -225,32 +228,22 @@ function kiAktualisieren() {
   const akte = s.akteId ? byId("akten", s.akteId) : null;
 
   kiUhr();
-  kiEl("untertitel").textContent = s.laedt ? "schreibt …" : akte ? `${akte.number} · ${akte.title || ""}` : "Gesetzbuch & Kanzlei";
+  const status = kiEl("status");
+  status.textContent = s.laedt ? "schreibt …" : "bereit";
+  status.classList.toggle("tippt", s.laedt);
+  kiEl("pill").textContent = akte ? `${akte.number} · ${akte.title || ""}` : "Allgemein – keine Akte";
   kiEl("lock-text").textContent = s.verlauf.length
     ? truncate(s.verlauf[s.verlauf.length - 1].text.replace(/[*#`]/g, "").replace(/\s+/g, " ").trim(), 70)
     : akte ? `Fragen zu ${akte.number}? Tippen, um zu chatten` : "Tippen, um zu chatten";
 
-  // Aktenauswahl
-  const akten = [...state.akten].sort((a, b) =>
-    (a.status === "Geschlossen") - (b.status === "Geschlossen") || String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
-  kiEl("akten").innerHTML = String(html`
-    <option value="">Ohne Akte – allgemeine Fragen</option>
+  // Aktenauswahl (in der Kopfzeile)
+  const akten = kiOffeneAkten();
+  kiSetzen(kiEl("akten"), html`
+    <option value="">Allgemein – keine Akte</option>
     ${akten.map((a) => html`<option value="${a.id}" ${a.id === s.akteId ? "selected" : ""}>${a.number} · ${truncate(a.title, 40)}${a.status === "Geschlossen" ? " (geschl.)" : ""}</option>`)}`);
+  kiEl("akten").value = s.akteId;
 
-  // Akte-Karte (nur aufgeklappt sichtbar)
-  kiEl("akte-karte").innerHTML = String(akte ? html`
-    <div class="ki-akte-nr">${akte.number}</div>
-    <div class="ki-akte-titel">${akte.title || "–"}</div>
-    <dl>
-      <dt>Mandant</dt><dd>${mandantName(akte)}</dd>
-      <dt>Status</dt><dd>${akte.status || "–"}${akte.in_haft ? html` · <span class="danger-text">in Haft</span>` : ""}</dd>
-      <dt>Vorwürfe</dt><dd>${(akte.vorwuerfe || []).length || "keine"}</dd>
-    </dl>
-    <a href="#/akten/${akte.id}">Akte öffnen</a>`
-    : html`<p class="ki-akte-leer">Keine Akte gewählt. Der Assistent kennt dann euer Gesetzbuch und die Liste der offenen Akten.</p>`);
-  kiEl("info").textContent = s.info ? `Heute ${s.info.heute}/${s.info.limit} Anfragen` : "";
-
-  // Vorschläge
+  // Vorschläge über dem Eingabefeld
   const chips = [];
   if (seitenAkte && seitenAkte !== s.akteId) {
     const a = byId("akten", seitenAkte);
@@ -259,28 +252,94 @@ function kiAktualisieren() {
   KI_VORLAGEN.forEach((v, i) => {
     if (!v.akte || akte) chips.push(html`<button type="button" class="ki-chip" data-action="ki-vorlage" data-i="${i}" ${s.laedt ? "disabled" : ""}>${v.label}</button>`);
   });
-  kiEl("chips").innerHTML = String(html`${chips}`);
+  kiSetzen(kiEl("chips"), html`${chips}`);
 
+  kiPanelZeichnen(akte, akten);
   kiChatZeichnen();
   kiChatBlock.querySelector(".ki-senden").disabled = s.laedt;
 }
+
+// Linkes Innendisplay: Kontext (Akte, Details, Nutzung)
+function kiPanelZeichnen(akte, akten) {
+  const s = ui.assistent;
+  const vorwuerfe = akte ? (akte.vorwuerfe || []) : [];
+  const zustaendig = akte && akte.zustaendig_id ? personName(akte.zustaendig_id) : "";
+  const offene = akten.filter((a) => a.status !== "Geschlossen").slice(0, 5);
+  const prozent = s.info ? Math.min(100, Math.round((s.info.heute / s.info.limit) * 100)) : 0;
+  kiSetzen(kiEl("panel"), html`
+    <div class="ki-panel-kopf">
+      <span class="ki-panel-titel">Kontext</span>
+      <span class="ki-marke">${new SafeHtml(KI_ICON.ifruit)}iFruit</span>
+    </div>
+    ${akte ? html`
+      <section class="ki-karte ki-akte">
+        <div class="ki-akte-oben">
+          <span class="ki-badge">${akte.number}</span>
+          <span class="ki-status s-${norm(akte.status || "").replace(/\s+/g, "-")}">${akte.status || "–"}</span>
+        </div>
+        <h3>${akte.title || "–"}</h3>
+        <dl>
+          <dt>Mandant</dt><dd>${mandantName(akte)}</dd>
+          ${zustaendig ? html`<dt>Zuständig</dt><dd>${zustaendig}</dd>` : ""}
+          ${akte.in_haft ? html`<dt>Haft</dt><dd class="danger-text">in Haft${akte.haft_bis ? ` bis ${fmt.datum(akte.haft_bis)}` : ""}</dd>` : ""}
+        </dl>
+        ${vorwuerfe.length ? html`
+          <p class="ki-mini-titel">Tatvorwürfe</p>
+          <ul class="ki-vorwuerfe">
+            ${vorwuerfe.slice(0, 4).map((v) => html`<li><span>${v.paragraph || "§"}</span>${v.anzahl > 1 ? `${v.anzahl}× ` : ""}${v.titel || ""}</li>`)}
+            ${vorwuerfe.length > 4 ? html`<li class="mehr">+ ${vorwuerfe.length - 4} weitere</li>` : ""}
+          </ul>` : html`<p class="ki-leise">Noch keine Tatvorwürfe erfasst.</p>`}
+        <div class="ki-karte-aktionen">
+          <a class="ki-knopf" href="#/akten/${akte.id}">Akte öffnen</a>
+          <button type="button" class="ki-knopf leise" data-action="ki-akte-setzen" data-id="">Ohne Akte</button>
+        </div>
+      </section>` : html`
+      <section class="ki-karte ki-allgemein">
+        <h3>Allgemeiner Modus</h3>
+        <p class="ki-leise">Der Assistent kennt euer Gesetzbuch und die Liste der offenen Akten. Für Fragen zu einem Fall wähle eine Akte:</p>
+        ${offene.length ? html`<div class="ki-aktenliste">
+          ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
+        </div>` : ""}
+      </section>`}
+    <section class="ki-karte">
+      <p class="ki-mini-titel" style="margin-top:0">Bedienung</p>
+      <ul class="ki-tipps">
+        <li><kbd>Enter</kbd>senden · <kbd>⇧</kbd>+<kbd>Enter</kbd>neue Zeile</li>
+        <li><kbd>K</kbd>Assistent holen · <kbd>Esc</kbd>einstecken</li>
+        <li><kbd>2×</kbd>aufs Scharnier klicken: auf- und zuklappen</li>
+      </ul>
+    </section>
+    <div class="ki-panel-fuss">
+      <div class="ki-nutzung"><span>Heute</span><strong>${s.info ? `${s.info.heute} / ${s.info.limit}` : "–"}</strong></div>
+      <div class="ki-balken"><span style="width:${prozent}%"></span></div>
+      <p class="ki-leise">Gemini · Antworten sind Vorschläge, bitte prüfen.</p>
+    </div>`);
+}
+
+// Wie viele Nachrichten schon angezeigt wurden (nur neue ploppen ein)
+let kiGezeigt = 0;
 
 function kiChatZeichnen() {
   const s = ui.assistent;
   const chat = kiEl("chat");
   const amEnde = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 40;
   const darfVerlauf = s.akteId && darf("akten_schreiben");
+  const akte = s.akteId ? byId("akten", s.akteId) : null;
+  const neuAb = Math.min(kiGezeigt, s.verlauf.length);
   const leer = html`<div class="ki-leer">
     <img src="assets/icon.png" alt="">
-    <p><strong>Hallo${myName() ? `, ${myName().split(" ")[0]}` : ""}!</strong></p>
-    <p>Ich kenne euer Gesetzbuch und ${s.akteId ? "die gewählte Akte" : "eure offenen Akten"}. Frag mich etwas oder tippe auf einen Vorschlag.</p>
-    <p class="ki-hinweis">Antworten sind Vorschläge. Bitte immer prüfen.</p>
+    <p class="ki-gruss">Hallo${myName() ? `, ${myName().split(" ")[0]}` : ""}!</p>
+    <p>Ich helfe dir bei Akten, Paragraphen und Schriftsätzen.</p>
+    <ul class="ki-weiss">
+      <li>${new SafeHtml(KI_ICON.akte)}${akte ? `Akte ${akte.number}` : `${state.akten.filter((a) => a.status !== "Geschlossen").length} offene Akten`}</li>
+      <li>§ Gesetzbuch des Servers</li>
+    </ul>
   </div>`;
-  chat.innerHTML = String(html`
-    ${s.verlauf.length ? "" : leer}
+  const inhalt = html`
+    ${s.verlauf.length ? html`<div class="ki-tag">Heute</div>` : leer}
     ${s.verlauf.map((n, i) => n.rolle === "nutzer"
-      ? html`<div class="ki-msg ich"><div class="ki-bubble">${multiline(n.text)}</div><time>${kiZeit(n.zeit)}</time></div>`
-      : html`<div class="ki-msg ki">
+      ? html`<div class="ki-msg ich ${i >= neuAb ? "neu" : ""}"><div class="ki-bubble">${multiline(n.text)}</div><time>${kiZeit(n.zeit)}</time></div>`
+      : html`<div class="ki-msg ki ${i >= neuAb ? "neu" : ""}">
           <div class="ki-bubble">${new SafeHtml(kiFormat(n.text))}</div>
           <div class="ki-msg-aktionen">
             <time>${kiZeit(n.zeit)}</time>
@@ -288,15 +347,18 @@ function kiChatZeichnen() {
             ${darfVerlauf ? html`<button type="button" data-action="ki-in-verlauf" data-i="${i}" title="In den Verlauf der Akte">${new SafeHtml(KI_ICON.akte)}In Akte</button>` : ""}
           </div>
         </div>`)}
-    ${s.laedt ? html`<div class="ki-msg ki"><div class="ki-bubble ki-tippt"><span></span><span></span><span></span></div></div>` : ""}`);
+    ${s.laedt ? html`<div class="ki-msg ki neu"><div class="ki-bubble ki-tippt"><span></span><span></span><span></span></div></div>` : ""}`;
+  kiSetzen(chat, inhalt);
+  kiGezeigt = s.verlauf.length;
   if (amEnde || s.laedt) chat.scrollTop = chat.scrollHeight;
 }
 
 function kiUhr() {
   const d = new Date();
   const uhr = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  kiPhone.querySelectorAll('[data-ki="uhr"]').forEach((el) => (el.textContent = uhr));
-  kiEl("datum").textContent = d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  kiPhone.querySelectorAll('[data-ki="uhr"]').forEach((el) => { if (el.textContent !== uhr) el.textContent = uhr; });
+  const datum = d.toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+  if (kiEl("datum").textContent !== datum) kiEl("datum").textContent = datum;
 }
 setInterval(() => { if (!kiPhone.hidden) kiUhr(); }, 20000);
 
@@ -547,7 +609,8 @@ Object.assign(ACTIONS, {
     kiTextarea.focus();
   },
   "ki-akte-setzen": (d) => {
-    ui.assistent.akteId = d.id;
+    if ((d.id || "") === ui.assistent.akteId) return;
+    ui.assistent.akteId = d.id || "";
     ui.assistent.verlauf = [];
     kiSpeichern();
     kiAktualisieren();
