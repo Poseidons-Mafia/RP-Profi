@@ -1951,3 +1951,6 @@ body.nw-seite .guide-btn { display: none; }
   .nw-modus-karten { grid-template-columns: 1fr 1fr; }
   .nw-gruss { font-size: 1.3rem; }
 }
+
+.nw-kosten { margin-left: auto; padding: 0 7px; border-radius: 999px; background: var(--line-soft); color: var(--muted); font-size: 0.68rem; font-variant-numeric: tabular-nums; }
+.nw-msg-meta .badge + .nw-kosten { margin-left: 0; }

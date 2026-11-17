@@ -96,14 +96,18 @@ und Änderungen erscheinen bei allen sofort.
   - **Persönliche Einstellungen** (gelten auch fürs Handy): Anrede (Sir, Madam, ohne), Ton (Butler, dezent, sachlich),
     Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren, Standardmodus, Senden mit Enter oder Strg+Enter.
   - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, Gewichtung beim Tageslimit
-    (z. B. Gutachten zählt 2×), höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus und **Hausregeln** für alle Antworten.
+    (z. B. Gutachten zählt 2×), höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
+    **maximale Kosten pro Anfrage** (US-Dollar, gilt auch fürs Handy). Nigel rechnet vor jedem Schritt mit den Preisen des Modells:
+    Wird es knapp, schlägt er weniger nach, denkt kürzer und begrenzt die Antwortlänge; reicht das Budget gar nicht, lehnt er ab,
+    bevor Geld ausgegeben wird. Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (heute) und für den Admin
+    je Mitglied unter Personal → Ränge & Berechtigungen.
   - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
 
 ## Update von einer älteren Version
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) und [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung) und [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -112,7 +116,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
@@ -131,6 +135,7 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 |---|---|
 | `OPENROUTER_API_KEY` | Pflicht: Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit) |
 | `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
+| `KI_KOSTEN_MAX` | optional: Höchstkosten pro Anfrage in US-Dollar (z. B. `0.05`), falls in Nigels Kanzlei-Vorgaben nichts eingestellt ist |
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
