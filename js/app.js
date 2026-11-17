@@ -36,6 +36,58 @@ const NAV = [
   { page: "team", label: "Personal", href: "#/team" },
 ];
 
+// ---------- Rechte für Seiten und Aktionen ----------
+// Was hier fehlt, darf jedes Mitglied. Die Datenbank prüft zusätzlich selbst.
+const SEITEN_RECHTE = {
+  akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
+  rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen",
+};
+const AKTIONS_RECHTE = {
+  "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
+  "haft-ende": "akten_schreiben", "vorwurf-hinzufuegen": "akten_schreiben", "vorwurf-anzahl": "akten_schreiben",
+  "vorwurf-entfernen": "akten_schreiben", "eintrag-bearbeiten": "akten_schreiben", "eintrag-loeschen": "akten_schreiben",
+  "beteiligter-neu": "akten_schreiben", "beteiligter-bearbeiten": "akten_schreiben", "beweis-neu": "akten_schreiben",
+  "beweis-bearbeiten": "akten_schreiben", "auswahl-in-akte": "akten_schreiben", "akte-loeschen": "akten_loeschen",
+  "mandant-neu": "mandanten_schreiben", "mandant-bearbeiten": "mandanten_schreiben",
+  "termin-neu": "termine_schreiben", "termin-bearbeiten": "termine_schreiben", "aufgabe-bearbeiten": "termine_schreiben",
+  "rechnung-neu": "rechnungen_schreiben", "rechnung-bearbeiten": "rechnungen_schreiben", "rechnung-bezahlt": "rechnungen_schreiben",
+  "gebuehr-neu": "gesetzbuch_schreiben", "gebuehr-bearbeiten": "gesetzbuch_schreiben", "gesetz-neu": "gesetzbuch_schreiben",
+  "gesetz-bearbeiten": "gesetzbuch_schreiben", "gesetze-import": "gesetzbuch_schreiben",
+  "buchung-neu": "buchhaltung_schreiben", "buchung-storno": "buchhaltung_schreiben",
+  "konto-neu": "buchhaltung_schreiben", "konto-bearbeiten": "buchhaltung_schreiben",
+  "nutzer-neu": "personal_schreiben", "nutzer-passwort": "personal_schreiben", "nutzer-sperren": "personal_schreiben",
+  "personalakte-bearbeiten": "personal_schreiben", "vermerk-neu": "personal_schreiben", "vermerk-loeschen": "personal_schreiben",
+  "einstellungen-bearbeiten": "einstellungen_schreiben",
+  "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
+};
+const AENDERUNGS_RECHTE = {
+  "akte-status": "akten_schreiben", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
+};
+const FORMULAR_RECHTE = { eintrag: "akten_schreiben", "aufgabe-schnell": "termine_schreiben" };
+
+function erlaubt(recht) {
+  return !recht || (recht === "admin" ? state.isAdmin : darf(recht));
+}
+
+function keinRecht() {
+  toast("Dafür fehlt dir die Berechtigung (Rang).", "error");
+}
+
+// Knöpfe, Häkchen und Formulare ohne passendes Recht entfernen bzw. sperren
+function rechteAnwenden(root = document) {
+  root.querySelectorAll("[data-action]").forEach((el) => {
+    if (erlaubt(AKTIONS_RECHTE[el.dataset.action])) return;
+    if (el.classList.contains("day-cell")) el.removeAttribute("data-action");
+    else el.remove();
+  });
+  root.querySelectorAll("[data-change]").forEach((el) => {
+    if (!erlaubt(AENDERUNGS_RECHTE[el.dataset.change])) el.disabled = true;
+  });
+  root.querySelectorAll("form[data-submit]").forEach((el) => {
+    if (!erlaubt(FORMULAR_RECHTE[el.dataset.submit])) el.remove();
+  });
+}
+
 // ---------- Routing ----------
 function parseRoute() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
@@ -77,7 +129,9 @@ function render() {
   const scrolls = {};
   main.querySelectorAll("[data-scroll]").forEach((el) => (scrolls[el.dataset.scroll] = el.scrollTop));
 
-  const view = VIEWS[route.page] || VIEWS.uebersicht;
+  const view = !erlaubt(SEITEN_RECHTE[route.page])
+    ? () => html`<div class="page"><div class="card empty-state"><h2>Kein Zugriff</h2><p>Dein Rang erlaubt es nicht, diesen Bereich zu sehen.</p><a class="btn" href="#/">Zur Übersicht</a></div></div>`
+    : VIEWS[route.page] || VIEWS.uebersicht;
   try {
     main.innerHTML = String(view(route));
   } catch (e) {
@@ -97,6 +151,8 @@ function render() {
     }
   }
   renderNav(route);
+  document.querySelectorAll(".topbar [data-action]").forEach((el) => { el.hidden = !erlaubt(AKTIONS_RECHTE[el.dataset.action]); });
+  rechteAnwenden(main);
   document.title = `${(NAV.find((n) => n.page === route.page) || NAV[0]).label} – Wiwang Law`;
 }
 
@@ -105,7 +161,7 @@ function renderNav(route) {
     + state.termine.filter(terminUeberfaellig).length;
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
   const badges = { kalender: heute, rechnungen: offen };
-  const sichtbar = NAV.filter((n) => n.page !== "buchhaltung" || darf("buchhaltung_sehen"));
+  const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
       ${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}
@@ -191,6 +247,7 @@ document.addEventListener("click", (e) => {
   const link = e.target.closest("a[href]");
   if (link && link !== el && el.contains(link)) return;
   const fn = ACTIONS[el.dataset.action];
+  if (fn && !erlaubt(AKTIONS_RECHTE[el.dataset.action])) { e.preventDefault(); return keinRecht(); }
   if (!fn) return;
   e.preventDefault();
   fn(el.dataset, el, e);
@@ -198,7 +255,9 @@ document.addEventListener("click", (e) => {
 
 document.addEventListener("change", (e) => {
   const el = e.target.closest("[data-change]");
-  if (el && CHANGES[el.dataset.change]) CHANGES[el.dataset.change](el, e);
+  if (!el || !CHANGES[el.dataset.change]) return;
+  if (!erlaubt(AENDERUNGS_RECHTE[el.dataset.change])) return keinRecht();
+  CHANGES[el.dataset.change](el, e);
 });
 
 document.addEventListener("input", (e) => {
@@ -210,6 +269,7 @@ document.addEventListener("submit", (e) => {
   const form = e.target.closest("form[data-submit]");
   if (!form) return;
   e.preventDefault();
+  if (!erlaubt(FORMULAR_RECHTE[form.dataset.submit])) return keinRecht();
   if (SUBMITS[form.dataset.submit]) SUBMITS[form.dataset.submit](form, e);
 });
 
@@ -222,7 +282,7 @@ document.addEventListener("keydown", (e) => {
     if (search) { e.preventDefault(); search.focus(); search.select(); }
   } else if (e.key === "n") {
     e.preventDefault();
-    ACTIONS["akte-neu"]({});
+    if (erlaubt(AKTIONS_RECHTE["akte-neu"])) ACTIONS["akte-neu"]({});
   }
 });
 
