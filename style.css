@@ -169,13 +169,89 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
 .btn.small { padding: 4px 10px; font-size: 0.8rem; }
 .btn.full { width: 100%; justify-content: center; }
 
-/* „Nigel fragen“: nur das Porträt – beim Überfahren verneigt sich Nigel
-   und sein Angebot gleitet aus dem Rahmen heraus. */
-.nigel-btn {
-  --nb-size: 30px;
+/* ---------- Werkzeugleiste der Akte: Icon-Buttons mit Tooltip ---------- */
+.akte-werkzeuge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  margin-top: 12px;
+}
+.werkzeug-gruppe {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid var(--line);
+}
+.werkzeug-gruppe:last-child { border-right: none; padding-right: 0; margin-right: 0; }
+.werkzeug-gruppe.rechts { margin-left: auto; }
+.werkzeug {
   position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.werkzeug svg { width: 18px; height: 18px; }
+.werkzeug:hover,
+.werkzeug:focus-visible { background: var(--gold-soft); border-color: var(--gold); }
+.werkzeug:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.werkzeug.danger { color: var(--red); border-color: #e9c2c2; }
+.werkzeug.danger:hover,
+.werkzeug.danger:focus-visible { background: var(--red-soft); border-color: var(--red); }
+
+/* Tooltip (liegt über allem, verschiebt nichts) */
+.werkzeug::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 30;
+  width: max-content;
+  max-width: 230px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: var(--black, #1d1a14);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1.3;
+  text-align: left;
+  white-space: pre-line;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -3px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.werkzeug[data-hinweis]::after { content: attr(data-tip) "\A" attr(data-hinweis); }
+.werkzeug:hover::after,
+.werkzeug:focus-visible::after { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.25s; }
+/* rechts außen: Tooltip nach links ausrichten, damit er nicht aus der Karte ragt */
+.werkzeug-gruppe.rechts .werkzeug::after { left: auto; right: 0; transform: translateY(-3px); }
+.werkzeug-gruppe.rechts .werkzeug:hover::after,
+.werkzeug-gruppe.rechts .werkzeug:focus-visible::after { transform: translateY(0); }
+@media (hover: none) { .werkzeug::after { display: none; } }
+
+/* „Nigel fragen“: nur das Porträt – beim Überfahren verneigt sich Nigel
+   und sein Angebot gleitet als Fähnchen heraus. Das Fähnchen liegt absolut
+   über den Nachbarn, damit die übrigen Buttons nicht verrutschen. */
+.nigel-btn {
+  --nb-size: 32px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: var(--nb-size);
   height: var(--nb-size);
   padding: 0;
   border: 1px solid var(--gold);
@@ -188,9 +264,11 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
   box-shadow: 0 0 0 0 rgba(204, 158, 0, 0);
   transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
+.nigel-btn:hover,
+.nigel-btn:focus-visible { z-index: 20; }
 .nigel-btn-bild {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   flex: 0 0 auto;
   width: calc(var(--nb-size) - 2px);
   height: calc(var(--nb-size) - 2px);
@@ -216,7 +294,7 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
   border-radius: 50%;
   background: var(--gold);
   border: 2px solid var(--panel);
-  z-index: 2;
+  z-index: 3;
   animation: nigel-bereit 2.8s ease-in-out infinite;
   transition: opacity 0.2s ease;
 }
@@ -225,19 +303,29 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
   80% { transform: scale(1.35); }
 }
 .nigel-btn-text {
+  position: absolute;
+  z-index: 1;
+  top: -1px;
+  left: calc(var(--nb-size) / 2 - 1px);
+  height: var(--nb-size);
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  max-width: 0;
-  overflow: hidden;
+  padding: 0 14px 0 calc(var(--nb-size) / 2 + 8px);
+  border: 1px solid var(--gold);
+  border-left: none;
+  border-radius: 0 999px 999px 0;
+  background: var(--gold-soft);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   white-space: nowrap;
   font-size: 0.8rem;
   font-weight: bold;
   line-height: 1.05;
+  pointer-events: none;
   opacity: 0;
-  transform: translateX(-12px);
-  transition: max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1), padding 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              opacity 0.25s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
 .nigel-btn-text small {
   font-size: 0.62rem;
@@ -259,23 +347,17 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
 .nigel-btn:hover::after,
 .nigel-btn:focus-visible::after { opacity: 0; }
 .nigel-btn:hover .nigel-btn-text,
-.nigel-btn:focus-visible .nigel-btn-text {
-  max-width: 140px;
-  padding: 0 12px 0 8px;
-  opacity: 1;
-  transform: translateX(0);
-}
+.nigel-btn:focus-visible .nigel-btn-text { opacity: 1; clip-path: inset(0 0 0 0); }
 .nigel-btn:hover .nigel-btn-text small,
 .nigel-btn:focus-visible .nigel-btn-text small { opacity: 1; transform: translateY(0); }
 .nigel-btn:active .nigel-btn-bild img { transform: rotate(-8deg) translateY(3px) scale(0.98); }
-/* Touch-Geräte kennen kein Überfahren: dort steht der Text gleich daneben */
+/* Touch-Geräte kennen kein Überfahren: dort bleibt es beim Porträt */
 @media (hover: none) {
-  .nigel-btn-text { max-width: 140px; padding: 0 12px 0 8px; opacity: 1; transform: none; }
-  .nigel-btn-text small { display: none; }
+  .nigel-btn-text { display: none; }
   .nigel-btn::after { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .nigel-btn, .nigel-btn *, .nigel-btn::after { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
+  .nigel-btn, .nigel-btn *, .nigel-btn::after, .werkzeug, .werkzeug::after { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
 }
 .icon-btn {
   border: none;
