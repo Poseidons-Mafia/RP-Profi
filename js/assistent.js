@@ -6,7 +6,7 @@
 //    zugeklappt  – kompakter Chat auf dem Außendisplay
 //    aufgeklappt – links Akte & Schnellaktionen, rechts der Chat
 //  Die Seite dahinter bleibt bedienbar. Die KI läuft über die
-//  Supabase Edge Function "ki-assistent" (OpenRouter, sonst Google Gemini) und beantwortet
+//  Supabase Edge Function "ki-assistent" (Claude Opus 5.5 über OpenRouter) und beantwortet
 //  ausschließlich Rechtsfragen. Dabei schlägt sie mit Werkzeugen in den
 //  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
