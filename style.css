@@ -1041,119 +1041,151 @@ body.in-app .guide-btn span { display: none; }
   .ablauf-schritte .when { min-width: 70px; }
 }
 
-/* ---------- KI-Assistent: Smartphone in der Ecke ---------- */
-/* Eingesteckt schaut nur der obere Teil schräg aus der Ecke, angetippt kommt es ganz heraus. */
+/* ---------- KI-Assistent: faltbares iFruit-Smartphone ---------- */
+/* Zugeklappt (kurz und breit) schaut das Außendisplay schräg aus der Ecke.
+   Angetippt kommt es heraus und klappt auf: links Akte & Schnellaktionen, rechts der Chat. */
 .ki-phone {
-  --ki-peek: 118px;
+  --ki-peek: 112px;
+  --ki-zu-b: 262px;                      /* zugeklappt: Breite … */
+  --ki-zu-h: 366px;                      /* … und Höhe (Seitenverhältnis ca. 84 : 118) */
+  --ki-auf-h: min(600px, calc(100vh - 40px));
+  --ki-auf-b: min(calc(var(--ki-auf-h) * 1.42), calc(100vw - 48px));
   position: fixed;
   right: max(26px, env(safe-area-inset-right));
-  bottom: max(16px, env(safe-area-inset-bottom));
+  bottom: max(18px, env(safe-area-inset-bottom));
   z-index: 40;
-  width: 370px;
-  height: min(760px, calc(100vh - 32px));
-  height: min(760px, calc(100dvh - 32px));
+  width: var(--ki-zu-b);
+  height: var(--ki-zu-h);
   transform-origin: 100% 100%;
   transform: translateY(calc(100% - var(--ki-peek))) rotate(-7deg);
-  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.25, 1.1), width 0.5s cubic-bezier(0.3, 0.8, 0.3, 1), height 0.5s cubic-bezier(0.3, 0.8, 0.3, 1);
   filter: drop-shadow(0 22px 40px rgba(60, 25, 0, 0.32));
 }
 body:not(.in-app) .ki-phone { display: none; }
 .ki-phone:not(.offen) { cursor: pointer; }
 .ki-phone:not(.offen) .ki-statusbar { pointer-events: none; }
 .ki-phone:not(.offen):hover { transform: translateY(calc(100% - var(--ki-peek) - 26px)) rotate(-4deg); }
-.ki-phone.offen { transform: none; }
+.ki-phone.offen { width: var(--ki-auf-b); height: var(--ki-auf-h); transform: none; }
 body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left)); }
 
+/* Gehäuse: Titan-Rahmen, sehr schmale Ränder */
 .ki-frame {
   position: relative;
   height: 100%;
-  padding: 11px;
-  border-radius: 54px;
-  background: linear-gradient(150deg, #3a3a3a 0%, #121212 35%, #050505 100%);
-  box-shadow: inset 0 0 0 1.5px #4a4a4a, inset 0 0 0 4px #0a0a0a, 0 0 0 1px rgba(204, 158, 0, 0.55);
+  padding: 8px;
+  border-radius: 40px;
+  background: linear-gradient(150deg, #4a4744 0%, #1b1a19 30%, #0b0b0b 70%, #2a2826 100%);
+  box-shadow: inset 0 0 0 1.5px #6b6763, inset 0 0 0 3.5px #0a0a0a, 0 0 0 1px rgba(204, 158, 0, 0.5);
 }
-.ki-btn-side { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #2c2c2c, #4a4a4a); }
-.ki-btn-power { right: -3px; top: 170px; height: 78px; }
-.ki-btn-vol1 { left: -3px; top: 140px; height: 50px; }
-.ki-btn-vol2 { left: -3px; top: 202px; height: 50px; }
+.ki-phone.offen .ki-frame { border-radius: 34px; }
+.ki-btn-side { position: absolute; width: 4px; border-radius: 2px; background: linear-gradient(90deg, #3a3836, #6b6763); }
+.ki-btn-touch { right: -3px; top: 92px; height: 58px; } /* Seitentaste mit Fingerabdruck */
+.ki-btn-vol1 { right: -3px; top: 168px; height: 38px; }
+.ki-btn-vol2 { right: -3px; top: 214px; height: 38px; }
 
 .ki-screen {
   position: relative;
   display: flex;
-  flex-direction: column;
   height: 100%;
   overflow: hidden;
-  border-radius: 44px;
+  border-radius: 32px;
   background: var(--bg);
   isolation: isolate;
 }
-.ki-screen::before {
+.ki-phone.offen .ki-screen { border-radius: 27px; }
+
+/* Die beiden Hälften. Zugeklappt ist die linke eingefaltet. */
+.ki-links, .ki-rechts { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.ki-links {
+  flex: 0 0 0%;
+  overflow: hidden;
+  opacity: 0;
+  background: linear-gradient(180deg, var(--panel), var(--bg));
+  transform-origin: 100% 50%;
+  transform: perspective(900px) rotateY(-70deg);
+  transition: flex-basis 0.5s cubic-bezier(0.3, 0.8, 0.3, 1), opacity 0.35s, transform 0.5s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.ki-phone.offen .ki-links { flex-basis: 41%; opacity: 1; transform: none; }
+.ki-rechts { flex: 1; }
+.ki-rechts::before {
   content: "";
   position: absolute; inset: 0; z-index: -1;
-  background: url("assets/symbol.png") center 58% / 72% no-repeat;
+  background: url("assets/symbol.png") center 58% / 70% no-repeat;
   opacity: 0.07;
 }
+/* Knick in der Mitte */
+.ki-phone.offen .ki-rechts::after {
+  content: "";
+  position: absolute; top: 0; bottom: 0; left: -7px; width: 14px; z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(80, 50, 0, 0.08) 40%, rgba(255, 255, 255, 0.55) 50%, rgba(80, 50, 0, 0.08) 60%, transparent);
+}
 
-/* Statusleiste mit Dynamic Island */
+/* Statusleiste */
 .ki-statusbar {
   position: relative; z-index: 3;
   flex: none;
   display: flex; align-items: center; justify-content: space-between;
-  height: 50px; padding: 4px 30px 0 34px;
-  font-size: 0.88rem; font-weight: 700; letter-spacing: 0.01em;
+  height: 40px; padding: 2px 22px 0 26px;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.01em;
   color: var(--black);
   transition: color 0.3s;
 }
 .ki-phone:not(.offen) .ki-statusbar { color: #fff; }
-.ki-island { position: absolute; left: 50%; top: 11px; width: 108px; height: 31px; transform: translateX(-50%); border-radius: 20px; background: #000; }
+.ki-phone.offen .ki-uhr.nur-zu { visibility: hidden; }
+.ki-kamera { position: absolute; left: 50%; top: 12px; width: 13px; height: 13px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(circle at 40% 40%, #2b3a55 0 25%, #050505 45%); box-shadow: 0 0 0 1.5px #000; }
+.ki-status-icons { margin-left: auto; }
 .ki-status-icons svg { width: 54px; height: 12px; display: block; }
 
-/* Sperrbildschirm (sichtbar, solange das Handy eingesteckt ist) */
+/* Außendisplay / Sperrbildschirm */
 .ki-lock {
   position: absolute; inset: 0; z-index: 2;
   display: flex; flex-direction: column; align-items: center;
-  padding: 58px 18px 0;
+  padding: 40px 14px 0;
   border: 0; border-radius: inherit;
   color: #fff; text-align: center; cursor: pointer;
   background:
-    url("assets/symbol.png") center 72% / 80% no-repeat,
+    url("assets/symbol.png") center 78% / 85% no-repeat,
     radial-gradient(120% 80% at 30% 10%, #c81e1e 0%, var(--red) 35%, var(--red-dark) 60%, #2a0505 100%);
   background-blend-mode: soft-light, normal;
-  transition: opacity 0.35s, transform 0.45s;
+  transition: opacity 0.3s, transform 0.45s;
 }
-.ki-phone.offen .ki-lock { opacity: 0; transform: translateY(-40px); pointer-events: none; }
-.ki-lock-datum { font-size: 0.95rem; font-weight: 600; opacity: 0.85; text-transform: capitalize; }
-.ki-lock-uhr { font-size: 4.6rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; margin: 2px 0 22px; }
+.ki-phone.offen .ki-lock { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.ki-lock-marke { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; opacity: 0.9; }
+.ki-lock-marke svg, .ki-marke svg { width: 13px; height: 13px; }
+.ki-lock-datum { margin-top: 4px; font-size: 0.85rem; font-weight: 600; opacity: 0.85; text-transform: capitalize; }
+.ki-lock-uhr { font-size: 3.9rem; font-weight: 300; line-height: 1; letter-spacing: -0.02em; margin: 2px 0 16px; }
 .ki-notification {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 9px;
   width: 100%;
-  padding: 11px 13px;
-  border-radius: 20px;
+  padding: 9px 11px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.2);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-  text-align: left; font-size: 0.82rem; line-height: 1.3;
+  text-align: left; font-size: 0.78rem; line-height: 1.3;
 }
-.ki-notification img { width: 34px; height: 34px; border-radius: 9px; background: #fff; flex: none; object-fit: contain; }
-.ki-notification strong { display: block; font-size: 0.85rem; }
+.ki-notification img { width: 30px; height: 30px; border-radius: 8px; background: #fff; flex: none; object-fit: contain; }
+.ki-notification strong { display: block; font-size: 0.82rem; }
 
-/* Kopf des Chats */
-.ki-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 4px 12px 8px 16px; }
+/* Linke Hälfte: Kopf, Akte, Schnellaktionen */
+.ki-head { flex: none; display: flex; align-items: center; gap: 10px; padding: 2px 14px 10px 16px; }
 .ki-avatar { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; flex: none; }
 .ki-head-text { flex: 1; min-width: 0; line-height: 1.2; }
 .ki-head-text strong { display: block; font-size: 1rem; }
 .ki-head-text span { display: block; font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ki-icon-btn {
   flex: none; display: grid; place-items: center;
-  width: 36px; height: 36px; border: 0; border-radius: 50%;
+  width: 34px; height: 34px; border: 0; border-radius: 50%;
   background: transparent; color: var(--text); cursor: pointer;
 }
 .ki-icon-btn:hover { background: var(--line-soft); }
-.ki-icon-btn svg { width: 20px; height: 20px; }
+.ki-icon-btn svg { width: 19px; height: 19px; }
+.ki-icon-btn.nur-mobil { display: none; }
 
 .ki-kontext {
   flex: none; display: flex; align-items: center; gap: 6px;
-  margin: 0 12px 4px; padding: 0 4px 0 10px;
-  border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+  margin: 0 14px 10px; padding: 0 4px 0 10px;
+  border: 1px solid var(--line); border-radius: 12px; background: #fff;
   color: var(--muted);
 }
 .ki-kontext svg { width: 16px; height: 16px; flex: none; }
@@ -1161,12 +1193,47 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-kontext select:focus { outline: none; }
 .ki-kontext:focus-within { border-color: var(--gold); }
 
-/* Nachrichten */
+.ki-akte-karte {
+  flex: none;
+  margin: 0 14px 12px; padding: 11px 13px;
+  border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: 12px;
+  background: #fff; font-size: 0.8rem;
+}
+.ki-akte-nr { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; color: var(--red); }
+.ki-akte-titel { font-weight: 700; margin: 1px 0 6px; line-height: 1.3; }
+.ki-akte-karte dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0 0 6px; }
+.ki-akte-karte dt { color: var(--muted); }
+.ki-akte-karte dd { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ki-akte-karte a { font-size: 0.76rem; font-weight: 700; text-decoration: none; }
+.ki-akte-karte:has(.ki-akte-leer) { border-left-color: var(--gold); }
+.ki-akte-leer { margin: 0; color: var(--muted); line-height: 1.4; }
+.ki-label { flex: none; margin: 0 16px 6px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.ki-chips { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: stretch; gap: 6px; overflow-y: auto; padding: 0 14px 8px; }
+.ki-chip {
+  flex: none; text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 12px;
+  background: #fff; color: var(--text);
+  font-size: 0.8rem; cursor: pointer;
+}
+.ki-chip:hover { border-color: var(--red); color: var(--red); }
+.ki-chip.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); font-weight: 700; }
+.ki-chip:disabled { opacity: 0.5; cursor: default; }
+
+.ki-links-fuss { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px 14px; font-size: 0.7rem; color: var(--muted); }
+.ki-marke { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); opacity: 0.55; }
+
+/* Rechte Hälfte: Chat */
+.ki-chat-kopf { flex: none; display: flex; align-items: center; gap: 2px; padding: 0 10px 6px 16px; }
+.ki-chat-kopf strong { flex: 1; font-size: 0.95rem; }
+.ki-phone:not(.offen) .ki-chat-kopf, .ki-phone:not(.offen) .ki-chat, .ki-phone:not(.offen) .ki-eingabe { visibility: hidden; }
+
 .ki-chat {
   flex: 1; min-height: 0;
   display: flex; flex-direction: column; gap: 10px;
   overflow-y: auto; overscroll-behavior: contain;
-  padding: 10px 12px 6px;
+  padding: 6px 14px 6px;
 }
 .ki-msg { display: flex; flex-direction: column; max-width: 86%; }
 .ki-msg.ich { align-self: flex-end; align-items: flex-end; }
@@ -1203,28 +1270,12 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 @keyframes ki-tippt { 0%, 60%, 100% { transform: translateY(0); opacity: 0.45; } 30% { transform: translateY(-4px); opacity: 1; } }
 
 .ki-leer { margin: auto 8px; text-align: center; font-size: 0.85rem; color: var(--muted); }
-.ki-leer img { width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; }
+.ki-leer img { width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 2px solid var(--gold); object-fit: contain; }
 .ki-leer p { margin: 6px 0; }
 .ki-leer strong { color: var(--text); font-size: 1rem; }
 .ki-hinweis { font-size: 0.72rem; opacity: 0.8; }
 
-/* Vorschläge */
-.ki-chips { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 6px 12px 4px; scrollbar-width: none; }
-.ki-chips::-webkit-scrollbar { display: none; }
-.ki-chips:empty { display: none; }
-.ki-chip {
-  flex: none; white-space: nowrap;
-  padding: 6px 12px;
-  border: 1px solid var(--line); border-radius: 999px;
-  background: var(--panel); color: var(--text);
-  font-size: 0.76rem; cursor: pointer;
-}
-.ki-chip:hover { border-color: var(--red); color: var(--red); }
-.ki-chip.gold { background: var(--gold-soft); border-color: var(--gold); color: var(--gold-text); font-weight: 700; }
-.ki-chip:disabled { opacity: 0.5; cursor: default; }
-
-/* Eingabe */
-.ki-eingabe { flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 6px 12px 4px; }
+.ki-eingabe { flex: none; display: flex; align-items: flex-end; gap: 8px; padding: 6px 14px 2px; }
 .ki-eingabe textarea {
   flex: 1; min-width: 0;
   max-height: 120px; resize: none;
@@ -1243,13 +1294,30 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-senden:active { transform: scale(0.92); }
 .ki-senden:disabled { opacity: 0.45; cursor: default; }
 .ki-senden svg { width: 20px; height: 20px; }
-.ki-home { flex: none; width: 130px; height: 5px; margin: 6px auto 8px; border-radius: 3px; background: var(--black); opacity: 0.85; }
+.ki-home { flex: none; position: relative; z-index: 3; width: 110px; height: 5px; margin: 6px auto 7px; border-radius: 3px; background: var(--black); opacity: 0.85; transition: background 0.3s; }
+.ki-phone:not(.offen) .ki-home { background: #fff; }
 
-/* Kleine Bildschirme: eingesteckt kleiner, herausgeholt füllt das Handy den ganzen Bildschirm */
+/* Schmale Fenster: aufgeklappt untereinander (oben Akte & Vorschläge, darunter der Chat) */
+@media (max-width: 860px) {
+  .ki-phone.offen { --ki-auf-b: min(420px, calc(100vw - 32px)); }
+  .ki-phone.offen .ki-screen { flex-direction: column; }
+  .ki-phone.offen .ki-links { flex: none; transform: none; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .ki-phone.offen .ki-rechts::after, .ki-phone.offen .ki-links .ki-statusbar,
+  .ki-phone.offen .ki-akte-karte, .ki-phone.offen .ki-label, .ki-phone.offen .ki-links-fuss, .ki-phone.offen .ki-chat-kopf { display: none; }
+  .ki-phone.offen .ki-rechts { position: static; }
+  .ki-phone.offen .ki-uhr.nur-zu { visibility: visible; }
+  .ki-phone.offen .ki-rechts .ki-statusbar { position: absolute; inset: 0 0 auto; }
+  .ki-phone.offen .ki-head { padding-top: 40px; }
+  .ki-icon-btn.nur-mobil { display: grid; }
+  .ki-chips { flex: none; flex-direction: row; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+  .ki-chips::-webkit-scrollbar { display: none; }
+  .ki-chip { white-space: nowrap; border-radius: 999px; padding: 6px 12px; font-size: 0.76rem; }
+}
+/* Handy: zugeklappt kleiner, herausgeholt füllt es den ganzen Bildschirm */
 @media (max-width: 700px) {
-  .ki-phone:not(.offen) { --ki-peek: 84px; width: 250px; height: 500px; right: -14px; transform: translateY(calc(100% - var(--ki-peek))) rotate(-5deg); }
+  .ki-phone:not(.offen) { --ki-peek: 84px; --ki-zu-b: 210px; --ki-zu-h: 294px; right: -12px; transform: translateY(calc(100% - var(--ki-peek))) rotate(-5deg); }
   .ki-phone:not(.offen):hover { transform: translateY(calc(100% - var(--ki-peek) - 16px)) rotate(-3deg); }
-  .ki-phone:not(.offen) .ki-lock-uhr { font-size: 3.6rem; }
+  .ki-phone:not(.offen) .ki-lock-uhr { font-size: 3.1rem; }
   .ki-phone.offen { inset: 0; width: auto; height: auto; filter: none; }
   .ki-phone.offen .ki-frame { padding: 0; border-radius: 0; box-shadow: none; }
   .ki-phone.offen .ki-screen { border-radius: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
@@ -1259,7 +1327,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 }
 @media (prefers-reduced-motion: reduce) {
   .glocke.klingelt svg { animation: none; }
-  .ki-phone, .ki-lock { transition: none; }
+  .ki-phone, .ki-lock, .ki-links { transition: none; }
   .ki-tippt span { animation: none; }
 }
 
