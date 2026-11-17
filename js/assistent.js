@@ -1,8 +1,9 @@
 // =============================================================
 //  Wiwang Law – KI-Assistent
-//  Ein Smartphone, das unten rechts aus der Ecke schaut. Antippen
-//  holt es heraus, darin wird gechattet. Die Seite dahinter bleibt
-//  bedienbar. Die KI läuft über die Supabase Edge Function
+//  Ein faltbares iFruit-Smartphone, das zugeklappt unten rechts aus
+//  der Ecke schaut. Antippen holt es heraus und klappt es auf:
+//  links Akte und Schnellaktionen, rechts der Chat. Die Seite
+//  dahinter bleibt bedienbar. Die KI läuft über die Supabase Edge Function
 //  "ki-assistent" (Google Gemini). Recht: "ki_assistent".
 // =============================================================
 
@@ -23,6 +24,8 @@ const KI_ICON = {
   neu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h8M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   kopieren: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   akte: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A1.5 1.5 0 0 1 5.5 5H10l2 2h6.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  // Eigenes Logo (Zitrusscheibe) für die fiktive Marke iFruit
+  ifruit: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.9"/><g stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity="0.9"><path d="M12 5.2v13.6M6.1 8.6l11.8 6.8M6.1 15.4l11.8-6.8"/></g><circle cx="12" cy="12" r="1.3" fill="#fff"/></svg>',
   status: '<svg viewBox="0 0 54 12" aria-hidden="true"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0.5" width="3" height="11.5" rx="1"/><path d="M29 3.2a8.6 8.6 0 0 1 6 2.4l1.3-1.3a10.4 10.4 0 0 0-14.6 0L23 5.6a8.6 8.6 0 0 1 6-2.4zm0 3.5a5 5 0 0 1 3.5 1.4l1.3-1.3a6.8 6.8 0 0 0-9.6 0l1.3 1.3A5 5 0 0 1 29 6.7zm0 3.4-1.6 1.6L29 13.3l1.6-1.6z"/><rect x="40" y="1" width="12" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="41.8" y="2.8" width="8.4" height="6.4" rx="1.2"/><rect x="52.6" y="4.2" width="1.4" height="3.6" rx="0.7"/></g></svg>',
 };
 
@@ -34,43 +37,60 @@ kiPhone.hidden = true;
 kiPhone.setAttribute("aria-label", "KI-Assistent");
 kiPhone.innerHTML = `
   <div class="ki-frame">
-    <span class="ki-btn-side ki-btn-power"></span><span class="ki-btn-side ki-btn-vol1"></span><span class="ki-btn-side ki-btn-vol2"></span>
+    <span class="ki-btn-side ki-btn-touch" title="Seitentaste"></span><span class="ki-btn-side ki-btn-vol1"></span><span class="ki-btn-side ki-btn-vol2"></span>
     <div class="ki-screen">
-      <div class="ki-statusbar"><span class="ki-uhr" data-ki="uhr"></span><span class="ki-island"></span><span class="ki-status-icons">${KI_ICON.status}</span></div>
 
-      <button type="button" class="ki-lock" aria-label="KI-Assistent öffnen (Taste K)">
-        <span class="ki-lock-uhr" data-ki="uhr"></span>
-        <span class="ki-lock-datum" data-ki="datum"></span>
-        <span class="ki-notification">
-          <img src="assets/icon.png" alt="">
-          <span><strong>KI-Assistent</strong><span data-ki="lock-text">Tippen, um zu chatten</span></span>
-        </span>
-      </button>
-
-      <header class="ki-head">
-        <img class="ki-avatar" src="assets/icon.png" alt="">
-        <div class="ki-head-text">
-          <strong>KI-Assistent</strong>
-          <span data-ki="untertitel"></span>
+      <!-- linke Hälfte (nur aufgeklappt): Akte & Schnellaktionen -->
+      <section class="ki-links">
+        <div class="ki-statusbar"><span class="ki-uhr" data-ki="uhr"></span></div>
+        <header class="ki-head">
+          <img class="ki-avatar" src="assets/icon.png" alt="">
+          <div class="ki-head-text">
+            <strong>KI-Assistent</strong>
+            <span data-ki="untertitel"></span>
+          </div>
+          <button type="button" class="ki-icon-btn nur-mobil" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
+          <button type="button" class="ki-icon-btn nur-mobil" data-action="ki-schliessen" title="Einstecken" aria-label="Schließen">${KI_ICON.zu}</button>
+        </header>
+        <div class="ki-kontext">
+          ${KI_ICON.akte}
+          <select data-change="ki-akte" aria-label="Akte als Kontext" data-ki="akten"></select>
         </div>
-        <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
-        <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Schließen">${KI_ICON.zu}</button>
-      </header>
+        <div class="ki-akte-karte" data-ki="akte-karte"></div>
+        <p class="ki-label">Schnellaktionen</p>
+        <div class="ki-chips" data-ki="chips"></div>
+        <footer class="ki-links-fuss">
+          <span data-ki="info"></span>
+          <span class="ki-marke">${KI_ICON.ifruit}iFruit</span>
+        </footer>
+      </section>
 
-      <div class="ki-kontext">
-        ${KI_ICON.akte}
-        <select data-change="ki-akte" aria-label="Akte als Kontext" data-ki="akten"></select>
-      </div>
+      <!-- rechte Hälfte: zugeklappt das Außendisplay, aufgeklappt der Chat -->
+      <section class="ki-rechts">
+        <div class="ki-statusbar"><span class="ki-uhr nur-zu" data-ki="uhr"></span><span class="ki-kamera"></span><span class="ki-status-icons">${KI_ICON.status}</span></div>
 
-      <div class="ki-chat" data-ki="chat" aria-live="polite"></div>
+        <button type="button" class="ki-lock" aria-label="KI-Assistent öffnen (Taste K)">
+          <span class="ki-lock-marke">${KI_ICON.ifruit}iFruit</span>
+          <span class="ki-lock-datum" data-ki="datum"></span>
+          <span class="ki-lock-uhr" data-ki="uhr"></span>
+          <span class="ki-notification">
+            <img src="assets/icon.png" alt="">
+            <span><strong>KI-Assistent</strong><span data-ki="lock-text">Tippen, um zu chatten</span></span>
+          </span>
+        </button>
 
-      <div class="ki-chips" data-ki="chips"></div>
-
-      <form class="ki-eingabe" data-submit="ki-frage">
-        <textarea name="text" rows="1" placeholder="Nachricht" aria-label="Nachricht an den KI-Assistenten"></textarea>
-        <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
-      </form>
-      <div class="ki-home"></div>
+        <div class="ki-chat-kopf">
+          <strong>Chat</strong>
+          <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
+          <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Zuklappen (Esc)" aria-label="Schließen">${KI_ICON.zu}</button>
+        </div>
+        <div class="ki-chat" data-ki="chat" aria-live="polite"></div>
+        <form class="ki-eingabe" data-submit="ki-frage">
+          <textarea name="text" rows="1" placeholder="Nachricht" aria-label="Nachricht an den KI-Assistenten"></textarea>
+          <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
+        </form>
+        <div class="ki-home"></div>
+      </section>
     </div>
   </div>`;
 document.body.append(kiPhone);
@@ -156,6 +176,19 @@ function kiAktualisieren() {
   kiEl("akten").innerHTML = String(html`
     <option value="">Ohne Akte – allgemeine Fragen</option>
     ${akten.map((a) => html`<option value="${a.id}" ${a.id === s.akteId ? "selected" : ""}>${a.number} · ${truncate(a.title, 40)}${a.status === "Geschlossen" ? " (geschl.)" : ""}</option>`)}`);
+
+  // Akte-Karte (linke Hälfte)
+  kiEl("akte-karte").innerHTML = String(akte ? html`
+    <div class="ki-akte-nr">${akte.number}</div>
+    <div class="ki-akte-titel">${akte.title || "–"}</div>
+    <dl>
+      <dt>Mandant</dt><dd>${mandantName(akte)}</dd>
+      <dt>Status</dt><dd>${akte.status || "–"}${akte.in_haft ? html` · <span class="danger-text">in Haft</span>` : ""}</dd>
+      <dt>Vorwürfe</dt><dd>${(akte.vorwuerfe || []).length || "keine"}</dd>
+    </dl>
+    <a href="#/akten/${akte.id}">Akte öffnen</a>`
+    : html`<p class="ki-akte-leer">Keine Akte gewählt. Der Assistent kennt dann euer Gesetzbuch und die Liste der offenen Akten.</p>`);
+  kiEl("info").textContent = s.info ? `Heute ${s.info.heute}/${s.info.limit} Anfragen` : "";
 
   // Vorschläge
   const chips = [];
