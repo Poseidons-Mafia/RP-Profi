@@ -44,7 +44,11 @@ und Änderungen erscheinen bei allen sofort.
 - **Buchhaltung** (doppelte Buchführung): Kontenrahmen, Grundbuch mit unveränderbaren Buchungen
   (Korrektur nur per Storno), Hauptbuch mit T-Konten, Summen- und Saldenliste, Bilanz und GuV.
   Rechnungen und Zahlungseingänge werden automatisch gebucht. Buchen darf nur der Admin.
-- **Gesetzbuch & Strafrechner:** Paragraphen eures Servers, Massenimport aus Google Sheets/Excel.
+- **Gesetze:** alle Gesetzbücher eures Servers (StGB, StVO, Waffengesetz …) im Wortlaut, auf der Übersicht als
+  **Kacheln** – ein Gesetzbuch je Kachel. Darin die Paragraphen nach Abschnitten mit Inhaltsverzeichnis, Suche
+  (auch über alle Gesetze), Link je Paragraph und „KI fragen“. Gesetzestext lässt sich per **Massenimport** einfach
+  einfügen (jede Zeile mit `§ …`/`Art. …` beginnt einen Paragraphen, „Erster Abschnitt …“/„# …“ setzt den Abschnitt).
+- **Strafkatalog & Strafrechner:** Delikte eures Servers mit Geldstrafe und Haft, Massenimport aus Google Sheets/Excel.
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
   dann drucken oder als PDF speichern.
@@ -53,9 +57,15 @@ und Änderungen erscheinen bei allen sofort.
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
-- **KI-Assistent** (Google Gemini 3.5 Flash-Lite, Gratis-Kontingent): Akte zusammenfassen, nächste Schritte,
-  Strafrahmen, Schriftsatz-Entwürfe, passende Paragraphen aus eurem Gesetzbuch. Eigenes Recht „KI-Assistent“
-  (anfangs nur Chairman). Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
+- **KI-Assistent für Rechtsfragen** (Google Gemini 3.5 Flash-Lite über API-Schlüssel, Gratis-Kontingent): beantwortet
+  **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
+  Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
+  und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
+  Die KI antwortet in **Markdown**, das im Browser mit Showdown in HTML umgewandelt (und mit DOMPurify bereinigt) wird.
+  Antworten sind auf **4000 Zeichen** begrenzt – das interne Nachdenken (Reasoning) zählt nicht mit. Unter jeder Antwort
+  stehen die nachgeschlagenen Paragraphen (anklickbar). Eigenes Recht „KI-Assistent“ (anfangs nur Chairman).
+  **Tageslimit:** Grundwert je Rang (Spalte „KI-Limit pro Tag“) plus Abweichung je Mitglied (+/−), beides unter
+  **Personal → Ränge & Berechtigungen** einstellbar (nur Admin). Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
   unten rechts aus der Ecke schaut: antippen (oder Taste `K`) holt es heraus. Herausgeholt lässt es sich mit dem
   Klapp-Knopf (oder Doppelklick aufs Scharnier) auf- und zuklappen: zugeklappt ein kompakter Chat auf dem
   Außendisplay, aufgeklappt links Akte und Schnellaktionen, rechts der Chat. `Esc` steckt es wieder ein. Ist eine Akte geöffnet, nimmt es diese als Kontext.
@@ -65,7 +75,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent) und [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe). Bestehende Daten bleiben erhalten:
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) und [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits). Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
 ## Neueinrichtung (ca. 10 Minuten)
@@ -73,7 +83,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
@@ -87,12 +97,18 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
    (Dashboard → **Edge Functions** → Name `ki-assistent`, Inhalt von `index.ts` einfügen, **Verify JWT aus** –
    die Funktion prüft die Anmeldung selbst).
 3. Unter **Edge Functions → Secrets** das Secret `GEMINI_API_KEY` mit dem Schlüssel anlegen.
-   Optional: `GEMINI_MODELL` (Standard `gemini-3.5-flash-lite`) und `KI_TAGESLIMIT` (Anfragen je Mitglied und Tag, Standard 100).
-4. Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei.
+   Optional: `GEMINI_MODELL` (Standard `gemini-3.5-flash-lite`).
+4. Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
+   auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
+   (z. B. −20 oder +50; ein wirksames Limit von 0 sperrt die KI für dieses Mitglied). Gespeichert wird der Grundwert in
+   `raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`.
+5. Unter **Gesetze** die Gesetzbücher anlegen und die Paragraphen per Massenimport einfügen – nur was dort steht,
+   kann die KI nachschlagen.
 
 Hinweise: Im Gratis-Tarif begrenzt Google die Anfragen (ca. 10–15 pro Minute, ca. 500 pro Tag für das ganze Projekt)
-und darf die Eingaben zum Verbessern seiner Modelle nutzen. Akteninhalte der gewählten Akte, die offenen Akten
-und das Gesetzbuch werden dafür an Google geschickt.
+und darf die Eingaben zum Verbessern seiner Modelle nutzen. Die Inhalte der gewählten Akte, der Strafkatalog und die
+nachgeschlagenen Paragraphen werden dafür an Google geschickt. Schlägt die KI nach, braucht eine Frage mehrere
+Anfragen an Google (zählt beim eigenen Tageslimit trotzdem nur einmal).
 
 ## Gut zu wissen
 
@@ -115,11 +131,12 @@ und das Gesetzbuch werden dafür an Google geschickt.
 | `js/forms.js` | Formulare und Dialoge |
 | `js/app.js` | Anmeldung, Seitenwechsel, Tastenkürzel |
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
+| `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
 | `js/assistent.js` | KI-Assistent (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
-| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Kontext, Anfrage an Gemini |
+| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an Gemini |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

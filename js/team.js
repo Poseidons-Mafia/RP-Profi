@@ -239,6 +239,7 @@ function tabRaenge() {
           <tr><th rowspan="2">Rang</th><th rowspan="2" class="num">Mitgl.</th>
             ${BEREICHE.map((b) => html`<th class="rt grp" colspan="${b.nurSchreiben ? 1 : 2}" title="${b.text}">${b.label}</th>`)}
             ${SONDERRECHTE.map((x) => html`<th class="rt grp" rowspan="2">${x.label}</th>`)}
+            <th class="rt grp" rowspan="2" title="Grundwert: KI-Anfragen pro Tag für Mitglieder dieses Rangs">KI-Limit<br>pro Tag</th>
             ${admin ? html`<th rowspan="2"></th>` : ""}</tr>
           <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>` : html`<th class="rt sub">Lesen</th><th class="rt sub">Bearb.</th>`)}</tr>
         </thead>
@@ -249,6 +250,10 @@ function tabRaenge() {
             <td class="num">${n}</td>
             ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, `${b.key}_lesen`, `${b.label} lesen`)}${zelle(r, `${b.key}_schreiben`, `${b.label} bearbeiten`)}`)}
             ${SONDERRECHTE.map((x) => zelle(r, x.key, x.label))}
+            <td class="center"><input type="number" class="ki-limit-feld" min="0" max="100000" step="1" inputmode="numeric"
+              value="${rangKiLimit(r)}" data-change="rang-ki-limit" data-id="${r.id}" title="${r.name}: KI-Anfragen pro Tag (Grundwert)"
+              aria-label="${r.name}: KI-Limit pro Tag" ${admin ? "" : "disabled"}
+              style="${hatRangRecht(r, "ki_assistent") ? "" : "opacity:.55"}"></td>
             ${admin ? html`<td class="row-actions">
               <button class="icon-btn" title="Nach oben" data-action="rang-sort" data-id="${r.id}" data-delta="-1" ${i === 0 ? "disabled" : ""}>↑</button>
               <button class="icon-btn" title="Nach unten" data-action="rang-sort" data-id="${r.id}" data-delta="1" ${i === raenge.length - 1 ? "disabled" : ""}>↓</button>
@@ -261,12 +266,117 @@ function tabRaenge() {
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
         <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
-        <li><strong>KI-Assistent</strong>: Chat mit der KI (Google Gemini). Sie sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an Google.</li>
+        <li><strong>KI-Assistent</strong>: Chat mit der KI (Google Gemini) – beantwortet ausschließlich Rechtsfragen und schlägt dafür in den Gesetzen nach. Sie sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an Google.</li>
+        <li><strong>KI-Limit pro Tag</strong>: Grundwert für alle Mitglieder des Rangs. Je Mitglied lässt sich unten eine Abweichung (+/−) festlegen.</li>
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
         <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
       </ul>
+    </div>
+    ${kiLimitKarte()}`;
+}
+
+// ---------- KI-Limits ----------
+// Wirksames Limit = Grundwert des Rangs (ohne Rang: 100) + Abweichung des Mitglieds, mindestens 0
+// (dieselbe Rechnung macht die Datenbank in ki_tageslimit())
+const KI_LIMIT_OHNE_RANG = 100;
+function rangKiLimit(r) {
+  return r && Number.isFinite(Number(r.ki_tageslimit)) ? Number(r.ki_tageslimit) : KI_LIMIT_OHNE_RANG;
+}
+function kiLimitVon(p) {
+  const r = rangVon(p);
+  return Math.max(0, (r ? rangKiLimit(r) : KI_LIMIT_OHNE_RANG) + (Number(p.ki_limit_offset) || 0));
+}
+function darfKiNutzer(p) {
+  if (istAdminUser(p.user_id)) return true;
+  const r = rangVon(p);
+  return !!r && p.status !== "Ausgeschieden" && hatRangRecht(r, "ki_assistent");
+}
+
+// Heutige Nutzung aller Mitglieder (nur der Admin darf sie lesen)
+ui.kiNutzungHeute = null;
+async function ladeKiNutzungHeute() {
+  ui.kiNutzungHeute = {};
+  const tagesbeginn = new Date();
+  tagesbeginn.setUTCHours(0, 0, 0, 0);
+  const { data, error } = await db.from("ki_nutzung").select("user_id").gte("zeit", tagesbeginn.toISOString()).limit(10000);
+  if (error) { console.warn(error); return; }
+  const zaehler = {};
+  for (const z of data) zaehler[z.user_id] = (zaehler[z.user_id] || 0) + 1;
+  ui.kiNutzungHeute = zaehler;
+  scheduleRender();
+}
+
+function kiLimitKarte() {
+  const admin = state.isAdmin;
+  if (admin && ui.kiNutzungHeute === null) ladeKiNutzungHeute();
+  const liste = team().filter((p) => p.status !== "Ausgeschieden")
+    .sort((a, b) => darfKiNutzer(b) - darfKiNutzer(a)
+      || ((rangVon(a) || {}).sortierung ?? 999) - ((rangVon(b) || {}).sortierung ?? 999)
+      || personName(a.user_id).localeCompare(personName(b.user_id), "de"));
+  const nutzung = ui.kiNutzungHeute || {};
+  return html`
+    <div class="card">
+      <div class="card-head">
+        <div><h2>KI-Limit je Mitglied</h2>
+          <p class="muted small" style="margin:0">Anfragen pro Tag = <strong>Grundwert des Rangs</strong> (Spalte „KI-Limit“ oben) + <strong>Abweichung</strong> des Mitglieds.
+            Beispiel: Rang 50, Abweichung −20 → 30 pro Tag. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
+        ${admin ? html`<button class="btn small" data-action="ki-nutzung-neu" title="Heutige Nutzung neu laden">Nutzung aktualisieren</button>` : ""}
+      </div>
+      <div class="table-wrap"><table class="table ki-limit-tabelle">
+        <thead><tr><th>Mitglied</th><th>Rang</th><th class="center">KI-Recht</th><th class="num">Grundwert</th>
+          <th class="center">Abweichung</th><th class="num">Wirksam / Tag</th>${admin ? html`<th class="num">Heute genutzt</th>` : ""}</tr></thead>
+        <tbody>${liste.map((p) => {
+          const r = rangVon(p);
+          const ki = darfKiNutzer(p);
+          const limit = kiLimitVon(p);
+          const offset = Number(p.ki_limit_offset) || 0;
+          const heute = nutzung[p.user_id] || 0;
+          return html`<tr class="${ki ? "" : "gedimmt"}">
+            <td><span class="name-mit-avatar">${avatar(p.user_id)}<a href="#/team/${p.user_id}"><strong>${personName(p.user_id)}</strong></a></span>
+              ${istAdminUser(p.user_id) ? html` <span class="badge alert">Admin</span>` : ""}</td>
+            <td>${rangName(p) || html`<span class="muted">kein Rang</span>`}</td>
+            <td class="center">${ki ? html`<span class="badge ok">ja</span>` : html`<span class="badge">nein</span>`}</td>
+            <td class="num">${r ? rangKiLimit(r) : html`<span class="muted" title="ohne Rang">${KI_LIMIT_OHNE_RANG}</span>`}</td>
+            <td class="center"><input type="number" class="ki-limit-feld" min="-100000" max="100000" step="1" inputmode="numeric"
+              value="${offset}" data-change="ki-limit-offset" data-id="${p.user_id}" aria-label="${personName(p.user_id)}: Abweichung vom Grundwert"
+              title="Abweichung vom Grundwert des Rangs (+/−)" ${admin ? "" : "disabled"}></td>
+            <td class="num"><strong>${limit}</strong>${offset ? html` <span class="small ${offset > 0 ? "ok-text" : "danger-text"}">(${offset > 0 ? "+" : ""}${offset})</span>` : ""}</td>
+            ${admin ? html`<td class="num ${ki && heute >= limit ? "danger-text" : ""}">${ui.kiNutzungHeute ? heute : "…"}</td>` : ""}
+          </tr>`;
+        })}</tbody>
+      </table></div>
+      <p class="muted small" style="margin:8px 0 0">Ein Limit von 0 sperrt die KI für das Mitglied, auch wenn der Rang sie erlaubt. Gezählt wird pro Kalendertag (UTC).</p>
     </div>`;
 }
+
+CHANGES["rang-ki-limit"] = async (el) => {
+  const r = byId("raenge", el.dataset.id);
+  const wert = Math.round(Number(el.value));
+  if (!r) return;
+  if (!Number.isFinite(wert) || wert < 0 || wert > 100000 || el.value === "") {
+    toast("Bitte eine Zahl von 0 bis 100000 eingeben.", "error");
+    el.value = rangKiLimit(r);
+    return;
+  }
+  if (wert === rangKiLimit(r)) return;
+  await attempt(() => updateRow("raenge", r.id, { ki_tageslimit: wert }), `${r.name}: KI-Limit ${wert} pro Tag`);
+};
+
+CHANGES["ki-limit-offset"] = async (el) => {
+  const p = profileOf(el.dataset.id);
+  const wert = el.value === "" ? 0 : Math.round(Number(el.value));
+  if (!p) return;
+  if (!Number.isFinite(wert) || Math.abs(wert) > 100000) {
+    toast("Bitte eine ganze Zahl eingeben (z. B. 20 oder -10).", "error");
+    el.value = Number(p.ki_limit_offset) || 0;
+    return;
+  }
+  if (wert === (Number(p.ki_limit_offset) || 0)) return;
+  await attempt(() => updateRow("profiles", p.user_id, { ki_limit_offset: wert }),
+    `${personName(p.user_id)}: Abweichung ${wert > 0 ? "+" : ""}${wert} → ${Math.max(0, kiLimitVon({ ...p, ki_limit_offset: wert }))} pro Tag`);
+};
+
+ACTIONS["ki-nutzung-neu"] = () => ladeKiNutzungHeute();
 
 function tabEinstellungen() {
   const st = state.settings;

@@ -40,8 +40,9 @@ VIEWS.gesetzbuch = () => {
   return html`
     <div class="page">
       <div class="page-head">
-        <div><h1>Gesetzbuch & Strafrechner</h1>
-          <p class="muted">Das Gesetzbuch eures Servers – Haken setzen, und der Strafrahmen wird automatisch ausgerechnet.</p></div>
+        <div><h1>Strafkatalog & Strafrechner</h1>
+          <p class="muted">Die Delikte eures Servers mit Strafmaß – Haken setzen, und der Strafrahmen wird automatisch ausgerechnet.
+            Den Wortlaut der Gesetze findest du unter <a href="#/gesetze">Gesetze</a>.</p></div>
         <div class="actions-row">
           ${darf("gesetzbuch") ? html`<button class="btn" data-action="gesetze-import">Massenimport</button>` : ""}
           ${state.gesetze.length ? html`<button class="btn" data-action="gesetze-export">Export (CSV)</button>` : ""}

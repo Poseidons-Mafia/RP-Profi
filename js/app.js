@@ -36,7 +36,8 @@ const NAV = [
   { page: "pinnwand", label: "Pinnwand", href: "#/pinnwand" },
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
   { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
-  { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
+  { page: "gesetze", label: "Gesetze", href: "#/gesetze" },
+  { page: "gesetzbuch", label: "Strafkatalog", href: "#/gesetzbuch" },
   { page: "team", label: "Personal", href: "#/team" },
 ];
 
@@ -44,7 +45,7 @@ const NAV = [
 // Was hier fehlt, darf jedes Mitglied. Die Datenbank prüft zusätzlich selbst.
 const SEITEN_RECHTE = {
   akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
-  rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen",
+  rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen", gesetze: "gesetzbuch_lesen",
 };
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
@@ -57,6 +58,9 @@ const AKTIONS_RECHTE = {
   "rechnung-neu": "rechnungen_schreiben", "rechnung-bearbeiten": "rechnungen_schreiben", "rechnung-bezahlt": "rechnungen_schreiben",
   "gebuehr-neu": "gesetzbuch_schreiben", "gebuehr-bearbeiten": "gesetzbuch_schreiben", "gesetz-neu": "gesetzbuch_schreiben",
   "gesetz-bearbeiten": "gesetzbuch_schreiben", "gesetze-import": "gesetzbuch_schreiben",
+  "gesetzbuch-neu": "gesetzbuch_schreiben", "gesetzbuch-bearbeiten": "gesetzbuch_schreiben", "paragraph-neu": "gesetzbuch_schreiben",
+  "paragraph-bearbeiten": "gesetzbuch_schreiben", "paragraphen-import": "gesetzbuch_schreiben", "gb-ki": "ki_assistent",
+  "ki-nutzung-neu": "admin",
   "buchung-neu": "buchhaltung_schreiben", "buchung-storno": "buchhaltung_schreiben",
   "konto-neu": "buchhaltung_schreiben", "konto-bearbeiten": "buchhaltung_schreiben",
   "nutzer-neu": "personal_schreiben", "nutzer-passwort": "personal_schreiben", "nutzer-sperren": "personal_schreiben",
@@ -70,6 +74,7 @@ const AKTIONS_RECHTE = {
 };
 const AENDERUNGS_RECHTE = {
   "akte-status": "akten_schreiben", "ki-akte": "ki_assistent", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
+  "rang-ki-limit": "admin", "ki-limit-offset": "admin",
 };
 const FORMULAR_RECHTE = { eintrag: "akten_schreiben", "aufgabe-schnell": "termine_schreiben", "ki-frage": "ki_assistent" };
 
