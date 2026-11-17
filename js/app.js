@@ -62,7 +62,7 @@ const AKTIONS_RECHTE = {
   "nutzer-neu": "personal_schreiben", "nutzer-passwort": "personal_schreiben", "nutzer-sperren": "personal_schreiben",
   "personalakte-bearbeiten": "personal_schreiben", "vermerk-neu": "personal_schreiben", "vermerk-loeschen": "personal_schreiben",
   "einstellungen-bearbeiten": "einstellungen_schreiben",
-  "ki-oeffnen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
+  "ki-oeffnen": "ki_assistent", "ki-klappen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
   "ki-in-verlauf": "akten_schreiben",
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
   "ablauf-starten": "termine_schreiben", "wiedervorlage": "termine_schreiben",

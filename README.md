@@ -56,8 +56,9 @@ und Änderungen erscheinen bei allen sofort.
 - **KI-Assistent** (Google Gemini 3.5 Flash-Lite, Gratis-Kontingent): Akte zusammenfassen, nächste Schritte,
   Strafrahmen, Schriftsatz-Entwürfe, passende Paragraphen aus eurem Gesetzbuch. Eigenes Recht „KI-Assistent“
   (anfangs nur Chairman). Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
-  unten rechts aus der Ecke schaut: antippen (oder Taste `K`) holt es heraus und klappt es auf (links Akte und
-  Schnellaktionen, rechts der Chat), `Esc` klappt es wieder zu. Ist eine Akte geöffnet, nimmt es diese als Kontext.
+  unten rechts aus der Ecke schaut: antippen (oder Taste `K`) holt es heraus. Herausgeholt lässt es sich mit dem
+  Klapp-Knopf (oder Doppelklick aufs Scharnier) auf- und zuklappen: zugeklappt ein kompakter Chat auf dem
+  Außendisplay, aufgeklappt links Akte und Schnellaktionen, rechts der Chat. `Esc` steckt es wieder ein. Ist eine Akte geöffnet, nimmt es diese als Kontext.
   Die KI sieht nur, was das Mitglied selbst lesen darf. Antworten lassen sich in den Verlauf der Akte übernehmen.
 
 ## Update von einer älteren Version
@@ -116,7 +117,7 @@ und das Gesetzbuch werden dafür an Google geschickt.
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
-| `js/assistent.js` | KI-Assistent (faltbares iFruit-Smartphone mit Chat) |
+| `js/assistent.js` | KI-Assistent (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
