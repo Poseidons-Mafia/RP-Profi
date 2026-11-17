@@ -14,6 +14,7 @@ const FELD_NAMEN = {
   telefon: "Telefon", notizen: "Notizen", markierungen: "Markierungen", client: "Mandant", mandant_id: "Mandant",
   verantwortlich: "Verantwortlich", zustaendig: "Zuständig", faellig: "Fälligkeit", ort: "Ort", link: "Link",
   bezahlt_am: "Bezahlt am", wichtig: "wichtig", art: "Art", rolle: "Rolle", kontakt: "Kontakt",
+  erwaehnt: "Erwähnungen",
 };
 
 function aenderungText(p) {
@@ -135,6 +136,10 @@ VIEWS.uebersicht = () => {
   const dringend = offeneAkten.filter((a) => a.prioritaet === "Dringend" || a.prioritaet === "Hoch")
     .sort((a, b) => (a.prioritaet === "Dringend" ? -1 : 1) - (b.prioritaet === "Dringend" ? -1 : 1));
   const meineAkten = offeneAkten.filter((a) => a.zustaendig_id === state.me.id).sort((a, b) => zuletztAktiv(b) - zuletztAktiv(a));
+  const liegen = offeneAkten.filter(liegenGeblieben)
+    .sort((a, b) => (b.zustaendig_id === state.me.id) - (a.zustaendig_id === state.me.id) || zuletztAktiv(a) - zuletztAktiv(b));
+  const zuBestaetigen = pinnwandOffen();
+  const beitraege = pinnwandSortiert(state.pinnwand.filter(pinnwandAktuell)).slice(0, 3);
   const profil = myProfile();
   const stunde = now.getHours();
   const gruss = stunde < 11 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
@@ -155,12 +160,19 @@ VIEWS.uebersicht = () => {
           <div class="actions-row"><button class="btn small gold" data-action="profil-bearbeiten">Profil ausfüllen</button></div></div>` : ""}
 
       ${q ? sucheErgebnisse(q) : html`
+        ${zuBestaetigen.length ? html`
+          <div class="box warning bestaetigen-box">
+            <strong>Bitte lesen und bestätigen:</strong>
+            <ul>${zuBestaetigen.map((b) => html`<li><a href="#/pinnwand">${b.titel}</a> <span class="small">– ${personName(b.created_by)}, ${fmt.relativ(b.created_at)}</span></li>`)}</ul>
+            <div class="actions-row"><a class="btn small gold" href="#/pinnwand">Zur Pinnwand</a></div>
+          </div>` : ""}
         <div class="kpis">
           <a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>
           <a class="kpi ${termineHeute.length ? "alert" : ""}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
           <a class="kpi ${ueberfaellig.length ? "alert" : ""}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>
           <a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>
           <a class="kpi" href="#/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>
+          <a class="kpi ${liegen.length ? "warn" : ""}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>
         </div>
 
         <div class="grid-2">
@@ -175,8 +187,25 @@ VIEWS.uebersicht = () => {
               ${aufgabeSchnellForm(null)}
               ${meineAufgaben.length ? html`<ul class="rows">${meineAufgaben.slice(0, 12).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
             </div>
+            ${liegen.length ? html`<div class="card">
+              <div class="card-head"><h2>Liegen geblieben</h2>
+                <a class="btn small" href="#/akten" data-action="akten-zeigen" data-status="liegen">Alle ${liegen.length}</a></div>
+              <p class="muted small" style="margin:-4px 0 6px">Offene Akten, in denen seit ${state.settings.liegezeit_tage}+ Tagen nichts passiert ist und kein Termin ansteht.</p>
+              <ul class="rows">${liegen.slice(0, 6).map((a) => html`<li>
+                <div class="when"><strong class="danger-text">${liegtSeitTagen(a)} Tage</strong>still</div>
+                <div class="grow">
+                  <div class="title"><a href="#/akten/${a.id}">${a.number} · ${truncate(a.title, 50)}</a></div>
+                  <div class="meta">${joinHtml([mandantName(a), html`Zuständig: ${a.zustaendig_id === state.me.id ? html`<strong>du</strong>` : personName(a.zustaendig_id, "niemand")}`])}</div>
+                </div>
+                <div class="tools"><button class="btn small" data-action="wiedervorlage" data-id="${a.id}" title="Wiedervorlage-Termin anlegen">Wiedervorlage</button></div>
+              </li>`)}</ul>
+            </div>` : ""}
           </div>
           <div class="stack">
+            ${beitraege.length ? html`<div class="card">
+              <div class="card-head"><h2>Pinnwand</h2><a class="btn small" href="#/pinnwand">Alle</a></div>
+              <div class="stack">${beitraege.map((b) => beitragKarte(b, { kompakt: true }))}</div>
+            </div>` : ""}
             ${inHaft.length ? html`<div class="card">
               <div class="card-head"><h2>Mandanten in Haft</h2></div>
               <ul class="rows">${inHaft.map((a) => html`<li>

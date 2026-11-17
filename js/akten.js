@@ -26,7 +26,8 @@ function gefilterteAkten() {
   const list = state.akten.filter((a) => {
     if (f.status === "aktiv" && a.status === "Geschlossen") return false;
     if (f.status === "haft" && !a.in_haft) return false;
-    if (!["aktiv", "alle", "haft"].includes(f.status) && a.status !== f.status) return false;
+    if (f.status === "liegen" && !liegenGeblieben(a)) return false;
+    if (!["aktiv", "alle", "haft", "liegen"].includes(f.status) && a.status !== f.status) return false;
     if (f.typ && a.area !== f.typ) return false;
     if (f.meine && a.zustaendig_id !== state.me.id) return false;
     if (!f.q) return true;
@@ -49,14 +50,25 @@ function gefilterteAkten() {
   return list.sort(sorters[f.sort] || sorters.aktiv);
 }
 
+function fortschrittBalken(akteId, { text = true } = {}) {
+  const st = aufgabenStand(akteId);
+  if (!st.gesamt) return "";
+  const pct = Math.round((st.erledigt / st.gesamt) * 100);
+  return html`<span class="fortschritt-zeile" title="${st.erledigt} von ${st.gesamt} Aufgaben erledigt">
+    <span class="fortschritt ${pct === 100 ? "fertig" : ""}"><span style="width:${pct}%"></span></span>${text ? html`<span>${st.erledigt}/${st.gesamt} Aufgaben</span>` : ""}</span>`;
+}
+
 function akteListItem(a, activeId) {
   const nt = naechsterTermin(a.id);
+  const wer = typeof betrachter === "function" ? betrachter(a.id) : [];
   return html`
     <a class="item ${a.id === activeId ? "active" : ""}" href="#/akten/${a.id}">
-      <span class="num"><span class="dot ${statusClass(a.prioritaet)}"></span>${a.number}</span>
+      <span class="num"><span class="dot ${statusClass(a.prioritaet)}"></span>${a.number}
+        ${wer.length ? html`<span class="avatars mini" title="Gerade geöffnet von ${wer.map((id) => personName(id)).join(", ")}">${wer.map((id) => avatar(id, { punkt: false }))}</span>` : ""}</span>
       <span class="title">${a.title}</span>
       <span class="meta"><span>${mandantName(a)}</span><span class="badges">${haftBadge(a)}${statusBadge(a.status)}</span></span>
       ${nt ? html`<span class="sub">Nächster Termin: ${fmt.tag(nt.beginn)}, ${fmt.zeit(nt.beginn)} · ${nt.titel}</span>` : ""}
+      ${a.status !== "Geschlossen" ? fortschrittBalken(a.id) : ""}
     </a>`;
 }
 
@@ -75,7 +87,7 @@ VIEWS.akten = (route) => {
           <div class="toolbar">
             <select id="akten-status" data-change="akten-filter" data-key="status">
               ${[["aktiv", "Offen + In Bearbeitung"], ["Offen", "Offen"], ["In Bearbeitung", "In Bearbeitung"],
-                 ["Geschlossen", "Geschlossen"], ["haft", "Mandant in Haft"], ["alle", "Alle Akten"]]
+                 ["Geschlossen", "Geschlossen"], ["haft", "Mandant in Haft"], ["liegen", "Liegen geblieben"], ["alle", "Alle Akten"]]
                 .map(([v, l]) => html`<option value="${v}" ${f.status === v ? "selected" : ""}>${l}</option>`)}
             </select>
             <select id="akten-typ" data-change="akten-filter" data-key="typ">
@@ -138,6 +150,7 @@ function renderAkteDetail(a, sub) {
               ${a.opponent ? html` · Gegen: ${a.opponent}` : ""}
               · Zuständig: ${personName(a.zustaendig_id, a.lawyer || "niemand")}
             </div>
+            ${typeof betrachterHinweis === "function" ? betrachterHinweis(a.id) : ""}
           </div>
           <div class="actions-row" style="align-items:flex-start">
             <select class="status-select" id="status-${a.id}" data-change="akte-status" data-id="${a.id}" title="Status ändern">
@@ -147,6 +160,8 @@ function renderAkteDetail(a, sub) {
           </div>
         </div>
         <div class="actions-row" style="margin-top:10px">
+          <button class="btn small" data-action="ablauf-starten" data-id="${a.id}" title="Checkliste mit Aufgaben und Terminen anlegen">Ablauf starten</button>
+          <button class="btn small" data-action="wiedervorlage" data-id="${a.id}" title="Termin zur Wiedervorlage anlegen">Wiedervorlage</button>
           <button class="btn small" data-action="dokument-waehlen" data-id="${a.id}">Dokument erstellen</button>
           <button class="btn small" data-action="aktenblatt" data-id="${a.id}">Aktenblatt drucken</button>
           <button class="btn small" data-action="akte-link" data-id="${a.id}">Link kopieren</button>
@@ -202,7 +217,8 @@ function tabUeberblick(a) {
       <div><dt>Priorität</dt><dd>${a.prioritaet || "Normal"}</dd></div>
       <div><dt>Az. Polizei / StA / Gericht</dt><dd>${a.az_extern || "–"}</dd></div>
       <div><dt>Angelegt</dt><dd>${fmt.datum(a.created_at)} von ${personName(a.created_by)}</dd></div>
-      <div><dt>Zuletzt aktiv</dt><dd>${fmt.relativ(zuletztAktiv(a))}</dd></div>
+      <div><dt>Zuletzt aktiv</dt><dd>${fmt.relativ(zuletztAktiv(a))}${liegenGeblieben(a) ? html`<br><span class="small danger-text">liegt seit ${liegtSeitTagen(a)} Tagen</span>` : ""}</dd></div>
+      ${aufgabenStand(a.id).gesamt ? html`<div><dt>Aufgaben</dt><dd>${fortschrittBalken(a.id)}</dd></div>` : ""}
     </dl>
 
     <h3 class="section-title">Sachverhalt</h3>
@@ -210,7 +226,7 @@ function tabUeberblick(a) {
 
     ${wichtige.length ? html`
       <h3 class="section-title" style="margin-top:20px">Wichtige Einträge</h3>
-      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${e.text}</p></li>`)}</ul>` : ""}
+      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${mitErwaehnungen(e.text)}</p></li>`)}</ul>` : ""}
 
     <div class="card-head" style="margin-top:20px">
       <h3 class="section-title" style="margin:0">Tatvorwürfe & Strafrahmen</h3>
@@ -267,14 +283,15 @@ function tabVerlauf(a) {
   const entries = kinder("eintraege", a.id).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
   return html`
     <form class="entry-form" data-submit="eintrag" data-id="${a.id}">
-      <textarea id="${textId}" name="text" rows="3" data-input="draft" required
-        placeholder="Neuer Eintrag … z. B. Gespräch mit Mandant, Anruf bei der Staatsanwaltschaft, Ergebnis der Vernehmung">${ui.drafts[textId] || ""}</textarea>
+      <textarea id="${textId}" name="text" rows="3" data-input="draft" data-mention required
+        placeholder="Neuer Eintrag … z. B. Gespräch mit Mandant, Anruf bei der StA. Mit @Name holst du Kollegen dazu.">${ui.drafts[textId] || ""}</textarea>
       <div class="actions-row">
         <div class="actions-row">
           <select id="${artId}" name="art" data-input="draft">
             ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || "Notiz") === o ? "selected" : ""}>${o}</option>`)}
           </select>
           <label class="check"><input type="checkbox" id="${wichtigId}" name="wichtig" data-input="draft" ${ui.drafts[wichtigId] ? "checked" : ""}> Wichtig</label>
+          <span class="muted small erw-tipp">Tipp: <strong>@</strong> erwähnt Kollegen</span>
         </div>
         <button class="btn primary" type="submit">Eintragen</button>
       </div>
@@ -285,8 +302,9 @@ function tabVerlauf(a) {
           <span class="badge gold">${e.art || "Notiz"}</span>
           ${e.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
           <strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}
+          ${(e.erwaehnt || []).length ? html`<span class="erw-an" title="Erwähnt und benachrichtigt">→ ${e.erwaehnt.map((id) => personName(id)).join(", ")}</span>` : ""}
         </div>
-        <p>${e.text}</p>
+        <p>${mitErwaehnungen(e.text)}</p>
         <div class="tools">
           <button class="icon-btn" title="Bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>
           <button class="icon-btn" title="Löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
@@ -302,8 +320,10 @@ SUBMITS.eintrag = async (form) => {
   if (!text) return;
   const button = form.querySelector('[type="submit"]');
   button.disabled = true;
+  const erwaehnt = erwaehnteIn(text);
   const ok = await attempt(() => insertRow("eintraege", {
     akte_id: id, text, art: form.elements.art.value, wichtig: form.elements.wichtig.checked,
+    ...(erwaehnt.length ? { erwaehnt } : {}),
   }));
   button.disabled = false;
   if (ok) {
@@ -311,7 +331,8 @@ SUBMITS.eintrag = async (form) => {
     delete ui.drafts[`wichtig-${id}`];
     form.elements.text.value = "";
     form.elements.wichtig.checked = false;
-    toast("Eintrag gespeichert");
+    const andere = erwaehnt.filter((x) => x !== state.me.id);
+    toast(andere.length ? `Eintrag gespeichert – ${andere.map((x) => personName(x)).join(", ")} benachrichtigt` : "Eintrag gespeichert");
   }
 };
 
@@ -405,6 +426,10 @@ function tabAufgaben(a) {
   const offen = list.filter((t) => !t.erledigt).sort(sortAufgaben);
   const erledigt = list.filter((t) => t.erledigt).sort((x, y) => new Date(y.erledigt_am || 0) - new Date(x.erledigt_am || 0));
   return html`
+    <div class="card-head">
+      <div class="muted small">${list.length ? fortschrittBalken(a.id) : "Noch keine Aufgaben – lege sie einzeln an oder starte einen Ablauf (Checkliste)."}</div>
+      <button class="btn small" data-action="ablauf-starten" data-id="${a.id}">Ablauf starten</button>
+    </div>
     ${aufgabeSchnellForm(a.id)}
     ${offen.length ? html`<ul class="rows">${offen.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
     ${erledigt.length ? html`<div class="group-title">Erledigt</div><ul class="rows">${erledigt.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : ""}`;
@@ -464,6 +489,17 @@ function akteFields() {
   ];
 }
 
+// Nur beim Anlegen: gleich eine Checkliste starten
+function akteAblaufFeld() {
+  return { type: "custom", name: "ablauf", label: "Ablauf starten (optional)",
+    render: () => html`<select name="ablauf" id="f-ablauf">
+        <option value="">— keinen —</option>
+        ${ablaeufeSortiert().map((x) => html`<option value="${x.id}" data-rg="${x.rechtsgebiet || ""}" data-ma="${x.mandatsart || ""}">${x.name} (${schrittZusammenfassung(x.schritte)})</option>`)}
+      </select>
+      <small class="help" id="f-ablauf-hilfe">Legt die Aufgaben und Termine der Checkliste direkt für die zuständige Person an.</small>`,
+    read: (form) => form.elements.ablauf.value || null };
+}
+
 async function mandantFuerName(name) {
   return findMandantByName(name) || insertRow("mandanten", { name: name.trim() });
 }
@@ -472,12 +508,26 @@ function openAkteForm(akte, preset = {}) {
   const values = akte
     ? { ...akte, mandant: mandantName(akte) }
     : { status: "Offen", prioritaet: "Normal", area: "Strafrecht", zustaendig_id: state.me.id, ...preset };
+  const mitAblauf = !akte && darf("termine_schreiben") && state.ablaeufe.length;
+  // Passenden Ablauf hervorheben, sobald Rechtsgebiet/Mandatsart gewählt sind
+  const ablaufHinweis = (form) => {
+    const sel = form.elements.ablauf;
+    if (!sel) return;
+    const passend = [...sel.options].find((o) => o.value && (o.dataset.rg || o.dataset.ma)
+      && (!o.dataset.rg || o.dataset.rg === form.elements.area.value) && (!o.dataset.ma || o.dataset.ma === form.elements.typ.value));
+    [...sel.options].forEach((o) => { o.textContent = o.textContent.replace(/ ★$/, "") + (o === passend ? " ★" : ""); });
+    $("f-ablauf-hilfe").textContent = passend
+      ? `Passend: „${passend.textContent.replace(/ \(.*$/, "")}“ (★). Legt die Aufgaben und Termine direkt an.`
+      : "Legt die Aufgaben und Termine der Checkliste direkt für die zuständige Person an.";
+  };
   openForm({
     title: akte ? `Akte ${akte.number} bearbeiten` : "Neue Akte",
-    fields: akteFields(),
+    fields: mitAblauf ? [...akteFields(), { type: "section", label: "Arbeitsablauf" }, akteAblaufFeld()] : akteFields(),
     values,
     wide: true,
     submitLabel: akte ? "Speichern" : "Akte anlegen",
+    onMount: mitAblauf ? ablaufHinweis : null,
+    onChange: mitAblauf ? (name, form) => { if (name === "area" || name === "typ") ablaufHinweis(form); } : null,
     onSubmit: async (v) => {
       const mandant = await mandantFuerName(v.mandant);
       const row = {
@@ -493,6 +543,11 @@ function openAkteForm(akte, preset = {}) {
         go(`akten/${created.id}`);
         toast(`Akte ${created.number} angelegt`);
         if (konflikte(created).length) toast("Achtung: möglicher Interessenkonflikt – siehe Akte.", "error");
+        const ablauf = v.ablauf && byId("ablaeufe", v.ablauf);
+        if (ablauf) {
+          const res = await attempt(() => ablaufStarten(created, ablauf, ablauf.schritte, created.zustaendig_id, ymd(new Date())));
+          if (res !== undefined) toast(`Ablauf „${ablauf.name}“ gestartet`);
+        }
       }
     },
   });
@@ -625,7 +680,14 @@ Object.assign(ACTIONS, {
         { name: "text", label: "Text", type: "textarea", rows: 6, required: true },
       ],
       values: e,
-      onSubmit: async (v) => { await updateRow("eintraege", e.id, v); toast("Eintrag gespeichert"); },
+      onMount: (form) => { form.elements.text.dataset.mention = ""; },
+      onSubmit: async (v) => {
+        const erwaehnt = erwaehnteIn(v.text);
+        const vorher = new Set(e.erwaehnt || []);
+        await updateRow("eintraege", e.id, { ...v, ...(erwaehnt.length || vorher.size ? { erwaehnt } : {}) });
+        const neu = erwaehnt.filter((x) => !vorher.has(x) && x !== state.me.id);
+        toast(neu.length ? `Eintrag gespeichert – ${neu.map((x) => personName(x)).join(", ")} benachrichtigt` : "Eintrag gespeichert");
+      },
       onDelete: async () => {
         if (!confirm("Eintrag löschen?")) return false;
         await deleteRow("eintraege", e.id);

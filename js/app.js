@@ -7,6 +7,7 @@
 // Zustand der Oberfläche (Filter, Entwürfe, …) – nur im Browser
 const ui = {
   akten: { q: "", status: "aktiv", typ: "", sort: "aktiv", meine: false },
+  pinnwand: { archiv: false },
   mandanten: { q: "", markierung: "" },
   kalender: { modus: "agenda", monat: ymd(new Date()).slice(0, 7), vergangene: false, meine: false },
   rechnungen: { status: "Offen", q: "" },
@@ -22,6 +23,8 @@ const ACTIONS = {};
 const CHANGES = {};
 const INPUTS = {};
 const SUBMITS = {};
+// Wird nach jedem Neuzeichnen aufgerufen (z. B. Glocke, Online-Anzeige)
+const RENDER_HOOKS = [];
 
 // Seiten (von den Seiten-Dateien befüllt)
 const VIEWS = {};
@@ -30,6 +33,7 @@ const NAV = [
   { page: "akten", label: "Akten", href: "#/akten" },
   { page: "mandanten", label: "Mandanten", href: "#/mandanten" },
   { page: "kalender", label: "Kalender", href: "#/kalender" },
+  { page: "pinnwand", label: "Pinnwand", href: "#/pinnwand" },
   { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
   { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
   { page: "gesetzbuch", label: "Gesetzbuch", href: "#/gesetzbuch" },
@@ -61,6 +65,8 @@ const AKTIONS_RECHTE = {
   "ki-oeffnen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
   "ki-in-verlauf": "akten_schreiben",
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
+  "ablauf-starten": "termine_schreiben", "wiedervorlage": "termine_schreiben",
+  "ablauf-neu": "einstellungen_schreiben", "ablauf-bearbeiten": "einstellungen_schreiben",
 };
 const AENDERUNGS_RECHTE = {
   "akte-status": "akten_schreiben", "ki-akte": "ki_assistent", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
@@ -157,19 +163,24 @@ function render() {
   rechteAnwenden(main);
   if (typeof kiAktualisieren === "function") kiAktualisieren();
   document.title = `${(NAV.find((n) => n.page === route.page) || NAV[0]).label} – Wiwang Law`;
+  for (const hook of RENDER_HOOKS) {
+    try { hook(route); } catch (e) { console.error(e); }
+  }
 }
 
 function renderNav(route) {
   const heute = state.termine.filter((t) => !t.erledigt && sameDay(t.beginn, new Date())).length
     + state.termine.filter(terminUeberfaellig).length;
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
-  const badges = { kalender: heute, rechnungen: offen };
+  const pinnwand = typeof pinnwandOffen === "function" ? pinnwandOffen().length : 0;
+  const badges = { kalender: heute, rechnungen: offen, pinnwand };
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
       ${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}
     </a>`)}`);
-  $("btn-me").textContent = myName() || "Profil";
+  // Auf dem Handy nur der Vorname, damit die Kopfzeile nicht umbricht
+  $("btn-me").textContent = (window.innerWidth < 700 ? firstName(myName()) : myName()) || "Profil";
 }
 
 // ---------- Bildschirme ----------

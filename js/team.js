@@ -118,6 +118,12 @@ function openPersonalForm(userId) {
           && confirm(`${personName(userId)} ist ausgeschieden. Den Zugang zum Aktensystem jetzt auch sperren?`)) {
         await sperren(userId, true);
       }
+      // Abwesend? Dann die offene Arbeit gleich an eine Vertretung geben
+      const n = offeneArbeit(userId);
+      if (v.status && v.status !== "Aktiv" && v.status !== vorher && darfUebergeben() && n.akten + n.aufgaben + n.termine > 0
+          && confirm(`${personName(userId)} ist jetzt „${v.status}“ und hat noch ${n.akten} aktive Akte(n), ${n.aufgaben} offene Aufgabe(n) und ${n.termine} Termin(e).\n\nJetzt an eine Vertretung übergeben?`)) {
+        setTimeout(() => openUebergabe(userId), 50); // erst nach dem Schließen dieses Dialogs
+      }
     },
   });
 }
@@ -138,6 +144,8 @@ function einstellungFields() {
     { name: "waehrung", label: "Währungszeichen", required: true, third: true },
     { name: "haft_einheit", label: "Haft-Einheit", required: true, third: true, help: "z. B. HE, Monate, Minuten" },
     { name: "zahlungsziel_tage", label: "Zahlungsziel (Tage)", type: "number", required: true, third: true },
+    { name: "liegezeit_tage", label: "„Liegen geblieben“ nach (Tagen)", type: "number", required: true, half: true,
+      help: "Offene Akten ohne Eintrag, Aufgabe oder Termin seit so vielen Tagen werden auf der Übersicht gemeldet." },
     { name: "rechnung_einleitung", label: "Rechnung: Einleitungstext", type: "textarea", rows: 3 },
     { name: "rechnung_hinweis", label: "Rechnung: Hinweis unter der Tabelle", type: "textarea", rows: 2 },
   ];
@@ -190,7 +198,7 @@ function tabMitglieder() {
           const u = logins.get(p.user_id);
           const akten = state.akten.filter((a) => a.zustaendig_id === p.user_id && a.status !== "Geschlossen").length;
           return html`<tr class="clickable" data-action="goto" data-to="team/${p.user_id}">
-            <td><a href="#/team/${p.user_id}"><strong>${personName(p.user_id)}</strong></a>
+            <td><span class="name-mit-avatar">${avatar(p.user_id)}<a href="#/team/${p.user_id}"><strong>${personName(p.user_id)}</strong></a></span>
               ${p.user_id === state.me.id ? html` <span class="badge gold">Du</span>` : ""}
               ${istAdminUser(p.user_id) ? html` <span class="badge alert">Admin</span>` : ""}
               ${u && u.gesperrt ? html` <span class="badge geschlossen">gesperrt</span>` : ""}
@@ -274,6 +282,7 @@ function tabEinstellungen() {
           <div><dt>Währung</dt><dd>${st.waehrung}</dd></div>
           <div><dt>Haft-Einheit</dt><dd>${st.haft_einheit}</dd></div>
           <div><dt>Zahlungsziel</dt><dd>${st.zahlungsziel_tage} Tage</dd></div>
+          <div><dt>Liegen geblieben nach</dt><dd>${st.liegezeit_tage} Tagen</dd></div>
         </dl>
         <p class="small muted" style="margin:0">Rechnungstext: „${truncate(st.rechnung_einleitung, 120)}“</p>
       </div>
@@ -282,9 +291,10 @@ function tabEinstellungen() {
         <p class="muted">Lädt alle Daten, die du sehen darfst, als Datei herunter.</p>
         <button class="btn" data-action="export-alles">Komplettsicherung herunterladen</button>
         <h3 class="section-title" style="margin-top:22px">Tastenkürzel</h3>
-        <p class="small" style="margin:0"><code>/</code> Suche · <code>N</code> neue Akte · <code>Esc</code> Dialog schließen</p>
+        <p class="small" style="margin:0"><code>/</code> Suche · <code>N</code> neue Akte · <code>B</code> Benachrichtigungen · <code>K</code> KI-Assistent · <code>Esc</code> schließen</p>
       </div>
-    </div>`;
+    </div>
+    ${ablaeufeKarte()}`;
 }
 
 // ---------- Personalakte eines Mitglieds ----------
@@ -322,10 +332,13 @@ function personalDetail(p) {
               ${statusBadgeP(p.status)}
               ${istAdminUser(id) ? html`<span class="badge alert">Admin</span>` : ""}
               ${u && u.gesperrt ? html`<span class="badge geschlossen">Zugang gesperrt</span>` : ""}
+              ${onlineStatus(id) ? html`<span class="badge ok">${onlineStatus(id) === "weg" ? "online (im Hintergrund)" : "online"}</span>` : ""}
             </div>
           </div>
           <div class="actions-row" style="align-items:flex-start">
             ${ich ? html`<button class="btn" data-action="profil-bearbeiten">Mein Profil</button>` : ""}
+            ${darfUebergeben() && (() => { const n = offeneArbeit(id); return n.akten + n.aufgaben + n.termine > 0; })()
+              ? html`<button class="btn" data-action="uebergabe" data-id="${id}" title="Akten, Aufgaben und Termine an eine Vertretung geben (Urlaub, Krankheit …)">Arbeit übergeben</button>` : ""}
             ${verwalten || (ich && state.isAdmin) ? html`<button class="btn primary" data-action="personal-bearbeiten" data-id="${id}">Bearbeiten</button>` : ""}
             ${darf("personal_verwalten") && !ich && !istAdminUser(id) ? html`
               <button class="btn" data-action="nutzer-passwort" data-id="${id}">Passwort</button>
