@@ -250,7 +250,7 @@ function tabUeberblick(a) {
 
 function vorwurfTabelle(a) {
   const list = a.vorwuerfe || [];
-  if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Gesetzbuch hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
+  if (!list.length) return html`<p class="empty">${darf("akten_schreiben") ? "Noch keine Tatvorwürfe. Über „+ Vorwurf“ aus dem Strafkatalog hinzufügen – Geldstrafe und Haft werden automatisch zusammengerechnet." : "Keine Tatvorwürfe erfasst."}</p>`;
   const sum = vorwurfSumme(list);
   return html`
     <div class="table-wrap"><table class="table">
@@ -601,7 +601,7 @@ function openVorwurfPicker(akteId) {
         <div class="field third"><label class="label">Haft (${state.settings.haft_einheit})</label><input name="haft" inputmode="decimal" placeholder="0"></div>
         <div class="field third" style="align-self:end"><button class="btn full" type="submit">Hinzufügen</button></div>
       </form>`,
-    footer: html`<div class="dialog-actions"><a class="btn" href="#/gesetzbuch">Gesetzbuch öffnen</a><span class="spacer"></span><button class="btn primary" data-close>Fertig</button></div>`,
+    footer: html`<div class="dialog-actions"><a class="btn" href="#/gesetzbuch">Strafkatalog öffnen</a><span class="spacer"></span><button class="btn primary" data-close>Fertig</button></div>`,
   });
   const listEl = dlg.querySelector("#vw-list");
   const q = dlg.querySelector("#vw-q");
@@ -618,7 +618,7 @@ function openVorwurfPicker(akteId) {
         <span class="right">${g.geldstrafe ? fmt.geld(g.geldstrafe) : ""}${g.haft ? html`<br>${fmt.haft(g.haft)}` : ""}
           ${vorhanden.has(g.id) ? html`<br><strong class="ok-text">✓ ${vorhanden.get(g.id)}×</strong>` : ""}</span>
       </button>`)}`
-      : html`<p class="empty" style="padding:10px 12px">${state.gesetze.length ? "Nichts gefunden." : "Das Gesetzbuch ist noch leer. Lege es unter „Gesetzbuch“ an oder gib den Vorwurf unten frei ein."}</p>`);
+      : html`<p class="empty" style="padding:10px 12px">${state.gesetze.length ? "Nichts gefunden." : "Der Strafkatalog ist noch leer. Lege ihn unter „Strafkatalog“ an oder gib den Vorwurf unten frei ein."}</p>`);
   };
   draw();
   q.addEventListener("input", draw);

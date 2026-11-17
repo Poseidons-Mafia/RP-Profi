@@ -6,8 +6,12 @@
 //    zugeklappt  – kompakter Chat auf dem Außendisplay
 //    aufgeklappt – links Akte & Schnellaktionen, rechts der Chat
 //  Die Seite dahinter bleibt bedienbar. Die KI läuft über die
-//  Supabase Edge Function "ki-assistent" (Google Gemini).
-//  Recht: "ki_assistent".
+//  Supabase Edge Function "ki-assistent" (Google Gemini) und beantwortet
+//  ausschließlich Rechtsfragen. Dabei schlägt sie mit Werkzeugen in den
+//  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
+//  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
+//  Recht: "ki_assistent". Tageslimit: Grundwert des Rangs + Abweichung
+//  des Mitglieds (Personal → Ränge & Berechtigungen).
 // =============================================================
 
 const KI_SPEICHER = "wiwang-ki";
@@ -18,11 +22,12 @@ const KI_ZEIT = { raus: 560, rein: 480, falten: 720, glas: 300 };
 const kiMobil = window.matchMedia("(max-width: 700px)");
 
 const KI_VORLAGEN = [
-  { label: "Zusammenfassen", akte: true, text: "Fasse diese Akte kurz zusammen: Sachverhalt, Vorwürfe, Stand, offene Punkte." },
-  { label: "Nächste Schritte", akte: true, text: "Welche nächsten Schritte und welche Verteidigungsstrategie empfiehlst du für diese Akte? Begründe kurz." },
-  { label: "Strafrahmen", akte: true, text: "Berechne den Strafrahmen (Geldstrafe und Haft) für die Tatvorwürfe dieser Akte anhand des Gesetzbuchs." },
-  { label: "Schriftsatz", akte: true, text: "Entwirf einen Schriftsatz an die Staatsanwaltschaft für diese Akte. Art des Schriftsatzes: ", ergaenzen: true },
-  { label: "Paragraphen finden", akte: false, text: "Welche Paragraphen aus unserem Gesetzbuch passen auf folgenden Sachverhalt?\n", ergaenzen: true },
+  { label: "Rechtslage", akte: true, text: "Wie ist die Rechtslage in dieser Akte? Welche Paragraphen sind einschlägig, und welche rechtlichen Einwände gibt es?" },
+  { label: "Vorwürfe prüfen", akte: true, text: "Prüfe die Tatvorwürfe dieser Akte am Wortlaut der Paragraphen: Sind die Tatbestände erfüllt? Was fehlt ggf.?" },
+  { label: "Strafrahmen", akte: true, text: "Welcher Strafrahmen (Geldstrafe und Haft) droht für die Tatvorwürfe dieser Akte laut Strafkatalog?" },
+  { label: "Paragraphen finden", akte: false, text: "Welche Paragraphen passen auf folgenden Sachverhalt?\n", ergaenzen: true },
+  { label: "Paragraph erklären", akte: false, text: "Erkläre mir ", ergaenzen: true },
+  { label: "Welche Gesetze?", akte: false, text: "Welche Gesetzbücher gibt es auf dem Server und wofür gelten sie?" },
 ];
 
 const KI_ICON = {
@@ -162,10 +167,67 @@ function kiLaden(userId) {
   } catch {}
   kiGezeigt = s.verlauf.length; // gespeicherte Nachrichten nicht einploppen lassen
   kiZustandSofort();
+  kiInfoLaden(userId);
 }
 
-// ---------- Einfache Formatierung der KI-Antworten (sicher, ohne fremdes HTML) ----------
+// Heutige Nutzung und wirksames Tageslimit (Rang + Abweichung) anzeigen
+async function kiInfoLaden(userId) {
+  try {
+    const tagesbeginn = new Date();
+    tagesbeginn.setUTCHours(0, 0, 0, 0);
+    const [limit, nutzung] = await Promise.all([
+      db.rpc("ki_tageslimit"),
+      db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("zeit", tagesbeginn.toISOString()),
+    ]);
+    if (limit.error || nutzung.error || ui.assistent.userId !== userId) return;
+    ui.assistent.info = { ...(ui.assistent.info || {}), heute: nutzung.count || 0, limit: limit.data };
+    kiAktualisieren();
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+// Frage vorbereiten (z. B. „KI fragen“ an einem Paragraphen): Handy holen, Text ins Eingabefeld
+function kiFrageVorbereiten(text) {
+  kiOeffnen();
+  kiTextarea.value = text;
+  kiTextareaHoehe();
+  setTimeout(() => {
+    kiTextarea.focus({ preventScroll: true });
+    kiTextarea.setSelectionRange(text.length, text.length);
+  }, 50);
+}
+
+// ---------- KI-Antworten: Markdown → HTML (Showdown), danach bereinigt (DOMPurify) ----------
+const kiMarkdown = window.showdown ? new window.showdown.Converter({
+  tables: true, strikethrough: true, simpleLineBreaks: true, simplifiedAutoLink: true, excludeTrailingPunctuationFromURLs: true,
+  literalMidWordUnderscores: true, noHeaderId: true, ghCodeBlocks: true, openLinksInNewWindow: true, emoji: false,
+  disableForced4SpacesIndentedSublists: true, ghCompatibleHeaderId: false,
+}) : null;
+if (window.DOMPurify) {
+  // Links aus Antworten immer in neuem Tab und ohne Zugriff auf diese Seite
+  window.DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+    if (node.tagName === "A") { node.setAttribute("target", "_blank"); node.setAttribute("rel", "noopener noreferrer"); }
+  });
+}
+
 function kiFormat(text) {
+  if (kiMarkdown && window.DOMPurify) {
+    const roh = kiMarkdown.makeHtml(String(text || ""));
+    const sauber = window.DOMPurify.sanitize(roh, {
+      ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "del", "s", "code", "pre", "blockquote", "ul", "ol", "li",
+        "h1", "h2", "h3", "h4", "h5", "h6", "hr", "table", "thead", "tbody", "tr", "th", "td", "a"],
+      ALLOWED_ATTR: ["href", "target", "rel", "align", "start"],
+      ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|#)/i,
+    });
+    // breite Tabellen im Handy-Display seitlich scrollbar machen
+    return sauber.replace(/<table>/g, '<div class="ki-tabelle"><table>').replace(/<\/table>/g, "</table></div>");
+  }
+  return kiFormatEinfach(text);
+}
+
+// Notlösung, falls Showdown/DOMPurify nicht geladen werden konnten (sicher, ohne fremdes HTML)
+function kiFormatEinfach(text) {
   const inline = (s) => esc(s)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
@@ -265,7 +327,7 @@ function kiPanelZeichnen(akte, akten) {
   const vorwuerfe = akte ? (akte.vorwuerfe || []) : [];
   const zustaendig = akte && akte.zustaendig_id ? personName(akte.zustaendig_id) : "";
   const offene = akten.filter((a) => a.status !== "Geschlossen").slice(0, 5);
-  const prozent = s.info ? Math.min(100, Math.round((s.info.heute / s.info.limit) * 100)) : 0;
+  const prozent = s.info ? (s.info.limit ? Math.min(100, Math.round((s.info.heute / s.info.limit) * 100)) : 100) : 0;
   kiSetzen(kiEl("panel"), html`
     <div class="ki-panel-kopf">
       <span class="ki-panel-titel">Kontext</span>
@@ -296,7 +358,7 @@ function kiPanelZeichnen(akte, akten) {
       </section>` : html`
       <section class="ki-karte ki-allgemein">
         <h3>Allgemeiner Modus</h3>
-        <p class="ki-leise">Der Assistent kennt euer Gesetzbuch und die Liste der offenen Akten. Für Fragen zu einem Fall wähle eine Akte:</p>
+        <p class="ki-leise">Der Assistent beantwortet Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wähle eine Akte:</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
@@ -310,9 +372,9 @@ function kiPanelZeichnen(akte, akten) {
       </ul>
     </section>
     <div class="ki-panel-fuss">
-      <div class="ki-nutzung"><span>Heute</span><strong>${s.info ? `${s.info.heute} / ${s.info.limit}` : "–"}</strong></div>
+      <div class="ki-nutzung"><span>Heute genutzt</span><strong>${s.info ? `${s.info.heute} / ${s.info.limit}` : "–"}</strong></div>
       <div class="ki-balken"><span style="width:${prozent}%"></span></div>
-      <p class="ki-leise">Gemini · Antworten sind Vorschläge, bitte prüfen.</p>
+      <p class="ki-leise">Nur Rechtsfragen · Antworten max. 4000 Zeichen · bitte prüfen.</p>
     </div>`);
 }
 
@@ -329,10 +391,10 @@ function kiChatZeichnen() {
   const leer = html`<div class="ki-leer">
     <img src="assets/icon.png" alt="">
     <p class="ki-gruss">Hallo${myName() ? `, ${myName().split(" ")[0]}` : ""}!</p>
-    <p>Ich helfe dir bei Akten, Paragraphen und Schriftsätzen.</p>
+    <p>Ich beantworte Rechtsfragen zu den Gesetzen des Servers – und nur das.</p>
     <ul class="ki-weiss">
-      <li>${new SafeHtml(KI_ICON.akte)}${akte ? `Akte ${akte.number}` : `${state.akten.filter((a) => a.status !== "Geschlossen").length} offene Akten`}</li>
-      <li>§ Gesetzbuch des Servers</li>
+      <li>§ ${state.gesetzbuecher.length} ${state.gesetzbuecher.length === 1 ? "Gesetzbuch" : "Gesetzbücher"} · ${state.gesetze.length} Delikte</li>
+      ${akte ? html`<li>${new SafeHtml(KI_ICON.akte)}Akte ${akte.number}</li>` : ""}
     </ul>
   </div>`;
   const inhalt = html`
@@ -340,7 +402,9 @@ function kiChatZeichnen() {
     ${s.verlauf.map((n, i) => n.rolle === "nutzer"
       ? html`<div class="ki-msg ich ${i >= neuAb ? "neu" : ""}"><div class="ki-bubble">${multiline(n.text)}</div><time>${kiZeit(n.zeit)}</time></div>`
       : html`<div class="ki-msg ki ${i >= neuAb ? "neu" : ""}">
-          <div class="ki-bubble">${new SafeHtml(kiFormat(n.text))}</div>
+          <div class="ki-bubble ki-md">${new SafeHtml(kiFormat(n.text))}</div>
+          ${(n.quellen || []).length ? html`<div class="ki-quellen" title="Von der KI nachgeschlagen">
+            <span>Nachgeschlagen:</span>${n.quellen.map((q) => html`<button type="button" class="ki-quelle" data-action="ki-quelle" data-q="${q}">${q}</button>`)}</div>` : ""}
           <div class="ki-msg-aktionen">
             <time>${kiZeit(n.zeit)}</time>
             <button type="button" data-action="ki-kopieren" data-i="${i}" title="Kopieren">${new SafeHtml(KI_ICON.kopieren)}Kopieren</button>
@@ -543,7 +607,7 @@ async function kiFragen(text) {
       try { const j = await error.context.json(); if (j && j.fehler) msg = j.fehler; } catch {}
       throw new Error(msg);
     }
-    s.verlauf.push({ rolle: "ki", text: data.antwort, zeit: new Date().toISOString() });
+    s.verlauf.push({ rolle: "ki", text: data.antwort, zeit: new Date().toISOString(), quellen: data.nachgeschlagen || [], gekuerzt: !!data.gekuerzt });
     s.info = { heute: data.heute, limit: data.limit, modell: data.modell };
   } catch (e) {
     console.error(e);
@@ -624,6 +688,16 @@ Object.assign(ACTIONS, {
       kiTextarea.focus();
       kiTextarea.setSelectionRange(v.text.length, v.text.length);
     } else kiFragen(v.text);
+  },
+  // Nachgeschlagenen Paragraphen ("§ 12 StGB") in den Gesetzen öffnen
+  "ki-quelle": (d) => {
+    const q = norm(d.q);
+    const buch = [...state.gesetzbuecher].sort((a, b) => b.kuerzel.length - a.kuerzel.length)
+      .find((b) => q.endsWith(" " + norm(b.kuerzel)));
+    const nr = buch ? paragraphNorm(q.slice(0, q.length - norm(buch.kuerzel).length)) : "";
+    const p = buch && state.paragraphen.find((x) => x.gesetzbuch_id === buch.id && paragraphNorm(x.nummer) === nr);
+    if (p) go(`gesetze/${buch.id}/${p.id}`);
+    else if (buch) go(`gesetze/${buch.id}`);
   },
   "ki-kopieren": async (d) => {
     const n = ui.assistent.verlauf[Number(d.i)];
