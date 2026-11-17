@@ -1592,3 +1592,8 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-quellen { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 4px 0 0 2px; font-size: 0.68rem; color: var(--muted); }
 .ki-quelle { border: 1px solid var(--line); background: #fff; color: var(--red-dark); border-radius: 999px; padding: 1px 7px; font: inherit; font-weight: bold; cursor: pointer; }
 .ki-quelle:hover { background: var(--gold-soft); }
+
+/* ---------- Nigel, der KI-Butler ---------- */
+.ki-gruss { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-weight: 400 !important; font-size: 1.25rem !important; color: var(--red-dark) !important; }
+.ki-appbar-text > strong { font-family: Georgia, "Times New Roman", serif; letter-spacing: 0.02em; }
+.ki-avatar, .ki-leer img, .ki-notification img { object-fit: cover; padding: 0; }

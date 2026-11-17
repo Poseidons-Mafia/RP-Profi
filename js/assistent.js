@@ -1,5 +1,5 @@
 // =============================================================
-//  Wiwang Law – KI-Assistent
+//  Wiwang Law – KI-Assistent „Nigel“ (britischer Butler & Jurist)
 //  Ein faltbares iFruit-Smartphone, das zugeklappt unten rechts aus
 //  der Ecke schaut. Antippen holt es heraus. Herausgeholt lässt es
 //  sich auf- und zuklappen (3D-Faltung):
@@ -56,7 +56,7 @@ const kiPhone = document.createElement("aside");
 kiPhone.id = "ki-phone";
 kiPhone.className = "ki-phone";
 kiPhone.hidden = true;
-kiPhone.setAttribute("aria-label", "KI-Assistent");
+kiPhone.setAttribute("aria-label", "Nigel, der KI-Butler");
 kiPhone.innerHTML = `
   <div class="ki-geraet">
     <div class="ki-haelfte ki-haelfte-rechts">
@@ -81,13 +81,13 @@ kiPhone.innerHTML = `
           ${KI_STATUS(true, true)}
           <div class="ki-slot" data-slot="chat-cover"></div>
           <div class="ki-home"></div>
-          <button type="button" class="ki-lock" aria-label="KI-Assistent öffnen (Taste K)">
+          <button type="button" class="ki-lock" aria-label="Nigel rufen (Taste K)">
             <span class="ki-lock-marke">${KI_ICON.ifruit}iFruit</span>
             <span class="ki-lock-datum" data-ki="datum"></span>
             <span class="ki-lock-uhr" data-ki="uhr"></span>
             <span class="ki-notification">
-              <img src="assets/icon.png" alt="">
-              <span><strong>KI-Assistent</strong><span data-ki="lock-text">Tippen, um zu chatten</span></span>
+              <img src="assets/nigel.svg" alt="">
+              <span><strong>Nigel</strong><span data-ki="lock-text">Sie haben geläutet, Sir?</span></span>
             </span>
           </button>
         </div>
@@ -100,9 +100,9 @@ const kiChatBlock = document.createElement("div");
 kiChatBlock.className = "ki-chatblock";
 kiChatBlock.innerHTML = `
   <header class="ki-appbar">
-    <img class="ki-avatar" src="assets/icon.png" alt="">
+    <img class="ki-avatar" src="assets/nigel.svg" alt="Nigel">
     <div class="ki-appbar-text">
-      <strong>KI-Assistent <span class="ki-online" data-ki="status">bereit</span></strong>
+      <strong>Nigel <span class="ki-online" data-ki="status">zu Diensten</span></strong>
       <label class="ki-pill" title="Akte als Kontext wählen">
         ${KI_ICON.akte}<span data-ki="pill"></span><svg class="ki-pfeil" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <select data-change="ki-akte" data-ki="akten" aria-label="Akte als Kontext"></select>
@@ -118,7 +118,7 @@ kiChatBlock.innerHTML = `
   <div class="ki-unten">
     <div class="ki-chips" data-ki="chips"></div>
     <form class="ki-eingabe" data-submit="ki-frage">
-      <textarea name="text" rows="1" placeholder="Frag den Assistenten …" aria-label="Nachricht an den KI-Assistenten"></textarea>
+      <textarea name="text" rows="1" placeholder="Ihre Rechtsfrage an Nigel, Sir …" aria-label="Nachricht an Nigel"></textarea>
       <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
     </form>
   </div>`;
@@ -253,6 +253,12 @@ function kiFormatEinfach(text) {
   return out.join("");
 }
 
+// „Guten Morgen“ / „Guten Tag“ / „Guten Abend“ – wie es sich für einen Butler gehört
+function kiTagesgruss() {
+  const h = new Date().getHours();
+  return h < 5 ? "Guten Abend" : h < 11 ? "Guten Morgen" : h < 18 ? "Guten Tag" : "Guten Abend";
+}
+
 function kiZeit(iso) {
   return iso ? new Date(iso).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }) : "";
 }
@@ -291,12 +297,12 @@ function kiAktualisieren() {
 
   kiUhr();
   const status = kiEl("status");
-  status.textContent = s.laedt ? "schreibt …" : "bereit";
+  status.textContent = s.laedt ? "schlägt nach …" : "zu Diensten";
   status.classList.toggle("tippt", s.laedt);
   kiEl("pill").textContent = akte ? `${akte.number} · ${akte.title || ""}` : "Allgemein – keine Akte";
   kiEl("lock-text").textContent = s.verlauf.length
     ? truncate(s.verlauf[s.verlauf.length - 1].text.replace(/[*#`]/g, "").replace(/\s+/g, " ").trim(), 70)
-    : akte ? `Fragen zu ${akte.number}? Tippen, um zu chatten` : "Tippen, um zu chatten";
+    : akte ? `Rechtsfragen zu ${akte.number}, Sir? Tippen Sie, und ich bin zur Stelle.` : "Sie haben geläutet, Sir? Tippen Sie, und ich bin zur Stelle.";
 
   // Aktenauswahl (in der Kopfzeile)
   const akten = kiOffeneAkten();
@@ -330,7 +336,7 @@ function kiPanelZeichnen(akte, akten) {
   const prozent = s.info ? (s.info.limit ? Math.min(100, Math.round((s.info.heute / s.info.limit) * 100)) : 100) : 0;
   kiSetzen(kiEl("panel"), html`
     <div class="ki-panel-kopf">
-      <span class="ki-panel-titel">Kontext</span>
+      <span class="ki-panel-titel">Nigels Notizbuch</span>
       <span class="ki-marke">${new SafeHtml(KI_ICON.ifruit)}iFruit</span>
     </div>
     ${akte ? html`
@@ -357,17 +363,17 @@ function kiPanelZeichnen(akte, akten) {
         </div>
       </section>` : html`
       <section class="ki-karte ki-allgemein">
-        <h3>Allgemeiner Modus</h3>
-        <p class="ki-leise">Der Assistent beantwortet Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wähle eine Akte:</p>
+        <h3>Allgemeine Rechtsfragen</h3>
+        <p class="ki-leise">Nigel, Butler und Jurist, beantwortet Ihre Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wählen Sie eine Akte, Sir:</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
       </section>`}
     <section class="ki-karte">
-      <p class="ki-mini-titel" style="margin-top:0">Bedienung</p>
+      <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen, Sir</p>
       <ul class="ki-tipps">
         <li><kbd>Enter</kbd>senden · <kbd>⇧</kbd>+<kbd>Enter</kbd>neue Zeile</li>
-        <li><kbd>K</kbd>Assistent holen · <kbd>Esc</kbd>einstecken</li>
+        <li><kbd>K</kbd>Nigel rufen · <kbd>Esc</kbd>entlassen</li>
         <li><kbd>2×</kbd>aufs Scharnier klicken: auf- und zuklappen</li>
       </ul>
     </section>
@@ -389,9 +395,9 @@ function kiChatZeichnen() {
   const akte = s.akteId ? byId("akten", s.akteId) : null;
   const neuAb = Math.min(kiGezeigt, s.verlauf.length);
   const leer = html`<div class="ki-leer">
-    <img src="assets/icon.png" alt="">
-    <p class="ki-gruss">Hallo${myName() ? `, ${myName().split(" ")[0]}` : ""}!</p>
-    <p>Ich beantworte Rechtsfragen zu den Gesetzen des Servers – und nur das.</p>
+    <img src="assets/nigel.svg" alt="Nigel">
+    <p class="ki-gruss">${kiTagesgruss()}, Sir.</p>
+    <p>Nigel, zu Ihren Diensten. Ich kläre Ihre Rechtsfragen zu den Gesetzen dieser Stadt – und, wenn Sie gestatten, ausschließlich diese.</p>
     <ul class="ki-weiss">
       <li>§ ${state.gesetzbuecher.length} ${state.gesetzbuecher.length === 1 ? "Gesetzbuch" : "Gesetzbücher"} · ${state.gesetze.length} Delikte</li>
       ${akte ? html`<li>${new SafeHtml(KI_ICON.akte)}Akte ${akte.number}</li>` : ""}
@@ -614,7 +620,7 @@ async function kiFragen(text) {
     s.verlauf.pop(); // Frage zurück ins Eingabefeld, damit nichts verloren geht
     if (!kiTextarea.value) kiTextarea.value = text;
     kiTextareaHoehe();
-    toast(/Failed to send|fetch/i.test(e.message) ? "Der KI-Assistent ist nicht erreichbar." : e.message, "error");
+    toast(/Failed to send|fetch/i.test(e.message) ? "Verzeihung, Sir – Nigel ist gerade nicht erreichbar." : e.message, "error");
   } finally {
     s.laedt = false;
     kiSpeichern();
@@ -706,7 +712,7 @@ Object.assign(ACTIONS, {
   "ki-in-verlauf": async (d) => {
     const n = ui.assistent.verlauf[Number(d.i)];
     if (!n || !ui.assistent.akteId) return;
-    await attempt(() => insertRow("eintraege", { akte_id: ui.assistent.akteId, art: "Intern", text: `KI-Assistent:\n${n.text}` }),
+    await attempt(() => insertRow("eintraege", { akte_id: ui.assistent.akteId, art: "Intern", text: `Nigel (KI-Butler) – rechtliche Einschätzung:\n${n.text}` }),
       "Im Verlauf der Akte gespeichert");
   },
 });

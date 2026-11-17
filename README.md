@@ -57,7 +57,8 @@ und Änderungen erscheinen bei allen sofort.
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
-- **KI-Assistent für Rechtsfragen** (ausschließlich **Claude Opus 5.5** über **OpenRouter**, kein anderes Modell): beantwortet
+- **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (ausschließlich
+  **Claude Opus 5.5** über **OpenRouter**, kein anderes Modell): beantwortet
   **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
   Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
@@ -139,7 +140,8 @@ der Strafkatalog und die nachgeschlagenen Paragraphen.
 | `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
-| `js/assistent.js` | KI-Assistent (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
+| `js/assistent.js` | KI-Assistent „Nigel“ (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
+| `assets/nigel.svg` | Avatar von Nigel (eigene Zeichnung) |
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
