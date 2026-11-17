@@ -202,7 +202,7 @@ function gesetzbuchAnsicht(buch, springeZu) {
                 <header>
                   <h3><span class="nr">${p.nummer}</span> ${p.titel || ""}</h3>
                   <div class="gb-tools">
-                    ${ki ? html`<button class="btn small" data-action="gb-ki" data-id="${p.id}" title="Nigel zu diesem Paragraphen befragen">Nigel fragen</button>` : ""}
+                    ${ki ? html`<button type="button" class="nigel-btn" data-action="gb-ki" data-id="${p.id}" title="Nigel zu diesem Paragraphen befragen" aria-label="Nigel fragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>` : ""}
                     <button class="icon-btn" data-action="gb-link" data-id="${p.id}" title="Link kopieren">🔗</button>
                     ${schreiben ? html`<button class="icon-btn" data-action="paragraph-bearbeiten" data-id="${p.id}" title="Bearbeiten">✎</button>` : ""}
                   </div>
