@@ -75,12 +75,36 @@ und Änderungen erscheinen bei allen sofort.
   Klapp-Knopf (oder Doppelklick aufs Scharnier) auf- und zuklappen: zugeklappt ein kompakter Chat auf dem
   Außendisplay, aufgeklappt links Akte und Schnellaktionen, rechts der Chat. `Esc` steckt es wieder ein. Ist eine Akte geöffnet, nimmt es diese als Kontext.
   Die KI sieht nur, was das Mitglied selbst lesen darf. Antworten lassen sich in den Verlauf der Akte übernehmen.
+- **Nigels Arbeitsbereich** (Menüpunkt „Nigel“, `#/nigel`) für komplexe juristische Arbeit – das Handy bleibt das schnelle
+  Nachschlage-Werkzeug:
+  - **Gespeicherte Chats** (links): Suche, Anheften, nach Datum gruppiert, umbenennen, als Markdown exportieren, löschen.
+    Jeder sieht nur seine eigenen Chats. Ein Handy-Chat lässt sich mit einem Klick übernehmen („Im Arbeitsbereich fortsetzen“).
+  - **Arbeitsmodi:** *Rechtsfrage* (kurz, wie auf dem Handy), *Gutachten* (Gutachtenstil mit Strafrahmen), *Schriftsatz*
+    (Anträge, Stellungnahmen, Schreiben – landet direkt im Entwurf) und *Fallanalyse* (Stärken, Risiken, Beweislage, Strategie,
+    nächste Schritte, Fragen an den Mandanten). Lange Modi dürfen deutlich längere Antworten schreiben (bis 14 000 Zeichen).
+  - **Live-Arbeitsschritte:** Während Nigel arbeitet, sieht man, welche Paragraphen und Akten er gerade nachschlägt (mit Laufzeit
+    und „Abbrechen“); unter jeder Antwort bleiben die Schritte aufklappbar.
+  - **Kontext** (rechts): bis zu 5 Akten gleichzeitig, bis zu 20 angeheftete Paragraphen im Wortlaut und eigene Notizen zum Sachverhalt.
+    Zusätzlich kann Nigel selbst **Akten der Kanzlei durchsuchen und lesen** (z. B. vergleichbare frühere Fälle) – nur mit Leserecht.
+  - **Entwurf:** bearbeitbarer Schriftsatz je Chat (Markdown, Vorschau, [Platzhalter] gelb), Antworten „In Entwurf“ übernehmen,
+    **von Nigel überarbeiten lassen** (Schnellbefehle wie „Formeller formulieren“ oder eigene Anweisung, mit Rückgängig),
+    **mit Briefkopf drucken / als PDF**, kopieren, als `.md` laden oder in den Verlauf der Akte übernehmen.
+  - **Aus Antworten handeln:** in den Akten-Verlauf übernehmen, Checklisten („- [ ]“) direkt als **Aufgaben** anlegen,
+    Antwort neu erzeugen, frühere Frage ändern und neu stellen.
+  - **Quellen:** alle nachgeschlagenen Paragraphen des Chats mit Wortlaut, zum Anheften oder Öffnen.
+  - **Vorlagen:** Standard-, Kanzlei- und eigene Vorlagen (Auftrag + Modus). Kanzlei-Vorlagen pflegt, wer die Kanzlei-Einstellungen bearbeiten darf.
+  - **Persönliche Einstellungen** (gelten auch fürs Handy): Anrede (Sir, Madam, ohne), Ton (Butler, dezent, sachlich),
+    Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren, Standardmodus, Senden mit Enter oder Strg+Enter.
+  - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, Gewichtung beim Tageslimit
+    (z. B. Gutachten zählt 2×), höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus und **Hausregeln** für alle Antworten.
+  - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
 
 ## Update von einer älteren Version
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) und [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits). Bestehende Daten bleiben erhalten:
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) und [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung).
+Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
 ## Neueinrichtung (ca. 10 Minuten)
@@ -88,7 +112,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
@@ -107,7 +131,7 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 |---|---|
 | `OPENROUTER_API_KEY` | Pflicht: Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit) |
 | `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
-| `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt |
+| `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
 auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
@@ -116,10 +140,12 @@ auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je 
 und die Paragraphen per Massenimport einfügen – nur was dort steht, kann die KI nachschlagen.
 
 Hinweise: OpenRouter rechnet pro Token ab; die Preise je Modell stehen auf der Modellseite. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
-zählt beim Tageslimit aber nur einmal – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
+zählt beim Tageslimit aber nur einmal (im Arbeitsbereich so oft, wie die Kanzlei-Vorgaben für den Modus festlegen, z. B. Gutachten 2×) – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
 OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
-trainieren. An den KI-Anbieter gehen die gewählte Akte,
-der Strafkatalog und die nachgeschlagenen Paragraphen.
+trainieren. An den KI-Anbieter gehen die gewählten Akten,
+der Strafkatalog, die nachgeschlagenen und angehefteten Paragraphen, Notizen und ggf. der Entwurf.
+Lange Aufträge sind auf rund 105 Sekunden Arbeitszeit begrenzt (danach antwortet Nigel mit dem, was er hat), weil
+Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 
 ## Gut zu wissen
 
@@ -129,7 +155,7 @@ der Strafkatalog und die nachgeschlagenen Paragraphen.
 - Neue Versionen der Website lädt der Browser automatisch (siehe `update-check.js`).
   Bei Änderungen die Versionsnummer in `version.json`, `<meta name="app-version">` und
   bei den `?v=` in `index.html` erhöhen.
-- Tastenkürzel: `/` Suche, `N` neue Akte, `B` Benachrichtigungen, `K` KI-Assistent, `Esc` Dialog bzw. KI-Assistent schließen.
+- Tastenkürzel: `/` Suche, `N` neue Akte, `B` Benachrichtigungen, `K` KI-Assistent (im Arbeitsbereich: ins Eingabefeld), `Esc` Dialog bzw. KI-Assistent schließen.
 - Ab wann eine Akte als „liegen geblieben“ gilt (Standard 7 Tage), steht unter **Personal → Kanzlei & Daten**.
 
 ## Dateien
@@ -146,9 +172,10 @@ der Strafkatalog und die nachgeschlagenen Paragraphen.
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
 | `js/assistent.js` | KI-Assistent „Nigel“ (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
+| `js/nigel.js` | Nigels Arbeitsbereich: gespeicherte Chats, Modi, Kontext, Entwurf, Quellen, Vorlagen, Einstellungen |
 | `assets/nigel.svg` | Avatar von Nigel (eigene Zeichnung) |
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
-| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an das eingestellte Modell (OpenRouter) |
+| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |
