@@ -72,13 +72,44 @@ function akteListItem(a, activeId) {
     </a>`;
 }
 
+// ---------- Aktenliste einklappen (wird im Browser gemerkt) ----------
+const LISTE_ZU_KEY = "wiwang.aktenListeZu";
+ui.akten.listeZu = (() => { try { return localStorage.getItem(LISTE_ZU_KEY) === "1"; } catch { return false; } })();
+
+function setListeZu(zu) {
+  ui.akten.listeZu = zu;
+  try { localStorage.setItem(LISTE_ZU_KEY, zu ? "1" : "0"); } catch {}
+}
+
+// Schmale Leiste, wenn die Aktenliste eingeklappt ist: ausklappen, suchen, blättern, neu
+function listenLeiste(list, activeId) {
+  const i = activeId ? list.findIndex((a) => a.id === activeId) : -1;
+  const vor = i > 0 ? list[i - 1] : null;
+  const nach = i >= 0 && i < list.length - 1 ? list[i + 1] : !activeId && list.length ? list[0] : null;
+  const pfeil = (a, icon, label) => a
+    ? html`<a class="werkzeug" href="#/akten/${a.id}" aria-label="${label}: ${a.number}" data-tip="${label}" data-hinweis="${a.number} · ${a.title}">${new SafeHtml(AKTE_ICON[icon])}</a>`
+    : html`<span class="werkzeug aus" aria-hidden="true">${new SafeHtml(AKTE_ICON[icon])}</span>`;
+  return html`
+    <nav class="list-rail" aria-label="Aktenliste (eingeklappt)">
+      <button type="button" class="werkzeug" data-action="akten-liste-umschalten" aria-label="Aktenliste ausklappen" data-tip="Aktenliste ausklappen" data-hinweis="Taste [">${new SafeHtml(AKTE_ICON.ausklappen)}</button>
+      <button type="button" class="werkzeug" data-action="akten-suche" aria-label="Akten durchsuchen" data-tip="Akten durchsuchen" data-hinweis="Taste /">${new SafeHtml(AKTE_ICON.suche)}</button>
+      <span class="rail-trenner"></span>
+      ${pfeil(vor, "hoch", "Vorherige Akte")}
+      <span class="rail-pos" title="Position in der gefilterten Liste">${i >= 0 ? i + 1 : "–"}<small>von ${list.length}</small></span>
+      ${pfeil(nach, "runter", "Nächste Akte")}
+      <span class="rail-trenner"></span>
+      <button type="button" class="werkzeug" data-action="akte-neu" aria-label="Neue Akte" data-tip="Neue Akte" data-hinweis="Taste N">${new SafeHtml(AKTE_ICON.plus)}</button>
+    </nav>`;
+}
+
 VIEWS.akten = (route) => {
   const f = ui.akten;
   const list = gefilterteAkten();
   const akte = route.id ? byId("akten", route.id) : null;
   return html`
-    <div class="page">
-      <div class="split ${route.id ? "has-detail" : ""}">
+    <div class="page page-breit">
+      <div class="split ${route.id ? "has-detail" : ""} ${f.listeZu ? "liste-zu" : ""}">
+        ${listenLeiste(list, route.id)}
         <aside class="list-pane">
           <div class="toolbar">
             <div class="search"><input type="search" id="akten-q" data-search data-input="akten-filter" data-key="q"
@@ -100,7 +131,10 @@ VIEWS.akten = (route) => {
             </select>
             <label class="check"><input type="checkbox" id="akten-meine" data-change="akten-filter" data-key="meine" ${f.meine ? "checked" : ""}> Nur meine</label>
           </div>
-          <div class="list-count">${list.length} ${list.length === 1 ? "Akte" : "Akten"}</div>
+          <div class="list-count">
+            <span>${list.length} ${list.length === 1 ? "Akte" : "Akten"}</span>
+            <button type="button" class="link-btn liste-zu-btn" data-action="akten-liste-umschalten" title="Liste einklappen, um sich auf die Akte zu konzentrieren (Taste [)">${new SafeHtml(AKTE_ICON.einklappen)} Liste einklappen</button>
+          </div>
           <div class="list-scroll" data-scroll="akten-list">
             <ul class="item-list">${list.map((a) => html`<li>${akteListItem(a, route.id)}</li>`)}</ul>
             ${list.length ? "" : html`<p class="empty center">Keine Akten gefunden.</p>`}
@@ -112,13 +146,37 @@ VIEWS.akten = (route) => {
                    : html`<div class="card empty-state"><h2>Akte nicht gefunden</h2><p>Vielleicht wurde sie gelöscht.</p><a class="btn" href="#/akten">Zur Aktenliste</a></div>`
             : html`<div class="card empty-state">
                 <h2>Wähle eine Akte aus</h2>
-                <p>Links findest du alle Akten. Mit <strong>/</strong> springst du in die Suche, mit <strong>N</strong> legst du eine neue Akte an.</p>
+                <p>Links findest du alle Akten. Mit <strong>/</strong> springst du in die Suche, mit <strong>N</strong> legst du eine neue Akte an.
+                  Mit <strong>[</strong> klappst du die Aktenliste ein und aus.</p>
                 <button class="btn primary" data-action="akte-neu">+ Neue Akte</button>
               </div>`}
         </section>
       </div>
     </div>`;
 };
+
+ACTIONS["akten-liste-umschalten"] = () => { setListeZu(!ui.akten.listeZu); render(); };
+ACTIONS["akten-suche"] = () => {
+  setListeZu(false);
+  render();
+  const q = document.getElementById("akten-q");
+  if (q) { q.focus(); q.select(); }
+};
+
+// Tastenkürzel nur auf der Aktenseite: [ klappt die Liste, / öffnet die Suche auch im eingeklappten Zustand
+document.addEventListener("keydown", (e) => {
+  if (!state.loaded || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.closest("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
+  if (parseRoute().page !== "akten" || !window.matchMedia("(min-width: 981px)").matches) return;
+  if (e.key === "[") {
+    e.preventDefault();
+    ACTIONS["akten-liste-umschalten"]();
+  } else if (e.key === "/" && ui.akten.listeZu) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    ACTIONS["akten-suche"]();
+  }
+}, true);
 
 INPUTS["akten-filter"] = (el) => { ui.akten[el.dataset.key] = el.value; scheduleRender(); };
 CHANGES["akten-filter"] = (el) => {
@@ -134,12 +192,23 @@ const AKTE_ICON = {
   drucken: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9M7 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14h10v6.5H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3.5-3.5a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3.5 3.5a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   arbeitsbereich: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  einklappen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5v15M15 7l-5 5 5 5M10 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  ausklappen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5v15M14 7l5 5-5 5M19 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  suche: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 15l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  hoch: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  runter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   loeschen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
 // Quadratischer Icon-Button; die Beschriftung erscheint als Tooltip beim Überfahren
 function werkzeug(action, id, icon, label, hinweis = "", extra = "") {
-  return html`<button type="button" class="werkzeug ${extra}" data-action="${action}" data-id="${id}" aria-label="${label}" data-tip="${label}"${hinweis ? html` data-hinweis="${hinweis}"` : ""}>${new SafeHtml(AKTE_ICON[icon])}</button>`;
+  return html`<button type="button" class="werkzeug ${extra}" data-action="${action}" data-id="${id}" aria-label="${label}" data-tip="${label}"${hinweis ? html` data-hinweis="${hinweis}"` : ""}>${new SafeHtml(AKTE_ICON[icon])}<span class="wz-label">${label}</span></button>`;
+}
+
+// Schnell-Anlegen im Seitenmenü (nur auf breiten Bildschirmen sichtbar)
+function anlegenKnopf(attrs, label) {
+  return html`<button type="button" class="werkzeug" ${new SafeHtml(attrs)} aria-label="${label} hinzufügen" data-tip="${label} hinzufügen">${new SafeHtml(AKTE_ICON.plus)}<span class="wz-label">${label}</span></button>`;
 }
 
 // ---------- Detail ----------
@@ -175,35 +244,47 @@ function renderAkteDetail(a, sub) {
             <button class="btn" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button>
           </div>
         </div>
-        <div class="akte-werkzeuge" role="toolbar" aria-label="Aktionen zur Akte">
-          <div class="werkzeug-gruppe">
-            ${werkzeug("ablauf-starten", a.id, "ablauf", "Ablauf starten", "Checkliste mit Aufgaben und Terminen anlegen")}
-            ${werkzeug("wiedervorlage", a.id, "wiedervorlage", "Wiedervorlage", "Termin zur Wiedervorlage anlegen")}
-          </div>
-          <div class="werkzeug-gruppe">
-            ${werkzeug("dokument-waehlen", a.id, "dokument", "Dokument erstellen")}
-            ${werkzeug("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
-            ${werkzeug("akte-link", a.id, "link", "Link kopieren")}
-          </div>
-          ${darf("ki_assistent") ? html`<div class="werkzeug-gruppe">
-            <button type="button" class="nigel-btn" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>
-            ${werkzeug("nw-mit-akte", a.id, "arbeitsbereich", "Mit Nigel bearbeiten", "Gutachten, Schriftsatz oder Fallanalyse im Arbeitsbereich")}
-          </div>` : ""}
-          ${darf("akten_loeschen") ? html`<div class="werkzeug-gruppe rechts">${werkzeug("akte-loeschen", a.id, "loeschen", "Akte löschen", "", "danger")}</div>` : ""}
-        </div>
-        ${k.length ? html`
-          <div class="box warning" style="margin:12px 0 0">
-            <strong>Möglicher Interessenkonflikt:</strong>
-            <ul>${k.map((c) => html`<li><a href="#/akten/${c.akte.id}">${c.akte.number} · ${c.akte.title}</a> – ${c.grund} (${c.akte.status})</li>`)}</ul>
-          </div>` : ""}
-        <nav class="tabs">
-          ${AKTE_TABS.map((t) => {
-            const n = t.count ? t.count(a.id) : 0;
-            return html`<a href="#/akten/${a.id}${t.key ? "/" + t.key : ""}" class="${t.key === tab ? "active" : ""}">${t.label}${n ? html`<span class="count">${n}</span>` : ""}</a>`;
-          })}
-        </nav>
       </div>
-      <div class="tab-body">${body(a)}</div>
+      ${k.length ? html`
+        <div class="box warning konflikt">
+          <strong>Möglicher Interessenkonflikt:</strong>
+          <ul>${k.map((c) => html`<li><a href="#/akten/${c.akte.id}">${c.akte.number} · ${c.akte.title}</a> – ${c.grund} (${c.akte.status})</li>`)}</ul>
+        </div>` : ""}
+      <div class="akte-rumpf">
+        <aside class="akte-menu" aria-label="Menü der Akte">
+          <nav class="tabs" aria-label="Bereiche der Akte">
+            ${AKTE_TABS.map((t) => {
+              const n = t.count ? t.count(a.id) : 0;
+              return html`<a href="#/akten/${a.id}${t.key ? "/" + t.key : ""}" class="${t.key === tab ? "active" : ""}"${t.key === tab ? html` aria-current="page"` : ""}>${t.label}${n ? html`<span class="count">${n}</span>` : ""}</a>`;
+            })}
+          </nav>
+          <div class="akte-werkzeuge" role="toolbar" aria-label="Aktionen zur Akte">
+            <div class="werkzeug-gruppe anlegen" data-titel="Hinzufügen">
+              <a class="werkzeug" href="#/akten/${a.id}/verlauf" aria-label="Verlaufseintrag schreiben" data-tip="Verlaufseintrag schreiben">${new SafeHtml(AKTE_ICON.plus)}<span class="wz-label">Eintrag</span></a>
+              ${anlegenKnopf(`data-action="termin-neu" data-akte="${esc(a.id)}"`, "Termin")}
+              ${anlegenKnopf(`data-action="beteiligter-neu" data-akte="${esc(a.id)}"`, "Person")}
+              ${anlegenKnopf(`data-action="beweis-neu" data-akte="${esc(a.id)}"`, "Beweis")}
+              ${anlegenKnopf(`data-action="vorwurf-hinzufuegen" data-id="${esc(a.id)}"`, "Tatvorwurf")}
+              ${darf("rechnungen") ? anlegenKnopf(`data-action="rechnung-neu" data-akte="${esc(a.id)}"`, "Rechnung") : ""}
+            </div>
+            <div class="werkzeug-gruppe" data-titel="Planen">
+              ${werkzeug("ablauf-starten", a.id, "ablauf", "Ablauf starten", "Checkliste mit Aufgaben und Terminen anlegen")}
+              ${werkzeug("wiedervorlage", a.id, "wiedervorlage", "Wiedervorlage", "Termin zur Wiedervorlage anlegen")}
+            </div>
+            <div class="werkzeug-gruppe" data-titel="Ausgeben">
+              ${werkzeug("dokument-waehlen", a.id, "dokument", "Dokument erstellen")}
+              ${werkzeug("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
+              ${werkzeug("akte-link", a.id, "link", "Link kopieren")}
+            </div>
+            ${darf("ki_assistent") ? html`<div class="werkzeug-gruppe" data-titel="Nigel">
+              <button type="button" class="nigel-btn" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>
+              ${werkzeug("nw-mit-akte", a.id, "arbeitsbereich", "Mit Nigel bearbeiten", "Gutachten, Schriftsatz oder Fallanalyse im Arbeitsbereich")}
+            </div>` : ""}
+            ${darf("akten_loeschen") ? html`<div class="werkzeug-gruppe rechts">${werkzeug("akte-loeschen", a.id, "loeschen", "Akte löschen", "", "danger")}</div>` : ""}
+          </div>
+        </aside>
+        <div class="tab-body">${body(a)}</div>
+      </div>
     </div>`;
 }
 
