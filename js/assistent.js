@@ -14,7 +14,7 @@ const KI_SPEICHER = "wiwang-ki";
 ui.assistent = { offen: false, modus: "auf", akteId: "", verlauf: [], laedt: false, info: null, userId: null };
 
 // Zeiten der Animationen (müssen zu style.css passen)
-const KI_ZEIT = { raus: 560, rein: 480, falten: 820 };
+const KI_ZEIT = { raus: 560, rein: 480, falten: 720, glas: 300 };
 const kiMobil = window.matchMedia("(max-width: 700px)");
 
 const KI_VORLAGEN = [
@@ -59,8 +59,6 @@ kiPhone.innerHTML = `
         ${KI_STATUS(false, true)}
         <div class="ki-slot" data-slot="chat-innen"></div>
         <div class="ki-home"></div>
-        <div class="ki-schatten"></div>
-        <div class="ki-aus"></div>
       </div>
     </div>
     <div class="ki-scharnier"><span class="ki-glanz"></span></div>
@@ -69,7 +67,6 @@ kiPhone.innerHTML = `
         <div class="ki-screen ki-innen-links">
           ${KI_STATUS(true, false)}
           <div class="ki-slot" data-slot="steuer-innen"></div>
-          <div class="ki-aus"></div>
         </div>
       </div>
       <div class="ki-seite ki-seite-aussen ki-haelfte">
@@ -88,7 +85,6 @@ kiPhone.innerHTML = `
               <span><strong>KI-Assistent</strong><span data-ki="lock-text">Tippen, um zu chatten</span></span>
             </span>
           </button>
-          <div class="ki-aus"></div>
         </div>
       </div>
     </div>
@@ -333,24 +329,77 @@ function kiZustandSofort() {
   requestAnimationFrame(() => kiPhone.classList.remove("ohne-anim"));
 }
 
-// Falten: die Klappe dreht sich ums Scharnier. Bei 90° (Kante zum Betrachter)
-// wechseln die Inhalte das Display – genau dann sieht man keines der beiden.
+// Standbild eines Displays (für nahtlose Übergänge beim Falten). Das Abbild ist reine
+// Optik: ohne Aktionen, Namen oder Formularfunktionen, damit nichts doppelt reagiert.
+function kiAbbild(screen) {
+  const abbild = document.createElement("div");
+  abbild.className = "ki-abbild";
+  abbild.setAttribute("aria-hidden", "true");
+  abbild.inert = true;
+  for (const kind of screen.children) {
+    if (kind.matches(".ki-abbild, .ki-lock")) continue;
+    abbild.append(kind.cloneNode(true));
+  }
+  abbild.querySelectorAll("[data-ki], [data-slot], [data-action], [data-change], [data-submit], [name]").forEach((el) => {
+    for (const a of ["data-ki", "data-slot", "data-action", "data-change", "data-submit", "name"]) el.removeAttribute(a);
+  });
+  screen.append(abbild);
+  // Textfeld und Scrollpositionen übernehmen (kopiert cloneNode nicht mit)
+  const echt = screen.querySelectorAll(":scope > :not(.ki-abbild) textarea, :scope > :not(.ki-abbild) .ki-chat, :scope > :not(.ki-abbild) .ki-chips");
+  const kopie = abbild.querySelectorAll("textarea, .ki-chat, .ki-chips");
+  echt.forEach((el, i) => {
+    if (!kopie[i]) return;
+    if (el.tagName === "TEXTAREA") { kopie[i].value = el.value; kopie[i].style.height = el.style.height; }
+    kopie[i].scrollTop = el.scrollTop;
+    kopie[i].scrollLeft = el.scrollLeft;
+  });
+}
+function kiAbbilderWeg() {
+  kiPhone.querySelectorAll(".ki-abbild").forEach((el) => el.remove());
+}
+
+// Falten wie beim echten Foldable – ohne schwarze Displays:
+//  Aufklappen: Das Außendisplay wird zu Glas, man schaut hindurch auf den Chat des
+//              Innendisplays, dann schwingt die Klappe mit dem linken Display auf.
+//  Zuklappen:  Die Klappe schwingt über den weiterlaufenden Chat, danach blendet das
+//              Außendisplay über ihm ein.
 async function kiFalten(auf, lauf) {
   if (kiPhone.classList.contains("auf") === auf) return;
+  kiAbbilderWeg();
   if (kiReduziert()) {
+    kiPhone.classList.remove("glas", "faltet");
     kiPhone.classList.toggle("auf", auf);
     kiLayout(auf ? "auf" : "zu");
     return;
   }
-  kiPhone.classList.add("faltet");
-  kiEffekt(auf ? "fx-auf" : "fx-zu", KI_ZEIT.falten + 200);
-  kiPhone.classList.toggle("auf", auf);
-  await kiWarte(KI_ZEIT.falten * 0.46);
-  if (lauf !== kiLauf) return;
-  kiLayout(auf ? "auf" : "zu");
-  await kiWarte(KI_ZEIT.falten * 0.54);
-  if (lauf !== kiLauf) return;
-  kiPhone.classList.remove("faltet");
+  const fertig = () => { kiPhone.classList.remove("faltet", "glas"); kiAbbilderWeg(); };
+  kiEffekt("fx-falten", KI_ZEIT.falten + 200);
+
+  if (auf) {
+    kiAbbild(kiPhone.querySelector(".ki-cover"));   // Außendisplay einfrieren …
+    kiLayout("auf");                                 // … echte Inhalte liegen schon innen bereit
+    kiPhone.classList.add("faltet");
+    void kiPhone.offsetWidth;
+    kiPhone.classList.add("glas");                   // Außendisplay wird durchsichtig
+    await kiWarte(KI_ZEIT.glas * 0.45);
+    if (lauf !== kiLauf) return;
+    kiPhone.classList.add("auf");                    // Klappe schwingt auf
+    await kiWarte(KI_ZEIT.falten);
+    if (lauf !== kiLauf) return;
+    fertig();
+  } else {
+    kiPhone.classList.add("faltet", "glas");         // Außendisplay (noch auf der Rückseite) durchsichtig
+    void kiPhone.offsetWidth;
+    kiPhone.classList.remove("auf");                 // Klappe schwingt zu
+    await kiWarte(KI_ZEIT.falten);
+    if (lauf !== kiLauf) return;
+    kiAbbild(kiPhone.querySelector(".ki-innen-rechts")); // Chat innen einfrieren …
+    kiLayout("zu");                                  // … echte Inhalte aufs Außendisplay
+    kiPhone.classList.remove("glas");                // Außendisplay blendet über dem Chat ein
+    await kiWarte(KI_ZEIT.glas + 40);
+    if (lauf !== kiLauf) return;
+    fertig();
+  }
 }
 
 async function kiOeffnen(akteId) {
@@ -393,7 +442,7 @@ async function kiSchliessen() {
 
 async function kiKlappen() {
   const s = ui.assistent;
-  if (!s.offen || !kiDarfAuf()) return;
+  if (!s.offen || !kiDarfAuf() || kiPhone.classList.contains("faltet")) return;
   const lauf = ++kiLauf;
   s.modus = kiPhone.classList.contains("auf") ? "zu" : "auf";
   kiSpeichern();
@@ -403,7 +452,8 @@ async function kiKlappen() {
 // Wechsel zwischen Handy- und Desktopbreite: auf dem Handy immer zugeklappt
 kiMobil.addEventListener("change", () => {
   kiLauf++;
-  kiPhone.classList.remove("faltet");
+  kiPhone.classList.remove("faltet", "glas");
+  kiAbbilderWeg();
   kiZustandSofort();
 });
 

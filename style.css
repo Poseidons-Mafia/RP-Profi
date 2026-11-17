@@ -1050,7 +1050,8 @@ body.in-app .guide-btn span { display: none; }
   --W: min(calc(var(--H) * 0.71), calc((100vw - 64px) / 2), 430px);
   --s: 0.6;          /* Größe eingesteckt */
   --peek: 112px;     /* so viel schaut eingesteckt heraus */
-  --falten: 0.82s;
+  --falten: 0.72s;
+  --glas: 0.3s;
   position: fixed;
   right: max(26px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
@@ -1109,9 +1110,9 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   transform-origin: 100% 50%;
   transform-style: preserve-3d;
   transform: rotateY(180deg);
-  transition: transform var(--falten) cubic-bezier(0.62, 0, 0.3, 1);
+  transition: transform var(--falten) cubic-bezier(0.55, 0.05, 0.2, 1);
 }
-.ki-phone.auf .ki-klappe { transform: rotateY(0deg); transition: transform var(--falten) cubic-bezier(0.4, 0, 0.16, 1.12); }
+.ki-phone.auf .ki-klappe { transform: rotateY(0deg); }
 .ki-seite { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .ki-seite-innen { padding-right: 0; border-radius: 32px 0 0 32px; }
 .ki-seite-aussen { transform: rotateY(180deg); }
@@ -1144,69 +1145,42 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   background: linear-gradient(90deg, rgba(80, 50, 0, 0.1), rgba(255, 255, 255, 0.5) 30%, rgba(80, 50, 0, 0.06) 70%, transparent);
 }
 
-/* Display aus/an: schwarze Abdeckung, die beim Falten ein- und ausblendet */
-.ki-aus {
-  position: absolute; inset: 0; z-index: 20; pointer-events: none;
-  background: linear-gradient(118deg, #030303 0%, #18181a 30%, #070707 46%, #0b0b0c 70%, #1a1a1c 100%);
-}
-/* Spiegelung auf dem ausgeschalteten Glas, wandert beim Falten mit */
-.ki-aus::after {
+/* Glas: Beim Falten wird das Außendisplay durchsichtig – man schaut hindurch auf das
+   Innendisplay. Vom Gehäuse bleibt nur der Rahmen (Ring) sichtbar. */
+.ki-seite-aussen::before {
   content: "";
-  position: absolute; inset: 0;
-  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.13) 45%, transparent 60%);
-  background-size: 250% 100%;
-  background-position: 100% 0;
+  position: absolute; inset: 0; z-index: 30; pointer-events: none;
+  padding: 7px;
+  border-radius: inherit;
+  background: linear-gradient(150deg, #4a4744 0%, #1b1a19 30%, #0b0b0b 70%, #2a2826 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
-.ki-phone.faltet .ki-aus::after { animation: ki-spiegel var(--falten) cubic-bezier(0.5, 0, 0.3, 1); }
-@keyframes ki-spiegel { from { background-position: 100% 0; } to { background-position: -50% 0; } }
-.ki-innen-links .ki-aus, .ki-innen-rechts .ki-aus { opacity: 1; transition: opacity 0.38s ease-in; }
-.ki-phone.auf .ki-innen-links .ki-aus, .ki-phone.auf .ki-innen-rechts .ki-aus { opacity: 0; transition: opacity 0.5s ease-out 0.42s; }
-.ki-cover .ki-aus { opacity: 0; transition: opacity 0.45s ease-out 0.55s; }
-.ki-phone.auf .ki-cover .ki-aus { opacity: 1; transition: opacity 0.25s; }
-/* Einschalten: Inhalt wächst leicht heran */
-.ki-slot { transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) 0.42s, filter 0.5s 0.42s; }
-.ki-innen-links .ki-slot, .ki-innen-rechts .ki-slot { transform: scale(0.96); filter: blur(2px); }
-.ki-phone.auf .ki-innen-links .ki-slot, .ki-phone.auf .ki-innen-rechts .ki-slot { transform: none; filter: none; }
-.ki-phone.auf .ki-cover .ki-slot { transform: scale(0.96); filter: blur(2px); transition-delay: 0s; }
-.ki-cover .ki-slot { transition-delay: 0.55s; }
-
-/* Schatten, den die Klappe beim Falten auf das rechte Display wirft */
-.ki-schatten {
-  position: absolute; inset: 0; z-index: 19; pointer-events: none;
-  background: linear-gradient(90deg, rgba(20, 8, 0, 0.75), rgba(20, 8, 0, 0.25) 55%, transparent);
-  transform-origin: 0 50%;
-  transform: scaleX(0);
-  opacity: 0;
+/* Gehäuse unter dem Display: wird beim Glas sofort durchsichtig und kommt erst zurück,
+   wenn das Display wieder ganz eingeblendet ist (sonst blitzt es dunkel auf) */
+.ki-seite-aussen { background: #121110; transition: background-color 0s linear var(--glas); }
+.ki-phone.glas .ki-seite-aussen { background-color: transparent; transition-delay: 0s; }
+.ki-cover { transition: background-color var(--glas) ease; }
+.ki-cover::before, .ki-cover > :not(.ki-lock) { transition: opacity var(--glas) ease, transform var(--glas) ease, filter var(--glas) ease; }
+.ki-phone.glas .ki-cover { background-color: transparent; }
+.ki-phone.glas .ki-cover::before { opacity: 0; }
+.ki-phone.glas .ki-cover > :not(.ki-lock) { opacity: 0; transform: scale(1.025); filter: blur(3px); }
+/* leichter Glanz auf dem Glas, während es sich dreht */
+.ki-phone.glas .ki-cover::after {
+  content: "";
+  position: absolute; inset: 0; z-index: 25; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.22) 48%, rgba(255, 255, 255, 0) 64%);
 }
 
-/* Effekte beim Falten und Herausholen (ganzes Gerät federt mit) */
-.ki-phone.fx-zu .ki-geraet { animation: ki-fx-zu var(--falten) cubic-bezier(0.4, 0, 0.3, 1); }
-.ki-phone.fx-auf .ki-geraet { animation: ki-fx-auf var(--falten) cubic-bezier(0.3, 0, 0.3, 1); }
+/* Standbild eines Displays während des Übergangs */
+.ki-abbild { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; pointer-events: none; }
+
+/* Scharnier glänzt beim Falten kurz auf */
+.ki-phone.fx-falten .ki-glanz { animation: ki-glanz 0.7s ease-in-out 0.1s; }
+.ki-phone.fx-falten .ki-scharnier { opacity: 1; transition: none; }
 .ki-phone.fx-raus .ki-geraet { animation: ki-fx-raus 0.6s cubic-bezier(0.3, 0, 0.3, 1); }
-.ki-phone.fx-zu .ki-schatten { animation: ki-schatten-zu var(--falten) cubic-bezier(0.62, 0, 0.3, 1) forwards; }
-.ki-phone.fx-auf .ki-schatten { animation: ki-schatten-auf var(--falten) cubic-bezier(0.4, 0, 0.16, 1) forwards; }
-.ki-phone.fx-zu .ki-glanz, .ki-phone.fx-auf .ki-glanz { animation: ki-glanz 0.7s ease-in-out 0.15s; }
-.ki-phone.fx-zu .ki-scharnier, .ki-phone.fx-auf .ki-scharnier { opacity: 1; transition: none; }
-@keyframes ki-fx-zu {
-  0% { transform: none; }
-  40% { transform: translateY(-7px) rotate(0.9deg); }
-  76% { transform: translateY(3px) rotate(-0.25deg); }
-  88% { transform: translateY(-1.5px); }
-  100% { transform: none; }
-}
-@keyframes ki-fx-auf {
-  0% { transform: none; }
-  35% { transform: translateY(-9px) rotate(-1.1deg); }
-  72% { transform: translateY(2px) rotate(0.35deg); }
-  100% { transform: none; }
-}
-@keyframes ki-fx-raus {
-  0% { transform: rotate(-3deg); }
-  55% { transform: rotate(1.2deg); }
-  100% { transform: none; }
-}
-@keyframes ki-schatten-zu { 0% { transform: scaleX(0); opacity: 0; } 55% { opacity: 1; } 100% { transform: scaleX(1); opacity: 1; } }
-@keyframes ki-schatten-auf { 0% { transform: scaleX(1); opacity: 1; } 60% { opacity: 0.8; } 100% { transform: scaleX(0); opacity: 0; } }
+@keyframes ki-fx-raus { 0% { transform: rotate(-2deg); } 100% { transform: none; } }
 @keyframes ki-glanz { 0% { top: -40%; opacity: 0; } 20% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
 /* Statusleiste */
