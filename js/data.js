@@ -30,15 +30,31 @@ const DEFAULT_SETTINGS = {
   zahlungsziel_tage: 7,
   rechnung_einleitung: "für die von uns geleisteten Dienste stellen wir Ihnen, wie in §2 Ihres Mandatsvertrags festgelegt, folgende Kostenpunkte in Rechnung:",
   rechnung_hinweis: "Bitte begleichen Sie den Betrag innerhalb von 7 Tagen.",
+  liegezeit_tage: 7,
 };
 
 // ---------- Zustand ----------
 const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "beweise", "termine",
                 "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen",
-                "raenge", "personalakte", "personal_vermerke"];
+                "raenge", "personalakte", "personal_vermerke",
+                "benachrichtigungen", "pinnwand", "pinnwand_gelesen", "ablaeufe"];
 const PK = { profiles: "user_id", personalakte: "user_id" };
 const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
 const PROTOKOLL_LIMIT = 500;
+const BENACHRICHTIGUNG_LIMIT = 200;
+
+// Tabellen, die nicht komplett geladen werden (nur die neuesten Zeilen)
+const LADER = {
+  benachrichtigungen: async () => {
+    const { data, error } = await db.from("benachrichtigungen").select("*")
+      .order("zeit", { ascending: false }).limit(BENACHRICHTIGUNG_LIMIT);
+    if (error) throw error;
+    return data;
+  },
+};
+
+// Zusätzliche Reaktionen auf Live-Änderungen je Tabelle (von den Seiten befüllt)
+const LIVE_HOOKS = {};
 
 const state = {
   session: null,
@@ -66,8 +82,9 @@ async function fetchAll(table) {
 }
 
 async function loadAll() {
-  const results = await Promise.all(TABLES.map(fetchAll));
+  const results = await Promise.all(TABLES.map((t) => (LADER[t] || fetchAll)(t)));
   TABLES.forEach((t, i) => (state[t] = results[i]));
+  aktivCache = null;
   const { data, error } = await db.from("protokoll").select("*")
     .order("id", { ascending: false }).limit(PROTOKOLL_LIMIT);
   if (error) throw error;
@@ -77,7 +94,15 @@ async function loadAll() {
   state.rechteSig = RECHTE.map((r) => (darf(r.key) ? 1 : 0)).join("");
 }
 
-// Fehlt eine Tabelle/Spalte, wurde supabase-update-2.sql noch nicht ausgeführt
+// Einzelne Tabellen frisch laden (z. B. nach einer Übergabe, die viele Zeilen ändert)
+async function neuLaden(tables) {
+  const results = await Promise.all(tables.map((t) => (LADER[t] || fetchAll)(t)));
+  tables.forEach((t, i) => (state[t] = results[i]));
+  aktivCache = null;
+  scheduleRender();
+}
+
+// Fehlt eine Tabelle/Spalte, wurde ein supabase-update-*.sql noch nicht ausgeführt
 function isMissingSchema(error) {
   const text = `${error && error.code} ${error && error.message}`;
   return /PGRST20[0-9]|42P01|42703|schema cache|does not exist/i.test(text);
@@ -96,11 +121,13 @@ function startLive() {
     liveChannel.on("postgres_changes", { event: "*", schema: "public", table }, (p) => applyChange(table, p));
   }
   liveChannel.subscribe();
+  if (typeof startZusammenarbeit === "function") startZusammenarbeit();
 }
 
 function stopLive() {
   if (liveChannel && db) db.removeChannel(liveChannel);
   liveChannel = null;
+  if (typeof stopZusammenarbeit === "function") stopZusammenarbeit();
 }
 
 function applyChange(table, payload) {
@@ -130,10 +157,12 @@ function applyChange(table, payload) {
     }
     state.rechteSig = sig;
   }
+  if (LIVE_HOOKS[table]) LIVE_HOOKS[table](payload);
   scheduleRender();
 }
 
 function upsertLocal(table, row) {
+  aktivCache = null;
   const key = PK[table] || "id";
   const list = state[table];
   const i = list.findIndex((r) => r[key] === row[key]);
@@ -143,6 +172,7 @@ function upsertLocal(table, row) {
 
 function removeLocal(table, id) {
   if (!id) return;
+  aktivCache = null;
   const key = PK[table] || "id";
   state[table] = state[table].filter((r) => r[key] !== id);
   if (table === "akten") {
@@ -245,7 +275,7 @@ const BEREICHE = [
   { key: "buchhaltung", label: "Buchhaltung", text: "Bearbeiten = buchen, stornieren, Konten anlegen" },
   { key: "gesetzbuch", label: "Gesetzbuch & Gebühren", text: "Gesetzbuch und Gebührenkatalog" },
   { key: "personal", label: "Personalakten", text: "Lesen = Gehalt & Vermerke aller sehen; Bearbeiten = Personal verwalten" },
-  { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle", nurSchreiben: true },
+  { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle; Bearbeiten = auch Abläufe (Checklisten) verwalten und die Pinnwand moderieren", nurSchreiben: true },
 ];
 const SONDERRECHTE = [
   { key: "akten_loeschen", label: "Akten löschen" },
@@ -318,12 +348,39 @@ function kinder(table, akteId) {
   return state[table].filter((r) => r.akte_id === akteId);
 }
 
+// Letzte Aktivität je Akte (neuester Eintrag, Termin, Aufgabe … ) – einmal für alle
+// berechnet und bis zur nächsten Datenänderung gemerkt
+let aktivCache = null;
 function zuletztAktiv(akte) {
-  let t = Math.max(new Date(akte.updated_at || akte.created_at).getTime(), new Date(akte.created_at).getTime());
-  for (const table of AKTE_KINDER) {
-    for (const r of state[table]) if (r.akte_id === akte.id) t = Math.max(t, new Date(r.created_at).getTime());
+  if (!aktivCache) {
+    aktivCache = new Map();
+    for (const table of AKTE_KINDER) {
+      for (const r of state[table]) {
+        const t = new Date(r.created_at).getTime();
+        if (r.akte_id && !(aktivCache.get(r.akte_id) >= t)) aktivCache.set(r.akte_id, t);
+      }
+    }
   }
-  return new Date(t);
+  const eigen = Math.max(new Date(akte.updated_at || akte.created_at).getTime(), new Date(akte.created_at).getTime());
+  return new Date(Math.max(eigen, aktivCache.get(akte.id) || 0));
+}
+
+// Aufgaben-Fortschritt einer Akte
+function aufgabenStand(akteId) {
+  const list = kinder("aufgaben", akteId);
+  return { erledigt: list.filter((t) => t.erledigt).length, gesamt: list.length };
+}
+
+// Seit wie vielen Tagen ist in der Akte nichts passiert?
+function liegtSeitTagen(akte) {
+  return Math.floor((Date.now() - zuletztAktiv(akte)) / 86400000);
+}
+
+// Offene Akte ohne Bewegung seit X Tagen (Einstellung) und ohne anstehenden Termin
+function liegenGeblieben(akte) {
+  if (akte.status === "Geschlossen") return false;
+  const tage = Number(state.settings.liegezeit_tage) || 7;
+  return liegtSeitTagen(akte) >= tage && !naechsterTermin(akte.id);
 }
 
 function naechsterTermin(akteId) {

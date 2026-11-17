@@ -59,6 +59,11 @@ function truncate(text, n) {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
 }
 
+// "1 Aufgabe", "3 Aufgaben"
+function anzahl(n, eins, viele) {
+  return `${n} ${Number(n) === 1 ? eins : viele}`;
+}
+
 function firstName(name) {
   return String(name || "").trim().split(/\s+/)[0] || "";
 }

@@ -797,6 +797,198 @@ body.in-app .guide-btn span { display: none; }
 
 #print-area { display: none; }
 
+/* ---------- Zusammenarbeit: Avatare, Online, Glocke ---------- */
+.avatar {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-decoration: none;
+  user-select: none;
+}
+.avatar.gross { width: 36px; height: 36px; font-size: 0.82rem; }
+.avatar.mehr { background: var(--line); color: var(--text); }
+.avatar-punkt {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2fa84f;
+  box-shadow: 0 0 0 2px var(--panel);
+}
+.avatar.gross .avatar-punkt { width: 11px; height: 11px; }
+.avatar-punkt.weg { background: var(--panel); box-shadow: inset 0 0 0 2px #2fa84f, 0 0 0 2px var(--panel); }
+.avatars { display: inline-flex; align-items: center; }
+.avatars .avatar + .avatar { margin-left: -6px; box-shadow: 0 0 0 2px var(--panel); }
+.avatars.mini .avatar { width: 18px; height: 18px; font-size: 0.55rem; }
+.item .num .avatars.mini { margin-left: 6px; vertical-align: middle; }
+.name-mit-avatar { display: inline-flex; align-items: center; gap: 8px; }
+
+.online { display: inline-flex; align-items: center; padding: 2px 4px; border-radius: 999px; text-decoration: none; }
+.online .avatar { box-shadow: 0 0 0 2px #fffdf6; }
+.online .avatar + .avatar { margin-left: -4px; }
+.online .avatar-punkt { box-shadow: 0 0 0 2px #fffdf6; }
+.online:hover { background: rgba(0, 0, 0, 0.15); }
+
+.topbar .btn.glocke { position: relative; padding: 7px 9px; }
+.glocke svg { width: 20px; height: 20px; display: block; }
+.glocke.hat-neue { border-color: var(--gold); }
+.glocke-zahl {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--black);
+  font-size: 0.7rem;
+  font-weight: bold;
+  line-height: 19px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--red);
+}
+.glocke.klingelt svg { animation: klingeln 0.9s ease-in-out; transform-origin: 50% 10%; }
+@keyframes klingeln {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(16deg); } 30% { transform: rotate(-14deg); }
+  45% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 75% { transform: rotate(3deg); }
+}
+
+.glocke-panel {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 60;
+  width: min(420px, calc(100vw - 24px));
+  max-height: min(560px, calc(100vh - 90px));
+  max-height: min(560px, calc(100dvh - 90px));
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 48px rgba(40, 20, 0, 0.28);
+  overflow: hidden;
+}
+.gp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 12px 14px 10px; border-bottom: 1px solid var(--line); font-size: 0.92rem; }
+.gp-head .link-btn { font-size: 0.8rem; white-space: nowrap; }
+.gp-desktop { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--gold-soft); font-size: 0.8rem; color: var(--gold-text); }
+.gp-desktop span { flex: 1; }
+.gp-list { overflow-y: auto; overscroll-behavior: contain; }
+.gp-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+.gp-item:hover { background: var(--bg); }
+.gp-item.neu { background: #fff8e6; }
+.gp-item.neu:hover { background: var(--gold-soft); }
+.gp-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.gp-zeit { display: block; font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+.gp-punkt { flex: none; width: 9px; height: 9px; margin-top: 6px; border-radius: 50%; background: var(--red); }
+
+/* Wer hat die Akte gerade auch offen? */
+.hier-auch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 3px 10px 3px 4px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.8rem;
+}
+
+/* @-Erwähnungen */
+.mention { color: var(--blue); background: var(--blue-soft); border-radius: 4px; padding: 0 3px; font-weight: bold; }
+.mention.ich { color: var(--red-dark); background: var(--gold-soft); }
+.erw-an { color: var(--blue); }
+.erw-tipp { margin-left: 4px; }
+.mention-box {
+  position: fixed;
+  z-index: 70;
+  width: 260px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(40, 20, 0, 0.22);
+}
+.mention-hint { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 4px 8px 2px; }
+.mention-box button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.mention-box button.aktiv, .mention-box button:hover { background: var(--gold-soft); }
+
+/* Aufgaben-Fortschritt */
+.fortschritt-zeile { display: inline-flex; align-items: center; gap: 6px; font-size: 0.76rem; color: var(--muted); margin-top: 3px; }
+.item .fortschritt-zeile { display: flex; }
+.fortschritt { display: inline-block; width: 64px; height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; flex: none; }
+.fortschritt > span { display: block; height: 100%; border-radius: 999px; background: var(--gold); }
+.fortschritt.fertig > span { background: var(--green); }
+
+.kpi.warn { border-left-color: #e39b17; }
+.kpi.warn .value { color: #9a5b00; }
+.bestaetigen-box ul { margin-bottom: 4px; }
+
+/* ---------- Pinnwand ---------- */
+.pinnwand-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.beitrag {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.beitrag.wichtig { border-left-color: var(--red); background: #fff9f6; }
+.beitrag.angeheftet { border-top: 3px solid var(--black); }
+.beitrag.kompakt { box-shadow: none; padding: 10px 12px; }
+.beitrag-kopf { display: flex; gap: 10px; align-items: flex-start; }
+.beitrag-kopf .grow { flex: 1; min-width: 0; }
+.beitrag-kopf h3 { margin: 2px 0 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+.beitrag.kompakt h3 { font-size: 0.95rem; }
+.beitrag-kopf h3 a { color: inherit; text-decoration: none; }
+.beitrag-kopf h3 a:hover { color: var(--red); }
+.beitrag-kopf .meta { font-size: 0.78rem; color: var(--muted); }
+.beitrag-text { margin-top: 10px; white-space: normal; overflow-wrap: anywhere; font-size: 0.93rem; }
+.beitrag.kompakt .beitrag-text { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
+.beitrag-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.beitrag.kompakt .beitrag-fuss { margin-top: 8px; padding-top: 8px; }
+.team-rows > li { align-items: center; }
+
+/* Abläufe */
+.ablauf-liste button .badge { margin-left: 4px; font-weight: bold; }
+.ablauf-liste button span { display: block; }
+.ablauf-schritte { border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: #fff; }
+.ablauf-schritte .when { min-width: 96px; }
+
 /* ---------- Mobil ---------- */
 @media (max-width: 980px) {
   .split { grid-template-columns: 1fr; }
@@ -806,6 +998,7 @@ body.in-app .guide-btn span { display: none; }
   .back-link { display: inline-block; }
   .grid-3 { grid-template-columns: 1fr 1fr; }
   .cal-layout { grid-template-columns: 1fr; }
+  .pinnwand-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
@@ -839,6 +1032,13 @@ body.in-app .guide-btn span { display: none; }
   .quick-add select, .quick-add input[type="date"] { width: 100%; max-width: none; }
   .quick-add .btn { grid-column: 1 / -1; justify-content: center; }
   .rows .when { min-width: 58px; }
+  .topbar .btn.glocke { padding: 6px 8px; }
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .lang { display: none; }
+  #btn-me { max-width: 110px; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+  .online .avatar:nth-child(n + 3) { display: none; }
+  .erw-tipp { display: none; }
+  .ablauf-schritte .when { min-width: 70px; }
 }
 
 /* ---------- KI-Assistent: Smartphone in der Ecke ---------- */
@@ -1058,6 +1258,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   .ki-eingabe textarea { font-size: 16px; } /* verhindert Zoom auf dem iPhone */
 }
 @media (prefers-reduced-motion: reduce) {
+  .glocke.klingelt svg { animation: none; }
   .ki-phone, .ki-lock { transition: none; }
   .ki-tippt span { animation: none; }
 }
