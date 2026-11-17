@@ -1082,8 +1082,8 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
   background: linear-gradient(150deg, #4a4744 0%, #1b1a19 30%, #0b0b0b 70%, #2a2826 100%);
   box-shadow: inset 0 0 0 1.5px #6b6763, inset 0 0 0 3.5px #0a0a0a, 0 0 0 1px rgba(204, 158, 0, 0.45), 0 26px 50px rgba(60, 25, 0, 0.3);
 }
-.ki-haelfte-rechts { position: absolute; inset: 0; transition: border-radius 0.2s 0.55s; }
-.ki-phone.auf .ki-haelfte-rechts { border-top-left-radius: 0; border-bottom-left-radius: 0; transition: border-radius 0.15s; }
+/* Scharnierseite ist immer eckig – wie beim echten Foldable, damit das Gehäuse beim Falten nicht „morpht“ */
+.ki-haelfte-rechts { position: absolute; inset: 0; border-radius: 0 32px 32px 0; }
 /* Naht: aufgeklappt läuft das Display über das Scharnier – ohne dass sich die Breite ändert */
 .ki-naht {
   position: absolute; top: 7px; bottom: 7px; left: 0; width: 7px; z-index: 2;
@@ -1120,7 +1120,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-phone.auf .ki-klappe { transform: rotateY(0deg); }
 .ki-seite { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .ki-seite-innen { padding-right: 0; border-radius: 32px 0 0 32px; clip-path: inset(-80px 0 -80px -80px); } /* kein Schatten über den Knick */
-.ki-seite-aussen { transform: rotateY(180deg); }
+.ki-seite-aussen { transform: rotateY(180deg); border-radius: 0 32px 32px 0; }
 
 /* Displays */
 .ki-screen {
@@ -1140,8 +1140,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 }
 .ki-innen-links { border-radius: 26px 0 0 26px; background: linear-gradient(180deg, #fffdf7, #f6f0de); }
 .ki-innen-links::before { display: none; }
-.ki-innen-rechts { transition: border-radius 0.2s 0.55s; }
-.ki-phone.auf .ki-innen-rechts { border-top-left-radius: 0; border-bottom-left-radius: 0; transition: border-radius 0.15s; }
+.ki-innen-rechts { border-radius: 0 26px 26px 0; }
 
 /* Glas: Beim Falten wird das Außendisplay durchsichtig – man schaut hindurch auf das
    Innendisplay. Vom Gehäuse bleibt nur der Rahmen (Ring) sichtbar. */
