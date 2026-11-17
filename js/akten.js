@@ -126,6 +126,22 @@ CHANGES["akten-filter"] = (el) => {
   scheduleRender();
 };
 
+// ---------- Werkzeugleiste (Icon-Buttons mit Tooltip) ----------
+const AKTE_ICON = {
+  ablauf: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="5" cy="18" r="1.4" fill="currentColor"/></svg>',
+  wiedervorlage: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 10h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 12.5v3l2 1.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  dokument: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v4h4M12 11v6M9 14h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  drucken: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9M7 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14h10v6.5H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3.5-3.5a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3.5 3.5a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  arbeitsbereich: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  loeschen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
+// Quadratischer Icon-Button; die Beschriftung erscheint als Tooltip beim Überfahren
+function werkzeug(action, id, icon, label, hinweis = "", extra = "") {
+  return html`<button type="button" class="werkzeug ${extra}" data-action="${action}" data-id="${id}" aria-label="${label}" data-tip="${label}"${hinweis ? html` data-hinweis="${hinweis}"` : ""}>${new SafeHtml(AKTE_ICON[icon])}</button>`;
+}
+
 // ---------- Detail ----------
 function renderAkteDetail(a, sub) {
   const tab = AKTE_TABS.some((t) => t.key === (sub || "")) ? sub || "" : "";
@@ -159,15 +175,21 @@ function renderAkteDetail(a, sub) {
             <button class="btn" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button>
           </div>
         </div>
-        <div class="actions-row" style="margin-top:10px">
-          <button class="btn small" data-action="ablauf-starten" data-id="${a.id}" title="Checkliste mit Aufgaben und Terminen anlegen">Ablauf starten</button>
-          <button class="btn small" data-action="wiedervorlage" data-id="${a.id}" title="Termin zur Wiedervorlage anlegen">Wiedervorlage</button>
-          <button class="btn small" data-action="dokument-waehlen" data-id="${a.id}">Dokument erstellen</button>
-          <button class="btn small" data-action="aktenblatt" data-id="${a.id}">Aktenblatt drucken</button>
-          <button class="btn small" data-action="akte-link" data-id="${a.id}">Link kopieren</button>
-          ${darf("ki_assistent") ? html`<button type="button" class="nigel-btn" data-action="ki-oeffnen" data-id="${a.id}" title="Nigel zu dieser Akte befragen" aria-label="Nigel fragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>
-            <button class="btn small" data-action="nw-mit-akte" data-id="${a.id}" title="Gutachten, Schriftsatz oder Fallanalyse im Arbeitsbereich">Mit Nigel bearbeiten</button>` : ""}
-          ${darf("akten_loeschen") ? html`<button class="btn small danger" data-action="akte-loeschen" data-id="${a.id}">Löschen</button>` : ""}
+        <div class="akte-werkzeuge" role="toolbar" aria-label="Aktionen zur Akte">
+          <div class="werkzeug-gruppe">
+            ${werkzeug("ablauf-starten", a.id, "ablauf", "Ablauf starten", "Checkliste mit Aufgaben und Terminen anlegen")}
+            ${werkzeug("wiedervorlage", a.id, "wiedervorlage", "Wiedervorlage", "Termin zur Wiedervorlage anlegen")}
+          </div>
+          <div class="werkzeug-gruppe">
+            ${werkzeug("dokument-waehlen", a.id, "dokument", "Dokument erstellen")}
+            ${werkzeug("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
+            ${werkzeug("akte-link", a.id, "link", "Link kopieren")}
+          </div>
+          ${darf("ki_assistent") ? html`<div class="werkzeug-gruppe">
+            <button type="button" class="nigel-btn" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>
+            ${werkzeug("nw-mit-akte", a.id, "arbeitsbereich", "Mit Nigel bearbeiten", "Gutachten, Schriftsatz oder Fallanalyse im Arbeitsbereich")}
+          </div>` : ""}
+          ${darf("akten_loeschen") ? html`<div class="werkzeug-gruppe rechts">${werkzeug("akte-loeschen", a.id, "loeschen", "Akte löschen", "", "danger")}</div>` : ""}
         </div>
         ${k.length ? html`
           <div class="box warning" style="margin:12px 0 0">
