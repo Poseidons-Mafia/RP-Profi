@@ -7,7 +7,7 @@
 #  aktualisiert es) und ersetzt seine Paragraphen vollständig.
 #
 #  Erkannt werden:
-#    Gliederung   "Kapitel 1 – …", "Abschnitt 2 – …", "Abschnitt IV – …", "III. – …"
+#    Gliederung   "Kapitel 1 – …", "Abschnitt 2 – …", "Abschnitt IV – …", "1. Abschnitt – …", "III. – …"
 #    Vorschriften "§ 12 – Titel", "Artikel 5 – Titel", "Anlage 1 – Titel", "Präambel"
 #    Absätze "(1)", Aufzählungen "1." / "a)", Aufzählungen ohne Nummer
 #    (direkt untereinander stehende Zeilen), Tabellen aus Anlagen.
@@ -36,6 +36,9 @@ BUECHER = [
     ("BGB.txt", "BGB", "Bürgerliches Gesetzbuch",
      "Rechtsfähigkeit, Verträge, Eigentum, Selbsthilfe und Schadensersatz, Zivilklage, Ausweispflicht und Familienrecht.",
      "blau", 20),
+    ("ZPO.txt", "ZPO", "Zivilprozessordnung",
+     "Zivilprozess: Gerichte und Instanzen, Anwaltszwang, Einklagegebühr, Klage gegen Behörden, Staatshaftung, Beweisrecht, Kosten, Vollstreckung und Rechtsmittel.",
+     "gold", 25),
     ("LPolG.txt", "LPolG", "Landespolizeigesetz",
      "Aufgaben und Befugnisse der Polizeibehörden: Gefahrenabwehr, Identitätsfeststellung, Gewahrsam, Durchsuchung, Sicherstellung und Zwang.",
      "schwarz", 30),
@@ -97,7 +100,7 @@ Stich-, Wurf-, Hieb- und Schlagwaffen*:
 • BZ-Gasgranaten""",
 }
 
-RE_GLIEDERUNG = re.compile(r"^(?:Kapitel\s+\d+|Abschnitt\s+(?:\d+|[IVXLC]+)\.?|[IVXLC]+\.)\s*[–-]\s*(\S.*)$")
+RE_GLIEDERUNG = re.compile(r"^(?:Kapitel\s+\d+|\d+\.\s*Abschnitt|Abschnitt\s+(?:\d+|[IVXLC]+)\.?|[IVXLC]+\.)\s*[–-]\s*(\S.*)$")
 RE_PARA = re.compile(r"^§\s*(\d+[a-z]?)\s*[–-]\s*(.+)$")
 RE_ARTIKEL = re.compile(r"^Artikel\s+(\d+[a-z]?)\s*[–-]\s*(.+)$")
 RE_ANLAGE = re.compile(r"^Anlage\s+(\d+)\s*[–-]\s*(.+)$")
@@ -162,7 +165,10 @@ def formatiere(roh):
     for i, z in enumerate(roh):
         if z is None:
             continue
-        nachbar = (i > 0 and schlicht(roh[i - 1])) or (i + 1 < len(roh) and schlicht(roh[i + 1]))
+        # Nachbar ohne Leerzeile: eine weitere Zeile ohne Nummer – oder davor ein Unterpunkt wie "b)"
+        davor = roh[i - 1] if i > 0 else None
+        nachbar = (schlicht(davor) or (davor is not None and bool(RE_LISTE.match(davor)) and RE_LISTE.match(davor).group(1)[0].isalpha())) \
+            or (i + 1 < len(roh) and schlicht(roh[i + 1]))
         zeilen.append(z)
         punkt.append(schlicht(z) and nachbar)
 

@@ -1,5 +1,5 @@
 -- =============================================================
---  Wiwang Law – Gesetzestexte: Verf, StGB, StPO, BGB, LPolG, StVO, WaffG, BtMG, GewO, LuftVO
+--  Wiwang Law – Gesetzestexte: Verf, StGB, StPO, BGB, ZPO, LPolG, StVO, WaffG, BtMG, GewO, LuftVO
 --
 --  Erzeugt mit tools/gesetze-sql.py aus dem Ordner gesetze/.
 --  Diesen ganzen Text in Supabase unter "SQL Editor" einfügen und
@@ -1793,6 +1793,157 @@ Die Verwertung ist nur bis zur Höhe der offenen Forderung zulässig. Ein den Fo
 
 (6) Personen, die weder miteinander verwandt noch verschwägert sind, gelten im Sinne dieses Gesetzes als nicht verwandt, auch wenn tatsächlich eine persönliche oder familiäre Nähebeziehung besteht.')
 ) as v(nummer, titel, abschnitt, text) where lower(g.kuerzel) = lower('BGB');
+
+-- ---------- ZPO – Zivilprozessordnung (30 Einträge) ----------
+insert into public.gesetzbuecher (kuerzel, titel, beschreibung, farbe, sortierung)
+select 'ZPO', 'Zivilprozessordnung', 'Zivilprozess: Gerichte und Instanzen, Anwaltszwang, Einklagegebühr, Klage gegen Behörden, Staatshaftung, Beweisrecht, Kosten, Vollstreckung und Rechtsmittel.', 'gold', 25
+where not exists (select 1 from public.gesetzbuecher where lower(kuerzel) = lower('ZPO'));
+update public.gesetzbuecher set titel = 'Zivilprozessordnung', beschreibung = 'Zivilprozess: Gerichte und Instanzen, Anwaltszwang, Einklagegebühr, Klage gegen Behörden, Staatshaftung, Beweisrecht, Kosten, Vollstreckung und Rechtsmittel.'
+  where lower(kuerzel) = lower('ZPO');
+delete from public.paragraphen where gesetzbuch_id = (select id from public.gesetzbuecher where lower(kuerzel) = lower('ZPO'));
+insert into public.paragraphen (gesetzbuch_id, nummer, titel, abschnitt, text)
+select g.id, v.nummer, v.titel, v.abschnitt, v.text from public.gesetzbuecher g, (values
+  ('§ 1', 'Anwendungsbereich und Zweck', '1. Abschnitt – Allgemeine Vorschriften', '(1) Diese Zivilprozessordnung regelt das Verfahren in bürgerlichen Rechtsstreitigkeiten (Zivilsachen) vor den Gerichten des Staates San Andreas.
+
+(2) Zweck des Zivilprozesses ist die faire, zügige und rechtsstaatliche Durchsetzung oder Abwehr privatrechtlicher Ansprüche.'),
+  ('§ 1a', 'Ordnung in der Verhandlung', '1. Abschnitt – Allgemeine Vorschriften', '(1) Der Vorsitzende Richter übt die Sitzungsgewalt aus und sorgt für einen geordneten Ablauf der Gerichtsverhandlung.
+
+(2) Personen, die den Ablauf der Verhandlung erheblich stören, Anordnungen des Gerichts wiederholt missachten oder sich ungebührlich verhalten, können nach vorheriger Verwarnung aus dem Sitzungssaal verwiesen werden.
+
+(3) In besonders schwerwiegenden Fällen kann das Gericht gegen störende Beteiligte oder Zuschauer ein Ordnungsgeld verhängen. Ist ein Ordnungsgeld nicht ausreichend oder nicht beitreibbar, kann das Gericht ersatzweise Ordnungshaft verhängen. Die Ordnungshaft darf dabei 120 Hafteinheiten nicht übersteigen.'),
+  ('§ 1b', 'Missbräuchliche Rechtsverfolgung', '1. Abschnitt – Allgemeine Vorschriften', '(1) Das Gericht kann eine Klage oder einen Antrag als unzulässig verwerfen, wenn die Rechtsverfolgung offensichtlich rechtsmissbräuchlich, mutwillig oder ausschließlich zur Schädigung oder Belästigung einer anderen Person erfolgt.
+
+(2) Bei der Beurteilung sind insbesondere die Erfolgsaussichten, der Sachvortrag sowie das bisherige Verhalten der Parteien zu berücksichtigen.
+
+(3) Im Falle einer missbräuchlichen Rechtsverfolgung kann das Gericht der missbräuchlich handelnden Partei die gesamten Prozesskosten auferlegen und eine erneute Klage wegen desselben Streitgegenstands zurückweisen, sofern keine neuen erheblichen Tatsachen vorgetragen werden.'),
+  ('§ 2', 'Gerichtsbarkeit und Instanzenzug', '1. Abschnitt – Allgemeine Vorschriften', '(1) Die Zivilgerichtsbarkeit wird im Staat San Andreas durch folgende Gerichte ausgeübt:
+
+• United States District Court: Eingangsgericht (1. Instanz) für allgemeine zivilrechtliche Streitigkeiten bis zu einem Streitwert von $1.000.000.
+• Court of Appeals:
+    a) Eingangsgericht (1. Instanz) für Zivilklagen mit einem Streitwert von über $1.000.000 sowie für Streitigkeiten von besonderer staatlicher oder öffentlicher Bedeutung.
+    b) Berufungsinstanz für Rechtsmittel gegen Urteile des United States District Court.
+• United States Supreme Court: Höchste Gerichtsinstanz für Verfassungsfragen, Grundsatzentscheidungen sowie Revisionsverfahren gegen Entscheidungen des Court of Appeals.'),
+  ('§ 3', 'Parteien, Vertretung und Anwaltszwang', '1. Abschnitt – Allgemeine Vorschriften', '(1) Parteien des Zivilprozesses sind der Kläger (Antragsteller) und der Beklagte (Antragsgegner).
+
+(2) Vor den höheren Gerichten des Staates San Andreas (Court of Appeals und San Andreas Supreme Court) herrscht Anwaltszwang. Die Parteien müssen sich durch einen gemäß der Rechtsanwaltsordnung des Staates San Andreas zugelassenen Rechtsanwalt vertreten lassen.
+
+(3) Personen, die selbst im Besitz einer gültigen Anwaltslizenz des Staates San Andreas sind, sind vom Anwaltszwang ausgenommen und berechtigt, sich selbst vor Gericht zu vertreten.'),
+  ('§ 4', 'Gerichtsgebühren und Einklagegebühr', '1. Abschnitt – Allgemeine Vorschriften', '(1) Für das Einreichen einer Zivilklage wird eine Einklagegebühr (Gerichtsgebühr) in Höhe von 7,5 % des geltend gemachten Streitwerts erhoben.
+
+(2) Die Einklagegebühr ist mit Einreichen der Klageschrift fällig und an die Gerichts- bzw. Fraktionskasse einzuzahlen. Ohne Nachweis der Zahlung wird die Klage nicht zugestellt, es sei denn, das Gericht bewilligt ausnahmsweise eine Stundung.
+
+(3) Die Erstattung und finale Verteilung der Prozesskosten richtet sich nach § 17 dieses Gesetzes.'),
+  ('§ 5', 'Ausschließung und Befangenheit von Richtern', '1. Abschnitt – Allgemeine Vorschriften', '(1) Ein Richter ist von der Ausübung seines Amtes kraft Gesetzes ausgeschlossen, wenn er selbst Partei ist, mit einer Partei verwandt oder verschwägert ist oder in der Sache bereits als Zeuge, Vertreter oder Gutachter tätig war.
+
+(2) Eine Partei kann einen Richter wegen Besorgnis der Befangenheit ablehnen, wenn ein Grund vorliegt, der geeignet ist, Misstrauen gegen seine Unparteilichkeit zu rechtfertigen.
+
+(3) Über die Entscheidung der Ablehnung entscheidet das nächsthöhere Gericht, sofern vorhanden.'),
+  ('§ 6', 'Rechtliches Gehör und Mündlichkeit', '1. Abschnitt – Allgemeine Vorschriften', '(1) Den Parteien ist in jedem Stadium des Verfahrens rechtliches Gehör zu gewähren.
+
+(2) Gerichtsentscheidungen ergehen grundsätzlich auf Grund mündlicher Verhandlung, sofern die Parteien nicht einvernehmlich auf eine mündliche Verhandlung verzichten und einer Entscheidung im schriftlichen Verfahren zustimmen.'),
+  ('§ 7', 'Fristen, Zustellung und Aktenführung', '1. Abschnitt – Allgemeine Vorschriften', '(1) Schriftstücke, Klagen und Anträge können elektronisch (z. B. über FiveNet) eingereicht und zugestellt werden.
+
+(2) Setzt das Gericht eine Frist, beträgt diese im Regelfall 3 bis 7 Tage, sofern das Gericht wegen Dringlichkeit oder besonderer Umstände keine abweichende Regelung trifft.'),
+  ('§ 8', 'Klagen gegen Behörden', '1. Abschnitt – Allgemeine Vorschriften', '(1) Gegen Maßnahmen, Entscheidungen oder Unterlassungen staatlicher Behörden oder ihrer Bediensteten in Ausübung hoheitlicher Befugnisse kann Klage erhoben werden.
+
+(2) Das Gericht prüft insbesondere, ob die angegriffene Maßnahme rechtmäßig war und den geltenden Gesetzen entsprach.
+
+(3) Das Gericht kann rechtswidrige Verwaltungsakte aufheben, Behörden zur Vornahme einer Handlung verpflichten oder die Rechtswidrigkeit einer erledigten Maßnahme feststellen.'),
+  ('§ 8b', 'Staatshaftung', '1. Abschnitt – Allgemeine Vorschriften', '(1) Verletzt ein Amtsträger des Staates San Andreas in Ausübung seines Amtes schuldhaft eine ihm obliegende Amtspflicht, kann der Geschädigte Ersatz des daraus entstandenen Schadens verlangen.
+
+(2) Der Anspruch richtet sich gegen den Staat San Andreas und nicht gegen den einzelnen Amtsträger, sofern dieser in dienstlicher Ausübung gehandelt hat.
+
+(3) Die Haftung setzt voraus, dass ein unmittelbarer Schaden entstanden ist und ein rechtswidriges Verhalten vorliegt.
+
+(4) Kann dem schuldhaften Amtsträger der Vorsatz nachgewiesen werden, so kann der Schadensersatz auf den Amtsträger umgelegt oder mit diesem geteilt werden.
+
+(5) Über die Teilung entscheidet das Gericht mit dem Urteil.'),
+  ('§ 9', 'Klageerhebung und Klageschrift', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Das Verfahren wird durch Einreichen einer schriftlichen Klageschrift beim zuständigen Gericht eingeleitet.
+
+(2) Die Klageschrift muss enthalten:
+
+• Die genaue Bezeichnung der Parteien sowie ihrer vertretenden Rechtsanwälte.
+• Die genaue Angabe des Streitwerts sowie den Nachweis der gezahlten Einklagegebühr gemäß § 4 dieser Ordnung.
+• Den konkreten Klageantrag (z. B. Zahlung einer bestimmten Summe, Herausgabe einer Sache, Unterlassung).
+• Eine verständliche Darstellung des Sachverhalts (Klagebegründung).
+• Die Bezeichnung der Beweismittel.'),
+  ('§ 10', 'Zustellung und Klageerwiderung', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Nach Eingang der Klageschrift und Prüfung der formalen Voraussetzungen stellt das Gericht dem Beklagten bzw. dessen Rechtsbeistand die Klageschrift unverzüglich zu.
+
+(2) Dem Beklagten wird eine Frist zur Klageerwiderung von 5 Tagen gesetzt. In dieser hat er anzuzeigen, ob er sich gegen die Klage verteidigt, und seine Erwiderung nebst Beweismitteln einzureichen.'),
+  ('§ 11', 'Güteverhandlung und Vergleich', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Das Gericht soll in jeder Lage des Verfahrens auf eine gütliche Beilegung des Rechtsstreits hinwirken.
+
+(2) Vor der Hauptverhandlung kann eine Güteverhandlung stattfinden. Einigen sich die Parteien, wird ein gerichtlicher Vergleich protokolliert, der vollstreckbar ist.'),
+  ('§ 11a', 'Klagerücknahme', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Der Kläger kann die Klage bis zum Beginn der mündlichen Hauptverhandlung ohne Zustimmung des Beklagten zurücknehmen.
+
+(2) Nach Beginn der mündlichen Hauptverhandlung ist die Klagerücknahme nur mit Zustimmung des Beklagten zulässig.
+
+(3) Im Falle der Klagerücknahme trägt der Kläger grundsätzlich die Kosten des Rechtsstreits, sofern die Parteien keine abweichende Vereinbarung treffen oder das Gericht aus Billigkeitsgründen anders entscheidet.'),
+  ('§ 11b', 'Anerkenntnisurteil', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Erkennt der Beklagte den geltend gemachten Anspruch ganz oder teilweise ausdrücklich an, kann das Gericht insoweit ohne weitere Beweisaufnahme durch Anerkenntnisurteil entscheiden.
+
+(2) Das Anerkenntnisurteil steht einem rechtskräftigen Urteil gleich und ist nach Maßgabe dieser Ordnung vollstreckbar.
+
+(3) Die Kostenentscheidung richtet sich nach § 17 dieser Ordnung.'),
+  ('§ 12', 'Hauptverhandlung und Säumnis', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Das Gericht terminiert die Hauptverhandlung und lädt die Parteien (bzw. deren Anwälte) sowie etwaige Zeugen.
+
+(2) Erscheint die Klägerseite unentschuldigt nicht zum Termin, kann die Klage auf Antrag der Beklagtenseite kostenpflichtig abgewiesen werden.
+
+(3) Erscheint die Beklagtenseite unentschuldigt nicht, kann das Gericht auf Antrag der Klägerseite ein Versäumnisurteil nach Lage der Akten erlassen.'),
+  ('§ 12a', 'Streitgenossenschaft', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Mehrere Personen können gemeinsam als Kläger oder Beklagte an einem Verfahren beteiligt sein, wenn ihre Ansprüche oder Verpflichtungen auf demselben tatsächlichen oder rechtlichen Grund beruhen oder gleichartige Rechts- und Tatsachenfragen gemeinsam zu entscheiden sind.
+
+(2) Das Gericht kann Verfahren mit mehreren Beteiligten zur gemeinsamen Verhandlung und Entscheidung verbinden, sofern dies der Verfahrensökonomie dient und die Rechte der Parteien nicht beeinträchtigt.
+
+(3) Soweit gesetzlich nichts anderes bestimmt ist, wird über die Ansprüche jedes Beteiligten gesondert entschieden.'),
+  ('§ 12b', 'Nebenintervention', '2. Abschnitt – Erstinstanzliches Verfahren', '(1) Eine Person, die ein rechtliches Interesse am Obsiegen einer Partei hat, kann dem Rechtsstreit als Nebenintervenient beitreten.
+
+(2) Der Beitritt ist dem Gericht schriftlich oder elektronisch anzuzeigen und zu begründen.
+
+(3) Der Nebenintervenient darf Angriffs- und Verteidigungsmittel vorbringen sowie Beweisanträge stellen, soweit diese die unterstützte Partei nicht ausdrücklich ablehnt.
+
+(4) Der Beitritt darf den Fortgang des Verfahrens nicht unangemessen verzögern.'),
+  ('§ 13', 'Beweislast', '3. Abschnitt – Beweisrecht', 'Jede Partei hat die für sie günstigen Tatsachen zu beweisen, sofern das Gesetz keine abweichende Regelung oder Beweislastumkehr vorsieht.'),
+  ('§ 14', 'Zulässige Beweismittel', '3. Abschnitt – Beweisrecht', 'Als Beweismittel im Zivilprozess sind insbesondere zugelassen:
+
+• Urkunden und Dokumente: Verträge, Rechnungen, Kontoauszüge, schriftliche Erklärungen.
+• Elektronische Beweismittel: Fotos, Tonaufnahmen, Nachrichtenverläufe, System- und Dienstprotokolle.
+• Zeugenbeweis: Vernehmung von Personen zur Wahrnehmung von Tatsachen.
+• Sachverständigenbeweis: Gutachten staatlich anerkannter oder gerichtlich bestellter Fachexperten.
+• Parteivernehmung: Formelle Anhörung der Parteien selbst.'),
+  ('§ 15', 'Zeugenpflichten und Zeugnisverweigerung', '3. Abschnitt – Beweisrecht', '(1) Ordnungsgemäß geladene Zeugen sind zum Erscheinen und zur wahrheitsgemäßen Aussage vor Gericht verpflichtet.
+
+(2) Angehörigen einer Partei sowie Personen, die sich durch die Aussage selbst oder Angehörige der Gefahr strafrechtlicher Verfolgung aussetzen würden, steht ein Zeugnisverweigerungsrecht zu.
+
+(3) Vorsätzliche Falschaussagen vor Gericht werden nach dem Strafgesetzbuch geahndet.'),
+  ('§ 15a', 'Richterliche Hinweispflicht', '3. Abschnitt – Beweisrecht', '(1) Das Gericht hat darauf hinzuwirken, dass die Parteien sich vollständig und rechtzeitig über alle entscheidungserheblichen Tatsachen erklären sowie unklare oder unvollständige Angaben ergänzen.
+
+(2) Erweist sich ein Vortrag als unzureichend oder bestehen rechtliche oder tatsächliche Zweifel, kann das Gericht den Parteien Hinweise erteilen und ihnen eine angemessene Frist zur Ergänzung ihres Vorbringens setzen.
+
+(3) Die richterliche Hinweispflicht begründet keine Verpflichtung des Gerichts, eine Partei rechtlich zu beraten oder ihre Prozessführung zu übernehmen.'),
+  ('§ 16', 'Urteil und Entscheidung', '4. Abschnitt – Urteil, Kosten und Vollstreckung', '(1) Das Gericht entscheidet durch Urteil über den Klageanspruch.
+
+(2) Das Urteil wird mündlich verkündet oder den Parteien schriftlich/elektronisch zugestellt. Es enthält den Urteilstenor, die Darstellung des Sachverhalts und die rechtliche Begründung.'),
+  ('§ 17', 'Prozesskostenentscheidung', '4. Abschnitt – Urteil, Kosten und Vollstreckung', '(1) Die unterliegende Partei hat die gesamten Kosten des Rechtsstreits zu tragen. Dies umfasst die Gerichtsgebühren (Einklagegebühr) sowie die erstattungsfähigen Anwaltskosten der siegreichen Partei.
+
+(2) Bei teilweisem Obsiegen und Unterliegen werden die Prozesskosten verhältnismäßig geteilt oder gegeneinander aufgehoben.'),
+  ('§ 18', 'Zwangsvollstreckung', '4. Abschnitt – Urteil, Kosten und Vollstreckung', '(1) Aus rechtskräftigen oder vorläufig vollstreckbaren Urteilen und gerichtlichen Vergleichen findet die Zwangsvollstreckung statt.
+
+(2) Die Zwangsvollstreckung (z. B. Konten- oder Vermögenspfändung, Herausgabe von Vermögenswerten) wird durch das Department of Justice oder zuständige Beamte durchgeführt.'),
+  ('§ 19', 'Einstweilige Verfügung und Arrest', '5. Abschnitt – Einstweiliger Rechtsschutz (Eilverfahren)', '(1) Zur Sicherung von Rechten oder zur Vorbeugung drohender schwerer Nachteile kann das Gericht auf Antrag eine einstweilige Verfügung oder einen Arrest erlassen.
+
+(2) In dringenden Fällen kann die Entscheidung ohne vorherige mündliche Verhandlung ergehen.
+
+(3) Der Antragsteller muss den Anspruch sowie die Dringlichkeit (Eilbedürfnis) glaubhaft machen.'),
+  ('§ 20', 'Berufung zum Court of Appeals', '6. Abschnitt – Rechtsmittel und Rechtskraft', '(1) Gegen Urteile des United States District Court ist das Rechtsmittel der Berufung zum Court of Appeals zulässig.
+
+(2) Die Berufung muss innerhalb von 7 Tagen nach Zustellung des Urteils schriftlich oder elektronisch beim Court of Appeals eingelegt und begründet werden.
+
+(3) Der Court of Appeals prüft den Fall in tatsächlicher und rechtlicher Hinsicht neu.'),
+  ('§ 21', 'Revision zum United States Supreme Court', '6. Abschnitt – Rechtsmittel und Rechtskraft', '(1) Gegen Berufungsurteile des Court of Appeals ist das Rechtsmittel der Revision zum United States Supreme Court zulässig, wenn das Verfahren schwerwiegende Rechtsfehler aufweist oder die Sache von verfassungsrechtlicher oder grundsätzlicher Bedeutung ist.
+
+(2) Die Revisionsfrist beträgt 7 Tage ab Zustellung des Berufungsurteils.
+
+(3) Der Supreme Court prüft das Urteil ausschließlich auf rechtliche Fehler.'),
+  ('§ 22', 'Rechtskraft', '6. Abschnitt – Rechtsmittel und Rechtskraft', 'Urteile werden rechtskräftig, wenn kein Rechtsmittel mehr eingelegt werden kann oder die Rechtsmittelfrist von 7 Tagen ungenutzt verstrichen ist.')
+) as v(nummer, titel, abschnitt, text) where lower(g.kuerzel) = lower('ZPO');
 
 -- ---------- LPolG – Landespolizeigesetz (27 Einträge) ----------
 insert into public.gesetzbuecher (kuerzel, titel, beschreibung, farbe, sortierung)
