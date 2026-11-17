@@ -88,8 +88,11 @@ function nwVorgaben() {
     reasoning_max: ["low", "medium", "high"].includes(v.reasoning_max) ? v.reasoning_max : "high",
     gewichte: v.gewichte && typeof v.gewichte === "object" ? v.gewichte : {},
     akten_werkzeuge: v.akten_werkzeuge !== false,
+    kosten_max: Math.max(0, Number(v.kosten_max) || 0),
   };
 }
+// Dollarbeträge: kleine Summen mit mehr Nachkommastellen
+const nwDollar = (n) => (n === null || n === undefined || !isFinite(n)) ? "–" : "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: n < 0.01 ? 4 : n < 1 ? 3 : 2, maximumFractionDigits: n < 0.01 ? 4 : n < 1 ? 3 : 2 });
 const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" ? "schriftsatz" : m);
 const nwGewicht = (m) => (m === "frage" ? 1 : Math.max(1, Math.min(10, Number(nwVorgaben().gewichte[m === "ueberarbeiten" ? "schriftsatz" : m]) || 1)));
 const nwAnrede = () => ({ madam: "Madam", neutral: "" }[ui.nigel.profil.anrede] ?? "Sir");
@@ -135,7 +138,8 @@ async function nwInfoLaden() {
       const r = await db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", state.me.id).gte("zeit", tagesbeginn.toISOString());
       genutzt = r.count || 0;
     }
-    ui.nigel.info = { heute: genutzt || 0, limit: limit.data };
+    const kosten = await db.rpc("ki_kosten_heute");
+    ui.nigel.info = { heute: genutzt || 0, limit: limit.data, kosten: kosten.error ? null : Number(kosten.data) || 0 };
     ui.assistent.info = { ...(ui.assistent.info || {}), heute: genutzt || 0, limit: limit.data };
     scheduleRender();
   } catch (e) {
@@ -267,15 +271,17 @@ async function nwAnfrage(chat, modus, frageText) {
   let ergebnis = null;
   try {
     ergebnis = await nwStream(body, lauf);
-    const { data, error } = await db.from("ki_nachrichten").insert({
+    const zeile = {
       chat_id: chat.id, rolle: "ki", text: ergebnis.antwort, modus,
       quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [] },
       schritte: ergebnis.schritte || [], vorschlag: !!ergebnis.vorschlag, gekuerzt: !!ergebnis.gekuerzt,
-    }).select().single();
+    };
+    let { data, error } = await db.from("ki_nachrichten").insert({ ...zeile, kosten: ergebnis.kosten ?? null }).select().single();
+    if (error && isMissingSchema(error)) ({ data, error } = await db.from("ki_nachrichten").insert(zeile).select().single()); // ohne Update 10
     if (error) throw error;
     (n.nachrichten[chat.id] = n.nachrichten[chat.id] || []).push(data);
     nwSpeichernLeise(chat, { modus: chat.modus }); // nach oben in der Liste
-    n.info = { heute: ergebnis.heute, limit: ergebnis.limit };
+    n.info = { heute: ergebnis.heute, limit: ergebnis.limit, kosten: n.info && n.info.kosten !== null && n.info.kosten !== undefined ? n.info.kosten + (Number(ergebnis.kosten) || 0) : null };
     ui.assistent.info = { ...(ui.assistent.info || {}), heute: ergebnis.heute, limit: ergebnis.limit, modell: ergebnis.modell };
     if (ergebnis.vorschlag && modus === "schriftsatz" && !String(chat.entwurf || "").trim()) {
       // Erster Schriftsatz landet direkt im (leeren) Entwurf
@@ -681,6 +687,7 @@ function nwNachricht(chat, m, i, letzte) {
         ${m.modus ? html`<span class="nw-modus-badge m-${m.modus}">${NW_MODUS_NAME[m.modus] || m.modus}</span>` : ""}
         <time>${zeit}</time>
         ${m.gekuerzt ? html`<span class="badge" title="Die Antwort hat das Längenlimit erreicht">gekürzt</span>` : ""}
+        ${m.kosten !== null && m.kosten !== undefined ? html`<span class="nw-kosten" title="Kosten dieser Anfrage bei OpenRouter">${nwDollar(Number(m.kosten))}</span>` : ""}
       </div>
       ${schritte.length ? html`<details class="nw-schritte"><summary>${anzahl(schritte.length, "Arbeitsschritt", "Arbeitsschritte")}${quellen.length ? ` · ${anzahl(quellen.length, "Paragraph", "Paragraphen")}` : ""}${akten.length ? ` · ${anzahl(akten.length, "Akte", "Akten")}` : ""}</summary>
         <ol>${schritte.map((s) => nwSchrittZeile(s))}</ol></details>` : ""}
@@ -1004,12 +1011,15 @@ function nwEinstellungenZeichnen() {
       <h3>Nutzung heute</h3>
       <div class="ki-nutzung"><span>Anfragen</span><strong>${info ? `${info.heute} / ${info.limit}` : "–"}</strong></div>
       <div class="ki-balken"><span style="width:${info && info.limit ? Math.min(100, Math.round((info.heute / info.limit) * 100)) : 0}%"></span></div>
+      ${info && info.kosten !== null && info.kosten !== undefined ? html`<div class="ki-nutzung"><span>Kosten heute</span><strong>${nwDollar(info.kosten)}</strong></div>` : ""}
+      ${v.kosten_max ? html`<p class="nw-hilfe">Eine Anfrage darf höchstens <strong>${nwDollar(v.kosten_max)}</strong> kosten. Reicht das nicht, schlägt Nigel weniger nach und antwortet kürzer.</p>` : ""}
       <p class="nw-hilfe">${NW_MODI.filter((m) => m.key !== "frage" && nwModusErlaubt(m.key)).map((m) => `${m.label} zählt ${nwGewicht(m.key)}×`).join(" · ")}. Das Tageslimit legt der Admin unter Personal → Ränge & Berechtigungen fest.</p>
     </section>
     ${darf("einstellungen_schreiben") ? html`<section class="nw-block">
       <div class="nw-block-kopf"><h3>Kanzlei-Vorgaben für Nigel</h3><button type="button" class="btn small" data-action="nw-vorgaben">Bearbeiten</button></div>
       <dl class="nw-dl">
         <dt>Freigegebene Modi</dt><dd>${["Rechtsfrage", ...NW_MODI.filter((m) => m.key !== "frage" && v.modi.includes(m.key)).map((m) => m.label)].join(", ")}</dd>
+        <dt>Max. Kosten pro Anfrage</dt><dd>${v.kosten_max ? nwDollar(v.kosten_max) : "kein Limit"}</dd>
         <dt>Höchste Gründlichkeit</dt><dd>${stufen[v.reasoning_max]}</dd>
         <dt>Akten durchsuchen</dt><dd>${v.akten_werkzeuge ? "erlaubt" : "aus"}</dd>
         <dt>Hausregeln</dt><dd>${v.anweisungen ? truncate(v.anweisungen, 140) : "keine"}</dd>
@@ -1339,6 +1349,9 @@ Object.assign(ACTIONS, {
         { name: "modi", label: "Freigegebene Modi (Rechtsfrage ist immer frei)", type: "checks", options: NW_MODI.filter((m) => m.key !== "frage").map((m) => ({ value: m.key, label: m.label })) },
         { type: "section", label: "Gewichtung beim Tageslimit (wie oft eine Anfrage zählt)" },
         ...NW_MODI.filter((m) => m.key !== "frage").map((m) => ({ name: "g_" + m.key, label: m.label, type: "number", third: true, placeholder: "1" })),
+        { type: "section", label: "Kosten" },
+        { name: "kosten_max", label: "Max. Kosten pro Anfrage (US-Dollar)", type: "number", half: true, placeholder: "z. B. 0,05 – leer = kein Limit",
+          help: "Gilt für Handy und Arbeitsbereich. Wird es knapp, schlägt Nigel weniger nach, denkt kürzer und antwortet knapper; reicht es gar nicht, lehnt er die Anfrage ab, statt Geld auszugeben." },
         { name: "reasoning_max", label: "Höchste Gründlichkeit", type: "select", required: true, half: true,
           options: [{ value: "low", label: "Schnell" }, { value: "medium", label: "Gründlich" }, { value: "high", label: "Sehr gründlich" }],
           help: "Begrenzt die Kosten: Mitglieder können nicht gründlicher einstellen." },
@@ -1347,11 +1360,12 @@ Object.assign(ACTIONS, {
           placeholder: "z. B. „Schriftsätze immer mit ‚Sehr geehrte Damen und Herren‘ beginnen.“ oder „Bei Haftsachen immer auf die Frist für die Haftprüfung hinweisen.“",
           help: "Zusätzliche Anweisungen für alle Antworten (max. 4000 Zeichen). Sie ergänzen Nigels Regeln, heben sie aber nicht auf." },
       ],
-      values: { modi: v.modi, reasoning_max: v.reasoning_max, akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen,
+      values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen,
         ...Object.fromEntries(NW_MODI.filter((m) => m.key !== "frage").map((m) => ["g_" + m.key, nwGewicht(m.key)])) },
       onSubmit: async (w) => {
         const gewichte = Object.fromEntries(NW_MODI.filter((m) => m.key !== "frage").map((m) => [m.key, Math.max(1, Math.min(10, Math.round(Number(w["g_" + m.key]) || 1)))]));
-        const nigel = { modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000), gewichte };
+        const kostenMax = Number(w.kosten_max) > 0 ? Math.min(100, Math.round(Number(w.kosten_max) * 10000) / 10000) : 0;
+        const nigel = { kosten_max: kostenMax, modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000), gewichte };
         await updateRow("einstellungen", 1, { daten: { ...((state.einstellungen[0] || {}).daten || {}), nigel } });
         toast("Vorgaben gespeichert");
       },

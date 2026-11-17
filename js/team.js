@@ -299,12 +299,20 @@ async function ladeKiNutzungHeute() {
   const tagesbeginn = new Date();
   tagesbeginn.setUTCHours(0, 0, 0, 0);
   // Mit Update 9 zählen aufwendige Modi (z. B. Gutachten) mehrfach (Spalte gewicht)
-  let { data, error } = await db.from("ki_nutzung").select("user_id,gewicht").gte("zeit", tagesbeginn.toISOString()).limit(10000);
+  // Update 10: auch die Kosten (US-Dollar) je Mitglied
+  let { data, error } = await db.from("ki_nutzung").select("user_id,gewicht,kosten").gte("zeit", tagesbeginn.toISOString()).limit(10000);
+  const mitKosten = !error;
+  if (error) ({ data, error } = await db.from("ki_nutzung").select("user_id,gewicht").gte("zeit", tagesbeginn.toISOString()).limit(10000));
   if (error) ({ data, error } = await db.from("ki_nutzung").select("user_id").gte("zeit", tagesbeginn.toISOString()).limit(10000));
   if (error) { console.warn(error); return; }
   const zaehler = {};
-  for (const z of data) zaehler[z.user_id] = (zaehler[z.user_id] || 0) + (Number(z.gewicht) || 1);
+  const kosten = {};
+  for (const z of data) {
+    zaehler[z.user_id] = (zaehler[z.user_id] || 0) + (Number(z.gewicht) || 1);
+    if (z.kosten !== undefined) kosten[z.user_id] = (kosten[z.user_id] || 0) + (Number(z.kosten) || 0);
+  }
   ui.kiNutzungHeute = zaehler;
+  ui.kiKostenHeute = mitKosten ? kosten : null;
   scheduleRender();
 }
 
@@ -326,7 +334,7 @@ function kiLimitKarte() {
       </div>
       <div class="table-wrap"><table class="table ki-limit-tabelle">
         <thead><tr><th>Mitglied</th><th>Rang</th><th class="center">KI-Recht</th><th class="num">Grundwert</th>
-          <th class="center">Abweichung</th><th class="num">Wirksam / Tag</th>${admin ? html`<th class="num">Heute genutzt</th>` : ""}</tr></thead>
+          <th class="center">Abweichung</th><th class="num">Wirksam / Tag</th>${admin ? html`<th class="num">Heute genutzt</th><th class="num">Kosten heute</th>` : ""}</tr></thead>
         <tbody>${liste.map((p) => {
           const r = rangVon(p);
           const ki = darfKiNutzer(p);
@@ -343,7 +351,8 @@ function kiLimitKarte() {
               value="${offset}" data-change="ki-limit-offset" data-id="${p.user_id}" aria-label="${personName(p.user_id)}: Abweichung vom Grundwert"
               title="Abweichung vom Grundwert des Rangs (+/−)" ${admin ? "" : "disabled"}></td>
             <td class="num"><strong>${limit}</strong>${offset ? html` <span class="small ${offset > 0 ? "ok-text" : "danger-text"}">(${offset > 0 ? "+" : ""}${offset})</span>` : ""}</td>
-            ${admin ? html`<td class="num ${ki && heute >= limit ? "danger-text" : ""}">${ui.kiNutzungHeute ? heute : "…"}</td>` : ""}
+            ${admin ? html`<td class="num ${ki && heute >= limit ? "danger-text" : ""}">${ui.kiNutzungHeute ? heute : "…"}</td>
+              <td class="num">${ui.kiKostenHeute ? (ui.kiKostenHeute[p.user_id] ? "$" + ui.kiKostenHeute[p.user_id].toFixed(3) : "–") : ui.kiNutzungHeute ? "–" : "…"}</td>` : ""}
           </tr>`;
         })}</tbody>
       </table></div>
