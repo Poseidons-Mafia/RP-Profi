@@ -7,21 +7,30 @@
 //       Tageslimit des Mitglieds (Grundwert des Rangs + Abweichung),
 //    2. liest die Daten MIT DEM LOGIN DES MITGLIEDS (es gelten also
 //       dieselben Leserechte wie im Aktensystem),
-//    3. fragt Google Gemini. Die KI kann dabei zwei Werkzeuge nutzen:
+//    3. fragt die KI – über OpenRouter (wenn ein Schlüssel hinterlegt ist)
+//       oder Google Gemini. Die KI kann dabei zwei Werkzeuge nutzen:
 //         gesetze_finden      – Gesetzbücher finden
 //         paragraphen_finden  – einzelne Paragraphen im Wortlaut finden
 //    4. gibt die Antwort als Markdown zurück (höchstens 4000 Zeichen;
 //       das interne "Nachdenken" des Modells zählt nicht mit).
 //
 //  Secrets (Supabase → Edge Functions → Secrets):
-//    GEMINI_API_KEY   Schlüssel aus Google AI Studio (Pflicht)
-//    GEMINI_MODELL    optional, Standard "gemini-3.5-flash-lite"
-//    KI_TAGESLIMIT    optional, nur noch Notlösung, falls Update 8 fehlt
+//    OPENROUTER_API_KEY   Schlüssel von openrouter.ai – ist er gesetzt, wird OpenRouter genutzt
+//    OPENROUTER_MODELL    optional, Modell-ID(s), mehrere mit Komma = Ausweichliste
+//                         (Standard siehe OR_STANDARD unten)
+//    KI_REASONING         optional, "low" | "medium" | "high" (Standard "medium")
+//    GEMINI_API_KEY       Schlüssel aus Google AI Studio – Gratis-Rückfall, falls OpenRouter ausfällt
+//    GEMINI_MODELL        optional, Standard "gemini-3.5-flash-lite"
+//    KI_ANBIETER          optional, "gemini" erzwingt Gemini auch mit OpenRouter-Schlüssel
+//    KI_TAGESLIMIT        optional, nur noch Notlösung, falls Update 8 fehlt
 // =============================================================
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
-const MODELL = Deno.env.get("GEMINI_MODELL") || "gemini-3.5-flash-lite";
+const GEMINI_MODELL = Deno.env.get("GEMINI_MODELL") || "gemini-3.5-flash-lite";
+const OR_STANDARD = "anthropic/claude-sonnet-4.5,openai/gpt-5,google/gemini-2.5-pro";
+const OR_MODELLE = (Deno.env.get("OPENROUTER_MODELL") || OR_STANDARD).split(",").map((m) => m.trim()).filter(Boolean);
+const OR_REASONING = ["low", "medium", "high"].includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "medium";
 const TAGESLIMIT_NOTFALL = Number(Deno.env.get("KI_TAGESLIMIT") || 100);
 const MAX_NACHRICHTEN = 20;
 const MAX_ZEICHEN_EINGABE = 8000;
@@ -40,18 +49,27 @@ function antwort(body: unknown, status = 200) {
 }
 const fehler = (text: string, status = 400) => antwort({ fehler: text }, status);
 
+// Fehler der KI mit Text für das Mitglied und HTTP-Status
+class KiFehler extends Error {
+  constructor(public text: string, public status = 502) { super(text); }
+}
+
 type Nachricht = { rolle: "nutzer" | "ki"; text: string };
 // deno-lint-ignore no-explicit-any
 type Zeile = Record<string, any>;
 type Teil = { text?: string; thought?: boolean; thoughtSignature?: string; functionCall?: { id?: string; name: string; args?: Zeile }; functionResponse?: unknown };
 type Inhalt = { role: "user" | "model"; parts: Teil[] };
+type Ergebnis = { text: string; tokensEin: number; tokensAus: number; modell: string; anbieter: string };
+type Werkzeug = (name: string, args: Zeile) => Promise<Zeile>;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return fehler("Nur POST", 405);
 
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
-  if (!apiKey) return fehler("Der KI-Schlüssel fehlt noch (Secret GEMINI_API_KEY in Supabase).", 500);
+  const geminiKey = Deno.env.get("GEMINI_API_KEY") || "";
+  const orKey = Deno.env.get("OPENROUTER_API_KEY") || "";
+  const nutzeOpenRouter = !!orKey && (Deno.env.get("KI_ANBIETER") || "").toLowerCase() !== "gemini";
+  if (!orKey && !geminiKey) return fehler("Der KI-Schlüssel fehlt noch (Secret OPENROUTER_API_KEY oder GEMINI_API_KEY in Supabase).", 500);
 
   // ---------- Anmeldung ----------
   const auth = req.headers.get("Authorization") || "";
@@ -100,17 +118,135 @@ Deno.serve(async (req) => {
     console.error(e);
     return fehler("Die Daten für die KI konnten nicht geladen werden.", 500);
   }
+  const system = SYSTEM + "\n\n" + kontext;
 
-  // ---------- Gemini fragen (mit Werkzeugen) ----------
-  const inhalte: Inhalt[] = nachrichten.map((n) => ({ role: n.rolle === "ki" ? "model" : "user", parts: [{ text: n.text }] }));
-  const nachgeschlagen: string[] = [];
+  // ---------- KI fragen: OpenRouter, bei Ausfall Gemini ----------
+  let nachgeschlagen: string[] = [];
+  const werkzeug: Werkzeug = (name, args) => werkzeugAusfuehren(db, name, args, nachgeschlagen);
+  let ergebnis: Ergebnis;
+  try {
+    if (nutzeOpenRouter) {
+      try {
+        ergebnis = await frageOpenRouter(orKey, system, nachrichten, werkzeug);
+      } catch (e) {
+        if (!geminiKey) throw e;
+        console.error("OpenRouter fehlgeschlagen, weiche auf Gemini aus:", e instanceof KiFehler ? e.text : e);
+        nachgeschlagen = [];
+        ergebnis = await frageGemini(geminiKey, system, nachrichten, (name, args) => werkzeugAusfuehren(db, name, args, nachgeschlagen));
+      }
+    } else {
+      ergebnis = await frageGemini(geminiKey, system, nachrichten, werkzeug);
+    }
+  } catch (e) {
+    if (e instanceof KiFehler) return fehler(e.text, e.status);
+    console.error(e);
+    return fehler("Die KI hat einen Fehler gemeldet. Bitte erneut versuchen.", 502);
+  }
+
+  const gekuerzt = ergebnis.text.length > MAX_ANTWORT;
+  const text = aufLimitKuerzen(ergebnis.text, MAX_ANTWORT);
+
+  await db.from("ki_nutzung").insert({ user_id: userId, akte_id: akteId, tokens_ein: ergebnis.tokensEin || null, tokens_aus: ergebnis.tokensAus || null });
+
+  return antwort({
+    antwort: text, format: "markdown", gekuerzt, zeichen: text.length, max_zeichen: MAX_ANTWORT,
+    nachgeschlagen: [...new Set(nachgeschlagen)].slice(0, 12),
+    modell: ergebnis.modell, anbieter: ergebnis.anbieter, heute: (heute ?? 0) + 1, limit,
+  });
+});
+
+
+// =============================================================
+//  OpenRouter (OpenAI-kompatibel, viele Modelle)
+// =============================================================
+async function frageOpenRouter(key: string, system: string, nachrichten: Nachricht[], werkzeug: Werkzeug): Promise<Ergebnis> {
+  const verlauf: Zeile[] = [
+    { role: "system", content: system },
+    ...nachrichten.map((n) => ({ role: n.rolle === "ki" ? "assistant" : "user", content: n.text })),
+  ];
+  const tools = WERKZEUGE.map((w) => ({ type: "function", function: w }));
+  let modelle = [...OR_MODELLE];   // Ausweichliste – nicht verfügbare Modelle fallen heraus
   let tokensEin = 0, tokensAus = 0;
-  let text = "";
+
+  for (let runde = 0; runde < MAX_RUNDEN; runde++) {
+    const letzteRunde = runde === MAX_RUNDEN - 1;
+    let daten: Zeile | null = null;
+    while (!daten) {
+      const modell = modelle[0];
+      if (!modell) throw new KiFehler("Keines der eingestellten OpenRouter-Modelle ist verfügbar (Secret OPENROUTER_MODELL prüfen).");
+      let res: Response;
+      try {
+        res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Title": "Wiwang Law Aktensystem" },
+          body: JSON.stringify({
+            model: modell,
+            messages: verlauf,
+            tools,
+            // In der letzten Runde keine Werkzeuge mehr – dann muss die KI antworten
+            tool_choice: letzteRunde ? "none" : "auto",
+            reasoning: { effort: OR_REASONING },
+          }),
+        });
+      } catch (e) {
+        console.error(e);
+        throw new KiFehler("OpenRouter ist gerade nicht erreichbar.");
+      }
+      const json = await res.json().catch(() => ({}));
+      const meldung = String(json?.error?.message || "");
+      if (!res.ok || json?.error) {
+        console.error("OpenRouter", modell, res.status, JSON.stringify(json).slice(0, 2000));
+        // Modell unbekannt / kann keine Werkzeuge → nächstes Modell der Liste (nur vor der ersten Antwort)
+        if (runde === 0 && [400, 404].includes(res.status) && /model|tool|endpoint|not.*(found|exist|valid)/i.test(meldung)) {
+          modelle = modelle.slice(1);
+          continue;
+        }
+        if (res.status === 401) throw new KiFehler("Der OpenRouter-Schlüssel ist ungültig (Secret OPENROUTER_API_KEY prüfen).");
+        if (res.status === 402) throw new KiFehler("Das OpenRouter-Guthaben ist aufgebraucht (Credits aufladen oder Limit des Schlüssels erhöhen).");
+        if (res.status === 429) throw new KiFehler("Zu viele Anfragen an die KI – bitte gleich noch einmal versuchen.", 429);
+        throw new KiFehler("Die KI hat einen Fehler gemeldet. Bitte erneut versuchen.");
+      }
+      daten = json;
+    }
+    tokensEin += daten?.usage?.prompt_tokens ?? 0;
+    tokensAus += daten?.usage?.completion_tokens ?? 0;
+    const wahl = daten?.choices?.[0];
+    const msg = wahl?.message;
+
+    if (msg?.tool_calls?.length && !letzteRunde) {
+      // Nachricht unverändert zurückgeben (enthält ggf. reasoning_details, die manche Modelle brauchen)
+      verlauf.push(msg);
+      for (const call of msg.tool_calls) {
+        let args: Zeile = {};
+        try { args = JSON.parse(call.function?.arguments || "{}"); } catch { /* ungültige Argumente → leer */ }
+        const ergebnis = await werkzeug(call.function?.name || "", args);
+        verlauf.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(ergebnis) });
+      }
+      modelle = [modelle[0]];  // im laufenden Gespräch beim selben Modell bleiben
+      continue;
+    }
+
+    // Nur der sichtbare Antworttext – das Reasoning steht getrennt in msg.reasoning und zählt nicht mit
+    const inhalt = msg?.content;
+    const text = (Array.isArray(inhalt) ? inhalt.map((t: Zeile) => t?.text || "").join("") : String(inhalt || "")).trim();
+    if (!text) throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${wahl?.finish_reason || "unbekannt"}).`);
+    return { text, tokensEin, tokensAus, modell: daten?.model || modelle[0], anbieter: "openrouter" };
+  }
+  throw new KiFehler("Die KI hat keine Antwort geliefert.");
+}
+
+
+// =============================================================
+//  Google Gemini (Gratis-Kontingent)
+// =============================================================
+async function frageGemini(key: string, system: string, nachrichten: Nachricht[], werkzeug: Werkzeug): Promise<Ergebnis> {
+  const inhalte: Inhalt[] = nachrichten.map((n) => ({ role: n.rolle === "ki" ? "model" : "user", parts: [{ text: n.text }] }));
+  let tokensEin = 0, tokensAus = 0;
 
   for (let runde = 0; runde < MAX_RUNDEN; runde++) {
     const letzteRunde = runde === MAX_RUNDEN - 1;
     const anfrage = {
-      systemInstruction: { parts: [{ text: SYSTEM + "\n\n" + kontext }] },
+      systemInstruction: { parts: [{ text: system }] },
       contents: inhalte,
       tools: [{ functionDeclarations: WERKZEUGE }],
       // In der letzten Runde keine Werkzeuge mehr – dann muss die KI antworten
@@ -118,21 +254,21 @@ Deno.serve(async (req) => {
     };
     let res: Response;
     try {
-      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODELL)}:generateContent`, {
+      res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODELL)}:generateContent`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify(anfrage),
       });
     } catch (e) {
       console.error(e);
-      return fehler("Google ist gerade nicht erreichbar.", 502);
+      throw new KiFehler("Google ist gerade nicht erreichbar.");
     }
     const daten = await res.json().catch(() => ({}));
     if (!res.ok) {
       console.error("Gemini", res.status, JSON.stringify(daten).slice(0, 2000));
-      if (res.status === 429) return fehler("Das Gratis-Kontingent von Google ist gerade ausgeschöpft. Bitte in einer Minute (oder morgen) erneut versuchen.", 429);
-      if (res.status === 400 || res.status === 403) return fehler("Google hat die Anfrage abgelehnt (Schlüssel oder Modell prüfen).", 502);
-      return fehler("Die KI hat einen Fehler gemeldet. Bitte erneut versuchen.", 502);
+      if (res.status === 429) throw new KiFehler("Das Gratis-Kontingent von Google ist gerade ausgeschöpft. Bitte in einer Minute (oder morgen) erneut versuchen.", 429);
+      if (res.status === 400 || res.status === 403) throw new KiFehler("Google hat die Anfrage abgelehnt (Schlüssel oder Modell prüfen).");
+      throw new KiFehler("Die KI hat einen Fehler gemeldet. Bitte erneut versuchen.");
     }
     tokensEin += daten?.usageMetadata?.promptTokenCount ?? 0;
     tokensAus += daten?.usageMetadata?.candidatesTokenCount ?? 0;
@@ -147,7 +283,7 @@ Deno.serve(async (req) => {
       const ergebnisse: Teil[] = [];
       for (const p of aufrufe) {
         const aufruf = p.functionCall!;
-        const ergebnis = await werkzeugAusfuehren(db, aufruf.name, aufruf.args || {}, nachgeschlagen);
+        const ergebnis = await werkzeug(aufruf.name, aufruf.args || {});
         ergebnisse.push({ functionResponse: { ...(aufruf.id ? { id: aufruf.id } : {}), name: aufruf.name, response: ergebnis } });
       }
       inhalte.push({ role: "user", parts: ergebnisse });
@@ -155,26 +291,15 @@ Deno.serve(async (req) => {
     }
 
     // Nur der sichtbare Antworttext – Gedanken (Reasoning) zählen nicht mit
-    text = teile.filter((p) => !p.thought && typeof p.text === "string").map((p) => p.text).join("").trim();
+    const text = teile.filter((p) => !p.thought && typeof p.text === "string").map((p) => p.text).join("").trim();
     if (!text) {
       const grund = kandidat?.finishReason || daten?.promptFeedback?.blockReason || "unbekannt";
-      return fehler(`Die KI hat keine Antwort geliefert (Grund: ${grund}).`, 502);
+      throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${grund}).`);
     }
-    break;
+    return { text, tokensEin, tokensAus, modell: GEMINI_MODELL, anbieter: "gemini" };
   }
-  if (!text) return fehler("Die KI hat keine Antwort geliefert.", 502);
-  const gekuerzt = text.length > MAX_ANTWORT;
-  text = aufLimitKuerzen(text, MAX_ANTWORT);
-
-  await db.from("ki_nutzung").insert({ user_id: userId, akte_id: akteId, tokens_ein: tokensEin || null, tokens_aus: tokensAus || null });
-
-  return antwort({
-    antwort: text, format: "markdown", gekuerzt, zeichen: text.length, max_zeichen: MAX_ANTWORT,
-    nachgeschlagen: [...new Set(nachgeschlagen)].slice(0, 12),
-    modell: MODELL, heute: (heute ?? 0) + 1, limit,
-  });
-});
-
+  throw new KiFehler("Die KI hat keine Antwort geliefert.");
+}
 
 // =============================================================
 //  Antwortlänge: höchstens MAX_ANTWORT Zeichen (sichtbarer Text)

@@ -6,7 +6,7 @@
 //    zugeklappt  – kompakter Chat auf dem Außendisplay
 //    aufgeklappt – links Akte & Schnellaktionen, rechts der Chat
 //  Die Seite dahinter bleibt bedienbar. Die KI läuft über die
-//  Supabase Edge Function "ki-assistent" (Google Gemini) und beantwortet
+//  Supabase Edge Function "ki-assistent" (OpenRouter, sonst Google Gemini) und beantwortet
 //  ausschließlich Rechtsfragen. Dabei schlägt sie mit Werkzeugen in den
 //  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
@@ -374,7 +374,7 @@ function kiPanelZeichnen(akte, akten) {
     <div class="ki-panel-fuss">
       <div class="ki-nutzung"><span>Heute genutzt</span><strong>${s.info ? `${s.info.heute} / ${s.info.limit}` : "–"}</strong></div>
       <div class="ki-balken"><span style="width:${prozent}%"></span></div>
-      <p class="ki-leise">Nur Rechtsfragen · Antworten max. 4000 Zeichen · bitte prüfen.</p>
+      <p class="ki-leise">${s.info && s.info.modell ? html`Modell: ${s.info.modell} · ` : ""}Nur Rechtsfragen · max. 4000 Zeichen · bitte prüfen.</p>
     </div>`);
 }
 
@@ -608,7 +608,7 @@ async function kiFragen(text) {
       throw new Error(msg);
     }
     s.verlauf.push({ rolle: "ki", text: data.antwort, zeit: new Date().toISOString(), quellen: data.nachgeschlagen || [], gekuerzt: !!data.gekuerzt });
-    s.info = { heute: data.heute, limit: data.limit, modell: data.modell };
+    s.info = { heute: data.heute, limit: data.limit, modell: data.modell, anbieter: data.anbieter };
   } catch (e) {
     console.error(e);
     s.verlauf.pop(); // Frage zurück ins Eingabefeld, damit nichts verloren geht

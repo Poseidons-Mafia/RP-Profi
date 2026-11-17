@@ -57,7 +57,8 @@ und Änderungen erscheinen bei allen sofort.
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
-- **KI-Assistent für Rechtsfragen** (Google Gemini 3.5 Flash-Lite über API-Schlüssel, Gratis-Kontingent): beantwortet
+- **KI-Assistent für Rechtsfragen** (über **OpenRouter** mit frei wählbarem Modell; ohne OpenRouter-Schlüssel bzw. bei Ausfall
+  Google Gemini 3.5 Flash-Lite im Gratis-Kontingent): beantwortet
   **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
   Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
@@ -92,23 +93,30 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 
 ## KI-Assistent einrichten
 
-1. Auf <https://aistudio.google.com> mit einem Google-Konto anmelden → **Get API key** → **Create API key**.
-2. Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) in Supabase anlegen
-   (Dashboard → **Edge Functions** → Name `ki-assistent`, Inhalt von `index.ts` einfügen, **Verify JWT aus** –
-   die Funktion prüft die Anmeldung selbst).
-3. Unter **Edge Functions → Secrets** das Secret `GEMINI_API_KEY` mit dem Schlüssel anlegen.
-   Optional: `GEMINI_MODELL` (Standard `gemini-3.5-flash-lite`).
-4. Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
-   auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
-   (z. B. −20 oder +50; ein wirksames Limit von 0 sperrt die KI für dieses Mitglied). Gespeichert wird der Grundwert in
-   `raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`.
-5. Unter **Gesetze** die Gesetzbücher anlegen und die Paragraphen per Massenimport einfügen – nur was dort steht,
-   kann die KI nachschlagen.
+Die Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) wird in Supabase unter
+**Edge Functions** als `ki-assistent` angelegt (**Verify JWT aus** – die Funktion prüft die Anmeldung selbst).
+Welche KI antwortet, hängt von den **Secrets** ab (Supabase → Edge Functions → Secrets):
 
-Hinweise: Im Gratis-Tarif begrenzt Google die Anfragen (ca. 10–15 pro Minute, ca. 500 pro Tag für das ganze Projekt)
-und darf die Eingaben zum Verbessern seiner Modelle nutzen. Die Inhalte der gewählten Akte, der Strafkatalog und die
-nachgeschlagenen Paragraphen werden dafür an Google geschickt. Schlägt die KI nach, braucht eine Frage mehrere
-Anfragen an Google (zählt beim eigenen Tageslimit trotzdem nur einmal).
+| Secret | Bedeutung |
+|---|---|
+| `OPENROUTER_API_KEY` | Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit). Ist er gesetzt, antwortet OpenRouter. |
+| `OPENROUTER_MODELL` | optional: Modell-ID von <https://openrouter.ai/models> (Filter „Tools“), mehrere mit Komma = Ausweichliste. Standard: `anthropic/claude-sonnet-4.5,openai/gpt-5,google/gemini-2.5-pro` |
+| `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt |
+| `GEMINI_API_KEY` | Schlüssel aus <https://aistudio.google.com> (Gratis). Wird genutzt, wenn kein OpenRouter-Schlüssel da ist – und springt automatisch ein, wenn OpenRouter ausfällt (z. B. Guthaben leer). |
+| `GEMINI_MODELL` | optional, Standard `gemini-3.5-flash-lite` |
+| `KI_ANBIETER` | optional: `gemini` erzwingt Gemini, auch wenn ein OpenRouter-Schlüssel hinterlegt ist |
+
+Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
+auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
+(z. B. −20 oder +50; ein wirksames Limit von 0 sperrt die KI für dieses Mitglied). Gespeichert wird der Grundwert in
+`raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`. Unter **Gesetze** die Gesetzbücher anlegen
+und die Paragraphen per Massenimport einfügen – nur was dort steht, kann die KI nachschlagen.
+
+Hinweise: OpenRouter rechnet pro Token ab. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
+zählt beim Tageslimit aber nur einmal – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
+OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
+trainieren. Gemini darf im Gratis-Tarif die Eingaben zum Training nutzen. An den KI-Anbieter gehen die gewählte Akte,
+der Strafkatalog und die nachgeschlagenen Paragraphen.
 
 ## Gut zu wissen
 
