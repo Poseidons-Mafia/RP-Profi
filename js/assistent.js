@@ -38,6 +38,7 @@ const KI_ICON = {
   neu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h8M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   aufklappen: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="8.5" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="5" width="8.5" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 12h3.5M6.8 10.2 8.6 12l-1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" transform="rotate(180 6.75 12)"/></svg>',
   zuklappen: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="12" y="5" width="8.5" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 12h6M7.5 9.5 10 12l-2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  arbeitsbereich: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 8.5h18M8.5 8.5v11" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12.5 15.5 17 11M13.8 11H17v3.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   kopieren: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 15V6a2 2 0 0 1 2-2h8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   akte: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A1.5 1.5 0 0 1 5.5 5H10l2 2h6.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   // Eigenes Logo (Zitrusscheibe) für die fiktive Marke iFruit
@@ -111,6 +112,7 @@ kiChatBlock.innerHTML = `
       </label>
     </div>
     <div class="ki-appbar-btns">
+      <button type="button" class="ki-icon-btn ki-wechsel-btn" data-action="ki-arbeitsbereich" data-ki="wechsel-btn" title="Im Arbeitsbereich weiterarbeiten – Chat und Eingabe kommen mit" aria-label="Im Arbeitsbereich weiterarbeiten">${KI_ICON.arbeitsbereich}</button>
       <button type="button" class="ki-icon-btn ki-klapp-btn" data-action="ki-klappen" data-ki="klapp-btn">${KI_ICON.aufklappen}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Einstecken">${KI_ICON.zu}</button>
@@ -332,6 +334,7 @@ function kiAktualisieren() {
   kiPanelZeichnen(akte, akten);
   kiChatZeichnen();
   kiChatBlock.querySelector(".ki-senden").disabled = s.laedt;
+  kiEl("wechsel-btn").disabled = s.laedt;
 }
 
 // Linkes Innendisplay: Kontext (Akte, Details, Nutzung)
@@ -416,6 +419,10 @@ function kiChatZeichnen() {
       <li>§ ${state.gesetzbuecher.length} ${state.gesetzbuecher.length === 1 ? "Gesetzbuch" : "Gesetzbücher"} · ${state.gesetze.length} Delikte</li>
       ${akte ? html`<li>${new SafeHtml(KI_ICON.akte)}Akte ${akte.number}</li>` : ""}
     </ul>
+    <button type="button" class="ki-wechsel-karte" data-action="ki-arbeitsbereich">
+      ${new SafeHtml(KI_ICON.arbeitsbereich)}
+      <span><strong>Lieber am Schreibtisch, Sir?</strong>Im Arbeitsbereich weiterarbeiten – Ihre Eingabe${akte ? " und die Akte" : ""} nehme ich mit.</span>
+    </button>
   </div>`;
   const inhalt = html`
     ${s.verlauf.length ? html`<div class="ki-tag">Heute</div>` : leer}

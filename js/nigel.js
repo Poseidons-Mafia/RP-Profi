@@ -523,6 +523,13 @@ VIEWS.nigel.aktualisieren = (route) => {
     nwFeld("nw-para-suche").value = n.paraQ = "";
     nwAmEnde = true;
     if (window.innerWidth <= 900) n.ansicht = "chat";
+    if (n.uebergabe != null) {
+      const feld = nwFeld("nw-text");
+      if (n.uebergabe || !feld.value.trim()) feld.value = n.uebergabe;
+      n.uebergabe = null;
+      requestAnimationFrame(nwTextHoehe);
+      setTimeout(() => { feld.focus({ preventScroll: true }); feld.setSelectionRange(feld.value.length, feld.value.length); }, 40);
+    }
   }
 
   wurzel.dataset.ansicht = n.ansicht;
@@ -1082,11 +1089,22 @@ function nwVorlageFormular(v, art) {
   });
 }
 
-// Chat vom iFruit-Handy in den Arbeitsbereich übernehmen
+// Vom iFruit-Handy in den Arbeitsbereich wechseln: Chat, Akte und das, was gerade im
+// Eingabefeld steht, kommen mit – man arbeitet nahtlos weiter.
 async function nwVomHandy() {
   const s = ui.assistent;
-  if (!s.verlauf.length) return;
+  if (s.laedt) return toast("Einen Moment, Sir – Nigel antwortet noch auf dem Handy.", "error");
   if (ui.nigel.fehlt) return toast("Dafür fehlt noch das Datenbank-Update 9.", "error");
+  const eingabe = kiTextarea.value;
+  if (!s.verlauf.length) {
+    // Noch kein Chat: neue Aufgabe mit Akte und Eingabe
+    kiTextarea.value = "";
+    kiTextareaHoehe();
+    ui.nigel.uebergabe = eingabe;
+    if (s.offen) kiSchliessen();
+    nwNeueAufgabe({ akte_ids: s.akteId ? [s.akteId] : [] });
+    return;
+  }
   try {
     const chat = { titel: nwChatTitel((s.verlauf.find((m) => m.rolle === "nutzer") || {}).text), modus: "frage", akte_ids: s.akteId ? [s.akteId] : [], paragraph_ids: [], notiz: "", entwurf: "", angeheftet: false };
     const { data, error } = await db.from("ki_chats").insert(chat).select().single();
@@ -1101,6 +1119,9 @@ async function nwVomHandy() {
     ui.nigel.nachrichten[data.id] = msgs.sort((a, b) => a.created_at.localeCompare(b.created_at));
     s.verlauf = [];
     kiSpeichern();
+    if (kiTextarea.value === eingabe) { kiTextarea.value = ""; kiTextareaHoehe(); }
+    ui.nigel.uebergabe = eingabe;
+    ui.nigel.angezeigt = undefined;
     if (s.offen) kiSchliessen();
     toast("Handy-Chat übernommen");
     go("nigel/" + data.id);
@@ -1123,7 +1144,7 @@ Object.assign(ACTIONS, {
   "nw-neu": () => nwNeueAufgabe(),
   "nw-mit-akte": (d) => nwNeueAufgabe({ akte_ids: [d.id] }),
   "nw-vom-handy": () => nwVomHandy(),
-  "ki-arbeitsbereich": () => { if (ui.assistent.verlauf.length) nwVomHandy(); else { kiSchliessen(); nwNeueAufgabe({ akte_ids: ui.assistent.akteId ? [ui.assistent.akteId] : [] }); } },
+  "ki-arbeitsbereich": () => nwVomHandy(),
   "nw-ansicht": (d) => { ui.nigel.ansicht = d.ansicht; scheduleRender(); },
   "nw-panel": () => {
     if (window.innerWidth <= 900) ui.nigel.ansicht = ui.nigel.ansicht === "panel" ? "chat" : "panel";
