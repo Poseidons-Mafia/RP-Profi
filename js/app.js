@@ -38,6 +38,7 @@ const NAV = [
   { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
   { page: "gesetze", label: "Gesetze", href: "#/gesetze" },
   { page: "gesetzbuch", label: "Strafkatalog", href: "#/gesetzbuch" },
+  { page: "nigel", label: "Nigel", href: "#/nigel" },
   { page: "team", label: "Personal", href: "#/team" },
 ];
 
@@ -46,6 +47,7 @@ const NAV = [
 const SEITEN_RECHTE = {
   akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
   rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen", gesetze: "gesetzbuch_lesen",
+  nigel: "ki_assistent",
 };
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
@@ -67,7 +69,9 @@ const AKTIONS_RECHTE = {
   "personalakte-bearbeiten": "personal_schreiben", "vermerk-neu": "personal_schreiben", "vermerk-loeschen": "personal_schreiben",
   "einstellungen-bearbeiten": "einstellungen_schreiben",
   "ki-oeffnen": "ki_assistent", "ki-klappen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
-  "ki-in-verlauf": "akten_schreiben",
+  "ki-in-verlauf": "akten_schreiben", "ki-arbeitsbereich": "ki_assistent", "nw-mit-akte": "ki_assistent",
+  "nw-in-akte": "akten_schreiben", "nw-entwurf-in-akte": "akten_schreiben", "nw-aufgaben": "termine_schreiben",
+  "nw-vorgaben": "einstellungen_schreiben",
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
   "ablauf-starten": "termine_schreiben", "wiedervorlage": "termine_schreiben",
   "ablauf-neu": "einstellungen_schreiben", "ablauf-bearbeiten": "einstellungen_schreiben",
@@ -145,10 +149,16 @@ function render() {
   const view = !erlaubt(SEITEN_RECHTE[route.page])
     ? () => html`<div class="page"><div class="card empty-state"><h2>Kein Zugriff</h2><p>Dein Rang erlaubt es nicht, diesen Bereich zu sehen.</p><a class="btn" href="#/">Zur Übersicht</a></div></div>`
     : VIEWS[route.page] || VIEWS.uebersicht;
+  // Dauerhafte Seiten (view.dauerhaft, z. B. Nigels Arbeitsbereich) werden nur beim Betreten
+  // aufgebaut und danach von view.aktualisieren() in Teilen erneuert – Eingaben bleiben erhalten.
+  const behalten = view.dauerhaft && main.dataset.view === route.page && main.firstElementChild;
   try {
-    main.innerHTML = String(view(route));
+    if (!behalten) main.innerHTML = String(view(route));
+    main.dataset.view = view.dauerhaft ? route.page : "";
+    if (view.aktualisieren) view.aktualisieren(route);
   } catch (e) {
     console.error(e);
+    main.dataset.view = "";
     main.innerHTML = String(html`<div class="page"><div class="empty-state">
       <h2>Hier ist etwas schiefgelaufen</h2><p>${e.message}</p><a class="btn" href="#/">Zur Übersicht</a></div></div>`);
   }

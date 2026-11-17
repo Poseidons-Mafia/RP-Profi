@@ -298,10 +298,12 @@ async function ladeKiNutzungHeute() {
   ui.kiNutzungHeute = {};
   const tagesbeginn = new Date();
   tagesbeginn.setUTCHours(0, 0, 0, 0);
-  const { data, error } = await db.from("ki_nutzung").select("user_id").gte("zeit", tagesbeginn.toISOString()).limit(10000);
+  // Mit Update 9 zählen aufwendige Modi (z. B. Gutachten) mehrfach (Spalte gewicht)
+  let { data, error } = await db.from("ki_nutzung").select("user_id,gewicht").gte("zeit", tagesbeginn.toISOString()).limit(10000);
+  if (error) ({ data, error } = await db.from("ki_nutzung").select("user_id").gte("zeit", tagesbeginn.toISOString()).limit(10000));
   if (error) { console.warn(error); return; }
   const zaehler = {};
-  for (const z of data) zaehler[z.user_id] = (zaehler[z.user_id] || 0) + 1;
+  for (const z of data) zaehler[z.user_id] = (zaehler[z.user_id] || 0) + (Number(z.gewicht) || 1);
   ui.kiNutzungHeute = zaehler;
   scheduleRender();
 }

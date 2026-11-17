@@ -12,6 +12,8 @@
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
 //  Recht: "ki_assistent". Tageslimit: Grundwert des Rangs + Abweichung
 //  des Mitglieds (Personal → Ränge & Berechtigungen).
+//  Für größere Aufgaben gibt es Nigels Arbeitsbereich (js/nigel.js, #/nigel);
+//  das Handy bleibt das schnelle Nachschlage-Werkzeug.
 // =============================================================
 
 const KI_SPEICHER = "wiwang-ki";
@@ -175,12 +177,16 @@ async function kiInfoLaden(userId) {
   try {
     const tagesbeginn = new Date();
     tagesbeginn.setUTCHours(0, 0, 0, 0);
-    const [limit, nutzung] = await Promise.all([
-      db.rpc("ki_tageslimit"),
-      db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("zeit", tagesbeginn.toISOString()),
-    ]);
-    if (limit.error || nutzung.error || ui.assistent.userId !== userId) return;
-    ui.assistent.info = { ...(ui.assistent.info || {}), heute: nutzung.count || 0, limit: limit.data };
+    // Heute verbraucht: gewichtete Summe (Update 9), sonst Anzahl der Anfragen
+    const [limit, summe] = await Promise.all([db.rpc("ki_tageslimit"), db.rpc("ki_heute_genutzt")]);
+    let heute = summe.data;
+    if (summe.error) {
+      const nutzung = await db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("zeit", tagesbeginn.toISOString());
+      if (nutzung.error) return;
+      heute = nutzung.count;
+    }
+    if (limit.error || ui.assistent.userId !== userId) return;
+    ui.assistent.info = { ...(ui.assistent.info || {}), heute: heute || 0, limit: limit.data };
     kiAktualisieren();
   } catch (e) {
     console.warn(e);
@@ -282,7 +288,8 @@ function kiSetzen(el, inhalt) {
 
 // ---------- Aktualisieren (wird bei jedem Neuzeichnen aufgerufen) ----------
 function kiAktualisieren() {
-  const sichtbar = state.loaded && !!state.me && darf("ki_assistent");
+  // Im Arbeitsbereich (#/nigel) ist das Handy überflüssig und bleibt eingesteckt verborgen
+  const sichtbar = state.loaded && !!state.me && darf("ki_assistent") && parseRoute().page !== "nigel";
   kiPhone.hidden = !sichtbar;
   document.body.classList.toggle("ki-da", sichtbar);
   if (!sichtbar) return;
@@ -369,6 +376,13 @@ function kiPanelZeichnen(akte, akten) {
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
       </section>`}
+    <section class="ki-karte ki-arbeitsbereich">
+      <p class="ki-mini-titel" style="margin-top:0">Eine größere Aufgabe, Sir?</p>
+      <p class="ki-leise">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich – mit gespeicherten Chats, mehreren Akten und einem Entwurf.</p>
+      <div class="ki-karte-aktionen">
+        <button type="button" class="ki-knopf" data-action="ki-arbeitsbereich">${s.verlauf.length ? "Im Arbeitsbereich fortsetzen" : "Arbeitsbereich öffnen"}</button>
+      </div>
+    </section>
     <section class="ki-karte">
       <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen, Sir</p>
       <ul class="ki-tipps">
