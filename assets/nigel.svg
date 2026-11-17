@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nigel, der Butler">
+  <!-- Hintergrund -->
+  <circle cx="32" cy="32" r="32" fill="#faf5e4"/>
+  <circle cx="32" cy="32" r="30.5" fill="none" stroke="#cc9e00" stroke-width="1.5"/>
+  <clipPath id="rund"><circle cx="32" cy="32" r="30.5"/></clipPath>
+  <g clip-path="url(#rund)">
+    <!-- Frack -->
+    <path d="M6 66 C8 50 18 45 32 45 C46 45 56 50 58 66 Z" fill="#141414"/>
+    <!-- Hemdkragen und Hemd -->
+    <path d="M24 46 L32 58 L40 46 C37 44.5 27 44.5 24 46 Z" fill="#ffffff"/>
+    <path d="M24.5 45.5 L29 51 L32 47.5 Z M39.5 45.5 L35 51 L32 47.5 Z" fill="#f1ece0"/>
+    <!-- Revers -->
+    <path d="M22 46.5 L31 64 L20 64 L15 52 Z M42 46.5 L33 64 L44 64 L49 52 Z" fill="#262626"/>
+    <!-- Fliege -->
+    <path d="M32 49 L25.5 45.8 L25.5 52.2 Z M32 49 L38.5 45.8 L38.5 52.2 Z" fill="#a30000"/>
+    <circle cx="32" cy="49" r="1.9" fill="#7d0000"/>
+    <!-- Hals -->
+    <path d="M27.5 39 L36.5 39 L36 46 L28 46 Z" fill="#e9b996"/>
+    <!-- Ohren -->
+    <ellipse cx="18.6" cy="29.5" rx="2.3" ry="3.6" fill="#e9b996"/>
+    <ellipse cx="45.4" cy="29.5" rx="2.3" ry="3.6" fill="#e9b996"/>
+    <!-- Gesicht -->
+    <path d="M19.5 25 C19.5 15 25 11.5 32 11.5 C39 11.5 44.5 15 44.5 25 L44.5 30 C44.5 38.5 38.5 43 32 43 C25.5 43 19.5 38.5 19.5 30 Z" fill="#f2c7a5"/>
+    <!-- Haar: streng gescheitelt, grau meliert an den Schläfen -->
+    <path d="M18.8 26 C18 15 23.5 9 32.5 9 C41 9 46.5 14 45.4 26 C44.5 21 42.5 18.5 40.5 17.5 C35 19.5 27 19.5 21.5 17 C20.2 19 19.3 22 18.8 26 Z" fill="#2b2b2b"/>
+    <path d="M27.5 9.6 C26.5 13 26.8 16 28 18.6" fill="none" stroke="#454545" stroke-width="0.6" stroke-linecap="round"/>
+    <path d="M19.2 23 C19.4 21.5 19.8 20.2 20.4 19 L21 25 Z M45 23 C44.8 21.5 44.4 20.2 43.8 19 L43.2 25 Z" fill="#9a9a9a"/>
+    <!-- Augenbrauen -->
+    <path d="M23.8 24.2 Q27 22.6 29.6 24" fill="none" stroke="#2b2b2b" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M34.6 23.6 Q37.4 22.2 40.4 23.8" fill="none" stroke="#2b2b2b" stroke-width="1.3" stroke-linecap="round"/>
+    <!-- Augen -->
+    <ellipse cx="26.8" cy="27.6" rx="1.25" ry="1.15" fill="#1a1a1a"/>
+    <ellipse cx="37.4" cy="27.6" rx="1.25" ry="1.15" fill="#1a1a1a"/>
+    <!-- Monokel mit Kette -->
+    <circle cx="37.4" cy="27.6" r="3.7" fill="#ffffff" fill-opacity="0.18" stroke="#cc9e00" stroke-width="1.1"/>
+    <path d="M40.6 29.6 C43 34 43.5 38.5 41 44" fill="none" stroke="#cc9e00" stroke-width="0.8" stroke-dasharray="1.4 1"/>
+    <!-- Nase -->
+    <path d="M32.2 27.5 C31.4 30.5 30.6 32 31.4 33 C32 33.4 33 33.2 33.4 32.8" fill="none" stroke="#c98f6c" stroke-width="1" stroke-linecap="round"/>
+    <!-- Schnurrbart -->
+    <path d="M32 35 C29.5 33.6 26 34 23.8 36.6 C26.3 36.3 28.5 37.2 32 36.4 C35.5 37.2 37.7 36.3 40.2 36.6 C38 34 34.5 33.6 32 35 Z" fill="#3a3a3a"/>
+    <!-- Mund: leicht pikiertes Lächeln -->
+    <path d="M29.8 39 Q32 39.9 34.4 38.8" fill="none" stroke="#a8644a" stroke-width="0.9" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -280,7 +280,7 @@ const BEREICHE = [
 ];
 const SONDERRECHTE = [
   { key: "akten_loeschen", label: "Akten löschen" },
-  { key: "ki_assistent", label: "KI-Assistent" },
+  { key: "ki_assistent", label: "KI-Assistent (Nigel)" },
 ];
 // Alle einzelnen Rechte (für Vergleiche)
 const RECHTE = [

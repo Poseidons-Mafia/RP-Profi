@@ -87,7 +87,7 @@ function gesetzeUebersicht() {
     <div class="page">
       <div class="page-head">
         <div><h1>Gesetze</h1>
-          <p class="muted">Die Gesetzbücher eures Servers im Wortlaut. ${darf("ki_assistent") ? "Der KI-Assistent schlägt hier nach, wenn du ihm Rechtsfragen stellst." : ""}</p></div>
+          <p class="muted">Die Gesetzbücher eures Servers im Wortlaut. ${darf("ki_assistent") ? "Nigel, unser KI-Butler, schlägt hier nach, wenn Sie ihm Rechtsfragen stellen." : ""}</p></div>
         <div class="actions-row">
           ${schreiben ? html`<button class="btn primary" data-action="gesetzbuch-neu">+ Gesetzbuch</button>` : ""}
         </div>
@@ -196,7 +196,7 @@ function gesetzbuchAnsicht(buch, springeZu) {
                 <header>
                   <h3><span class="nr">${p.nummer}</span> ${p.titel || ""}</h3>
                   <div class="gb-tools">
-                    ${ki ? html`<button class="btn small" data-action="gb-ki" data-id="${p.id}" title="Den KI-Assistenten zu diesem Paragraphen fragen">KI fragen</button>` : ""}
+                    ${ki ? html`<button class="btn small" data-action="gb-ki" data-id="${p.id}" title="Nigel zu diesem Paragraphen befragen">Nigel fragen</button>` : ""}
                     <button class="icon-btn" data-action="gb-link" data-id="${p.id}" title="Link kopieren">🔗</button>
                     ${schreiben ? html`<button class="icon-btn" data-action="paragraph-bearbeiten" data-id="${p.id}" title="Bearbeiten">✎</button>` : ""}
                   </div>
@@ -433,6 +433,6 @@ Object.assign(ACTIONS, {
   "gb-ki": (d) => {
     const p = byId("paragraphen", d.id);
     if (!p || typeof kiFrageVorbereiten !== "function") return;
-    kiFrageVorbereiten(`Erkläre ${paragraphZitat(p)}${p.titel ? ` (${p.titel})` : ""}: `);
+    kiFrageVorbereiten(`Nigel, erklären Sie mir bitte ${paragraphZitat(p)}${p.titel ? ` (${p.titel})` : ""}: `);
   },
 });

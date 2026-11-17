@@ -57,8 +57,8 @@ und Änderungen erscheinen bei allen sofort.
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
-- **KI-Assistent für Rechtsfragen** (über **OpenRouter** mit frei wählbarem Modell; ohne OpenRouter-Schlüssel bzw. bei Ausfall
-  Google Gemini 3.5 Flash-Lite im Gratis-Kontingent): beantwortet
+- **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (genau **ein** Modell über
+  **OpenRouter**, derzeit DeepSeek V4.1 Flash, keine Ausweich-Modelle): beantwortet
   **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
   Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
@@ -95,16 +95,15 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 
 Die Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) wird in Supabase unter
 **Edge Functions** als `ki-assistent` angelegt (**Verify JWT aus** – die Funktion prüft die Anmeldung selbst).
-Welche KI antwortet, hängt von den **Secrets** ab (Supabase → Edge Functions → Secrets):
+Es antwortet **genau ein Modell** über OpenRouter – ohne Ausweich-Modelle und ohne andere KI. Antwortet trotzdem ein
+anderes Modell, wird die Antwort verworfen. Ist das Modell nicht erreichbar oder das Guthaben leer, bekommt das Mitglied
+eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 
 | Secret | Bedeutung |
 |---|---|
-| `OPENROUTER_API_KEY` | Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit). Ist er gesetzt, antwortet OpenRouter. |
-| `OPENROUTER_MODELL` | optional: Modell-ID von <https://openrouter.ai/models> (Filter „Tools“), mehrere mit Komma = Ausweichliste. Standard: `anthropic/claude-sonnet-4.5,openai/gpt-5,google/gemini-2.5-pro` |
+| `OPENROUTER_API_KEY` | Pflicht: Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit) |
+| `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt |
-| `GEMINI_API_KEY` | Schlüssel aus <https://aistudio.google.com> (Gratis). Wird genutzt, wenn kein OpenRouter-Schlüssel da ist – und springt automatisch ein, wenn OpenRouter ausfällt (z. B. Guthaben leer). |
-| `GEMINI_MODELL` | optional, Standard `gemini-3.5-flash-lite` |
-| `KI_ANBIETER` | optional: `gemini` erzwingt Gemini, auch wenn ein OpenRouter-Schlüssel hinterlegt ist |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
 auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
@@ -112,10 +111,10 @@ auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je 
 `raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`. Unter **Gesetze** die Gesetzbücher anlegen
 und die Paragraphen per Massenimport einfügen – nur was dort steht, kann die KI nachschlagen.
 
-Hinweise: OpenRouter rechnet pro Token ab. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
+Hinweise: OpenRouter rechnet pro Token ab; die Preise je Modell stehen auf der Modellseite. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
 zählt beim Tageslimit aber nur einmal – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
 OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
-trainieren. Gemini darf im Gratis-Tarif die Eingaben zum Training nutzen. An den KI-Anbieter gehen die gewählte Akte,
+trainieren. An den KI-Anbieter gehen die gewählte Akte,
 der Strafkatalog und die nachgeschlagenen Paragraphen.
 
 ## Gut zu wissen
@@ -142,9 +141,10 @@ der Strafkatalog und die nachgeschlagenen Paragraphen.
 | `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
 | `js/dokumente.js` | Vorlagen, Rechnung, Aktenblatt, Druck |
-| `js/assistent.js` | KI-Assistent (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
+| `js/assistent.js` | KI-Assistent „Nigel“ (faltbares iFruit-Smartphone mit Chat, 3D-Faltanimation) |
+| `assets/nigel.svg` | Avatar von Nigel (eigene Zeichnung) |
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
-| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an Gemini |
+| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an das eingestellte Modell (OpenRouter) |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

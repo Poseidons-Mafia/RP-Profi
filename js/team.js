@@ -266,7 +266,7 @@ function tabRaenge() {
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
         <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
-        <li><strong>KI-Assistent</strong>: Chat mit der KI (über OpenRouter bzw. Google Gemini) – beantwortet ausschließlich Rechtsfragen und schlägt dafür in den Gesetzen nach. Sie sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
+        <li><strong>KI-Assistent</strong>: „Nigel“, der KI-Butler (KI-Modell über OpenRouter) – beantwortet ausschließlich Rechtsfragen und schlägt dafür in den Gesetzen nach. Er sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
         <li><strong>KI-Limit pro Tag</strong>: Grundwert für alle Mitglieder des Rangs. Je Mitglied lässt sich unten eine Abweichung (+/−) festlegen.</li>
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
         <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
@@ -401,7 +401,7 @@ function tabEinstellungen() {
         <p class="muted">Lädt alle Daten, die du sehen darfst, als Datei herunter.</p>
         <button class="btn" data-action="export-alles">Komplettsicherung herunterladen</button>
         <h3 class="section-title" style="margin-top:22px">Tastenkürzel</h3>
-        <p class="small" style="margin:0"><code>/</code> Suche · <code>N</code> neue Akte · <code>B</code> Benachrichtigungen · <code>K</code> KI-Assistent · <code>Esc</code> schließen</p>
+        <p class="small" style="margin:0"><code>/</code> Suche · <code>N</code> neue Akte · <code>B</code> Benachrichtigungen · <code>K</code> Nigel (KI-Butler) · <code>Esc</code> schließen</p>
       </div>
     </div>
     ${ablaeufeKarte()}`;
