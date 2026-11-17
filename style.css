@@ -168,6 +168,115 @@ code { background: var(--gold-soft); padding: 1px 5px; border-radius: 4px; }
 .btn.danger:hover { background: var(--red-soft); }
 .btn.small { padding: 4px 10px; font-size: 0.8rem; }
 .btn.full { width: 100%; justify-content: center; }
+
+/* „Nigel fragen“: nur das Porträt – beim Überfahren verneigt sich Nigel
+   und sein Angebot gleitet aus dem Rahmen heraus. */
+.nigel-btn {
+  --nb-size: 30px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: var(--nb-size);
+  padding: 0;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  vertical-align: middle;
+  box-shadow: 0 0 0 0 rgba(204, 158, 0, 0);
+  transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.nigel-btn-bild {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  width: calc(var(--nb-size) - 2px);
+  height: calc(var(--nb-size) - 2px);
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg);
+}
+.nigel-btn-bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 85%;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* kleiner „Glöckchen“-Punkt: Nigel steht bereit */
+.nigel-btn::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--nb-size) - 9px);
+  top: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--panel);
+  z-index: 2;
+  animation: nigel-bereit 2.8s ease-in-out infinite;
+  transition: opacity 0.2s ease;
+}
+@keyframes nigel-bereit {
+  0%, 70%, 100% { transform: scale(1); }
+  80% { transform: scale(1.35); }
+}
+.nigel-btn-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: bold;
+  line-height: 1.05;
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: max-width 0.4s cubic-bezier(0.22, 1, 0.36, 1), padding 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.25s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nigel-btn-text small {
+  font-size: 0.62rem;
+  font-weight: normal;
+  font-style: italic;
+  color: var(--gold-text);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease 0.15s, transform 0.3s ease 0.15s;
+}
+.nigel-btn:hover,
+.nigel-btn:focus-visible {
+  background: var(--gold-soft);
+  box-shadow: 0 0 0 3px rgba(204, 158, 0, 0.18);
+}
+.nigel-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.nigel-btn:hover .nigel-btn-bild img,
+.nigel-btn:focus-visible .nigel-btn-bild img { transform: rotate(-8deg) translateY(2px) scale(1.06); }
+.nigel-btn:hover::after,
+.nigel-btn:focus-visible::after { opacity: 0; }
+.nigel-btn:hover .nigel-btn-text,
+.nigel-btn:focus-visible .nigel-btn-text {
+  max-width: 140px;
+  padding: 0 12px 0 8px;
+  opacity: 1;
+  transform: translateX(0);
+}
+.nigel-btn:hover .nigel-btn-text small,
+.nigel-btn:focus-visible .nigel-btn-text small { opacity: 1; transform: translateY(0); }
+.nigel-btn:active .nigel-btn-bild img { transform: rotate(-8deg) translateY(3px) scale(0.98); }
+/* Touch-Geräte kennen kein Überfahren: dort steht der Text gleich daneben */
+@media (hover: none) {
+  .nigel-btn-text { max-width: 140px; padding: 0 12px 0 8px; opacity: 1; transform: none; }
+  .nigel-btn-text small { display: none; }
+  .nigel-btn::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nigel-btn, .nigel-btn *, .nigel-btn::after { transition-duration: 0.01s !important; transition-delay: 0s !important; animation: none !important; }
+}
 .icon-btn {
   border: none;
   background: none;
