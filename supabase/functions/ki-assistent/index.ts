@@ -7,8 +7,8 @@
 //       Tageslimit des Mitglieds (Grundwert des Rangs + Abweichung),
 //    2. liest die Daten MIT DEM LOGIN DES MITGLIEDS (es gelten also
 //       dieselben Leserechte wie im Aktensystem),
-//    3. fragt Claude Opus 5.5 über OpenRouter – ausschließlich dieses
-//       Modell, keine Ausweich-Modelle, keine andere KI. Die KI kann
+//    3. fragt GENAU EIN Modell über OpenRouter (Secret OPENROUTER_MODELL) –
+//       keine Ausweich-Modelle, keine andere KI. Die KI kann
 //       dabei zwei Werkzeuge nutzen:
 //         gesetze_finden      – Gesetzbücher finden
 //         paragraphen_finden  – einzelne Paragraphen im Wortlaut finden
@@ -17,14 +17,17 @@
 //
 //  Secrets (Supabase → Edge Functions → Secrets):
 //    OPENROUTER_API_KEY   Schlüssel von openrouter.ai (Pflicht)
+//    OPENROUTER_MODELL    Modell-ID von openrouter.ai/models, z. B. "deepseek/deepseek-v4.1-flash-1017"
+//                         (genau EIN Modell; Standard siehe MODELL_STANDARD)
 //    KI_REASONING         optional, "low" | "medium" | "high" (Standard "medium")
 //    KI_TAGESLIMIT        optional, nur noch Notlösung, falls Update 8 fehlt
 // =============================================================
 
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 
-// Fest eingestellt: nur dieses Modell wird genutzt (bewusst nicht über ein Secret änderbar)
-const MODELL = "anthropic/claude-opus-5.5";
+// Genau ein Modell – ohne Ausweichliste. Steht im Secret versehentlich eine Liste, zählt nur der erste Eintrag.
+const MODELL_STANDARD = "deepseek/deepseek-v4.1-flash-1017";
+const MODELL = ((Deno.env.get("OPENROUTER_MODELL") || MODELL_STANDARD).split(",")[0] || MODELL_STANDARD).trim();
 const OR_REASONING = ["low", "medium", "high"].includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "medium";
 const TAGESLIMIT_NOTFALL = Number(Deno.env.get("KI_TAGESLIMIT") || 100);
 const MAX_NACHRICHTEN = 20;
@@ -111,11 +114,11 @@ Deno.serve(async (req) => {
   }
   const system = SYSTEM + "\n\n" + kontext;
 
-  // ---------- Claude Opus 5.5 fragen (über OpenRouter) ----------
+  // ---------- Das eingestellte Modell fragen (über OpenRouter) ----------
   const nachgeschlagen: string[] = [];
   let ergebnis: Ergebnis;
   try {
-    ergebnis = await frageOpus(orKey, system, nachrichten, (name, args) => werkzeugAusfuehren(db, name, args, nachgeschlagen));
+    ergebnis = await frageModell(orKey, system, nachrichten, (name, args) => werkzeugAusfuehren(db, name, args, nachgeschlagen));
   } catch (e) {
     if (e instanceof KiFehler) return fehler(e.text, e.status);
     console.error(e);
@@ -136,13 +139,13 @@ Deno.serve(async (req) => {
 
 
 // =============================================================
-//  Claude Opus 5.5 über OpenRouter
+//  Das eingestellte Modell über OpenRouter
 //  Es wird nur EIN Modell angefragt (keine "models"-Ausweichliste), daher
 //  weicht OpenRouter nie auf ein anderes Modell aus – höchstens auf einen
 //  anderen Rechenzentrums-Betreiber desselben Modells.
 //  Zur Sicherheit wird das antwortende Modell zusätzlich geprüft.
 // =============================================================
-async function frageOpus(key: string, system: string, nachrichten: Nachricht[], werkzeug: Werkzeug): Promise<Ergebnis> {
+async function frageModell(key: string, system: string, nachrichten: Nachricht[], werkzeug: Werkzeug): Promise<Ergebnis> {
   const verlauf: Zeile[] = [
     { role: "system", content: system },
     ...nachrichten.map((n) => ({ role: n.rolle === "ki" ? "assistant" : "user", content: n.text })),
@@ -178,11 +181,11 @@ async function frageOpus(key: string, system: string, nachrichten: Nachricht[], 
       if (res.status === 402) throw new KiFehler("Das OpenRouter-Guthaben ist aufgebraucht (Credits aufladen oder Limit des Schlüssels erhöhen).");
       if (res.status === 429) throw new KiFehler("Einen Augenblick Geduld, Sir – zu viele Anfragen auf einmal. Bitte gleich noch einmal versuchen.", 429);
       if ([400, 404].includes(res.status) && /model|endpoint|not.*(found|exist|valid)/i.test(meldung)) {
-        throw new KiFehler(`Das Modell ${MODELL} ist bei OpenRouter gerade nicht verfügbar.`);
+        throw new KiFehler(`Das Modell ${MODELL} ist bei OpenRouter nicht verfügbar oder kann keine Werkzeuge nutzen (Secret OPENROUTER_MODELL prüfen).`);
       }
       throw new KiFehler("Most irregular, Sir – es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
     }
-    // Sicherheitsnetz: Antwortet ein anderes Modell als Opus 5.5, wird die Antwort verworfen
+    // Sicherheitsnetz: Antwortet ein anderes als das eingestellte Modell, wird die Antwort verworfen
     const antwortModell = String(daten?.model || MODELL);
     if (!antwortModell.startsWith(MODELL)) {
       console.error("Falsches Modell geantwortet:", antwortModell);
@@ -209,7 +212,7 @@ async function frageOpus(key: string, system: string, nachrichten: Nachricht[], 
     const inhalt = msg?.content;
     const text = (Array.isArray(inhalt) ? inhalt.map((t: Zeile) => t?.text || "").join("") : String(inhalt || "")).trim();
     if (!text) throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${wahl?.finish_reason || "unbekannt"}).`);
-    return { text, tokensEin, tokensAus, modell: "Claude Opus 5.5" };
+    return { text, tokensEin, tokensAus, modell: MODELL.split("/").pop() || MODELL };
   }
   throw new KiFehler("Die KI hat keine Antwort geliefert.");
 }

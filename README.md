@@ -57,8 +57,8 @@ und Änderungen erscheinen bei allen sofort.
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
-- **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (ausschließlich
-  **Claude Opus 5.5** über **OpenRouter**, kein anderes Modell): beantwortet
+- **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (genau **ein** Modell über
+  **OpenRouter**, derzeit DeepSeek V4.1 Flash, keine Ausweich-Modelle): beantwortet
   **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
   Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
@@ -95,13 +95,14 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 
 Die Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) wird in Supabase unter
 **Edge Functions** als `ki-assistent` angelegt (**Verify JWT aus** – die Funktion prüft die Anmeldung selbst).
-Es antwortet **ausschließlich Claude Opus 5.5** (`anthropic/claude-opus-5.5`, fest im Code) über OpenRouter – ohne
-Ausweich-Modelle und ohne andere KI. Antwortet trotzdem ein anderes Modell, wird die Antwort verworfen. Ist Opus 5.5
-nicht erreichbar oder das Guthaben leer, bekommt das Mitglied eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
+Es antwortet **genau ein Modell** über OpenRouter – ohne Ausweich-Modelle und ohne andere KI. Antwortet trotzdem ein
+anderes Modell, wird die Antwort verworfen. Ist das Modell nicht erreichbar oder das Guthaben leer, bekommt das Mitglied
+eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 
 | Secret | Bedeutung |
 |---|---|
 | `OPENROUTER_API_KEY` | Pflicht: Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit) |
+| `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
@@ -110,7 +111,7 @@ auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je 
 `raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`. Unter **Gesetze** die Gesetzbücher anlegen
 und die Paragraphen per Massenimport einfügen – nur was dort steht, kann die KI nachschlagen.
 
-Hinweise: OpenRouter rechnet pro Token ab, Opus gehört zu den teuersten Modellen. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
+Hinweise: OpenRouter rechnet pro Token ab; die Preise je Modell stehen auf der Modellseite. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
 zählt beim Tageslimit aber nur einmal – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
 OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
 trainieren. An den KI-Anbieter gehen die gewählte Akte,
@@ -145,5 +146,5 @@ der Strafkatalog und die nachgeschlagenen Paragraphen.
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
-| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an Claude Opus 5.5 (OpenRouter) |
+| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Kontext, Werkzeuge (Gesetze/Paragraphen finden), Anfrage an das eingestellte Modell (OpenRouter) |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |
