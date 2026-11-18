@@ -1913,6 +1913,7 @@ body.nw-seite .guide-btn { display: none; }
 .m-gutachten { --nw-m: var(--red); --nw-m-soft: var(--red-soft); --nw-m-text: var(--red); }
 .m-schriftsatz, .m-ueberarbeiten { --nw-m: var(--gold); --nw-m-soft: var(--gold-soft); --nw-m-text: var(--gold-text); }
 .m-strategie { --nw-m: var(--green); --nw-m-soft: var(--green-soft); --nw-m-text: var(--green); }
+.m-orga { --nw-m: #5b4a8f; --nw-m-soft: #ece8f6; --nw-m-text: #4a3b7a; }
 
 .nw {
   --nw-oben: 120px;
@@ -2054,6 +2055,15 @@ body.nw-seite .guide-btn { display: none; }
 .nw-schritt-treffer.null { color: var(--muted); }
 .nw-msg-aktionen { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line-soft); }
 .nw-akte-quelle { text-decoration: none; }
+/* Orga-Modus: was Nigel erledigt hat */
+.nw-aktionen { margin: 10px 0 2px; padding: 8px 12px; border: 1px solid #d9d1ee; border-left: 3px solid #5b4a8f; border-radius: 8px; background: #f6f3fc; }
+.nw-aktionen .nw-gruppe { margin: 0 0 6px; color: #4a3b7a; }
+.nw-aktionen ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.nw-aktionen li { display: flex; align-items: baseline; gap: 8px; font-size: 0.84rem; overflow-wrap: anywhere; }
+.nw-aktionen li a { color: inherit; text-decoration: underline; text-decoration-color: #b9addb; text-underline-offset: 2px; }
+.nw-aktionen li a:hover { color: #4a3b7a; }
+.nw-aktionen.live li { animation: ki-msg-rein 0.3s ease both; }
+.nw-aktion-zeichen { flex: none; min-width: 22px; padding: 0 5px; border-radius: 5px; background: #ece8f6; color: #4a3b7a; font-size: 0.7rem; font-weight: bold; text-align: center; }
 .nw-msg .ki-quellen { margin-top: 8px; font-size: 0.72rem; }
 
 .nw-laeuft .nw-msg-inhalt { border-style: dashed; border-color: var(--gold); padding-bottom: 10px; }
@@ -2073,6 +2083,8 @@ body.nw-seite .guide-btn { display: none; }
 .nw-start-bild { width: 84px; height: 84px; border-radius: 50%; background: #fff; border: 3px solid var(--gold); object-fit: cover; box-shadow: 0 8px 24px rgba(163, 0, 0, 0.15); }
 .nw-gruss { margin: 10px 0 4px; font: italic 1.6rem Georgia, "Times New Roman", serif; color: var(--red-dark); }
 .nw-modus-karten { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 14px; text-align: left; }
+/* „Organisatorisch“ ist kein juristischer Modus – eigene, breite Zeile unter den anderen */
+.nw-modus-karte.m-orga { grid-column: 1 / -1; }
 .nw-modus-karte {
   display: flex; flex-direction: column; gap: 4px;
   padding: 12px 13px; border: 1px solid var(--line); border-top: 4px solid var(--nw-m); border-radius: 10px;
