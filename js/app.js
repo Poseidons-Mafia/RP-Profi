@@ -47,7 +47,7 @@ const NAV = [
 const SEITEN_RECHTE = {
   akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
   rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen", gesetze: "gesetzbuch_lesen",
-  nigel: "ki_assistent",
+  nigel: "ki_sehen", // nur „Sehen“: Arbeitsbereich als zensierte Vorschau (js/nigel.js)
 };
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben", "akte-abschluss": "akten_schreiben",
@@ -70,6 +70,7 @@ const AKTIONS_RECHTE = {
   "einstellungen-bearbeiten": "einstellungen_schreiben",
   "ki-oeffnen": "ki_assistent", "ki-klappen": "ki_assistent", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
   "ki-in-verlauf": "akten_schreiben", "ki-arbeitsbereich": "ki_assistent", "nw-mit-akte": "ki_assistent",
+  "ki-ansehen": "ki_sehen", "ki-sperre-tippen": "ki_sehen", "nw-neu": "ki_assistent", "nw-vom-handy": "ki_assistent",
   "nw-in-akte": "akten_schreiben", "nw-entwurf-in-akte": "akten_schreiben", "nw-aufgaben": "termine_schreiben",
   "nw-vorgaben": "einstellungen_schreiben",
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",

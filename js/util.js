@@ -291,9 +291,16 @@ function kiBudgetStand(roh) {
   return { budget: z(roh.budget), genutzt: z(roh.genutzt), kanzlei_budget: z(roh.kanzlei_budget), kanzlei_genutzt: z(roh.kanzlei_genutzt) };
 }
 const kiProzent = (genutzt, max) => (max > 0 ? Math.min(100, Math.round((genutzt / max) * 100)) : 100);
-// Anzeige: eigenes Monatsbudget mit Balken, darunter der Stand der Kanzlei
-function kiBudgetHtml(b) {
-  if (!b) return html`<div class="ki-nutzung"><span>Budget diesen Monat</span><strong>–</strong></div><div class="ki-balken"><span style="width:0%"></span></div>`;
+// Anzeige: eigenes Monatsbudget mit Balken, darunter der Stand der Kanzlei.
+// Dollarbeträge sieht nur der Admin – alle anderen sehen, wie viel Prozent schon verbraucht sind.
+function kiBudgetHtml(b, mitDollar = false) {
+  if (!b) return html`<div class="ki-nutzung"><span>${mitDollar ? "Budget diesen Monat" : "Kontingent diesen Monat"}</span><strong>–</strong></div><div class="ki-balken"><span style="width:0%"></span></div>`;
+  if (!mitDollar) {
+    return html`
+      <div class="ki-nutzung"><span>Mein Kontingent (Monat)</span><strong>${b.budget > 0 ? `${kiProzent(b.genutzt, b.budget)} % genutzt` : "keins"}</strong></div>
+      <div class="ki-balken"><span style="width:${kiProzent(b.genutzt, b.budget)}%"></span></div>
+      <div class="ki-nutzung"><span>Kanzlei gesamt</span><strong>${kiProzent(b.kanzlei_genutzt, b.kanzlei_budget)} % genutzt</strong></div>`;
+  }
   return html`
     <div class="ki-nutzung"><span>Mein Budget (Monat)</span><strong>${kiDollar(b.genutzt)} / ${kiDollar(b.budget)}</strong></div>
     <div class="ki-balken"><span style="width:${kiProzent(b.genutzt, b.budget)}%"></span></div>

@@ -399,7 +399,7 @@ const nwZitat = (p) => `${p.nummer} ${nwBuch(p).kuerzel || ""}`.trim();
 // =============================================================
 //  Seite
 // =============================================================
-VIEWS.nigel = () => html`
+VIEWS.nigel = () => nigelNurAnsehen() ? nwVorschauGeruest() : html`
   <div class="nw" data-nw="wurzel">
     <aside class="nw-liste" aria-label="Chats mit Nigel">
       <div class="nw-liste-kopf">
@@ -472,8 +472,16 @@ VIEWS.nigel.dauerhaft = true;
 // Wird bei jedem Neuzeichnen aufgerufen (nur geänderte Teile werden erneuert)
 VIEWS.nigel.aktualisieren = (route) => {
   const n = ui.nigel;
-  const wurzel = nwEl("wurzel");
+  let wurzel = nwEl("wurzel");
   if (!wurzel) return;
+  // Recht geändert (Sehen ↔ Verwenden): Seite neu aufbauen
+  const vorschau = nigelNurAnsehen();
+  if ((wurzel.dataset.vorschau === "1") !== vorschau) {
+    $("main").innerHTML = String(VIEWS.nigel(route));
+    wurzel = nwEl("wurzel");
+    n.angezeigt = undefined;
+  }
+  if (vorschau) return nwVorschauZeichnen(wurzel);
   if (n.userId !== state.me.id) {
     Object.assign(n, { userId: state.me.id, geladen: false, fehlt: false, chats: [], nachrichten: {}, neu: null, angezeigt: undefined, laeuft: {} });
   }
@@ -525,6 +533,239 @@ VIEWS.nigel.aktualisieren = (route) => {
   if (neuerChat && route.id && window.innerWidth > 900) setTimeout(() => nwFeld("nw-text") && nwFeld("nw-text").focus({ preventScroll: true }), 30);
 };
 
+// =============================================================
+//  Vorschau für „Nigel sehen“ (ohne „Nigel verwenden“)
+//  Man sieht, was Nigel alles könnte: Modi, Beispiele, die Reiter der
+//  Arbeitsfläche. Die Inhalte sind reine Platzhalter (keine echten Daten)
+//  und bleiben unter Milchglas mit „Vertraulich“-Stempel. Es wird nichts
+//  geladen und nichts gespeichert; Dollar-Beträge erscheinen nie.
+// =============================================================
+const NW_SCHLOSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.6" fill="currentColor"/><path d="M7.8 10.5V7.6a4.2 4.2 0 0 1 8.4 0v2.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+
+const NW_VORSCHAU_BEISPIEL = {
+  frage: {
+    frage: "Welche Paragraphen kommen in Betracht, wenn jemand ein fremdes Fahrzeug ohne Erlaubnis kurz benutzt und danach stehen lässt?",
+    antwort: "Sehr wohl, Sir. Zunächst kommt die unbefugte Benutzung eines Fahrzeugs in Betracht. Der Tatbestand setzt voraus, dass … Abzugrenzen ist dies vom Diebstahl, bei dem es auf die Zueignungsabsicht ankommt … Im Ergebnis spricht vieles für …",
+    schritte: ["Gesetzbücher durchsucht", "Paragraphen nachgeschlagen", "Strafkatalog geprüft"],
+  },
+  gutachten: {
+    frage: "Prüfe alle Tatvorwürfe dieser Akte im Gutachtenstil am Wortlaut der Paragraphen und berechne den drohenden Strafrahmen.",
+    antwort: "I. Strafbarkeit wegen … Der Mandant könnte sich strafbar gemacht haben, indem er … 1. Objektiver Tatbestand … 2. Subjektiver Tatbestand … 3. Rechtswidrigkeit und Schuld … II. Strafrahmen … III. Ergebnis …",
+    schritte: ["Akte gelesen", "Paragraphen nachgeschlagen", "Strafrahmen berechnet"],
+  },
+  schriftsatz: {
+    frage: "Entwirf einen Antrag auf Haftprüfung für den Mandanten dieser Akte.",
+    antwort: "An das zuständige Gericht – Antrag auf Haftprüfung – In der Sache … beantrage ich namens und in Vollmacht meines Mandanten, die Haftfortdauer zu überprüfen. Begründung: … Ein dringender Tatverdacht besteht nicht, weil …",
+    schritte: ["Akte gelesen", "Paragraphen nachgeschlagen", "Entwurf erstellt"],
+  },
+  strategie: {
+    frage: "Entwickle eine Verteidigungsstrategie für diese Akte.",
+    antwort: "Stärken: … Risiken: … Beweislage: Die Aussage des Zeugen … ist widersprüchlich … Strategie: … Nächste Schritte: – [ ] Akteneinsicht beantragen – [ ] Zeugen befragen – [ ] …",
+    schritte: ["Akte gelesen", "Beweise geprüft", "Paragraphen nachgeschlagen"],
+  },
+};
+
+const NW_VORSCHAU_KANN = [
+  ["§", "Rechtsfragen stellen – Nigel schlägt selbst in Gesetzen und Strafkatalog nach"],
+  ["G", "Gutachten zu allen Tatvorwürfen einer Akte, mit Strafrahmen"],
+  ["S", "Schriftsätze entwerfen und von Nigel überarbeiten lassen"],
+  ["F", "Fallanalysen: Stärken, Risiken, Beweislage und nächste Schritte"],
+  ["A", "Mehrere Akten, Paragraphen und Notizen als Kontext anheften"],
+  ["✓", "Antworten in die Akte übernehmen oder als Aufgaben anlegen"],
+  ["★", "Chats speichern, anheften, exportieren und fortsetzen"],
+  ["K", "Das iFruit-Handy als schnelles Nachschlagewerk (Taste K)"],
+];
+
+// Milchglas mit Stempel über Platzhalter-Inhalt
+function nwZensiert(inhalt, { titel, text, klein = false, stempel = "Vertraulich" } = {}) {
+  return html`<div class="nw-zensiert ${klein ? "klein" : ""}">
+    <div class="nw-zensiert-inhalt" aria-hidden="true" inert>${inhalt}</div>
+    <div class="nw-siegel">
+      <div class="nw-siegel-karte">
+        ${klein ? "" : html`<span class="nw-stempel" aria-hidden="true">${stempel}</span>`}
+        <span class="nw-siegel-schloss">${new SafeHtml(NW_SCHLOSS)}</span>
+        <strong>${titel}</strong>
+        ${text ? html`<p>${text}</p>` : ""}
+        <span class="nw-siegel-recht">Nur mit „Nigel verwenden“</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function nwVorschauGeruest() {
+  return html`
+  <div class="nw nw-vorschau" data-nw="wurzel" data-vorschau="1">
+    <aside class="nw-liste" aria-label="Chats mit Nigel (gesperrt)">
+      <div class="nw-liste-kopf">
+        <div class="nw-marke"><img src="assets/nigel.svg" alt=""><div><strong>Nigel</strong><span>Nur ansehen</span></div></div>
+        <button type="button" class="btn primary full nw-gesperrt-knopf" disabled title="Dafür fehlt die Berechtigung „Nigel verwenden“">${new SafeHtml(NW_SCHLOSS)} Neue Aufgabe</button>
+        <div class="search"><input type="search" placeholder="Chats durchsuchen …" disabled aria-label="Chats durchsuchen (gesperrt)"></div>
+      </div>
+      <div class="nw-liste-inhalt" data-nw="liste"></div>
+      <div class="nw-liste-fuss" data-nw="nutzung"></div>
+    </aside>
+
+    <section class="nw-haupt">
+      <header class="nw-kopf" data-nw="kopf"></header>
+      <div class="nw-verlauf" data-nw="scroll">
+        <div class="nw-verlauf-innen"><div data-nw="verlauf"></div></div>
+      </div>
+      <div class="nw-eingabe nw-eingabe-gesperrt">
+        <div class="nw-eingabe-feld">
+          <span class="nw-gesperrt-schloss">${new SafeHtml(NW_SCHLOSS)}</span>
+          <span class="nw-gesperrt-text"><strong>Nur ansehen.</strong> Aufträge an Nigel erfordern die Berechtigung „Nigel verwenden“ – freischalten kann der Admin.</span>
+          <button type="button" class="nw-senden" disabled aria-label="Senden (gesperrt)">${new SafeHtml(KI_ICON.senden)}</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="nw-panel" aria-label="Arbeitsfläche (zensiert)">
+      <nav class="nw-tabs" data-nw="tabs"></nav>
+      <div class="nw-panel-inhalt" data-nw="panel-scroll"><div data-nw="v-panel"></div></div>
+    </aside>
+  </div>`;
+}
+
+function nwVorschauZeichnen(wurzel) {
+  const n = ui.nigel;
+  if (!NW_VORSCHAU_BEISPIEL[n.vorschauModus]) n.vorschauModus = "gutachten";
+  wurzel.dataset.ansicht = n.ansicht;
+  wurzel.classList.toggle("panel-auf", n.panel);
+  document.body.classList.add("nw-seite");
+  nwHoehe();
+  const modus = n.vorschauModus;
+  const rang = rangName(myProfile());
+
+  // Links: Chats (Platzhalter unter Milchglas)
+  const demoChat = (t, m, wann, pin) => html`<div class="nw-chat-item">
+    <span class="t">${pin ? html`<span class="nw-pin">${new SafeHtml(NW_ICON.pin)}</span>` : ""}${t}</span>
+    <span class="m"><span class="nw-modus-punkt m-${m}"></span>${NW_MODUS_NAME[m]} · A-0000 · ${wann}</span></div>`;
+  nwSetzen(nwEl("liste"), nwZensiert(html`
+    <p class="nw-gruppe">Angeheftet</p>
+    ${demoChat("Verteidigung Musterakte", "strategie", "vor 2 Std.", true)}
+    <p class="nw-gruppe">Heute</p>
+    ${demoChat("Gutachten zu den Vorwürfen", "gutachten", "vor 20 Min.")}
+    ${demoChat("Antrag auf Haftprüfung", "schriftsatz", "vor 1 Std.")}
+    <p class="nw-gruppe">Letzte 7 Tage</p>
+    ${demoChat("Welche Paragraphen passen?", "frage", "gestern")}
+    ${demoChat("Einstellung beantragen", "schriftsatz", "vor 3 Tagen")}
+    ${demoChat("Vernehmung vorbereiten", "strategie", "vor 5 Tagen")}`,
+    { klein: true, titel: "Gespeicherte Chats", text: "Hier lägen Ihre Aufträge an Nigel – jederzeit fortsetzbar." }));
+
+  // Fuß: statt Budget nur der Hinweis auf das fehlende Recht (keine Beträge)
+  nwSetzen(nwEl("nutzung"), html`<div class="nw-vorschau-recht">
+    <span class="nw-vorschau-recht-zeile"><span class="ok">✓</span> Nigel sehen</span>
+    <span class="nw-vorschau-recht-zeile"><span class="nein">✕</span> Nigel verwenden</span>
+    ${rang ? html`<small>Ihr Rang: ${rang}</small>` : ""}
+  </div>`);
+
+  // Kopf
+  nwSetzen(nwEl("kopf"), html`
+    <div class="nw-kopf-zeile">
+      <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="liste" title="Chats" aria-label="Chats">${new SafeHtml(NW_ICON.liste)}</button>
+      <div class="nw-titel">
+        <h1>Was Nigel für Sie tun könnte</h1>
+        <span class="nw-titel-meta"><span class="nw-vorschau-marke">${new SafeHtml(NW_SCHLOSS)} Nur ansehen</span> Vorschau des Arbeitsbereichs</span>
+      </div>
+      <div class="nw-kopf-aktionen">
+        <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche">${new SafeHtml(NW_ICON.panel)}</button>
+      </div>
+    </div>
+    <div class="nw-modi" role="radiogroup" aria-label="Arbeitsmodus (Vorschau)">
+      ${NW_MODI.map((m) => html`<button type="button" role="radio" aria-checked="${modus === m.key}" class="nw-modus m-${m.key} ${modus === m.key ? "aktiv" : ""}"
+        data-action="nw-v-modus" data-modus="${m.key}" title="${m.text}">${m.label}</button>`)}
+    </div>`);
+
+  // Mitte: Begrüßung, Modi, Beispiel (Antwort zensiert), was alles ginge
+  const b = NW_VORSCHAU_BEISPIEL[modus];
+  const anrede = nwAnrede();
+  nwSetzen(nwEl("verlauf"), html`<div class="nw-start nw-vorschau-start">
+    <img class="nw-start-bild" src="assets/nigel.svg" alt="Nigel">
+    <h2 class="nw-gruss">${kiTagesgruss()}${anrede ? `, ${anrede}` : ""}.</h2>
+    <p class="muted">Ich bedaure – Ihr Rang gestattet mir, Ihnen meinen Arbeitsbereich zu zeigen, nicht aber, für Sie tätig zu werden.
+      Sehen Sie sich in Ruhe um, was ich für Sie erledigen könnte.</p>
+    <div class="nw-modus-karten">
+      ${NW_MODI.map((m) => html`<button type="button" class="nw-modus-karte m-${m.key} ${modus === m.key ? "aktiv" : ""}" data-action="nw-v-modus" data-modus="${m.key}">
+        <strong>${m.label}</strong><span>${m.text}</span></button>`)}
+    </div>
+    <div class="nw-vorschau-beispiel" data-modus="${modus}">
+      <p class="nw-gruppe">Beispiel: so sähe ein Auftrag im Modus „${NW_MODUS_NAME[modus]}“ aus</p>
+      <div class="nw-msg ich"><div class="nw-bubble">${b.frage}</div>
+        <div class="nw-msg-fuss">${modus !== "frage" ? html`<span class="nw-modus-badge m-${modus}">${NW_MODUS_NAME[modus]}</span>` : ""}<time>Beispiel</time></div></div>
+      <article class="nw-msg ki">
+        <img class="nw-msg-avatar" src="assets/nigel.svg" alt="">
+        <div class="nw-msg-inhalt">
+          <div class="nw-msg-meta"><strong>Nigel</strong><span class="nw-modus-badge m-${modus}">${NW_MODUS_NAME[modus]}</span><time>Beispiel</time></div>
+          <ol class="nw-schritte-live">${b.schritte.map((t) => html`<li><span class="nw-schritt-zeichen">✓</span><span class="nw-schritt-text"><strong>${t}</strong></span></li>`)}</ol>
+          ${nwZensiert(html`<div class="ki-md nw-text">${modus === "schriftsatz"
+            ? html`<div class="nw-dokument"><div class="nw-dokument-kopf"><span>${new SafeHtml(NW_ICON.entwurf)} Entwurf</span></div><div class="ki-md nw-dokument-text"><p>${b.antwort}</p><p>${b.antwort}</p></div></div>`
+            : html`<p>${b.antwort}</p><p>${b.antwort}</p>`}</div>`,
+            { titel: "Antwort zensiert", text: "Nigels Antwort sehen nur Mitglieder, die ihn verwenden dürfen." })}
+        </div>
+      </article>
+    </div>
+    <div class="nw-vorschau-kann">
+      <p class="nw-gruppe">Mit „Nigel verwenden“ könnten Sie …</p>
+      <ul>${NW_VORSCHAU_KANN.map(([z, t]) => html`<li><span class="nw-vorschau-zeichen">${z}</span>${t}</li>`)}</ul>
+    </div>
+  </div>`);
+
+  // Rechts: Reiter wie im echten Arbeitsbereich – anklickbar, Inhalt zensiert
+  nwSetzen(nwEl("tabs"), html`
+    <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="chat" aria-label="Zurück">${new SafeHtml(NW_ICON.zurueck)}</button>
+    ${NW_TABS.map(([k, label]) => html`<button type="button" class="${n.tab === k ? "aktiv" : ""}" data-action="nw-tab" data-tab="${k}">${label}<span class="nw-tab-schloss">${new SafeHtml(NW_SCHLOSS)}</span></button>`)}`);
+  nwSetzen(nwEl("v-panel"), nwVorschauPanel(n.tab));
+}
+
+function nwVorschauPanel(tab) {
+  const p = NW_STANDARD;
+  const segment = (optionen, aktiv) => html`<div class="nw-segment breit">${optionen.map(([w, l]) => html`<button type="button" class="${w === aktiv ? "aktiv" : ""}">${l}</button>`)}</div>`;
+  const demoAkte = (nr, titel, status, vorwuerfe) => html`<div class="nw-akte-karte">
+    <div class="nw-akte-kopf"><span class="ki-badge">${nr}</span><span class="ki-status">${status}</span></div>
+    <strong>${titel}</strong><span class="nw-akte-meta">Mustermandant · ${vorwuerfe}</span>
+    <span class="nw-akte-vorwuerfe"><span>§ 00 Muster</span><span>§ 00 Beispiel</span></span></div>`;
+  const inhalt = {
+    kontext: [html`
+      <section class="nw-block"><h3>Akten <span class="nw-zahl-leise">2/5</span></h3>
+        <div class="nw-akten">${demoAkte("A-0000", "Musterakte", "In Bearbeitung", "3 Vorwürfe")}${demoAkte("A-0001", "Beispielakte", "Neu", "1 Vorwurf")}</div></section>
+      <section class="nw-block"><h3>Angeheftete Paragraphen</h3>
+        <div class="nw-treffer"><a><span class="nw-para-nr">§ 00 MG</span><span class="nw-para-titel">Musterparagraph</span></a><a><span class="nw-para-nr">§ 01 MG</span><span class="nw-para-titel">Beispielparagraph</span></a></div></section>
+      <section class="nw-block"><h3>Notizen zum Sachverhalt</h3>
+        <p class="nw-vorschau-text">Der Mandant gibt an, zur Tatzeit … Zeuge X widerspricht … Absprache mit …</p></section>`,
+      "Kontext", "Akten, Paragraphen und Notizen, die Nigel bei jeder Frage kennt."],
+    entwurf: [html`
+      <section class="nw-block"><h3>Entwurf</h3>
+        <div class="nw-vorschau-dokument"><p><strong>Antrag auf Haftprüfung</strong></p><p>Sehr geehrte Damen und Herren,</p>
+          <p>in der Sache … beantrage ich namens und in Vollmacht meines Mandanten …</p><p>Begründung: … … …</p><p>Mit vorzüglicher Hochachtung</p></div></section>
+      <section class="nw-block"><h3>Von Nigel überarbeiten lassen</h3>
+        <div class="nw-chips">${NW_UEBERARBEITEN.map((t) => html`<span class="ki-chip">${t}</span>`)}</div></section>`,
+      "Entwurf", "Ihr Schriftsatz – selbst geschrieben oder von Nigel entworfen, überarbeitet und druckfertig."],
+    quellen: [html`
+      <section class="nw-block"><h3>Nachgeschlagene Paragraphen <span class="nw-zahl-leise">3</span></h3>
+        <div class="nw-paras">${["§ 00 MG", "§ 01 MG", "§ 02 BG"].map((q) => html`<div class="nw-para leer"><span class="nw-para-nr">${q}</span><span class="nw-para-titel">Wortlaut des Paragraphen …</span></div>`)}</div></section>
+      <section class="nw-block"><h3>Gelesene Akten</h3>
+        <div class="nw-treffer"><a><span class="nw-para-nr">A-0000</span><span class="nw-para-titel">Musterakte</span></a></div></section>`,
+      "Quellen", "Alles, was Nigel nachgeschlagen hat – mit Wortlaut, zum Anheften."],
+    vorlagen: [html`
+      <section class="nw-block"><h3>Standard</h3>
+        <div class="nw-vorlagen">${NW_VORLAGEN_STANDARD.slice(0, 5).map((v) => html`<div class="nw-vorlage"><div class="nw-vorlage-haupt">
+          <span class="nw-modus-badge m-${v.modus}">${NW_MODUS_NAME[v.modus]}</span><strong>${v.titel}</strong><span>${truncate(v.text, 80)}</span></div></div>`)}</div></section>`,
+      "Vorlagen", "Häufige Aufträge mit einem Klick – eigene und die der Kanzlei."],
+    einstellungen: [html`
+      <section class="nw-block">
+        <h3>Wie Nigel Sie anspricht</h3>${segment([["sir", "Sir"], ["madam", "Madam"], ["neutral", "Ohne Anrede"]], p.anrede)}
+        <h3>Ton</h3>${segment([["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]], p.ton)}
+        <h3>Antwortlänge</h3>${segment([["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]], p.laenge)}
+        <h3>Gründlichkeit</h3>${segment([["", "Standard"], ["low", "Schnell"], ["medium", "Gründlich"], ["high", "Sehr gründlich"]], p.gruendlichkeit)}
+        <label class="check nw-check"><input type="checkbox" checked disabled> Wortlaut der Paragraphen zitieren</label>
+        <h3>Standardmodus für neue Aufgaben</h3>${segment(NW_MODI.map((m) => [m.key, m.label]), p.modus)}
+        <h3>Senden mit</h3>${segment([["enter", "Enter"], ["strg", "Strg + Enter"]], p.senden)}
+      </section>`,
+      "Einstellungen", "Anrede, Ton, Antwortlänge und Gründlichkeit – ganz nach Ihrem Geschmack."],
+  }[tab] || [html``, "Gesperrt", ""];
+  return html`<div class="nw-vorschau-tab" data-tab="${tab}">${nwZensiert(inhalt[0], { titel: inhalt[1], text: inhalt[2], stempel: tab === "einstellungen" ? "Gesperrt" : "Vertraulich" })}</div>`;
+}
+
 // Seite füllt den Bildschirm unter Kopfzeile und Navigation
 function nwHoehe() {
   const w = nwEl("wurzel");
@@ -565,7 +806,7 @@ function nwListeZeichnen(aktiv) {
     ${!liste.length && n.q ? html`<p class="nw-leer-hinweis">Keine Chats zu „${n.q}“.</p>` : ""}
     ${!n.chats.length && !n.q ? html`<p class="nw-leer-hinweis">Ihre Chats mit Nigel erscheinen hier – gespeichert und jederzeit fortsetzbar.</p>` : ""}`);
 
-  nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget));
+  nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget, state.isAdmin));
 }
 
 // ---------- Kopf: Titel, Modus, Aktionen ----------
@@ -669,7 +910,7 @@ function nwNachricht(chat, m, i, letzte) {
         ${m.modus ? html`<span class="nw-modus-badge m-${m.modus}">${NW_MODUS_NAME[m.modus] || m.modus}</span>` : ""}
         <time>${zeit}</time>
         ${m.gekuerzt ? html`<span class="badge" title="Die Antwort hat das Längenlimit erreicht">gekürzt</span>` : ""}
-        ${m.kosten !== null && m.kosten !== undefined ? html`<span class="nw-kosten" title="Kosten dieser Anfrage bei OpenRouter">${nwDollar(Number(m.kosten))}</span>` : ""}
+        ${state.isAdmin && m.kosten !== null && m.kosten !== undefined ? html`<span class="nw-kosten" title="Kosten dieser Anfrage bei OpenRouter">${nwDollar(Number(m.kosten))}</span>` : ""}
       </div>
       ${schritte.length ? html`<details class="nw-schritte"><summary>${anzahl(schritte.length, "Arbeitsschritt", "Arbeitsschritte")}${quellen.length ? ` · ${anzahl(quellen.length, "Paragraph", "Paragraphen")}` : ""}${akten.length ? ` · ${anzahl(akten.length, "Akte", "Akten")}` : ""}</summary>
         <ol>${schritte.map((s) => nwSchrittZeile(s))}</ol></details>` : ""}
@@ -988,16 +1229,16 @@ function nwEinstellungenZeichnen() {
       <p class="nw-hilfe">Anrede, Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
     </section>
     <section class="nw-block">
-      <h3>KI-Budget diesen Monat</h3>
-      ${kiBudgetHtml((ui.assistent.info || {}).budget)}
-      ${v.kosten_max ? html`<p class="nw-hilfe">Eine Anfrage darf höchstens <strong>${nwDollar(v.kosten_max)}</strong> kosten. Reicht das nicht, schlägt Nigel weniger nach und antwortet kürzer.</p>` : ""}
-      <p class="nw-hilfe">Abgerechnet wird, was eine Anfrage tatsächlich kostet – aufwendige Modi verbrauchen also automatisch mehr. Das Budget legt der Admin unter Personal → Ränge & Berechtigungen fest; es gilt pro Kalendermonat (UTC).</p>
+      <h3>${state.isAdmin ? "KI-Budget diesen Monat" : "Kontingent diesen Monat"}</h3>
+      ${kiBudgetHtml((ui.assistent.info || {}).budget, state.isAdmin)}
+      ${state.isAdmin && v.kosten_max ? html`<p class="nw-hilfe">Eine Anfrage darf höchstens <strong>${nwDollar(v.kosten_max)}</strong> kosten. Reicht das nicht, schlägt Nigel weniger nach und antwortet kürzer.</p>` : ""}
+      <p class="nw-hilfe">Abgerechnet wird, was eine Anfrage tatsächlich kostet – aufwendige Modi verbrauchen also automatisch mehr. ${state.isAdmin ? "Das Budget legst du unter Personal → Ränge & Berechtigungen fest" : "Das Kontingent legt der Admin fest"}; es gilt pro Kalendermonat (UTC).</p>
     </section>
     ${darf("einstellungen_schreiben") ? html`<section class="nw-block">
       <div class="nw-block-kopf"><h3>Kanzlei-Vorgaben für Nigel</h3><button type="button" class="btn small" data-action="nw-vorgaben">Bearbeiten</button></div>
       <dl class="nw-dl">
         <dt>Freigegebene Modi</dt><dd>${["Rechtsfrage", ...NW_MODI.filter((m) => m.key !== "frage" && v.modi.includes(m.key)).map((m) => m.label)].join(", ")}</dd>
-        <dt>Max. Kosten pro Anfrage</dt><dd>${v.kosten_max ? nwDollar(v.kosten_max) : "kein Limit"}</dd>
+        ${state.isAdmin ? html`<dt>Max. Kosten pro Anfrage</dt><dd>${v.kosten_max ? nwDollar(v.kosten_max) : "kein Limit"}</dd>` : ""}
         <dt>Höchste Gründlichkeit</dt><dd>${stufen[v.reasoning_max]}</dd>
         <dt>Akten durchsuchen</dt><dd>${v.akten_werkzeuge ? "erlaubt" : "aus"}</dd>
         <dt>Hausregeln</dt><dd>${v.anweisungen ? truncate(v.anweisungen, 140) : "keine"}</dd>
@@ -1103,6 +1344,7 @@ Object.assign(ACTIONS, {
   "nw-vom-handy": () => nwVomHandy(),
   "ki-arbeitsbereich": () => { if (ui.assistent.verlauf.length) nwVomHandy(); else { kiSchliessen(); nwNeueAufgabe({ akte_ids: ui.assistent.akteId ? [ui.assistent.akteId] : [] }); } },
   "nw-ansicht": (d) => { ui.nigel.ansicht = d.ansicht; scheduleRender(); },
+  "nw-v-modus": (d) => { ui.nigel.vorschauModus = d.modus; scheduleRender(); },
   "nw-panel": () => {
     if (window.innerWidth <= 900) ui.nigel.ansicht = ui.nigel.ansicht === "panel" ? "chat" : "panel";
     else ui.nigel.panel = !ui.nigel.panel;
@@ -1113,7 +1355,7 @@ Object.assign(ACTIONS, {
     if (window.innerWidth <= 900) ui.nigel.ansicht = "panel";
     else ui.nigel.panel = true;
     scheduleRender();
-    if (d.tab === "kontext") setTimeout(() => { const s = document.querySelector('#main [data-change="nw-akte-hinzu"]'); if (s && !nwAktiverChat().akte_ids.length) s.focus(); }, 30);
+    if (d.tab === "kontext" && !nigelNurAnsehen()) setTimeout(() => { const s = document.querySelector('#main [data-change="nw-akte-hinzu"]'); if (s && !nwAktiverChat().akte_ids.length) s.focus(); }, 30);
   },
   "nw-modus": (d) => {
     const chat = nwAktiverChat();
@@ -1325,9 +1567,10 @@ Object.assign(ACTIONS, {
       wide: true,
       fields: [
         { name: "modi", label: "Freigegebene Modi (Rechtsfrage ist immer frei)", type: "checks", options: NW_MODI.filter((m) => m.key !== "frage").map((m) => ({ value: m.key, label: m.label })) },
-        { type: "section", label: "Kosten" },
-        { name: "kosten_max", label: "Max. Kosten pro Anfrage (US-Dollar)", type: "number", half: true, placeholder: "z. B. 0,05 – leer = kein Limit",
-          help: "Gilt für Handy und Arbeitsbereich. Wird es knapp, schlägt Nigel weniger nach, denkt kürzer und antwortet knapper; reicht es gar nicht, lehnt er die Anfrage ab, statt Geld auszugeben." },
+        // Dollar-Limits sieht und ändert nur der Admin
+        ...(state.isAdmin ? [{ type: "section", label: "Kosten" },
+          { name: "kosten_max", label: "Max. Kosten pro Anfrage (US-Dollar)", type: "number", half: true, placeholder: "z. B. 0,05 – leer = kein Limit",
+            help: "Gilt für Handy und Arbeitsbereich. Wird es knapp, schlägt Nigel weniger nach, denkt kürzer und antwortet knapper; reicht es gar nicht, lehnt er die Anfrage ab, statt Geld auszugeben." }] : []),
         { name: "reasoning_max", label: "Höchste Gründlichkeit", type: "select", required: true, half: true,
           options: [{ value: "low", label: "Schnell" }, { value: "medium", label: "Gründlich" }, { value: "high", label: "Sehr gründlich" }],
           help: "Begrenzt die Kosten: Mitglieder können nicht gründlicher einstellen." },
@@ -1338,7 +1581,8 @@ Object.assign(ACTIONS, {
       ],
       values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen },
       onSubmit: async (w) => {
-        const kostenMax = Number(w.kosten_max) > 0 ? Math.min(100, Math.round(Number(w.kosten_max) * 10000) / 10000) : 0;
+        const kostenMax = !state.isAdmin ? v.kosten_max // unverändert lassen
+          : Number(w.kosten_max) > 0 ? Math.min(100, Math.round(Number(w.kosten_max) * 10000) / 10000) : 0;
         const nigel = { kosten_max: kostenMax, modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000) };
         await updateRow("einstellungen", 1, { daten: { ...((state.einstellungen[0] || {}).daten || {}), nigel } });
         toast("Vorgaben gespeichert");
