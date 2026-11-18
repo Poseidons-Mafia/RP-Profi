@@ -154,7 +154,7 @@ VIEWS.uebersicht = () => {
           <h1>${gruss}${profil && profil.anzeigename ? `, ${firstName(profil.anzeigename)}` : ""}</h1>
           <p class="muted">${fmt.tagLang(now)} · ${state.settings.kanzlei}</p>
         </div>
-        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise … (Taste /)"></div>
+        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise …"></div>
       </div>
 
       ${profil && !profil.anzeigename ? html`

@@ -86,7 +86,7 @@ kiPhone.innerHTML = `
           ${KI_STATUS(true, true)}
           <div class="ki-slot" data-slot="chat-cover"></div>
           <div class="ki-home"></div>
-          <button type="button" class="ki-lock" aria-label="Nigel rufen (Taste K)">
+          <button type="button" class="ki-lock" aria-label="Nigel rufen">
             <span class="ki-lock-marke">${KI_ICON.ifruit}iFruit</span>
             <span class="ki-lock-datum" data-ki="datum"></span>
             <span class="ki-lock-uhr" data-ki="uhr"></span>
@@ -116,7 +116,7 @@ kiChatBlock.innerHTML = `
     <div class="ki-appbar-btns">
       <button type="button" class="ki-icon-btn ki-klapp-btn" data-action="ki-klappen" data-ki="klapp-btn">${KI_ICON.aufklappen}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
-      <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Einstecken">${KI_ICON.zu}</button>
+      <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken" aria-label="Einstecken">${KI_ICON.zu}</button>
     </div>
   </header>
   <div class="ki-chat" data-ki="chat" aria-live="polite"></div>
@@ -350,6 +350,7 @@ function kiPanelZeichnen(akte, akten) {
   const s = ui.assistent;
   const vorwuerfe = akte ? (akte.vorwuerfe || []) : [];
   const zustaendig = akte && akte.zustaendig_id ? personName(akte.zustaendig_id) : "";
+  const mandant = akte ? mandantName(akte) : "";
   const offene = akten.filter((a) => a.status !== "Geschlossen").slice(0, 5);
   kiSetzen(kiEl("panel"), html`
     <div class="ki-panel-kopf">
@@ -364,7 +365,7 @@ function kiPanelZeichnen(akte, akten) {
         </div>
         <h3>${akte.title || "–"}</h3>
         <dl>
-          <dt>Mandant</dt><dd>${mandantName(akte)}</dd>
+          ${mandant && mandant !== "–" ? html`<dt>Mandant</dt><dd>${mandant}</dd>` : ""}
           ${zustaendig ? html`<dt>Zuständig</dt><dd>${zustaendig}</dd>` : ""}
           ${akte.in_haft ? html`<dt>Haft</dt><dd class="danger-text">in Haft${akte.haft_bis ? ` bis ${fmt.datum(akte.haft_bis)}` : ""}</dd>` : ""}
         </dl>
@@ -381,29 +382,20 @@ function kiPanelZeichnen(akte, akten) {
       </section>` : html`
       <section class="ki-karte ki-allgemein">
         <h3>Allgemeine Rechtsfragen</h3>
-        <p class="ki-leise">Nigel, Butler und Jurist, beantwortet Ihre Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:</p>
+        <p class="ki-leise">${offene.length ? `Für Fragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:` : "Nigel schlägt in den Gesetzen und im Strafkatalog nach."}</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
       </section>`}
     <section class="ki-karte ki-arbeitsbereich">
-      <p class="ki-mini-titel" style="margin-top:0">Eine größere Aufgabe${anredeKomma()}?</p>
-      <p class="ki-leise">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich – mit gespeicherten Chats, mehreren Akten und einem Entwurf.</p>
+      <p class="ki-leise" style="margin-top:0">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich.</p>
       <div class="ki-karte-aktionen">
         <button type="button" class="ki-knopf" data-action="ki-arbeitsbereich">${s.verlauf.length ? "Im Arbeitsbereich fortsetzen" : "Arbeitsbereich öffnen"}</button>
       </div>
     </section>
-    <section class="ki-karte">
-      <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen${anredeKomma()}</p>
-      <ul class="ki-tipps">
-        <li><kbd>Enter</kbd>senden · <kbd>⇧</kbd>+<kbd>Enter</kbd>neue Zeile</li>
-        <li><kbd>K</kbd>Nigel rufen · <kbd>Esc</kbd>entlassen</li>
-        <li><kbd>2×</kbd>aufs Scharnier klicken: auf- und zuklappen</li>
-      </ul>
-    </section>
     <div class="ki-panel-fuss">
       ${kiBudgetHtml(s.info && s.info.budget, state.isAdmin)}
-      <p class="ki-leise">${s.info && s.info.modell ? html`Modell: ${s.info.modell} · ` : ""}Nur Rechtsfragen · max. 4000 Zeichen · bitte prüfen.</p>
+      <p class="ki-leise">Antworten bitte stets prüfen.</p>
     </div>`);
 }
 
