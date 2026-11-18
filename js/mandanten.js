@@ -77,6 +77,7 @@ VIEWS.mandanten = (route) => {
     .filter((m) => matches(f.q, m.name, m.telefon, m.discord, m.adresse, m.notizen, m.markierungen))
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
   const m = route.id ? byId("mandanten", route.id) : null;
+  const antraege = portalAntraege().length;
   return html`
     <div class="page">
       <div class="split ${route.id ? "has-detail" : ""}">
@@ -84,6 +85,10 @@ VIEWS.mandanten = (route) => {
           <div class="toolbar">
             <div class="search"><input type="search" id="mandanten-q" data-search data-input="mandanten-q" value="${f.q}" placeholder="Name, Telefon, Discord …"></div>
             <button class="btn small primary" data-action="mandant-neu">+ Neu</button>
+          </div>
+          <div class="toolbar">
+            <a class="btn small ${route.id === "portal" ? "primary" : ""} portal-link" href="#/mandanten/portal" title="Zugänge zum Mandantenportal">
+              Mandantenportal${antraege ? html`<span class="nav-badge" title="wartende Anträge">${antraege}</span>` : ""}</a>
           </div>
           <div class="toolbar">
             <select id="mandanten-mark" data-change="mandanten-mark">
@@ -107,7 +112,7 @@ VIEWS.mandanten = (route) => {
           </div>
         </aside>
         <section class="detail-pane">
-          ${route.id
+          ${route.id === "portal" ? portalZugaengeSeite() : route.id
             ? m ? mandantDetail(m) : html`<div class="card empty-state"><h2>Mandant nicht gefunden</h2><a class="btn" href="#/mandanten">Zur Liste</a></div>`
             : html`<div class="card empty-state"><h2>Mandantenkartei</h2>
                 <p>Alle Mandanten mit Kontaktdaten, Akten, Ergebnissen und offenen Rechnungen. Neue Mandanten entstehen auch automatisch beim Anlegen einer Akte.</p>
@@ -156,6 +161,7 @@ function mandantDetail(m) {
           <div><dt>Akten</dt><dd>${akten.length} (${akten.filter((a) => a.status !== "Geschlossen").length} aktiv)</dd></div>
         </dl>
         ${m.notizen ? html`<h3 class="section-title">Notizen</h3><p class="pre" style="margin-top:0">${m.notizen}</p>` : ""}
+        ${mandantPortalBlock(m)}
 
         <h3 class="section-title" style="margin-top:20px">Akten</h3>
         ${akten.length ? html`<div class="table-wrap"><table class="table">

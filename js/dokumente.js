@@ -323,7 +323,7 @@ function aktenblatt(a) {
     ${kinder("beteiligte", a.id).length ? html`<h3>Beteiligte</h3><ul>${kinder("beteiligte", a.id).map((b) => html`<li><strong>${b.rolle}:</strong> ${b.name}${b.kontakt ? ` (${b.kontakt})` : ""}${b.notiz ? ` – ${b.notiz}` : ""}</li>`)}</ul>` : ""}
     ${kinder("beweise", a.id).length ? html`<h3>Beweismittel</h3><ul>${kinder("beweise", a.id).map((b) => html`<li><strong>${b.art}:</strong> ${b.titel}${b.link ? html` – <span class="doc-small">${b.link}</span>` : ""}${b.beschreibung ? ` – ${b.beschreibung}` : ""}</li>`)}</ul>` : ""}
     ${termine.length ? html`<h3>Termine</h3><ul>${termine.map((t) => html`<li>${fmt.datumZeit(t.beginn)} – ${t.art}: ${t.titel}${t.ort ? ` (${t.ort})` : ""}${t.erledigt ? " ✓" : ""}</li>`)}</ul>` : ""}
-    ${eintraege.length ? html`<h3>Verlauf</h3>${eintraege.map((e) => html`<p><span class="doc-small">${fmt.datumZeit(e.created_at)} · ${e.art || "Notiz"} · ${personName(e.author)}${e.wichtig ? " · WICHTIG" : ""}</span><br>${multiline(e.text)}</p>`)}` : ""}`;
+    ${eintraege.length ? html`<h3>Verlauf</h3>${eintraege.map((e) => html`<p><span class="doc-small">${fmt.datumZeit(e.created_at)} · ${e.art || "Notiz"} · ${eintragAutor(e)}${e.wichtig ? " · WICHTIG" : ""}</span><br>${multiline(e.text)}</p>`)}` : ""}`;
 }
 
 // ---------- Aktionen ----------

@@ -16,6 +16,23 @@ und Änderungen erscheinen bei allen sofort.
   Passwort für die Anmeldung ohne Discord. Bestehende Mitglieder übernehmen ihren Charakter einmalig mit den alten
   Zugangsdaten. Admin-Rechte gelten für die Person (alle ihre Charaktere). Der Admin sieht unter **Accounts** alle
   Discord-Konten mit ihren Charakteren, gibt frei, lehnt ab, sperrt und ernennt Admins.
+- **Mandantenportal:** Auch **Mandanten** registrieren sich mit Discord („Ich bin Mandant“ – ohne Pflicht, auf dem
+  Discord-Server zu sein). Wer Mandanten bearbeiten darf, gibt den Zugang unter **Mandanten → Mandantenportal** frei und
+  ordnet ihn dabei einem Eintrag der Kartei zu (gleichnamige Einträge werden vorgeschlagen). Der Mandant sieht danach
+  ausschließlich sein eigenes Portal:
+  - **seine Akten** (als Mandant oder weil er für eine Akte freigeschaltet wurde – Mitmandant, Vertreter, Firma …;
+    in der Akte unter **Beteiligte → Mandantenportal**) mit Status, Ansprechpartner, Haft, Tatvorwürfen samt Strafrahmen
+    und Ergebnis,
+  - **Termine** der Akte (ohne interne Fristen und Wiedervorlagen),
+  - **Mitteilungen und Dokumente**, die die Kanzlei im Verlauf bzw. bei den Beweisen ausdrücklich
+    **„für Mandant sichtbar“** macht (Häkchen beim Eintragen oder das Auge am Eintrag),
+  - **seine Rechnungen** (Ansicht im Briefkopf, Drucken/PDF) und seine Kontaktdaten (Telefon/Adresse selbst änderbar).
+
+  Interne Notizen, Sachverhalt, Aufgaben, Historie, Beteiligte und alles andere sieht er nie – ein Mandanten-Charakter hat
+  kein Profil und keine Rechte; die Datenbank gibt ihm nur über `portal_daten()` genau diese Auswahl heraus. Er kann der
+  Kanzlei zu jeder Akte **schreiben** (steht im Verlauf als „Nachricht vom Mandanten“, die/der Zuständige wird benachrichtigt)
+  und wird selbst benachrichtigt, wenn etwas für ihn freigegeben wird, ein Termin dazukommt, eine Rechnung kommt oder sich
+  Status bzw. Ergebnis der Akte ändern. Mitarbeiter können zusätzlich einen Mandanten-Charakter haben und über das Logo wechseln.
 - **Übersicht:** Kennzahlen, Termine der nächsten 7 Tage, überfällige Fristen, eigene Aufgaben,
   Mandanten in Haft, dringende Akten, **liegen gebliebene Akten** (offen, seit X Tagen ohne Eintrag, Aufgabe
   oder Termin – mit „Wiedervorlage“ per Klick), Pinnwand, letzte Aktivitäten im Team, Statistik
@@ -119,7 +136,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) und [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -128,7 +145,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten
    (für den Discord-Login wird er später eingeschaltet – erst nachdem der Hook aus „Discord-Login einrichten“ aktiv ist).
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
@@ -160,7 +177,8 @@ zur nächsten Discord-Anmeldung – oder bis ein Admin ihn sperrt. Mitglieder la
 **Personal → Mitglied einstellen** anlegen.
 
 Test (nur lokal, nie gegen die Live-Datenbank): `PGHOST=… ./tools/test-konten/run.sh` spielt alle SQL-Dateien in eine
-lokale Postgres-Datenbank ein und prüft Registrierung, Freigabe, Wechsel, Übernahme, Sperren und Rechte.
+lokale Postgres-Datenbank ein und prüft Registrierung, Freigabe, Wechsel, Übernahme, Sperren und Rechte – und fürs
+Mandantenportal, dass ein Mandant wirklich nur seine eigenen, freigegebenen Daten sieht.
 
 ## KI-Assistent einrichten
 
@@ -211,7 +229,9 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/data.js` | Laden, Live-Updates, Speichern |
 | `js/forms.js` | Formulare und Dialoge |
 | `js/app.js` | Anmeldung, Seitenwechsel, Tastenkürzel |
-| `js/konto.js` | Discord-Anmeldung, Registrierung, Charaktere beantragen/übernehmen, Charakter-Wechsel (Logo) |
+| `js/konto.js` | Discord-Anmeldung, Registrierung (Mitarbeiter oder Mandant), Charaktere beantragen/übernehmen, Charakter-Wechsel (Logo) |
+| `js/portal.js` | Mandantenportal (was ein angemeldeter Mandant sieht: Akten, Termine, Nachrichten, Rechnungen, Kontaktdaten) |
+| `js/portal-verwaltung.js` | Mandantenportal aus Sicht der Kanzlei: Zugänge freigeben/zuordnen/sperren, Mitmandanten je Akte, „für Mandant sichtbar“ |
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
 | `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
@@ -223,6 +243,6 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
 | `supabase/functions/discord-pruefung/` | Edge Function: prüft nach der Discord-Anmeldung die Mitgliedschaft im Discord-Server |
-| `tools/test-konten/` | lokaler Test für Update 11 (Nachbau der Supabase-Umgebung + Szenarien) |
+| `tools/test-konten/` | lokaler Test für Update 11 und 12 (Nachbau der Supabase-Umgebung + Szenarien) |
 | `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

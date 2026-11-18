@@ -611,11 +611,12 @@ function tabKonten() {
           <td><strong>${c.name}</strong></td>
           <td><span class="name-mit-avatar">${discordAvatar(p)}<span>${p.discord_name || "–"}
             ${p.discord_benutzer ? html`<div class="small muted">@${p.discord_benutzer}</div>` : ""}</span></span>
-            ${p.server_mitglied ? "" : html` <span class="badge alert">nicht auf dem Server</span>`}</td>
-          <td>${erste ? "Registrierung" : html`Weiterer Charakter<div class="small muted">hat schon ${anzahl(p.charaktere.filter((x) => x.status === "frei").length, "Charakter", "Charaktere")}</div>`}</td>
+            ${p.server_mitglied || c.art === "mandant" ? "" : html` <span class="badge alert">nicht auf dem Server</span>`}</td>
+          <td>${c.art === "mandant" ? html`<span class="badge mandant">Mandant</span>${c.notiz ? html`<div class="small muted">„${truncate(c.notiz, 80)}“</div>` : ""}`
+            : erste ? "Registrierung" : html`Weiterer Charakter<div class="small muted">hat schon ${anzahl(p.charaktere.filter((x) => x.status === "frei").length, "Charakter", "Charaktere")}</div>`}</td>
           <td class="nowrap">${fmt.relativ(c.created_at)}</td>
           <td class="nowrap right">
-            <button class="btn small primary" data-action="konto-freigeben" data-id="${c.id}">Freigeben</button>
+            <button class="btn small primary" data-action="${c.art === "mandant" ? "zugang-freigeben" : "konto-freigeben"}" data-id="${c.id}">Freigeben</button>
             <button class="btn small danger" data-action="konto-ablehnen" data-id="${c.id}">Ablehnen</button></td>
         </tr>`)}</tbody></table></div>`
       : html`<p class="empty">Keine offenen Freigaben.</p>`}
@@ -629,11 +630,13 @@ function tabKonten() {
           <td><span class="name-mit-avatar">${discordAvatar(p)}<span><strong>${p.discord_name || "–"}</strong>
             ${p.ich ? html` <span class="badge gold">Du</span>` : ""}${p.ist_admin ? html` <span class="badge alert">Admin</span>` : ""}
             <div class="small muted">${p.discord_benutzer ? `@${p.discord_benutzer}` : ""}${p.email ? ` · ${p.email}` : ""}</div></span></span>
-            ${p.server_mitglied ? "" : html`<div><span class="badge alert">nicht auf dem Server</span></div>`}</td>
+            ${p.server_mitglied || p.charaktere.every((c) => c.art === "mandant") ? "" : html`<div><span class="badge alert">nicht auf dem Server</span></div>`}</td>
           <td>${personStatusBadge(p.status)}</td>
           <td>${p.charaktere.length ? p.charaktere.map((c) => html`<div class="konto-char">
-              <span>${c.user_id ? html`<a href="#/team/${c.user_id}">${c.name}</a>` : c.name}</span>
-              <span class="small muted">${c.rang || ""}</span>
+              <span>${c.user_id && c.art !== "mandant" ? html`<a href="#/team/${c.user_id}">${c.name}</a>` : c.name}</span>
+              <span class="small muted">${c.art === "mandant"
+                ? html`Mandant${c.mandant_id ? html` · <a href="#/mandanten/${c.mandant_id}">${c.mandant_name || "Kartei"}</a>` : ""}`
+                : c.rang || ""}</span>
               ${charakterStatusBadge({ ...c, aktiv: false })}
               ${c.status === "frei" && !p.ich ? html`<button class="link-btn small" data-action="konto-charakter" data-id="${c.id}" data-aktion="sperren">sperren</button>` : ""}
               ${c.status === "gesperrt" ? html`<button class="link-btn small" data-action="konto-charakter" data-id="${c.id}" data-aktion="entsperren">entsperren</button>` : ""}

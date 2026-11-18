@@ -144,7 +144,7 @@ function glockeZeichnen() {
       ${list.length ? list.map((b) => html`
         <a class="gp-item ${b.gelesen ? "" : "neu"}" href="${b.link || "#/"}" data-action="benachrichtigung-oeffnen" data-id="${b.id}">
           ${avatar(b.von)}
-          <span class="gp-text"><strong>${personName(b.von, "System")}</strong> ${b.text}
+          <span class="gp-text"><strong>${benachrichtigungAbsender(b)}</strong> ${b.text}
             <span class="gp-zeit">${fmt.relativ(b.zeit)}</span></span>
           ${b.gelesen ? "" : html`<span class="gp-punkt" title="ungelesen"></span>`}
         </a>`)
@@ -200,7 +200,7 @@ document.addEventListener("keydown", (e) => {
 // Neue Benachrichtigung live: Meldung, Glocke wackelt, ggf. Desktop-Hinweis
 LIVE_HOOKS.benachrichtigungen = (p) => {
   if (p.eventType !== "INSERT" || !state.me || !p.new || p.new.user_id !== state.me.id) return;
-  const text = `${personName(p.new.von, "System")} ${p.new.text}`;
+  const text = `${benachrichtigungAbsender(p.new)} ${p.new.text}`;
   toast(truncate(text, 160));
   const btn = $("btn-glocke");
   if (btn) {

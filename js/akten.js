@@ -165,6 +165,7 @@ const AKTE_ICON = {
   drucken: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9M7 17H4.5A1.5 1.5 0 0 1 3 15.5v-5A1.5 1.5 0 0 1 4.5 9h15a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5H17M7 14h10v6.5H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3.5-3.5a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3.5 3.5a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   arbeitsbereich: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  auge: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   loeschen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const icon = (name) => new SafeHtml(AKTE_ICON[name]);
@@ -327,7 +328,7 @@ function tabUeberblick(a) {
 
     ${wichtige.length ? html`
       <h3 class="section-title" style="margin-top:20px">Wichtige Einträge</h3>
-      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${mitErwaehnungen(e.text)}</p></li>`)}</ul>` : ""}
+      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${mitErwaehnungen(e.text)}</p></li>`)}</ul>` : ""}
 
     <div class="card-head" style="margin-top:20px">
       <h3 class="section-title" style="margin:0">Tatvorwürfe & Strafrahmen</h3>
@@ -380,7 +381,7 @@ function vorwurfTabelle(a) {
 
 // ---------- Tab: Verlauf ----------
 function tabVerlauf(a) {
-  const textId = `draft-${a.id}`, artId = `art-${a.id}`, wichtigId = `wichtig-${a.id}`;
+  const textId = `draft-${a.id}`, artId = `art-${a.id}`, wichtigId = `wichtig-${a.id}`, mandantId = `fuer-mandant-${a.id}`;
   const entries = kinder("eintraege", a.id).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
   return html`
     <form class="entry-form" data-submit="eintrag" data-id="${a.id}">
@@ -392,22 +393,25 @@ function tabVerlauf(a) {
             ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || "Notiz") === o ? "selected" : ""}>${o}</option>`)}
           </select>
           <label class="check"><input type="checkbox" id="${wichtigId}" name="wichtig" data-input="draft" ${ui.drafts[wichtigId] ? "checked" : ""}> Wichtig</label>
+          <label class="check" title="Im Mandantenportal sichtbar – der Mandant wird benachrichtigt"><input type="checkbox" id="${mandantId}" name="fuer_mandant" data-input="draft" ${ui.drafts[mandantId] ? "checked" : ""}> Für Mandant sichtbar</label>
           <span class="muted small erw-tipp">Tipp: <strong>@</strong> erwähnt Kollegen</span>
         </div>
         <button class="btn primary" type="submit">Eintragen</button>
       </div>
     </form>
     ${entries.length ? html`<ul class="timeline">${entries.map((e) => html`
-      <li class="${e.wichtig ? "wichtig" : ""}">
+      <li class="${e.wichtig ? "wichtig" : ""} ${e.mandant_id ? "vom-mandanten" : ""}">
         <div class="head">
-          <span class="badge gold">${e.art || "Notiz"}</span>
+          <span class="badge ${e.mandant_id ? "mandant" : "gold"}">${e.mandant_id ? "Nachricht vom Mandanten" : e.art || "Notiz"}</span>
           ${e.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
-          <strong>${personName(e.author)}</strong> · ${fmt.datumZeit(e.created_at)}
+          ${e.fuer_mandant && !e.mandant_id ? html`<span class="badge sichtbar" title="Im Mandantenportal sichtbar">für Mandant sichtbar</span>` : ""}
+          <strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}
           ${(e.erwaehnt || []).length ? html`<span class="erw-an" title="Erwähnt und benachrichtigt">→ ${e.erwaehnt.map((id) => personName(id)).join(", ")}</span>` : ""}
         </div>
         <p>${mitErwaehnungen(e.text)}</p>
         <div class="tools">
-          <button class="icon-btn" title="Bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>
+          ${e.mandant_id ? "" : html`<button class="icon-btn ${e.fuer_mandant ? "an" : ""}" title="${e.fuer_mandant ? "Für den Mandanten wieder verbergen" : "Für den Mandanten sichtbar machen"}" data-action="eintrag-fuer-mandant" data-id="${e.id}">${icon("auge")}</button>
+          <button class="icon-btn" title="Bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>`}
           <button class="icon-btn" title="Löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
         </div>
       </li>`)}</ul>` : html`<p class="empty">Noch keine Einträge. Halte hier alles fest, was im Fall passiert.</p>`}`;
@@ -424,14 +428,17 @@ SUBMITS.eintrag = async (form) => {
   const erwaehnt = erwaehnteIn(text);
   const ok = await attempt(() => insertRow("eintraege", {
     akte_id: id, text, art: form.elements.art.value, wichtig: form.elements.wichtig.checked,
+    ...(form.elements.fuer_mandant.checked ? { fuer_mandant: true } : {}),
     ...(erwaehnt.length ? { erwaehnt } : {}),
   }));
   button.disabled = false;
   if (ok) {
     delete ui.drafts[`draft-${id}`];
     delete ui.drafts[`wichtig-${id}`];
+    delete ui.drafts[`fuer-mandant-${id}`];
     form.elements.text.value = "";
     form.elements.wichtig.checked = false;
+    form.elements.fuer_mandant.checked = false;
     const andere = erwaehnt.filter((x) => x !== state.me.id);
     toast(andere.length ? `Eintrag gespeichert – ${andere.map((x) => personName(x)).join(", ")} benachrichtigt` : "Eintrag gespeichert");
   }
@@ -465,7 +472,8 @@ function tabBeteiligte(a) {
             <div class="tools"><button class="icon-btn" title="Bearbeiten" data-action="beteiligter-bearbeiten" data-id="${b.id}">✎</button></div>
           </div>`)}</div>`;
     })}
-    ${list.length ? "" : html`<p class="empty">Noch keine weiteren Personen erfasst.</p>`}`;
+    ${list.length ? "" : html`<p class="empty">Noch keine weiteren Personen erfasst.</p>`}
+    ${aktePortalBlock(a)}`;
 }
 
 function beteiligterFields() {
@@ -489,7 +497,7 @@ function tabBeweise(a) {
       const url = safeUrl(b.link);
       return html`
         <div class="mini-card">
-          <div class="meta"><span class="badge gold">${b.art}</span> · ${fmt.datum(b.created_at)} · ${personName(b.created_by)}</div>
+          <div class="meta"><span class="badge gold">${b.art}</span>${b.fuer_mandant ? html` <span class="badge sichtbar" title="Im Mandantenportal sichtbar">für Mandant sichtbar</span>` : ""} · ${fmt.datum(b.created_at)} · ${personName(b.created_by)}</div>
           <div class="title" style="margin-top:4px">${b.titel}</div>
           ${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer" class="small">Öffnen ↗</a>` : ""}
           ${url && isImageUrl(url) ? html`<a href="${url}" target="_blank" rel="noopener noreferrer"><img class="thumb" src="${url}" alt="${b.titel}" loading="lazy"></a>` : ""}
@@ -499,12 +507,19 @@ function tabBeweise(a) {
     })}</div>` : html`<p class="empty">Noch keine Beweismittel.</p>`}`;
 }
 
+// "für Mandant sichtbar" nur mitschicken, wenn es gesetzt ist (oder vorher gesetzt war)
+function ohneFalschesSichtbar(v) {
+  const { fuer_mandant, ...rest } = v;
+  return fuer_mandant ? v : rest;
+}
+
 function beweisFields() {
   return [
     { name: "art", label: "Art", type: "select", options: OPTIONEN.beweisArt, required: true, half: true },
     { name: "titel", label: "Bezeichnung", required: true, half: true, placeholder: "z. B. Dashcam Kreuzung Vinewood" },
     { name: "link", label: "Link", type: "url", placeholder: "https://…", help: "Bilder (.png/.jpg) werden direkt als Vorschau angezeigt." },
     { name: "beschreibung", label: "Beschreibung", type: "textarea", rows: 3, placeholder: "Was ist zu sehen? Warum ist es wichtig?" },
+    { name: "fuer_mandant", label: "Für Mandant sichtbar (Mandantenportal, der Mandant wird benachrichtigt)", type: "checkbox" },
   ];
 }
 
@@ -779,13 +794,14 @@ Object.assign(ACTIONS, {
         { name: "art", label: "Art", type: "select", options: OPTIONEN.eintragArt, required: true, half: true },
         { name: "wichtig", label: "Wichtig", type: "checkbox", half: true },
         { name: "text", label: "Text", type: "textarea", rows: 6, required: true },
+        { name: "fuer_mandant", label: "Für Mandant sichtbar (Mandantenportal)", type: "checkbox" },
       ],
       values: e,
       onMount: (form) => { form.elements.text.dataset.mention = ""; },
       onSubmit: async (v) => {
         const erwaehnt = erwaehnteIn(v.text);
         const vorher = new Set(e.erwaehnt || []);
-        await updateRow("eintraege", e.id, { ...v, ...(erwaehnt.length || vorher.size ? { erwaehnt } : {}) });
+        await updateRow("eintraege", e.id, { ...(e.fuer_mandant ? v : ohneFalschesSichtbar(v)), ...(erwaehnt.length || vorher.size ? { erwaehnt } : {}) });
         const neu = erwaehnt.filter((x) => !vorher.has(x) && x !== state.me.id);
         toast(neu.length ? `Eintrag gespeichert – ${neu.map((x) => personName(x)).join(", ")} benachrichtigt` : "Eintrag gespeichert");
       },
@@ -823,7 +839,7 @@ Object.assign(ACTIONS, {
     title: "Beweismittel hinzufügen",
     fields: beweisFields(),
     values: { art: "Foto" },
-    onSubmit: async (v) => { await insertRow("beweise", { ...v, akte_id: d.akte }); toast("Beweismittel gespeichert"); },
+    onSubmit: async (v) => { await insertRow("beweise", { ...ohneFalschesSichtbar(v), akte_id: d.akte }); toast("Beweismittel gespeichert"); },
   }),
   "beweis-bearbeiten": (d) => {
     const b = byId("beweise", d.id);
@@ -831,7 +847,7 @@ Object.assign(ACTIONS, {
       title: "Beweismittel bearbeiten",
       fields: beweisFields(),
       values: b,
-      onSubmit: async (v) => { await updateRow("beweise", b.id, v); toast("Gespeichert"); },
+      onSubmit: async (v) => { await updateRow("beweise", b.id, b.fuer_mandant ? v : ohneFalschesSichtbar(v)); toast("Gespeichert"); },
       onDelete: async () => {
         if (!confirm(`„${b.titel}“ löschen?`)) return false;
         await deleteRow("beweise", b.id);
