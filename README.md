@@ -134,8 +134,9 @@ und Änderungen erscheinen bei allen sofort.
     Antwort neu erzeugen, frühere Frage ändern und neu stellen.
   - **Quellen:** alle nachgeschlagenen Paragraphen des Chats mit Wortlaut, zum Anheften oder Öffnen.
   - **Vorlagen:** Standard-, Kanzlei- und eigene Vorlagen (Auftrag + Modus). Kanzlei-Vorlagen pflegt, wer die Kanzlei-Einstellungen bearbeiten darf.
-  - **Persönliche Einstellungen** (gelten auch fürs Handy): Anrede (Sir, Madam, ohne), Ton (Butler, dezent, sachlich),
-    Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren, Standardmodus, Senden mit Enter oder Strg+Enter.
+  - **Persönliche Einstellungen** (gelten auch fürs Handy): Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren,
+    Standardmodus, Senden mit Enter oder Strg+Enter, Kosten-Anzeige (Prozent/Dollar). Der Ton ist immer der Butler;
+    die Anrede kommt aus „Mein Profil“ (Herr → Sir, Frau → Madam, Keine Anrede).
   - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
     **maximale Kosten pro Anfrage** (US-Dollar, gilt auch fürs Handy). Nigel rechnet vor jedem Schritt mit den Preisen des Modells:
     Wird es knapp, schlägt er weniger nach, denkt kürzer und begrenzt die Antwortlänge; reicht das Budget gar nicht, lehnt er ab,
