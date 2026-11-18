@@ -154,13 +154,19 @@ function einstellungFields() {
 // ---------- Seite ----------
 VIEWS.team = (route) => {
   if (darf("personal_verwalten") && ui.adminUsers === null) ladeAdminUsers();
+  // #/team/konten öffnet direkt die Accounts (Link aus der Benachrichtigung)
+  if (route.id === "konten") { ui.personal.tab = "konten"; route = { ...route, id: null }; }
   if (route.id) {
     const p = profileOf(route.id);
     return html`<div class="page">${p ? personalDetail(p)
       : html`<div class="card empty-state"><h2>Mitglied nicht gefunden</h2><a class="btn" href="#/team">Zur Übersicht</a></div>`}</div>`;
   }
   const tabs = [["mitglieder", "Mitglieder"], ["raenge", "Ränge & Berechtigungen"], ["einstellungen", "Kanzlei & Daten"]];
-  const tab = ui.personal.tab;
+  if (state.isAdmin) {
+    const n = ui.konten && !ui.konten.fehler ? kontenOffen().length : 0;
+    tabs.push(["konten", n ? `Accounts (${n})` : "Accounts"]);
+  }
+  const tab = ui.personal.tab === "konten" && !state.isAdmin ? "mitglieder" : ui.personal.tab;
   return html`
     <div class="page">
       <div class="page-head">
@@ -173,7 +179,7 @@ VIEWS.team = (route) => {
       <nav class="tabs" style="margin:0 0 16px;padding:0">
         ${tabs.map(([k, l]) => html`<a href="#/team" data-action="personal-tab" data-tab="${k}" class="${k === tab ? "active" : ""}">${l}</a>`)}
       </nav>
-      ${tab === "raenge" ? tabRaenge() : tab === "einstellungen" ? tabEinstellungen() : tabMitglieder()}
+      ${tab === "raenge" ? tabRaenge() : tab === "einstellungen" ? tabEinstellungen() : tab === "konten" ? tabKonten() : tabMitglieder()}
     </div>`;
 };
 
@@ -546,8 +552,176 @@ function isMe2(a, b) {
   return a && b && String(a).toLowerCase() === String(b).toLowerCase();
 }
 
+
+// ---------- Accounts (Discord-Konten & Charaktere, nur Admin) ----------
+ui.konten = null;
+
+async function ladeKonten() {
+  if (!state.isAdmin || ui.kontenLaedt) return;
+  ui.kontenLaedt = true;
+  const { data, error } = await db.rpc("admin_konten");
+  ui.kontenLaedt = false;
+  ui.konten = error
+    ? { fehler: /PGRST202|Could not find the function/i.test(`${error.code} ${error.message}`)
+        ? "Die Accounts sind in Supabase noch nicht eingerichtet (supabase-update-11.sql)." : errorText(error) }
+    : data;
+  scheduleRender();
+}
+
+// Offene Freigaben: je wartendem Charakter eine Zeile
+function kontenOffen() {
+  if (!ui.konten || ui.konten.fehler) return [];
+  return ui.konten.personen.flatMap((p) => p.status === "gesperrt" ? [] : p.charaktere
+    .filter((c) => c.status === "wartet")
+    .map((c) => ({ p, c, erste: p.status !== "frei" })));
+}
+
+const findeCharakter = (id) => {
+  for (const p of (ui.konten && ui.konten.personen) || []) {
+    const c = p.charaktere.find((x) => x.id === id);
+    if (c) return { p, c };
+  }
+  return {};
+};
+const findePerson = (id) => ((ui.konten && ui.konten.personen) || []).find((p) => p.user_id === id) || {};
+
+function personStatusBadge(s) {
+  return { wartet: html`<span class="badge gold">wartet</span>`, frei: html`<span class="badge ok">freigegeben</span>`,
+    abgelehnt: html`<span class="badge geschlossen">abgelehnt</span>`, gesperrt: html`<span class="badge alert">gesperrt</span>` }[s] || s;
+}
+
+function discordAvatar(p) {
+  return p.avatar_url ? html`<img src="${p.avatar_url}" alt="" class="discord-avatar klein">`
+    : html`<span class="discord-avatar klein leer">${(p.discord_name || "?").slice(0, 1)}</span>`;
+}
+
+function tabKonten() {
+  if (ui.konten === null) { ladeKonten(); return html`<div class="card"><p class="muted">Accounts werden geladen …</p></div>`; }
+  if (ui.konten.fehler) return html`<div class="card"><p class="error">${ui.konten.fehler}</p></div>`;
+  const offen = kontenOffen();
+  const personen = ui.konten.personen;
+  const ohne = ui.konten.ohne_discord;
+  return html`
+    <div class="card">
+      <div class="card-head"><h2>Freigaben</h2>
+        <button class="btn small" data-action="konten-laden">Aktualisieren</button></div>
+      ${offen.length ? html`<div class="table-wrap"><table class="table">
+        <thead><tr><th>Charakter</th><th>Discord</th><th>Art</th><th>Beantragt</th><th></th></tr></thead>
+        <tbody>${offen.map(({ p, c, erste }) => html`<tr>
+          <td><strong>${c.name}</strong></td>
+          <td><span class="name-mit-avatar">${discordAvatar(p)}<span>${p.discord_name || "–"}
+            ${p.discord_benutzer ? html`<div class="small muted">@${p.discord_benutzer}</div>` : ""}</span></span>
+            ${p.server_mitglied ? "" : html` <span class="badge alert">nicht auf dem Server</span>`}</td>
+          <td>${erste ? "Registrierung" : html`Weiterer Charakter<div class="small muted">hat schon ${anzahl(p.charaktere.filter((x) => x.status === "frei").length, "Charakter", "Charaktere")}</div>`}</td>
+          <td class="nowrap">${fmt.relativ(c.created_at)}</td>
+          <td class="nowrap right">
+            <button class="btn small primary" data-action="konto-freigeben" data-id="${c.id}">Freigeben</button>
+            <button class="btn small danger" data-action="konto-ablehnen" data-id="${c.id}">Ablehnen</button></td>
+        </tr>`)}</tbody></table></div>`
+      : html`<p class="empty">Keine offenen Freigaben.</p>`}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Discord-Konten</h2><span class="muted small">${anzahl(personen.length, "Person", "Personen")}</span></div>
+      ${personen.length ? html`<div class="table-wrap"><table class="table konten-tabelle">
+        <thead><tr><th>Person</th><th>Status</th><th>Charaktere</th><th>Zuletzt aktiv</th><th></th></tr></thead>
+        <tbody>${personen.map((p) => html`<tr>
+          <td><span class="name-mit-avatar">${discordAvatar(p)}<span><strong>${p.discord_name || "–"}</strong>
+            ${p.ich ? html` <span class="badge gold">Du</span>` : ""}${p.ist_admin ? html` <span class="badge alert">Admin</span>` : ""}
+            <div class="small muted">${p.discord_benutzer ? `@${p.discord_benutzer}` : ""}${p.email ? ` · ${p.email}` : ""}</div></span></span>
+            ${p.server_mitglied ? "" : html`<div><span class="badge alert">nicht auf dem Server</span></div>`}</td>
+          <td>${personStatusBadge(p.status)}</td>
+          <td>${p.charaktere.length ? p.charaktere.map((c) => html`<div class="konto-char">
+              <span>${c.user_id ? html`<a href="#/team/${c.user_id}">${c.name}</a>` : c.name}</span>
+              <span class="small muted">${c.rang || ""}</span>
+              ${charakterStatusBadge({ ...c, aktiv: false })}
+              ${c.status === "frei" && !p.ich ? html`<button class="link-btn small" data-action="konto-charakter" data-id="${c.id}" data-aktion="sperren">sperren</button>` : ""}
+              ${c.status === "gesperrt" ? html`<button class="link-btn small" data-action="konto-charakter" data-id="${c.id}" data-aktion="entsperren">entsperren</button>` : ""}
+            </div>`) : html`<span class="muted">–</span>`}</td>
+          <td class="nowrap small">${p.letzte_anmeldung ? fmt.relativ(p.letzte_anmeldung) : "noch nie"}</td>
+          <td class="nowrap right">${p.ich ? "" : html`
+            ${p.status === "gesperrt"
+              ? html`<button class="btn small" data-action="konto-person" data-id="${p.user_id}" data-aktion="entsperren">Entsperren</button>`
+              : p.status === "abgelehnt"
+                ? html`<button class="btn small" data-action="konto-person" data-id="${p.user_id}" data-aktion="freigeben">Doch freigeben</button>`
+                : html`<button class="btn small danger" data-action="konto-person" data-id="${p.user_id}" data-aktion="sperren">Sperren</button>`}
+            ${p.status === "frei" ? html`<button class="btn small" data-action="konto-person" data-id="${p.user_id}" data-aktion="${p.ist_admin ? "kein_admin" : "admin"}">${p.ist_admin ? "Admin entziehen" : "Zum Admin"}</button>` : ""}`}</td>
+        </tr>`)}</tbody></table></div>`
+      : html`<p class="empty">Noch hat sich niemand mit Discord angemeldet.</p>`}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Noch nicht mit Discord verknüpft</h2></div>
+      <p class="small muted">Diese Mitglieder melden sich noch mit E-Mail und Passwort an. Zum Verknüpfen: mit Discord anmelden und
+        „Bestehenden Charakter übernehmen“ wählen (danach gelten die alten Zugangsdaten nicht mehr).</p>
+      ${ohne.length ? html`<div class="table-wrap"><table class="table">
+        <thead><tr><th>Mitglied</th><th>Login</th><th>Status</th><th>Zuletzt angemeldet</th></tr></thead>
+        <tbody>${ohne.map((u) => html`<tr>
+          <td><a href="#/team/${u.user_id}"><strong>${u.name}</strong></a>${u.ist_admin ? html` <span class="badge alert">Admin</span>` : ""}</td>
+          <td class="small">${u.email}</td>
+          <td>${statusBadgeP(u.profil_status)}${u.gesperrt ? html` <span class="badge geschlossen">gesperrt</span>` : ""}</td>
+          <td class="nowrap small">${u.letzte_anmeldung ? fmt.relativ(u.letzte_anmeldung) : "noch nie"}</td>
+        </tr>`)}</tbody></table></div>`
+      : html`<p class="empty">Alle Mitglieder sind mit Discord verknüpft.</p>`}
+    </div>`;
+}
+
+async function kontoAktion(rpc, args, ok) {
+  const { error } = await db.rpc(rpc, args);
+  if (error) throw error;
+  toast(ok);
+  ui.konten = null;
+  ui.adminUsers = null;
+  await neuLaden(["profiles"]);
+}
+
+const KONTO_TEXTE = {
+  sperren: ["sperren", "gesperrt"], entsperren: ["entsperren", "entsperrt"], freigeben: ["freigeben", "freigegeben"],
+  admin: ["zum Admin machen (gilt für alle Charaktere)", "ist jetzt Admin"], kein_admin: ["die Admin-Rechte entziehen", "ist kein Admin mehr"],
+};
+
 // ---------- Aktionen ----------
 Object.assign(ACTIONS, {
+  "konten-laden": () => { ui.konten = null; render(); },
+  "konto-freigeben": (d) => {
+    const { p, c } = findeCharakter(d.id);
+    if (!c) return;
+    openForm({
+      title: `${c.name} freigeben`,
+      intro: p.status !== "frei"
+        ? html`Damit ist auch die Registrierung von <strong>${p.discord_name || "dieser Person"}</strong> freigegeben.`
+        : html`Weiterer Charakter von <strong>${p.discord_name || "dieser Person"}</strong>.`,
+      fields: [{ name: "rang_id", label: "Rang", type: "select", emptyLabel: "— kein Rang (keine Rechte) —",
+        options: () => vergebbareRaenge().map((r) => ({ value: r.id, label: r.name })),
+        help: "Kann später unter Personal geändert werden." }],
+      submitLabel: "Freigeben",
+      onSubmit: (v) => kontoAktion("admin_charakter", { p_charakter: c.id, p_aktion: "freigeben", p_rang: v.rang_id || null },
+        `${c.name} ist freigegeben`),
+    });
+  },
+  "konto-ablehnen": async (d) => {
+    const { p, c } = findeCharakter(d.id);
+    if (!c || !confirm(`${c.name} ablehnen?`)) return;
+    // Erste Registrierung: die ganze Person ablehnen, sonst nur den Charakter
+    await attempt(() => p.status !== "frei"
+      ? kontoAktion("admin_person", { p_person: p.user_id, p_aktion: "ablehnen" }, "Registrierung abgelehnt")
+      : kontoAktion("admin_charakter", { p_charakter: c.id, p_aktion: "ablehnen" }, `${c.name} abgelehnt`));
+  },
+  "konto-person": async (d) => {
+    const p = findePerson(d.id);
+    const [frage, fertig] = KONTO_TEXTE[d.aktion] || [d.aktion, "erledigt"];
+    const name = p.discord_name || "Person";
+    const zusatz = d.aktion === "sperren" ? "\n\nAlle Charaktere dieser Person werden gesperrt." : "";
+    if (!confirm(`${name} ${frage}?${zusatz}`)) return;
+    await attempt(() => kontoAktion("admin_person", { p_person: d.id, p_aktion: d.aktion }, `${name} ${fertig}`));
+  },
+  "konto-charakter": async (d) => {
+    const { c } = findeCharakter(d.id);
+    if (!c) return;
+    const [frage, fertig] = KONTO_TEXTE[d.aktion];
+    if (!confirm(`${c.name} ${frage}?`)) return;
+    await attempt(() => kontoAktion("admin_charakter", { p_charakter: d.id, p_aktion: d.aktion }, `${c.name} ${fertig}`));
+  },
   "personal-tab": (d) => { ui.personal.tab = d.tab; if (parseRoute().page !== "team" || parseRoute().id) go("team"); else render(); },
   "personal-filter": (d) => { ui.personal.filter = d.filter; render(); },
   "profil-bearbeiten": () => openProfilForm(state.me.id),
