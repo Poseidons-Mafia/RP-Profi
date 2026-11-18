@@ -14,13 +14,13 @@
   <meta name="apple-mobile-web-app-title" content="Wiwang Law">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="format-detection" content="telephone=no">
-  <meta name="app-version" content="50">
-  <link rel="stylesheet" href="style.css?v=50">
+  <meta name="app-version" content="51">
+  <link rel="stylesheet" href="style.css?v=51">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#/" data-action="charakter-menue" title="Charakter wechseln">
-      <img class="brand-logo" src="assets/logo.png?v=50" alt="Wiwang Law">
+      <img class="brand-logo" src="assets/logo.png?v=51" alt="Wiwang Law">
       <span id="brand-wechsel" class="brand-wechsel" hidden aria-hidden="true">⇄</span>
       <span id="brand-sub" class="brand-sub">Aktensystem</span>
     </a>
@@ -78,7 +78,7 @@
   <!-- Login -->
   <section id="login-screen" class="center-screen" hidden>
     <form id="login-form" class="card login-card">
-      <div class="login-brand"><img src="assets/logo.png?v=50" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=51" alt="Wiwang Law"></div>
       <h2>Anmelden</h2>
       <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
       <button type="button" class="btn discord full" data-action="discord-login">
@@ -100,7 +100,7 @@
   <!-- Discord-Konto ohne aktiven Charakter: Registrierung, Freigabe, Charakter wählen -->
   <section id="konto-screen" class="center-screen" hidden>
     <div class="card login-card konto-card">
-      <div class="login-brand"><img src="assets/logo.png?v=50" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=51" alt="Wiwang Law"></div>
       <div id="konto-inhalt"></div>
     </div>
   </section>
@@ -109,7 +109,7 @@
   <!-- Mandantenportal (angemeldet als Mandanten-Charakter) -->
   <main id="portal" hidden></main>
 
-  <a class="guide-btn" href="leitfaden/straftat.html?v=50" title="Leitfaden: Abhandlung einer Straftat (öffentlich)" aria-label="Leitfaden: Abhandlung einer Straftat">
+  <a class="guide-btn" href="leitfaden/straftat.html?v=51" title="Leitfaden: Abhandlung einer Straftat (öffentlich)" aria-label="Leitfaden: Abhandlung einer Straftat">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7a2 2 0 0 1 2 2v9h-7a2 2 0 0 1-2-2zM3.5 11.5a2 2 0 0 1 2-2h7M6.5 5.5h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <span>Leitfaden</span>
   </a>
@@ -120,34 +120,36 @@
   <div id="print-area"></div>
   <div id="toasts" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+  <!-- Fremde Skripte mit Prüfsumme (SRI): wurde die Datei auf dem CDN verändert, lädt der Browser sie nicht.
+       Bei einem Versionswechsel die integrity-Werte neu berechnen (siehe README, Abschnitt Sicherheit). -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <!-- KI-Antworten: Markdown → HTML (Showdown) und Bereinigung (DOMPurify) -->
-  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
-  <script src="config.js?v=50"></script>
-  <script src="update-check.js?v=50"></script>
-  <script src="js/util.js?v=50"></script>
-  <script src="js/data.js?v=50"></script>
-  <script src="js/forms.js?v=50"></script>
-  <script src="js/app.js?v=50"></script>
-  <script src="js/konto.js?v=50"></script>
-  <script src="js/dokumente.js?v=50"></script>
-  <script src="js/akten.js?v=50"></script>
-  <script src="js/uebersicht.js?v=50"></script>
-  <script src="js/mandanten.js?v=50"></script>
-  <script src="js/kalender.js?v=50"></script>
-  <script src="js/rechnungen.js?v=50"></script>
-  <script src="js/gesetzbuch.js?v=50"></script>
-  <script src="js/gesetze.js?v=50"></script>
-  <script src="js/team.js?v=50"></script>
-  <script src="js/buchhaltung.js?v=50"></script>
-  <script src="js/finanzen.js?v=50"></script>
-  <script src="js/zusammenarbeit.js?v=50"></script>
-  <script src="js/pinnwand.js?v=50"></script>
-  <script src="js/ablaeufe.js?v=50"></script>
-  <script src="js/assistent.js?v=50"></script>
-  <script src="js/nigel.js?v=50"></script>
-  <script src="js/portal-verwaltung.js?v=50"></script>
-  <script src="js/portal.js?v=50"></script>
+  <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js" integrity="sha384-GP2+CwBlakZSDJUr+E4JvbxpM75i1i8+RKkieQxzuyDZLG+5105E1OfHIjzcXyWH" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous"></script>
+  <script src="config.js?v=51"></script>
+  <script src="update-check.js?v=51"></script>
+  <script src="js/util.js?v=51"></script>
+  <script src="js/data.js?v=51"></script>
+  <script src="js/forms.js?v=51"></script>
+  <script src="js/app.js?v=51"></script>
+  <script src="js/konto.js?v=51"></script>
+  <script src="js/dokumente.js?v=51"></script>
+  <script src="js/akten.js?v=51"></script>
+  <script src="js/uebersicht.js?v=51"></script>
+  <script src="js/mandanten.js?v=51"></script>
+  <script src="js/kalender.js?v=51"></script>
+  <script src="js/rechnungen.js?v=51"></script>
+  <script src="js/gesetzbuch.js?v=51"></script>
+  <script src="js/gesetze.js?v=51"></script>
+  <script src="js/team.js?v=51"></script>
+  <script src="js/buchhaltung.js?v=51"></script>
+  <script src="js/finanzen.js?v=51"></script>
+  <script src="js/zusammenarbeit.js?v=51"></script>
+  <script src="js/pinnwand.js?v=51"></script>
+  <script src="js/ablaeufe.js?v=51"></script>
+  <script src="js/assistent.js?v=51"></script>
+  <script src="js/nigel.js?v=51"></script>
+  <script src="js/portal-verwaltung.js?v=51"></script>
+  <script src="js/portal.js?v=51"></script>
 </body>
 </html>
