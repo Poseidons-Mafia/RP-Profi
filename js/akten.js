@@ -204,7 +204,7 @@ document.addEventListener("keydown", (e) => {
 function eckdaten(a) {
   const m = byId("mandanten", a.mandant_id);
   return [
-    ["Mandant", m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>${m.telefon ? html`<br><span class="small muted">${m.telefon}</span>` : ""}` : a.client],
+    ["Mandant", m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>${m.telefon ? html`<br><span class="small muted">${m.telefon}</span>` : ""}` : a.client || html`<span class="muted">ohne Mandant</span>`],
     ["Gegenpartei", a.opponent || "–"],
     ["Zuständig", personName(a.zustaendig_id, a.lawyer || "–")],
     ["Rechtsgebiet", a.area || "–"],
@@ -263,7 +263,7 @@ function renderAkteDetail(a, sub) {
             <span class="badges">${prioBadge(a.prioritaet)} ${haftBadge(a)}</span>
             <h2>${a.title}</h2>
             <div class="head-sub nur-schmal">
-              Mandant: ${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : a.client}
+              ${m ? html`Mandant: <a href="#/mandanten/${m.id}">${m.name}</a>` : a.client ? `Mandant: ${a.client}` : "Ohne Mandant"}
               ${a.opponent ? html` · Gegen: ${a.opponent}` : ""}
               · Zuständig: ${personName(a.zustaendig_id, a.lawyer || "niemand")}
             </div>
@@ -456,7 +456,7 @@ function tabBeteiligte(a) {
     </div>
     <div class="group-title">Mandant & Gegenpartei</div>
     <div class="cards">
-      <div class="mini-card"><div class="meta">Mandant</div><div class="title">${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : a.client}</div>
+      <div class="mini-card"><div class="meta">Mandant</div><div class="title">${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : a.client || html`<span class="muted">ohne Mandant</span>`}</div>
         ${m && m.telefon ? html`<div class="meta">${m.telefon}</div>` : ""}</div>
       ${a.opponent ? html`<div class="mini-card"><div class="meta">Gegenpartei (aus der Akte)</div><div class="title">${a.opponent}</div></div>` : ""}
     </div>
@@ -588,9 +588,9 @@ async function ladeHistorie(id) {
 function akteFields() {
   return [
     { name: "title", label: "Titel / Betreff", required: true, placeholder: "z. B. Raub Fleeca Bank, Verkehrsunfall Vinewood Blvd." },
-    { name: "mandant", label: "Mandant", required: true, half: true, placeholder: "Name – neu oder aus der Kartei",
+    { name: "mandant", label: "Mandant (optional)", half: true, placeholder: "Name – neu oder aus der Kartei",
       list: () => state.mandanten.map((m) => m.name).sort((x, y) => x.localeCompare(y, "de")),
-      help: "Neue Namen kommen automatisch in die Mandantenkartei." },
+      help: "Neue Namen kommen automatisch in die Mandantenkartei. Leer lassen für Akten ohne Mandant (z. B. interne Akten, Gutachten)." },
     { name: "opponent", label: "Gegenpartei", half: true, placeholder: "optional" },
     { name: "area", label: "Rechtsgebiet", type: "select", options: OPTIONEN.rechtsgebiet, half: true },
     { name: "typ", label: "Mandatsart", type: "select", options: OPTIONEN.mandatsart, half: true },
@@ -617,12 +617,13 @@ function akteAblaufFeld() {
 }
 
 async function mandantFuerName(name) {
+  if (!(name || "").trim()) return null; // Akte ohne Mandant
   return findMandantByName(name) || insertRow("mandanten", { name: name.trim() });
 }
 
 function openAkteForm(akte, preset = {}) {
   const values = akte
-    ? { ...akte, mandant: mandantName(akte) }
+    ? { ...akte, mandant: akte.mandant_id || akte.client ? mandantName(akte) : "" }
     : { status: "Offen", prioritaet: "Normal", area: "Strafrecht", zustaendig_id: state.me.id, ...preset };
   const mitAblauf = !akte && darf("termine_schreiben") && state.ablaeufe.length;
   // Passenden Ablauf hervorheben, sobald Rechtsgebiet/Mandatsart gewählt sind
@@ -647,7 +648,7 @@ function openAkteForm(akte, preset = {}) {
     onSubmit: async (v) => {
       const mandant = await mandantFuerName(v.mandant);
       const row = {
-        title: v.title, client: mandant.name, mandant_id: mandant.id, opponent: v.opponent, area: v.area, typ: v.typ,
+        title: v.title, client: mandant ? mandant.name : null, mandant_id: mandant ? mandant.id : null, opponent: v.opponent, area: v.area, typ: v.typ,
         status: v.status, prioritaet: v.prioritaet, zustaendig_id: v.zustaendig_id, az_extern: v.az_extern,
         summary: v.summary, in_haft: v.in_haft, haft_bis: v.in_haft ? v.haft_bis : null,
       };

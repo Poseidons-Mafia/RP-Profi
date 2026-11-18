@@ -437,11 +437,11 @@ function gegnerNamen(akte) {
 // Interessenkonflikte: Gegner hier ist anderswo unser Mandant – oder umgekehrt
 function konflikte(akte) {
   const result = [];
-  const mandant = norm(mandantName(akte));
+  const mandant = akte.mandant_id || akte.client ? norm(mandantName(akte)) : "";
   const gegner = new Set(gegnerNamen(akte));
   for (const other of state.akten) {
     if (other.id === akte.id) continue;
-    const otherMandant = norm(mandantName(other));
+    const otherMandant = other.mandant_id || other.client ? norm(mandantName(other)) : "";
     if (otherMandant && gegner.has(otherMandant)) {
       result.push({ akte: other, grund: `${mandantName(other)} ist dort unser Mandant` });
     } else if (mandant && gegnerNamen(other).includes(mandant)) {
