@@ -493,11 +493,6 @@ dialog.law::backdrop { background: rgba(39, 35, 29, .34); }
 .foot { display: grid; gap: 6px; }
 .abbr { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .abbr b { color: var(--ink); font-weight: 600; }
-kbd {
-  display: inline-block; padding: 0 5px; border-radius: 4px;
-  border: 1px solid var(--rule-strong); border-bottom-width: 2px; background: var(--card);
-  font: 600 11px/1.5 var(--body); color: var(--ink);
-}
 
 /* ---------- Rückgängig ---------- */
 .toast {
@@ -631,7 +626,7 @@ svg.flow { display: block; margin: 0 auto; overflow: visible; }
   .guide { overflow: visible; border-right: 0; padding-right: 0; max-width: 46rem; margin-inline: auto; }
   .chart { padding-left: 0; padding-block: 8px 28px; }
   .canvas { height: 72vh; }
-  .top-meta .src, .foot .keys { display: none; }
+  .top-meta .src { display: none; }
   dialog.law {
     inset: auto 0 0 0; width: 100%; height: auto; max-height: 88vh; max-height: 88dvh;
     border-left: 0; border-top: 1px solid var(--rule-strong); border-radius: 16px 16px 0 0;
@@ -704,7 +699,6 @@ svg.flow { display: block; margin: 0 auto; overflow: visible; }
 
       <div class="foot">
         <p class="abbr"><b>StA</b> Staatsanwaltschaft (Office of the San Andreas Attorney General) · <b>Ermittlungspersonen der StA</b> Beamte der Special Investigations Division (SID) und des Department of Commercial Licensing and Investigations (DCLI), § 2 Abs. 3 LPolG · <b>HE</b> Hafteinheiten · <b>MP</b> Member of Parliament · <b>NG</b> National Guard</p>
-        <p class="abbr keys"><kbd>1</kbd>–<kbd>9</kbd> Antwort oder Haken · <kbd>Enter</kbd> weiter · <kbd>Rücktaste</kbd> zurück · <kbd>Esc</kbd> Vorschau schließen · <kbd>Strg</kbd>+<kbd>Z</kbd> rückgängig</p>
         <p class="abbr">Normangaben nach der Gesetzessammlung des Servers, Stand 29.10.2026.</p>
       </div>
     </section>
@@ -1069,7 +1063,7 @@ svg.flow { display: block; margin: 0 auto; overflow: visible; }
     toastLeft = TOAST_MS;
     toastDeadline = Date.now() + TOAST_MS;
     toastTimer = setTimeout(hideToast, TOAST_MS);
-    $("live").textContent += " " + msg + ". Rückgängig mit Strg+Z.";
+    $("live").textContent += " " + msg + ".";
   }
   function hideToast() {
     clearTimeout(toastTimer);

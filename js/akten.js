@@ -257,7 +257,7 @@ function renderAkteDetail(a, sub) {
         <div class="top">
           <button type="button" class="btn icon-only liste-umschalten" data-action="akten-liste-umschalten"
             aria-pressed="${zu ? "true" : "false"}" aria-label="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden"}"
-            title="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden – mehr Platz für die Akte"} (Taste [)">${icon("liste")}</button>
+            title="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden – mehr Platz für die Akte"}">${icon("liste")}</button>
           <div class="kopf-titel">
             <span class="case-number">${a.number}</span>
             <span class="badges">${prioBadge(a.prioritaet)} ${haftBadge(a)}</span>

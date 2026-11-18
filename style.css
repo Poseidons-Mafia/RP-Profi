@@ -1679,15 +1679,13 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-knopf.leise:hover { border-color: var(--red); color: var(--red); }
 .ki-aktenliste { display: grid; gap: 4px; margin-top: 10px; }
 .ki-aktenliste button {
+  min-width: 0; width: 100%; color: inherit; font-family: inherit;
   display: flex; align-items: center; gap: 8px;
   padding: 7px 8px; border: 0; border-radius: 10px;
   background: var(--bg); text-align: left; cursor: pointer; font-size: 0.78rem;
 }
 .ki-aktenliste button:hover { background: var(--gold-soft); }
-.ki-aktenliste .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ki-tipps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 0.76rem; color: var(--muted); }
-.ki-tipps li { display: flex; align-items: center; gap: 8px; }
-.ki-tipps kbd { min-width: 22px; padding: 1px 6px; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 1px 0 1px var(--line-soft); color: var(--text); font: 700 0.7rem/1.5 inherit; text-align: center; }
+.ki-aktenliste .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ki-panel-fuss { margin-top: auto; padding-top: 6px; }
 .ki-nutzung { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); }
 .ki-nutzung strong { color: var(--text); }
@@ -2092,7 +2090,6 @@ body.nw-seite .guide-btn { display: none; }
 .nw-kontext-plus:hover { border-color: var(--red); color: var(--red); }
 .nw-schalter { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .nw-schalter input { width: 14px; height: 14px; margin: 0; accent-color: var(--red); }
-.nw-leiste-tipp { margin-left: auto; color: var(--muted); }
 .nw-eingabe-feld {
   display: flex; align-items: flex-end; gap: 8px;
   max-width: 940px; margin: 0 auto; padding: 6px 6px 6px 14px;
@@ -2232,7 +2229,6 @@ body.nw-seite .guide-btn { display: none; }
   .nw-msg-inhalt { padding: 10px 12px 6px; }
   .nw-dokument-text { padding: 12px; }
   .nw-eingabe { padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); }
-  .nw-leiste-tipp { display: none; }
   .nw-eingabe-feld textarea, .nw input, .nw select, .nw textarea { font-size: 16px; }
   .nw-modus-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nw-gruss { font-size: 1.3rem; }
