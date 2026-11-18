@@ -505,18 +505,36 @@ const kiWarte = (ms) => new Promise((r) => setTimeout(r, ms));
 const kiReduziert = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const kiDarfAuf = () => !kiMobil.matches;
 
-// Kurz eine Effekt-Klasse setzen (Animation neu starten)
+// Kurz eine Effekt-Klasse setzen (Animation neu starten). Ein älterer Timer darf die
+// Klasse einer neueren Bewegung nicht vorzeitig entfernen.
+const kiEffektTimer = {};
 function kiEffekt(klasse, ms) {
+  clearTimeout(kiEffektTimer[klasse]);
   kiPhone.classList.remove(klasse);
   void kiPhone.offsetWidth;
   kiPhone.classList.add(klasse);
-  setTimeout(() => kiPhone.classList.remove(klasse), ms);
+  kiEffektTimer[klasse] = setTimeout(() => kiPhone.classList.remove(klasse), ms);
+}
+
+// Neue Bewegung beginnen: die laufende abbrechen und deren Zwischenzustand aufräumen.
+// Ohne das blieben nach einer unterbrochenen Faltung „faltet“/„glas“ hängen – der
+// Klapp-Knopf reagierte dann nicht mehr, und der Chat lag im falschen Display, sodass
+// auch „Einstecken“ unter der durchsichtigen Klappe nicht mehr erreichbar war.
+function kiNeueBewegung() {
+  const lauf = ++kiLauf;
+  kiPhone.classList.remove("faltet", "glas");
+  kiAbbilderWeg();
+  kiLayout(kiPhone.classList.contains("auf") ? "auf" : "zu");
+  return lauf;
 }
 
 // Zustand ohne Animation herstellen (Seitenstart, Benutzerwechsel)
 function kiZustandSofort() {
   const s = ui.assistent;
   const auf = s.offen && s.modus === "auf" && kiDarfAuf();
+  kiLauf++;
+  kiPhone.classList.remove("faltet", "glas");
+  kiAbbilderWeg();
   kiPhone.classList.add("ohne-anim");
   kiPhone.classList.toggle("offen", s.offen);
   kiPhone.classList.toggle("auf", auf);
@@ -561,7 +579,6 @@ function kiAbbilderWeg() {
 //              Außendisplay über ihm ein.
 async function kiFalten(auf, lauf) {
   if (kiPhone.classList.contains("auf") === auf) return;
-  kiAbbilderWeg();
   if (kiReduziert()) {
     kiPhone.classList.remove("glas", "faltet");
     kiPhone.classList.toggle("auf", auf);
@@ -600,7 +617,7 @@ async function kiFalten(auf, lauf) {
 
 async function kiOeffnen(akteId) {
   const s = ui.assistent;
-  const lauf = ++kiLauf;
+  const lauf = kiNeueBewegung();
   if (akteId && akteId !== s.akteId) {
     s.akteId = akteId;
     s.verlauf = []; // neue Akte → neuer Chat
@@ -622,7 +639,7 @@ async function kiOeffnen(akteId) {
 
 async function kiSchliessen() {
   const s = ui.assistent;
-  const lauf = ++kiLauf;
+  const lauf = kiNeueBewegung();
   s.offen = false;
   kiSpeichern();
   kiTextarea.blur();
@@ -638,20 +655,16 @@ async function kiSchliessen() {
 
 async function kiKlappen() {
   const s = ui.assistent;
-  if (!s.offen || !kiDarfAuf() || kiPhone.classList.contains("faltet")) return;
-  const lauf = ++kiLauf;
-  s.modus = kiPhone.classList.contains("auf") ? "zu" : "auf";
+  if (!s.offen || !kiDarfAuf()) return;
+  // Während einer Faltung kehrt ein Klick die Bewegung einfach um
+  const lauf = kiNeueBewegung();
+  s.modus = s.modus === "auf" ? "zu" : "auf"; // Ziel der letzten Bewegung umkehren
   kiSpeichern();
   await kiFalten(s.modus === "auf", lauf);
 }
 
 // Wechsel zwischen Handy- und Desktopbreite: auf dem Handy immer zugeklappt
-kiMobil.addEventListener("change", () => {
-  kiLauf++;
-  kiPhone.classList.remove("faltet", "glas");
-  kiAbbilderWeg();
-  kiZustandSofort();
-});
+kiMobil.addEventListener("change", () => kiZustandSofort());
 
 function kiTextareaHoehe() {
   kiTextarea.style.height = "auto";
