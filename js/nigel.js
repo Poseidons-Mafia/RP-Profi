@@ -566,14 +566,14 @@ const NW_VORSCHAU_BEISPIEL = {
 };
 
 const NW_VORSCHAU_KANN = [
-  ["§", "Rechtsfragen stellen – Nigel schlägt selbst in Gesetzen und Strafkatalog nach"],
-  ["G", "Gutachten zu allen Tatvorwürfen einer Akte, mit Strafrahmen"],
-  ["S", "Schriftsätze entwerfen und von Nigel überarbeiten lassen"],
-  ["F", "Fallanalysen: Stärken, Risiken, Beweislage und nächste Schritte"],
-  ["A", "Mehrere Akten, Paragraphen und Notizen als Kontext anheften"],
-  ["✓", "Antworten in die Akte übernehmen oder als Aufgaben anlegen"],
-  ["★", "Chats speichern, anheften, exportieren und fortsetzen"],
-  ["K", "Das iFruit-Handy als schnelles Nachschlagewerk (Taste K)"],
+  ["§", "Beantwortet Rechtsfragen und schlägt dafür selbst in Gesetzen und Strafkatalog nach"],
+  ["G", "Prüft die Tatvorwürfe einer Akte im Gutachtenstil, mit Strafrahmen"],
+  ["S", "Entwirft Schriftsätze und überarbeitet sie auf Anweisung"],
+  ["F", "Analysiert Fälle: Stärken, Risiken, Beweislage, nächste Schritte"],
+  ["A", "Arbeitet mit mehreren Akten, Paragraphen und Notizen als Kontext"],
+  ["✓", "Übernimmt Antworten in die Akte oder legt daraus Aufgaben an"],
+  ["★", "Speichert Chats – zum Fortsetzen, Anheften und Exportieren"],
+  ["K", "Steht auf dem iFruit-Handy zum schnellen Nachschlagen bereit"],
 ];
 
 // Milchglas mit Stempel über Platzhalter-Inhalt
@@ -586,7 +586,7 @@ function nwZensiert(inhalt, { titel, text, klein = false, stempel = "Vertraulich
         <span class="nw-siegel-schloss">${new SafeHtml(NW_SCHLOSS)}</span>
         <strong>${titel}</strong>
         ${text ? html`<p>${text}</p>` : ""}
-        <span class="nw-siegel-recht">Nur mit „Nigel verwenden“</span>
+        <span class="nw-siegel-recht">Nicht freigeschaltet</span>
       </div>
     </div>
   </div>`;
@@ -613,7 +613,7 @@ function nwVorschauGeruest() {
       <div class="nw-eingabe nw-eingabe-gesperrt">
         <div class="nw-eingabe-feld">
           <span class="nw-gesperrt-schloss">${new SafeHtml(NW_SCHLOSS)}</span>
-          <span class="nw-gesperrt-text"><strong>Nur ansehen.</strong> Aufträge an Nigel erfordern die Berechtigung „Nigel verwenden“ – freischalten kann der Admin.</span>
+          <span class="nw-gesperrt-text"><strong>Nur ansehen.</strong> Für Aufträge an Nigel fehlt die Berechtigung „Nigel verwenden“.</span>
           <button type="button" class="nw-senden" disabled aria-label="Senden (gesperrt)">${new SafeHtml(KI_ICON.senden)}</button>
         </div>
       </div>
@@ -650,7 +650,7 @@ function nwVorschauZeichnen(wurzel) {
     ${demoChat("Welche Paragraphen passen?", "frage", "gestern")}
     ${demoChat("Einstellung beantragen", "schriftsatz", "vor 3 Tagen")}
     ${demoChat("Vernehmung vorbereiten", "strategie", "vor 5 Tagen")}`,
-    { klein: true, titel: "Gespeicherte Chats", text: "Hier lägen Ihre Aufträge an Nigel – jederzeit fortsetzbar." }));
+    { klein: true, titel: "Gespeicherte Chats", text: "Aufträge an Nigel werden hier gespeichert." }));
 
   // Fuß: statt Budget nur der Hinweis auf das fehlende Recht (keine Beträge)
   nwSetzen(nwEl("nutzung"), html`<div class="nw-vorschau-recht">
@@ -664,8 +664,8 @@ function nwVorschauZeichnen(wurzel) {
     <div class="nw-kopf-zeile">
       <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="liste" title="Chats" aria-label="Chats">${new SafeHtml(NW_ICON.liste)}</button>
       <div class="nw-titel">
-        <h1>Was Nigel für Sie tun könnte</h1>
-        <span class="nw-titel-meta"><span class="nw-vorschau-marke">${new SafeHtml(NW_SCHLOSS)} Nur ansehen</span> Vorschau des Arbeitsbereichs</span>
+        <h1>Nigels Arbeitsbereich</h1>
+        <span class="nw-titel-meta"><span class="nw-vorschau-marke">${new SafeHtml(NW_SCHLOSS)} Nur ansehen</span> Überblick</span>
       </div>
       <div class="nw-kopf-aktionen">
         <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche">${new SafeHtml(NW_ICON.panel)}</button>
@@ -682,14 +682,14 @@ function nwVorschauZeichnen(wurzel) {
   nwSetzen(nwEl("verlauf"), html`<div class="nw-start nw-vorschau-start">
     <img class="nw-start-bild" src="assets/nigel.svg" alt="Nigel">
     <h2 class="nw-gruss">${kiTagesgruss()}${anrede ? `, ${anrede}` : ""}.</h2>
-    <p class="muted">Ich bedaure – Ihr Rang gestattet mir, Ihnen meinen Arbeitsbereich zu zeigen, nicht aber, für Sie tätig zu werden.
-      Sehen Sie sich in Ruhe um, was ich für Sie erledigen könnte.</p>
+    <p class="muted">Ihr Rang kann Nigels Arbeitsbereich ansehen; Aufträge an Nigel sind nicht freigeschaltet.
+      Hier ein Überblick, wie er arbeitet.</p>
     <div class="nw-modus-karten">
       ${NW_MODI.map((m) => html`<button type="button" class="nw-modus-karte m-${m.key} ${modus === m.key ? "aktiv" : ""}" data-action="nw-v-modus" data-modus="${m.key}">
         <strong>${m.label}</strong><span>${m.text}</span></button>`)}
     </div>
     <div class="nw-vorschau-beispiel" data-modus="${modus}">
-      <p class="nw-gruppe">Beispiel: so sähe ein Auftrag im Modus „${NW_MODUS_NAME[modus]}“ aus</p>
+      <p class="nw-gruppe">Beispiel: ${NW_MODUS_NAME[modus]}</p>
       <div class="nw-msg ich"><div class="nw-bubble">${b.frage}</div>
         <div class="nw-msg-fuss">${modus !== "frage" ? html`<span class="nw-modus-badge m-${modus}">${NW_MODUS_NAME[modus]}</span>` : ""}<time>Beispiel</time></div></div>
       <article class="nw-msg ki">
@@ -700,12 +700,12 @@ function nwVorschauZeichnen(wurzel) {
           ${nwZensiert(html`<div class="ki-md nw-text">${modus === "schriftsatz"
             ? html`<div class="nw-dokument"><div class="nw-dokument-kopf"><span>${new SafeHtml(NW_ICON.entwurf)} Entwurf</span></div><div class="ki-md nw-dokument-text"><p>${b.antwort}</p><p>${b.antwort}</p></div></div>`
             : html`<p>${b.antwort}</p><p>${b.antwort}</p>`}</div>`,
-            { titel: "Antwort zensiert", text: "Nigels Antwort sehen nur Mitglieder, die ihn verwenden dürfen." })}
+            { titel: "Antwort ausgeblendet", text: "Antworten sind beim Recht „Nigel sehen“ ausgeblendet." })}
         </div>
       </article>
     </div>
     <div class="nw-vorschau-kann">
-      <p class="nw-gruppe">Mit „Nigel verwenden“ könnten Sie …</p>
+      <p class="nw-gruppe">Was Nigel kann</p>
       <ul>${NW_VORSCHAU_KANN.map(([z, t]) => html`<li><span class="nw-vorschau-zeichen">${z}</span>${t}</li>`)}</ul>
     </div>
   </div>`);
@@ -732,25 +732,25 @@ function nwVorschauPanel(tab) {
         <div class="nw-treffer"><a><span class="nw-para-nr">§ 00 MG</span><span class="nw-para-titel">Musterparagraph</span></a><a><span class="nw-para-nr">§ 01 MG</span><span class="nw-para-titel">Beispielparagraph</span></a></div></section>
       <section class="nw-block"><h3>Notizen zum Sachverhalt</h3>
         <p class="nw-vorschau-text">Der Mandant gibt an, zur Tatzeit … Zeuge X widerspricht … Absprache mit …</p></section>`,
-      "Kontext", "Akten, Paragraphen und Notizen, die Nigel bei jeder Frage kennt."],
+      "Kontext", "Akten, Paragraphen und Notizen, die Nigel bei jeder Frage berücksichtigt."],
     entwurf: [html`
       <section class="nw-block"><h3>Entwurf</h3>
         <div class="nw-vorschau-dokument"><p><strong>Antrag auf Haftprüfung</strong></p><p>Sehr geehrte Damen und Herren,</p>
           <p>in der Sache … beantrage ich namens und in Vollmacht meines Mandanten …</p><p>Begründung: … … …</p><p>Mit vorzüglicher Hochachtung</p></div></section>
       <section class="nw-block"><h3>Von Nigel überarbeiten lassen</h3>
         <div class="nw-chips">${NW_UEBERARBEITEN.map((t) => html`<span class="ki-chip">${t}</span>`)}</div></section>`,
-      "Entwurf", "Ihr Schriftsatz – selbst geschrieben oder von Nigel entworfen, überarbeitet und druckfertig."],
+      "Entwurf", "Schriftsätze – selbst geschrieben oder von Nigel entworfen und überarbeitet."],
     quellen: [html`
       <section class="nw-block"><h3>Nachgeschlagene Paragraphen <span class="nw-zahl-leise">3</span></h3>
         <div class="nw-paras">${["§ 00 MG", "§ 01 MG", "§ 02 BG"].map((q) => html`<div class="nw-para leer"><span class="nw-para-nr">${q}</span><span class="nw-para-titel">Wortlaut des Paragraphen …</span></div>`)}</div></section>
       <section class="nw-block"><h3>Gelesene Akten</h3>
         <div class="nw-treffer"><a><span class="nw-para-nr">A-0000</span><span class="nw-para-titel">Musterakte</span></a></div></section>`,
-      "Quellen", "Alles, was Nigel nachgeschlagen hat – mit Wortlaut, zum Anheften."],
+      "Quellen", "Die Paragraphen, die Nigel nachgeschlagen hat, mit Wortlaut."],
     vorlagen: [html`
       <section class="nw-block"><h3>Standard</h3>
         <div class="nw-vorlagen">${NW_VORLAGEN_STANDARD.slice(0, 5).map((v) => html`<div class="nw-vorlage"><div class="nw-vorlage-haupt">
           <span class="nw-modus-badge m-${v.modus}">${NW_MODUS_NAME[v.modus]}</span><strong>${v.titel}</strong><span>${truncate(v.text, 80)}</span></div></div>`)}</div></section>`,
-      "Vorlagen", "Häufige Aufträge mit einem Klick – eigene und die der Kanzlei."],
+      "Vorlagen", "Häufige Aufträge – eigene und die der Kanzlei."],
     einstellungen: [html`
       <section class="nw-block">
         <h3>Wie Nigel Sie anspricht</h3>${segment([["sir", "Sir"], ["madam", "Madam"], ["neutral", "Ohne Anrede"]], p.anrede)}
@@ -761,7 +761,7 @@ function nwVorschauPanel(tab) {
         <h3>Standardmodus für neue Aufgaben</h3>${segment(NW_MODI.map((m) => [m.key, m.label]), p.modus)}
         <h3>Senden mit</h3>${segment([["enter", "Enter"], ["strg", "Strg + Enter"]], p.senden)}
       </section>`,
-      "Einstellungen", "Anrede, Ton, Antwortlänge und Gründlichkeit – ganz nach Ihrem Geschmack."],
+      "Einstellungen", "Anrede, Ton, Antwortlänge und Gründlichkeit."],
   }[tab] || [html``, "Gesperrt", ""];
   return html`<div class="nw-vorschau-tab" data-tab="${tab}">${nwZensiert(inhalt[0], { titel: inhalt[1], text: inhalt[2], stempel: tab === "einstellungen" ? "Gesperrt" : "Vertraulich" })}</div>`;
 }

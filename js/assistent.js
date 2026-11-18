@@ -11,7 +11,7 @@
 //  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
 //  Rechte: "ki_assistent" (= Nigel verwenden) bzw. "ki_sehen" (= nur sehen): Wer Nigel nur
-//  sehen darf, kann das Handy herausholen, bekommt aber nur einen Sperrbildschirm.
+//  sehen darf, bekommt dasselbe Handy, aber gesperrt (kein Chat, nichts wird geladen).
 //  Budget: US-Dollar pro Monat (Grundwert des Rangs + Abweichung) des Mitglieds
 //  (Personal → Ränge & Berechtigungen); die Beträge sieht nur der Admin.
 //  Für größere Aufgaben gibt es Nigels Arbeitsbereich (js/nigel.js, #/nigel);
@@ -44,7 +44,7 @@ const KI_ICON = {
   akte: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5A1.5 1.5 0 0 1 5.5 5H10l2 2h6.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   // Eigenes Logo (Zitrusscheibe) für die fiktive Marke iFruit
   ifruit: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><circle cx="12" cy="12" r="7.6" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.9"/><g stroke="#fff" stroke-width="1.1" stroke-linecap="round" opacity="0.9"><path d="M12 5.2v13.6M6.1 8.6l11.8 6.8M6.1 15.4l11.8-6.8"/></g><circle cx="12" cy="12" r="1.3" fill="#fff"/></svg>',
-  schloss: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.6" fill="currentColor"/><path d="M7.8 10.5V7.6a4.2 4.2 0 0 1 8.4 0v2.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15.2" r="1.6" fill="#2a0505"/><path d="M12 15.6v2.4" stroke="#2a0505" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  schloss: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.6" fill="currentColor"/><path d="M7.8 10.5V7.6a4.2 4.2 0 0 1 8.4 0v2.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="15.2" r="1.6" fill="#fff"/><path d="M12 15.6v2.4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
   status: '<svg viewBox="0 0 54 12" aria-hidden="true"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0.5" width="3" height="11.5" rx="1"/><path d="M29 3.2a8.6 8.6 0 0 1 6 2.4l1.3-1.3a10.4 10.4 0 0 0-14.6 0L23 5.6a8.6 8.6 0 0 1 6-2.4zm0 3.5a5 5 0 0 1 3.5 1.4l1.3-1.3a6.8 6.8 0 0 0-9.6 0l1.3 1.3A5 5 0 0 1 29 6.7zm0 3.4-1.6 1.6L29 13.3l1.6-1.6z"/><rect x="40" y="1" width="12" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="41.8" y="2.8" width="8.4" height="6.4" rx="1.2"/><rect x="52.6" y="4.2" width="1.4" height="3.6" rx="0.7"/></g></svg>',
 };
 
@@ -95,7 +95,6 @@ kiPhone.innerHTML = `
               <span><strong>Nigel</strong><span data-ki="lock-text">Sie haben geläutet, Sir?</span></span>
             </span>
           </button>
-          <div class="ki-sperre" data-ki="sperre" role="alertdialog" aria-label="Nigel ist gesperrt"></div>
         </div>
       </div>
     </div>
@@ -290,26 +289,22 @@ function kiAktualisieren() {
   document.body.classList.toggle("ki-da", sichtbar);
   if (!sichtbar) return;
   const s = ui.assistent;
-  // Nur „Sehen“: herausholen ja, aber nur der Sperrbildschirm (kein Chat, kein Aufklappen, nichts laden)
+  // Nur „Sehen“: gleiches Handy wie sonst, aber gesperrt (kein Chat, nichts wird geladen)
   const gesperrt = !darf("ki_assistent");
   if (kiGesperrt() !== gesperrt) {
-    kiLauf++;
-    kiPhone.classList.remove("faltet", "glas");
-    kiAbbilderWeg();
     kiPhone.classList.toggle("gesperrt", gesperrt);
-    kiChatBlock.inert = gesperrt;
-    kiPhone.querySelector(".ki-innen-links").inert = gesperrt;
     s.userId = null; // Zustand passend neu herstellen
   }
   if (gesperrt) {
     if (s.userId !== state.me.id) {
-      Object.assign(s, { userId: state.me.id, akteId: "", verlauf: [], offen: false, modus: "zu", info: null, laedt: false });
+      Object.assign(s, { userId: state.me.id, akteId: "", verlauf: [], offen: false, modus: "auf", info: null, laedt: false });
       kiZustandSofort();
     }
-    kiUhr();
-    kiSperreZeichnen();
+    kiGesperrtZeichnen();
     return;
   }
+  kiTextarea.disabled = false;
+  kiTextarea.placeholder = KI_PLATZHALTER;
   if (s.userId !== state.me.id) kiLaden(state.me.id);
 
   // Ohne laufenden Chat folgt der Kontext der geöffneten Akte
@@ -464,48 +459,44 @@ function kiGesperrt() {
   return kiPhone.classList.contains("gesperrt");
 }
 
-function kiSperreZeichnen() {
-  const rang = rangName(myProfile());
-  kiEl("lock-text").textContent = "Gesperrt, Sir – Ihrem Rang fehlt die Berechtigung, mich zu verwenden.";
-  kiSetzen(kiEl("sperre"), html`
-    <div class="ki-sperre-oben">
-      <span class="ki-lock-marke">${new SafeHtml(KI_ICON.ifruit)}iFruit Duo</span>
-      <span class="ki-sperre-datum" data-ki="datum"></span>
-      <button type="button" class="ki-sperre-schloss" data-action="ki-sperre-tippen" aria-label="Entsperren versuchen">
-        <span class="ki-sperre-ring"></span>${new SafeHtml(KI_ICON.schloss)}</button>
-      <strong class="ki-sperre-titel" data-ki="sperre-titel">Gesperrt</strong>
-      <span class="ki-sperre-punkte" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    </div>
-    <div class="ki-notification ki-sperre-nachricht">
-      <img src="assets/nigel.svg" alt="">
-      <span><strong>Nigel <small>jetzt</small></strong>Ich bedaure zutiefst, Sir – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein. Ansehen dürfen Sie sich meinen Arbeitsbereich aber gern.</span>
-    </div>
-    <div class="ki-sperre-recht">
-      <span class="ki-sperre-recht-titel">Fehlende Berechtigung</span>
-      <span class="ki-sperre-chips"><span class="ki-sperre-chip ok">✓ Nigel sehen</span><span class="ki-sperre-chip nein">✕ Nigel verwenden</span></span>
-      ${rang ? html`<span class="ki-sperre-rang">Ihr Rang: ${rang}</span>` : ""}
-    </div>
-    <div class="ki-sperre-knoepfe">
-      <button type="button" class="ki-sperre-knopf haupt" data-action="ki-ansehen">Arbeitsbereich ansehen</button>
-      <button type="button" class="ki-sperre-knopf" data-action="ki-schliessen">Einstecken</button>
-    </div>
-    <p class="ki-sperre-fuss">Freischalten kann der Admin unter Personal → Ränge & Berechtigungen.</p>`);
-  kiUhr();
-}
+const KI_PLATZHALTER = kiTextarea.placeholder;
 
-// Antippen des Schlosses: Code-Punkte füllen sich – und werden abgelehnt
-function kiSperreRuetteln() {
-  if (!kiGesperrt()) return;
-  kiEffekt("fx-verweigert", 1300);
-  try { navigator.vibrate && navigator.vibrate([40, 60, 40]); } catch {}
-  const titel = kiEl("sperre-titel");
-  if (titel) {
-    titel.textContent = "Zugriff verweigert";
-    clearTimeout(kiSperreRuetteln.t);
-    kiSperreRuetteln.t = setTimeout(() => { if (kiEl("sperre-titel")) kiEl("sperre-titel").textContent = "Gesperrt"; }, 1600);
-  }
+// Gesperrt: dieselbe Oberfläche, nur ohne Chat – Aufklappen und Einstecken funktionieren wie immer
+function kiGesperrtZeichnen() {
+  kiUhr();
+  const status = kiEl("status");
+  status.textContent = "gesperrt";
+  status.classList.remove("tippt");
+  kiEl("lock-text").textContent = "Für Ihren Rang ist Nigel gesperrt.";
+  kiTextarea.value = "";
+  kiTextarea.disabled = true;
+  kiTextarea.placeholder = "Gesperrt – „Nigel verwenden“ ist nicht freigeschaltet";
+  kiChatBlock.querySelector(".ki-senden").disabled = true;
+  kiSetzen(kiEl("chips"), "");
+  const schloss = new SafeHtml(KI_ICON.schloss);
+  kiSetzen(kiEl("chat"), html`<div class="ki-leer ki-gesperrt-leer">
+    <span class="ki-gesperrt-bild"><img src="assets/nigel.svg" alt="Nigel"><span class="ki-gesperrt-schloss">${schloss}</span></span>
+    <p class="ki-gruss">Gesperrt</p>
+    <p>Ihr Rang darf Nigel ansehen, aber nicht verwenden.</p>
+    <button type="button" class="ki-knopf" data-action="ki-ansehen">Arbeitsbereich ansehen</button>
+  </div>`);
+  const rang = rangName(myProfile());
+  kiSetzen(kiEl("panel"), html`
+    <div class="ki-panel-kopf">
+      <span class="ki-panel-titel">Nigels Notizbuch</span>
+      <span class="ki-marke">${new SafeHtml(KI_ICON.ifruit)}iFruit</span>
+    </div>
+    <section class="ki-karte">
+      <h3>Gesperrt</h3>
+      <p class="ki-leise">Nigel beantwortet Rechtsfragen und schlägt dafür in den Gesetzen nach. Für Ihren Rang${rang ? ` (${rang})` : ""} ist das Verwenden nicht freigeschaltet.</p>
+    </section>
+    <section class="ki-karte">
+      <p class="ki-mini-titel" style="margin-top:0">Arbeitsbereich</p>
+      <p class="ki-leise">Den Arbeitsbereich können Sie sich ansehen – Inhalte bleiben ausgeblendet.</p>
+      <div class="ki-karte-aktionen"><button type="button" class="ki-knopf" data-action="ki-ansehen">Arbeitsbereich ansehen</button></div>
+    </section>
+    <div class="ki-panel-fuss"><p class="ki-leise">Freischalten kann der Admin unter Personal → Ränge & Berechtigungen.</p></div>`);
 }
-setInterval(() => { if (!kiPhone.hidden) kiUhr(); }, 20000);
 
 // =============================================================
 //  Bewegung: herausholen, einstecken, auf- und zuklappen
@@ -514,7 +505,7 @@ setInterval(() => { if (!kiPhone.hidden) kiUhr(); }, 20000);
 let kiLauf = 0;
 const kiWarte = (ms) => new Promise((r) => setTimeout(r, ms));
 const kiReduziert = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const kiDarfAuf = () => !kiMobil.matches && !kiGesperrt();
+const kiDarfAuf = () => !kiMobil.matches;
 
 // Kurz eine Effekt-Klasse setzen (Animation neu starten)
 function kiEffekt(klasse, ms) {
@@ -626,15 +617,8 @@ async function kiOeffnen(akteId) {
     await kiWarte(kiReduziert() ? 0 : KI_ZEIT.raus * 0.7);
     if (lauf !== kiLauf) return;
   }
-  if (kiGesperrt()) {
-    // Gesperrt: kein Chat – stattdessen versucht das Handy einmal sichtbar zu entsperren
-    const knopf = kiPhone.querySelector(".ki-sperre-knopf.haupt");
-    if (knopf) knopf.focus({ preventScroll: true });
-    if (!warSchonOffen) kiSperreRuetteln();
-    return;
-  }
   if (s.modus === "auf" && kiDarfAuf()) await kiFalten(true, lauf);
-  if (lauf !== kiLauf) return;
+  if (lauf !== kiLauf || kiGesperrt()) return;
   kiTextarea.focus({ preventScroll: true });
 }
 
@@ -679,7 +663,7 @@ function kiTextareaHoehe() {
 async function kiFragen(text) {
   const s = ui.assistent;
   text = String(text || "").trim();
-  if (!text || s.laedt) return;
+  if (!text || s.laedt || kiGesperrt()) return;
   s.verlauf.push({ rolle: "nutzer", text, zeit: new Date().toISOString() });
   s.laedt = true;
   kiTextarea.value = "";
@@ -753,7 +737,6 @@ SUBMITS["ki-frage"] = () => kiFragen(kiTextarea.value);
 Object.assign(ACTIONS, {
   "ki-oeffnen": (d) => kiOeffnen(d.id),
   "ki-schliessen": () => kiSchliessen(),
-  "ki-sperre-tippen": () => kiSperreRuetteln(),
   "ki-ansehen": async () => { await kiSchliessen(); go("nigel"); },
   "ki-klappen": () => kiKlappen(),
   "ki-neu": () => {
