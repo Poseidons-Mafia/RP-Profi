@@ -130,13 +130,15 @@ Deno.serve(async (req) => {
   if (modus === "ueberarbeiten" && !entwurf) return fehler("Es gibt noch keinen Entwurf, den Nigel überarbeiten könnte.");
 
   // ---------- Kanzlei-Vorgaben und persönliche Einstellungen ----------
-  const [einstRes, profilRes] = await Promise.all([
+  const [einstRes, profilRes, anredeRes] = await Promise.all([
     db.from("einstellungen").select("daten").eq("id", 1).maybeSingle(),
     db.from("ki_profil").select("einstellungen").eq("user_id", userId).maybeSingle(), // fehlt ohne Update 9 → leer
+    db.from("profiles").select("anrede").eq("user_id", userId).maybeSingle(),          // fehlt ohne Update 15 → Fehler
   ]);
   const kanzleiDaten: Zeile = einstRes.data?.daten || {};
   const vorgaben = kanzleiVorgaben(kanzleiDaten.nigel);
-  const ich = persoenlich(profilRes.data?.einstellungen);
+  // Anrede aus „Mein Profil“ (pro Charakter); vor Update 15 noch aus Nigels Einstellungen
+  const ich = persoenlich({ ...(profilRes.data?.einstellungen || {}), ...(anredeRes.error ? {} : { anrede: anredeRes.data?.anrede }) });
   if (modus !== "frage" && !vorgaben.modi.includes(modus === "ueberarbeiten" ? "schriftsatz" : modus)) {
     return fehler(`Der Modus „${m.name}“ ist in der Kanzlei nicht freigegeben, ${ich.anrede}.`, 403);
   }
@@ -276,7 +278,7 @@ function kanzleiVorgaben(roh: unknown) {
   };
 }
 
-// Persönliche Einstellungen des Mitglieds (Arbeitsbereich → Einstellungen)
+// Persönliche Einstellungen des Mitglieds (Arbeitsbereich → Einstellungen; die Anrede aus dem Profil)
 function persoenlich(roh: unknown) {
   const e: Zeile = roh && typeof roh === "object" ? roh as Zeile : {};
   const wahl = (wert: unknown, erlaubt: string[], standard: string) => (erlaubt.includes(wert as string) ? wert as string : standard);

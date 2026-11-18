@@ -92,7 +92,7 @@ kiPhone.innerHTML = `
             <span class="ki-lock-uhr" data-ki="uhr"></span>
             <span class="ki-notification">
               <img src="assets/nigel.svg" alt="">
-              <span><strong>Nigel</strong><span data-ki="lock-text">Sie haben geläutet, Sir?</span></span>
+              <span><strong>Nigel</strong><span data-ki="lock-text">Sie haben geläutet?</span></span>
             </span>
           </button>
         </div>
@@ -123,7 +123,7 @@ kiChatBlock.innerHTML = `
   <div class="ki-unten">
     <div class="ki-chips" data-ki="chips"></div>
     <form class="ki-eingabe" data-submit="ki-frage">
-      <textarea name="text" rows="1" placeholder="Ihre Rechtsfrage an Nigel, Sir …" aria-label="Nachricht an Nigel"></textarea>
+      <textarea name="text" rows="1" placeholder="Ihre Rechtsfrage an Nigel …" aria-label="Nachricht an Nigel"></textarea>
       <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
     </form>
   </div>`;
@@ -304,7 +304,7 @@ function kiAktualisieren() {
     return;
   }
   kiTextarea.disabled = false;
-  kiTextarea.placeholder = KI_PLATZHALTER;
+  kiTextarea.placeholder = `Ihre Rechtsfrage an Nigel${anredeKomma()} …`;
   if (s.userId !== state.me.id) kiLaden(state.me.id);
 
   // Ohne laufenden Chat folgt der Kontext der geöffneten Akte
@@ -320,7 +320,7 @@ function kiAktualisieren() {
   kiEl("pill").textContent = akte ? `${akte.number} · ${akte.title || ""}` : "Allgemein – keine Akte";
   kiEl("lock-text").textContent = s.verlauf.length
     ? truncate(s.verlauf[s.verlauf.length - 1].text.replace(/[*#`]/g, "").replace(/\s+/g, " ").trim(), 70)
-    : akte ? `Rechtsfragen zu ${akte.number}, Sir? Tippen Sie, und ich bin zur Stelle.` : "Sie haben geläutet, Sir? Tippen Sie, und ich bin zur Stelle.";
+    : akte ? `Rechtsfragen zu ${akte.number}${anredeKomma()}? Tippen Sie, und ich bin zur Stelle.` : `Sie haben geläutet${anredeKomma()}? Tippen Sie, und ich bin zur Stelle.`;
 
   // Aktenauswahl (in der Kopfzeile)
   const akten = kiOffeneAkten();
@@ -381,20 +381,20 @@ function kiPanelZeichnen(akte, akten) {
       </section>` : html`
       <section class="ki-karte ki-allgemein">
         <h3>Allgemeine Rechtsfragen</h3>
-        <p class="ki-leise">Nigel, Butler und Jurist, beantwortet Ihre Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wählen Sie eine Akte, Sir:</p>
+        <p class="ki-leise">Nigel, Butler und Jurist, beantwortet Ihre Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
       </section>`}
     <section class="ki-karte ki-arbeitsbereich">
-      <p class="ki-mini-titel" style="margin-top:0">Eine größere Aufgabe, Sir?</p>
+      <p class="ki-mini-titel" style="margin-top:0">Eine größere Aufgabe${anredeKomma()}?</p>
       <p class="ki-leise">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich – mit gespeicherten Chats, mehreren Akten und einem Entwurf.</p>
       <div class="ki-karte-aktionen">
         <button type="button" class="ki-knopf" data-action="ki-arbeitsbereich">${s.verlauf.length ? "Im Arbeitsbereich fortsetzen" : "Arbeitsbereich öffnen"}</button>
       </div>
     </section>
     <section class="ki-karte">
-      <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen, Sir</p>
+      <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen${anredeKomma()}</p>
       <ul class="ki-tipps">
         <li><kbd>Enter</kbd>senden · <kbd>⇧</kbd>+<kbd>Enter</kbd>neue Zeile</li>
         <li><kbd>K</kbd>Nigel rufen · <kbd>Esc</kbd>entlassen</li>
@@ -419,7 +419,7 @@ function kiChatZeichnen() {
   const neuAb = Math.min(kiGezeigt, s.verlauf.length);
   const leer = html`<div class="ki-leer">
     <img src="assets/nigel.svg" alt="Nigel">
-    <p class="ki-gruss">${kiTagesgruss()}, Sir.</p>
+    <p class="ki-gruss">${kiTagesgruss()}${anredeKomma()}.</p>
     <p>Nigel, zu Ihren Diensten. Ich kläre Ihre Rechtsfragen zu den Gesetzen dieser Stadt – und, wenn Sie gestatten, ausschließlich diese.</p>
     <ul class="ki-weiss">
       <li>§ ${state.gesetzbuecher.length} ${state.gesetzbuecher.length === 1 ? "Gesetzbuch" : "Gesetzbücher"} · ${state.gesetze.length} Delikte</li>
@@ -459,15 +459,13 @@ function kiGesperrt() {
   return kiPhone.classList.contains("gesperrt");
 }
 
-const KI_PLATZHALTER = kiTextarea.placeholder;
-
 // Gesperrt: dieselbe Oberfläche, nur ohne Chat – Aufklappen und Einstecken funktionieren wie immer
 function kiGesperrtZeichnen() {
   kiUhr();
   const status = kiEl("status");
   status.textContent = "gesperrt";
   status.classList.remove("tippt");
-  kiEl("lock-text").textContent = "Ich bedaure, Sir – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.";
+  kiEl("lock-text").textContent = `Ich bedaure${anredeKomma()} – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.`;
   kiTextarea.value = "";
   kiTextarea.disabled = true;
   kiTextarea.placeholder = "Gesperrt – „Nigel verwenden“ ist nicht freigeschaltet";
@@ -477,7 +475,7 @@ function kiGesperrtZeichnen() {
   kiSetzen(kiEl("chat"), html`<div class="ki-leer ki-gesperrt-leer">
     <span class="ki-gesperrt-bild"><img src="assets/nigel.svg" alt="Nigel"><span class="ki-gesperrt-schloss">${schloss}</span></span>
     <p class="ki-gruss">Gesperrt</p>
-    <p>Ich bedaure, Sir – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.</p>
+    <p>Ich bedaure${anredeKomma()} – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.</p>
     <button type="button" class="ki-knopf" data-action="ki-ansehen">Arbeitsbereich ansehen</button>
   </div>`);
   const rang = rangName(myProfile());
@@ -686,7 +684,7 @@ async function kiFragen(text) {
     s.verlauf.pop(); // Frage zurück ins Eingabefeld, damit nichts verloren geht
     if (!kiTextarea.value) kiTextarea.value = text;
     kiTextareaHoehe();
-    toast(/Failed to send|fetch/i.test(e.message) ? "Verzeihung, Sir – Nigel ist gerade nicht erreichbar." : e.message, "error");
+    toast(/Failed to send|fetch/i.test(e.message) ? `Verzeihung${anredeKomma()} – Nigel ist gerade nicht erreichbar.` : e.message, "error");
   } finally {
     s.laedt = false;
     kiSpeichern();

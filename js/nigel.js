@@ -24,7 +24,7 @@ const NW_MODI = [
 const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung" };
 const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 10000, ueberarbeiten: 16000 };
 
-const NW_STANDARD = { anrede: "sir", ton: "butler", laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
+const NW_STANDARD = { ton: "butler", laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
 
 const NW_VORLAGEN_STANDARD = [
   { titel: "Rechtslage der Akte", modus: "frage", akte: true, text: "Wie ist die Rechtslage in dieser Akte? Welche Paragraphen sind einschlägig, und welche rechtlichen Einwände gibt es?" },
@@ -92,7 +92,7 @@ function nwVorgaben() {
 }
 const nwDollar = kiDollar;
 const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" ? "schriftsatz" : m);
-const nwAnrede = () => ({ madam: "Madam", neutral: "" }[ui.nigel.profil.anrede] ?? "Sir");
+const nwAnrede = () => meineAnrede(); // aus „Mein Profil“ (pro Charakter)
 
 // ---------- Laden ----------
 async function nwLaden() {
@@ -545,7 +545,7 @@ const NW_SCHLOSS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y=
 const NW_VORSCHAU_BEISPIEL = {
   frage: {
     frage: "Welche Paragraphen kommen in Betracht, wenn jemand ein fremdes Fahrzeug ohne Erlaubnis kurz benutzt und danach stehen lässt?",
-    antwort: "Sehr wohl, Sir. Zunächst kommt die unbefugte Benutzung eines Fahrzeugs in Betracht. Der Tatbestand setzt voraus, dass … Abzugrenzen ist dies vom Diebstahl, bei dem es auf die Zueignungsabsicht ankommt … Im Ergebnis spricht vieles für …",
+    antwort: "Sehr wohl. Zunächst kommt die unbefugte Benutzung eines Fahrzeugs in Betracht. Der Tatbestand setzt voraus, dass … Abzugrenzen ist dies vom Diebstahl, bei dem es auf die Zueignungsabsicht ankommt … Im Ergebnis spricht vieles für …",
     schritte: ["Gesetzbücher durchsucht", "Paragraphen nachgeschlagen", "Strafkatalog geprüft"],
   },
   gutachten: {
@@ -753,7 +753,6 @@ function nwVorschauPanel(tab) {
       "Vorlagen", "Häufige Aufträge – eigene und die der Kanzlei."],
     einstellungen: [html`
       <section class="nw-block">
-        <h3>Wie Nigel Sie anspricht</h3>${segment([["sir", "Sir"], ["madam", "Madam"], ["neutral", "Ohne Anrede"]], p.anrede)}
         <h3>Ton</h3>${segment([["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]], p.ton)}
         <h3>Antwortlänge</h3>${segment([["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]], p.laenge)}
         <h3>Gründlichkeit</h3>${segment([["", "Standard"], ["low", "Schnell"], ["medium", "Gründlich"], ["high", "Sehr gründlich"]], p.gruendlichkeit)}
@@ -761,7 +760,7 @@ function nwVorschauPanel(tab) {
         <h3>Standardmodus für neue Aufgaben</h3>${segment(NW_MODI.map((m) => [m.key, m.label]), p.modus)}
         <h3>Senden mit</h3>${segment([["enter", "Enter"], ["strg", "Strg + Enter"]], p.senden)}
       </section>`,
-      "Einstellungen", "Anrede, Ton, Antwortlänge und Gründlichkeit."],
+      "Einstellungen", "Ton, Antwortlänge und Gründlichkeit."],
   }[tab] || [html``, "Gesperrt", ""];
   return html`<div class="nw-vorschau-tab" data-tab="${tab}">${nwZensiert(inhalt[0], { titel: inhalt[1], text: inhalt[2], stempel: tab === "einstellungen" ? "Gesperrt" : "Vertraulich" })}</div>`;
 }
@@ -1212,7 +1211,8 @@ function nwEinstellungenZeichnen() {
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
       <h3>Wie Nigel Sie anspricht</h3>
-      ${auswahl("anrede", [["sir", "Sir"], ["madam", "Madam"], ["neutral", "Ohne Anrede"]])}
+      <div class="nw-zeile nw-anrede-zeile"><strong>${(ANREDEN.find((a) => a.value === ((myProfile() || {}).anrede || "sir")) || ANREDEN[0]).label}</strong>
+        <button type="button" class="btn small" data-action="profil-bearbeiten">In „Mein Profil“ ändern</button></div>
       <h3>Ton</h3>
       ${auswahl("ton", [["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]])}
       <p class="nw-hilfe">Butler: die volle Persona. Dezent: höflich, kaum Floskeln. Sachlich: nüchtern und direkt.</p>
@@ -1226,7 +1226,7 @@ function nwEinstellungenZeichnen() {
       ${auswahl("modus", NW_MODI.filter((m) => nwModusErlaubt(m.key)).map((m) => [m.key, m.label]))}
       <h3>Senden mit</h3>
       ${auswahl("senden", [["enter", "Enter"], ["strg", "Strg + Enter"]])}
-      <p class="nw-hilfe">Anrede, Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
+      <p class="nw-hilfe">Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy. Die Anrede gehört zum Profil – jeder Charakter hat seine eigene.</p>
     </section>
     <section class="nw-block">
       <h3>${state.isAdmin ? "KI-Budget diesen Monat" : "Kontingent diesen Monat"}</h3>
