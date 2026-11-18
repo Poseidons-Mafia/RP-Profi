@@ -8,9 +8,10 @@
 --  Neu: Wie Nigel jemanden anspricht, steht jetzt im eigenen Profil
 --  ("Mein Profil") statt in Nigels Einstellungen. Jeder RP-Charakter hat
 --  ein eigenes Profil und damit eine eigene Anrede:
---    'sir'     – „Sir“ (Standard)
---    'madam'   – „Madam“
---    'neutral' – ohne Anrede
+--  Im Profil wählt man Herr / Frau / Keine Anrede (gespeichert als):
+--    'sir'     – Herr → Nigel sagt „Sir“ (Standard)
+--    'madam'   – Frau → Nigel sagt „Madam“
+--    'neutral' – Keine Anrede → Nigel lässt die Anrede weg
 --  Nigel nutzt sie überall – auch bei der Berechtigung „Nigel sehen“.
 --  Bisher in Nigels Einstellungen gewählte Anreden werden übernommen.
 -- =============================================================

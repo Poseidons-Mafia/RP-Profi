@@ -336,7 +336,8 @@ function darf(recht) {
 }
 
 // Anrede des aktiven Charakters (Mein Profil) – so spricht Nigel ihn an
-const ANREDEN = [{ value: "sir", label: "Sir" }, { value: "madam", label: "Madam" }, { value: "neutral", label: "Ohne Anrede" }];
+// Im Profil wählt man Herr / Frau / Keine Anrede – Nigel sagt dann „Sir“ / „Madam“ / nichts (Werte: sir, madam, neutral)
+const ANREDEN = [{ value: "sir", label: "Herr" }, { value: "madam", label: "Frau" }, { value: "neutral", label: "Keine Anrede" }];
 function meineAnrede() {
   const a = (myProfile() || {}).anrede;
   return a === "madam" ? "Madam" : a === "neutral" ? "" : "Sir";

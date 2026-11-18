@@ -98,7 +98,7 @@ und Änderungen erscheinen bei allen sofort.
   **Nigel sehen** – das iFruit Duo lässt sich herausholen, zeigt aber nur einen Sperrbildschirm („Berechtigung fehlt“);
   der Arbeitsbereich ist als Vorschau offen (Modi, Beispiele, Reiter), alle Inhalte liegen zensiert unter Milchglas.
   **Nigel verwenden** – volle Nutzung wie bisher (schließt Sehen ein).
-  **Anrede:** Wie Nigel jemanden anspricht (Sir, Madam oder ohne Anrede), stellt jeder in **Mein Profil** ein –
+  **Anrede:** Im **Mein Profil** wählt jeder Herr, Frau oder Keine Anrede – Nigel sagt dann „Sir“, „Madam“ bzw. nichts –
   pro Charakter, und auch bei „Nigel sehen“.
   **KI-Budget:** US-Dollar pro Kalendermonat – Grundwert je Rang plus Abweichung je Mitglied (+/−), darüber ein
   **Kanzlei-Deckel** (Standard 10 $), alles unter **Personal → Ränge & Berechtigungen → KI-Budget pro Monat** einstellbar.
