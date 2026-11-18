@@ -682,8 +682,8 @@ function nwVorschauZeichnen(wurzel) {
   nwSetzen(nwEl("verlauf"), html`<div class="nw-start nw-vorschau-start">
     <img class="nw-start-bild" src="assets/nigel.svg" alt="Nigel">
     <h2 class="nw-gruss">${kiTagesgruss()}${anrede ? `, ${anrede}` : ""}.</h2>
-    <p class="muted">Ihr Rang kann Nigels Arbeitsbereich ansehen; Aufträge an Nigel sind nicht freigeschaltet.
-      Hier ein Überblick, wie er arbeitet.</p>
+    <p class="muted">Ich bedaure${anrede ? `, ${anrede}` : ""} – Ihr Rang gestattet mir, Ihnen meinen Arbeitsbereich zu zeigen, nicht aber, für Sie tätig zu werden.
+      Einen Blick hinein dürfen Sie selbstverständlich werfen.</p>
     <div class="nw-modus-karten">
       ${NW_MODI.map((m) => html`<button type="button" class="nw-modus-karte m-${m.key} ${modus === m.key ? "aktiv" : ""}" data-action="nw-v-modus" data-modus="${m.key}">
         <strong>${m.label}</strong><span>${m.text}</span></button>`)}

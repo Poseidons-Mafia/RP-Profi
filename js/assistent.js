@@ -467,7 +467,7 @@ function kiGesperrtZeichnen() {
   const status = kiEl("status");
   status.textContent = "gesperrt";
   status.classList.remove("tippt");
-  kiEl("lock-text").textContent = "Für Ihren Rang ist Nigel gesperrt.";
+  kiEl("lock-text").textContent = "Ich bedaure, Sir – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.";
   kiTextarea.value = "";
   kiTextarea.disabled = true;
   kiTextarea.placeholder = "Gesperrt – „Nigel verwenden“ ist nicht freigeschaltet";
@@ -477,7 +477,7 @@ function kiGesperrtZeichnen() {
   kiSetzen(kiEl("chat"), html`<div class="ki-leer ki-gesperrt-leer">
     <span class="ki-gesperrt-bild"><img src="assets/nigel.svg" alt="Nigel"><span class="ki-gesperrt-schloss">${schloss}</span></span>
     <p class="ki-gruss">Gesperrt</p>
-    <p>Ihr Rang darf Nigel ansehen, aber nicht verwenden.</p>
+    <p>Ich bedaure, Sir – Ihr Rang gestattet es mir nicht, Ihnen zu Diensten zu sein.</p>
     <button type="button" class="ki-knopf" data-action="ki-ansehen">Arbeitsbereich ansehen</button>
   </div>`);
   const rang = rangName(myProfile());
