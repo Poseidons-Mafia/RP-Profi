@@ -1,0 +1,5 @@
+[
+  { "name": "ping", "description": "Prüft, ob der Wiwang-Bot erreichbar ist", "type": 1, "contexts": [0] },
+  { "name": "konto", "description": "Zeigt dein Website-Konto und deine Charaktere", "type": 1, "contexts": [0] },
+  { "name": "termine", "description": "Zeigt deine nächsten Termine und offenen Aufgaben", "type": 1, "contexts": [0] }
+]
