@@ -245,7 +245,6 @@ function tabRaenge() {
           <tr><th rowspan="2">Rang</th><th rowspan="2" class="num">Mitgl.</th>
             ${BEREICHE.map((b) => html`<th class="rt grp" colspan="${b.nurSchreiben ? 1 : 2}" title="${b.text}">${b.label}</th>`)}
             ${SONDERRECHTE.map((x) => html`<th class="rt grp" rowspan="2">${x.label}</th>`)}
-            <th class="rt grp" rowspan="2" title="Grundwert: KI-Anfragen pro Tag für Mitglieder dieses Rangs">KI-Limit<br>pro Tag</th>
             ${admin ? html`<th rowspan="2"></th>` : ""}</tr>
           <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>` : html`<th class="rt sub">Lesen</th><th class="rt sub">Bearb.</th>`)}</tr>
         </thead>
@@ -256,10 +255,6 @@ function tabRaenge() {
             <td class="num">${n}</td>
             ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, `${b.key}_lesen`, `${b.label} lesen`)}${zelle(r, `${b.key}_schreiben`, `${b.label} bearbeiten`)}`)}
             ${SONDERRECHTE.map((x) => zelle(r, x.key, x.label))}
-            <td class="center"><input type="number" class="ki-limit-feld" min="0" max="100000" step="1" inputmode="numeric"
-              value="${rangKiLimit(r)}" data-change="rang-ki-limit" data-id="${r.id}" title="${r.name}: KI-Anfragen pro Tag (Grundwert)"
-              aria-label="${r.name}: KI-Limit pro Tag" ${admin ? "" : "disabled"}
-              style="${hatRangRecht(r, "ki_assistent") ? "" : "opacity:.55"}"></td>
             ${admin ? html`<td class="row-actions">
               <button class="icon-btn" title="Nach oben" data-action="rang-sort" data-id="${r.id}" data-delta="-1" ${i === 0 ? "disabled" : ""}>↑</button>
               <button class="icon-btn" title="Nach unten" data-action="rang-sort" data-id="${r.id}" data-delta="1" ${i === raenge.length - 1 ? "disabled" : ""}>↓</button>
@@ -273,127 +268,245 @@ function tabRaenge() {
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
         <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
         <li><strong>KI-Assistent</strong>: „Nigel“, der KI-Butler (KI-Modell über OpenRouter) – beantwortet ausschließlich Rechtsfragen und schlägt dafür in den Gesetzen nach. Er sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
-        <li><strong>KI-Limit pro Tag</strong>: Grundwert für alle Mitglieder des Rangs. Je Mitglied lässt sich unten eine Abweichung (+/−) festlegen.</li>
+        <li><strong>KI-Budget</strong>: US-Dollar pro Monat je Mitglied, darüber der Deckel der Kanzlei – siehe unten.</li>
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
         <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
       </ul>
     </div>
-    ${kiLimitKarte()}`;
+    ${kiBudgetKarte()}`;
 }
 
-// ---------- KI-Limits ----------
-// Wirksames Limit = Grundwert des Rangs (ohne Rang: 100) + Abweichung des Mitglieds, mindestens 0
-// (dieselbe Rechnung macht die Datenbank in ki_tageslimit())
-const KI_LIMIT_OHNE_RANG = 100;
-function rangKiLimit(r) {
-  return r && Number.isFinite(Number(r.ki_tageslimit)) ? Number(r.ki_tageslimit) : KI_LIMIT_OHNE_RANG;
+// ---------- KI-Budget (US-Dollar pro Kalendermonat, UTC) ----------
+// Wirksames Budget = Grundwert des Rangs (ohne Rang: 0) + Abweichung des Mitglieds, mindestens 0
+// (dieselbe Rechnung macht die Datenbank in ki_budget_status()). Darüber liegt der Deckel der Kanzlei.
+function rangKiBudget(r) {
+  return r && Number.isFinite(Number(r.ki_budget_monat)) ? Number(r.ki_budget_monat) : 0;
 }
-function kiLimitVon(p) {
-  const r = rangVon(p);
-  return Math.max(0, (r ? rangKiLimit(r) : KI_LIMIT_OHNE_RANG) + (Number(p.ki_limit_offset) || 0));
+function kiBudgetVon(p) {
+  return Math.max(0, rangKiBudget(rangVon(p)) + (Number(p.ki_budget_offset) || 0));
+}
+function kiDeckel() {
+  const e = state.einstellungen[0] || {};
+  return Number.isFinite(Number(e.ki_budget_monat)) ? Number(e.ki_budget_monat) : 10;
 }
 function darfKiNutzer(p) {
   if (istAdminUser(p.user_id)) return true;
   const r = rangVon(p);
   return !!r && p.status !== "Ausgeschieden" && hatRangRecht(r, "ki_assistent");
 }
+const kiMitglieder = () => team().filter((p) => p.status !== "Ausgeschieden" && darfKiNutzer(p));
+const kiCent = (n) => Math.round(Number(n) * 100) / 100;
 
-// Heutige Nutzung aller Mitglieder (nur der Admin darf sie lesen)
-ui.kiNutzungHeute = null;
-async function ladeKiNutzungHeute() {
-  ui.kiNutzungHeute = {};
-  const tagesbeginn = new Date();
-  tagesbeginn.setUTCHours(0, 0, 0, 0);
-  // Mit Update 9 zählen aufwendige Modi (z. B. Gutachten) mehrfach (Spalte gewicht)
-  // Update 10: auch die Kosten (US-Dollar) je Mitglied
-  let { data, error } = await db.from("ki_nutzung").select("user_id,gewicht,kosten").gte("zeit", tagesbeginn.toISOString()).limit(10000);
-  const mitKosten = !error;
-  if (error) ({ data, error } = await db.from("ki_nutzung").select("user_id,gewicht").gte("zeit", tagesbeginn.toISOString()).limit(10000));
-  if (error) ({ data, error } = await db.from("ki_nutzung").select("user_id").gte("zeit", tagesbeginn.toISOString()).limit(10000));
-  if (error) { console.warn(error); return; }
-  const zaehler = {};
-  const kosten = {};
+// Verbrauch im laufenden Monat (nur der Admin darf alle Zeilen lesen) und Ø-Kosten je Modus (letzte 30 Tage)
+ui.kiNutzungMonat = null;
+async function ladeKiNutzungMonat() {
+  ui.kiNutzungMonat = { laedt: true, kosten: {}, anfragen: {}, gesamt: 0, schnitt: {} };
+  const jetzt = new Date();
+  const monat = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth(), 1));
+  const ab = new Date(Math.min(monat.getTime(), jetzt.getTime() - 30 * 86400000));
+  const { data, error } = await db.from("ki_nutzung").select("user_id,kosten,modus,zeit").gte("zeit", ab.toISOString()).limit(20000);
+  if (error) { console.warn(error); ui.kiNutzungMonat = { fehler: true }; scheduleRender(); return; }
+  const n = { kosten: {}, anfragen: {}, gesamt: 0, schnitt: {} };
+  const proModus = {};
   for (const z of data) {
-    zaehler[z.user_id] = (zaehler[z.user_id] || 0) + (Number(z.gewicht) || 1);
-    if (z.kosten !== undefined) kosten[z.user_id] = (kosten[z.user_id] || 0) + (Number(z.kosten) || 0);
+    const k = Number(z.kosten) || 0;
+    if (new Date(z.zeit) >= monat) {
+      n.kosten[z.user_id] = (n.kosten[z.user_id] || 0) + k;
+      n.anfragen[z.user_id] = (n.anfragen[z.user_id] || 0) + 1;
+      n.gesamt += k;
+    }
+    if (z.kosten !== null && z.modus && new Date(z.zeit).getTime() >= jetzt.getTime() - 30 * 86400000) {
+      const m = (proModus[z.modus] = proModus[z.modus] || { summe: 0, anzahl: 0 });
+      m.summe += k;
+      m.anzahl++;
+    }
   }
-  ui.kiNutzungHeute = zaehler;
-  ui.kiKostenHeute = mitKosten ? kosten : null;
+  for (const [m, w] of Object.entries(proModus)) n.schnitt[m] = { kosten: w.summe / w.anzahl, anzahl: w.anzahl };
+  ui.kiNutzungMonat = n;
   scheduleRender();
 }
 
-function kiLimitKarte() {
+const KI_MODUS_NAMEN = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeiten" };
+
+function kiBudgetKarte() {
   const admin = state.isAdmin;
-  if (admin && ui.kiNutzungHeute === null) ladeKiNutzungHeute();
+  if (admin && ui.kiNutzungMonat === null) ladeKiNutzungMonat();
+  const nutzung = ui.kiNutzungMonat && !ui.kiNutzungMonat.laedt && !ui.kiNutzungMonat.fehler ? ui.kiNutzungMonat : null;
+  const deckel = kiDeckel();
+  const mitglieder = kiMitglieder();
+  const summe = kiCent(mitglieder.reduce((s, p) => s + kiBudgetVon(p), 0));
+  const hoechstens = Math.min(summe, deckel);
+  const ueber = summe > deckel + 0.0001;
+
+  // Hochrechnung: bisheriger Verbrauch auf den ganzen Monat
+  const jetzt = new Date();
+  const tageImMonat = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth() + 1, 0)).getUTCDate();
+  const tagAnteil = (jetzt.getUTCDate() - 1 + (jetzt.getUTCHours() * 60 + jetzt.getUTCMinutes()) / 1440) / tageImMonat;
+  const hochrechnung = nutzung && tagAnteil > 0.03 ? Math.min(deckel, nutzung.gesamt / tagAnteil) : null;
+
   const liste = team().filter((p) => p.status !== "Ausgeschieden")
     .sort((a, b) => darfKiNutzer(b) - darfKiNutzer(a)
       || ((rangVon(a) || {}).sortierung ?? 999) - ((rangVon(b) || {}).sortierung ?? 999)
       || personName(a.user_id).localeCompare(personName(b.user_id), "de"));
-  const nutzung = ui.kiNutzungHeute || {};
+  const raenge = rangeSortiert();
+  const schnitt = nutzung ? Object.entries(nutzung.schnitt).sort((a, b) => a[1].kosten - b[1].kosten) : [];
+  const frage = nutzung && nutzung.schnitt.frage ? nutzung.schnitt.frage.kosten : null;
+  const dollarFeld = (attrs) => html`<span class="ki-dollar-feld">$<input type="number" class="ki-limit-feld" step="0.01" inputmode="decimal" ${attrs} ${admin ? "" : "disabled"}></span>`;
+
   return html`
-    <div class="card">
+    <div class="card ki-budget">
       <div class="card-head">
-        <div><h2>KI-Limit je Mitglied</h2>
-          <p class="muted small" style="margin:0">Anfragen pro Tag = <strong>Grundwert des Rangs</strong> (Spalte „KI-Limit“ oben) + <strong>Abweichung</strong> des Mitglieds.
-            Beispiel: Rang 50, Abweichung −20 → 30 pro Tag. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
-        ${admin ? html`<button class="btn small" data-action="ki-nutzung-neu" title="Heutige Nutzung neu laden">Nutzung aktualisieren</button>` : ""}
+        <div><h2>KI-Budget pro Monat</h2>
+          <p class="muted small" style="margin:0">Jedes Mitglied hat ein Budget in US-Dollar pro Kalendermonat: <strong>Grundwert des Rangs</strong> + <strong>Abweichung</strong>.
+            Abgerechnet wird, was jede Anfrage bei OpenRouter tatsächlich kostet. Darüber liegt der <strong>Kanzlei-Deckel</strong>: Ist er erreicht, antwortet Nigel bis zum Monatsersten niemandem mehr.
+            ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
+        ${admin ? html`<button class="btn small" data-action="ki-nutzung-neu" title="Verbrauch neu laden">Verbrauch aktualisieren</button>` : ""}
       </div>
+
+      <div class="kpis ki-budget-kpis">
+        <div class="kpi ki-deckel">
+          <span class="value">${dollarFeld(html`min="0" max="10000" value="${deckel.toFixed(2)}" data-change="ki-deckel" aria-label="Kanzlei-Deckel pro Monat in US-Dollar" title="Mehr gibt die Kanzlei im Monat nie aus"`)}</span>
+          <span class="label">Kanzlei-Deckel / Monat</span>
+        </div>
+        <div class="kpi ${ueber ? "warn" : ""}" title="Summe der Budgets aller Mitglieder mit KI-Recht">
+          <span class="value">${kiDollar(summe)}</span>
+          <span class="label">Wenn alle ausschöpfen</span>
+        </div>
+        <div class="kpi" title="Mehr als der Deckel kann es nicht werden">
+          <span class="value">${kiDollar(hoechstens)}</span>
+          <span class="label">Höchstens ausgegeben</span>
+        </div>
+        ${admin ? html`<div class="kpi ${nutzung && nutzung.gesamt >= deckel ? "alert" : ""}">
+          <span class="value">${nutzung ? kiDollar(nutzung.gesamt) : "…"}</span>
+          <span class="label">Bisher diesen Monat${hochrechnung !== null ? html`<br>Hochrechnung ≈ ${kiDollar(hochrechnung)}` : ""}</span>
+        </div>` : ""}
+      </div>
+
+      ${admin ? html`<div class="ki-balken ki-balken-gross" title="Verbrauch der Kanzlei im Verhältnis zum Deckel"><span style="width:${nutzung ? kiProzent(nutzung.gesamt, deckel) : 0}%"></span></div>` : ""}
+      <p class="small ${ueber ? "" : "ok-text"}" style="margin:6px 0 14px">
+        ${mitglieder.length === 0 ? "Noch kein Mitglied hat das KI-Recht."
+          : ueber ? html`<strong>Die Budgets (${kiDollar(summe)}) sind größer als der Deckel (${kiDollar(deckel)}).</strong> Das ist erlaubt – dann greift der Deckel, und wer zuletzt kommt, bekommt nichts mehr.
+              Soll jedes Mitglied sein Budget sicher nutzen können, die Budgets um ${kiDollar(kiCent(summe - deckel))} senken.`
+          : html`✓ Alle ${anzahl(mitglieder.length, "Mitglied", "Mitglieder")} mit KI-Recht können ihr Budget voll nutzen – zusammen höchstens ${kiDollar(summe)}, ${kiDollar(kiCent(deckel - summe))} unter dem Deckel.`}
+        ${admin && mitglieder.length ? html` <button class="btn small" data-action="ki-budget-verteilen" style="margin-left:6px">Deckel gleichmäßig verteilen</button>` : ""}
+      </p>
+
+      ${schnitt.length ? html`<p class="muted small" style="margin:0 0 14px"><strong>Was kostet eine Anfrage?</strong> (Ø der letzten 30 Tage)
+        ${schnitt.map(([m, w], i) => html`${i ? " · " : ""}${KI_MODUS_NAMEN[m] || m} ≈ ${kiDollar(w.kosten)} <span title="Anzahl Anfragen">(${w.anzahl}×)</span>`)}
+        ${frage ? html`<br>Beispiel: $1 reicht für etwa <strong>${Math.floor(1 / frage)}</strong> Rechtsfragen, der Deckel von ${kiDollar(deckel)} für etwa <strong>${Math.floor(deckel / frage)}</strong>.` : ""}</p>` : ""}
+
+      <h3 class="section-title">Grundwert je Rang</h3>
+      <div class="table-wrap"><table class="table ki-limit-tabelle">
+        <thead><tr><th>Rang</th><th class="center">KI-Recht</th><th class="num">Mitglieder mit KI</th><th class="center">Budget / Mitglied</th><th class="num">Zusammen</th></tr></thead>
+        <tbody>${raenge.map((r) => {
+          const ki = hatRangRecht(r, "ki_assistent");
+          const leute = mitglieder.filter((p) => p.rang_id === r.id);
+          const zusammen = leute.reduce((s, p) => s + kiBudgetVon(p), 0);
+          return html`<tr class="${ki ? "" : "gedimmt"}">
+            <td><strong>${r.name}</strong></td>
+            <td class="center">${ki ? html`<span class="badge ok">ja</span>` : html`<span class="badge">nein</span>`}</td>
+            <td class="num">${leute.length}</td>
+            <td class="center">${dollarFeld(html`min="0" max="1000" value="${rangKiBudget(r).toFixed(2)}" data-change="rang-ki-budget" data-id="${r.id}" aria-label="${r.name}: KI-Budget pro Monat"`)}</td>
+            <td class="num">${leute.length ? kiDollar(zusammen) : "–"}</td>
+          </tr>`;
+        })}</tbody>
+      </table></div>
+
+      <h3 class="section-title" style="margin-top:18px">Budget je Mitglied</h3>
       <div class="table-wrap"><table class="table ki-limit-tabelle">
         <thead><tr><th>Mitglied</th><th>Rang</th><th class="center">KI-Recht</th><th class="num">Grundwert</th>
-          <th class="center">Abweichung</th><th class="num">Wirksam / Tag</th>${admin ? html`<th class="num">Heute genutzt</th><th class="num">Kosten heute</th>` : ""}</tr></thead>
+          <th class="center">Abweichung</th><th class="num">Budget / Monat</th>${admin ? html`<th class="num">Verbraucht</th><th class="num">Rest</th>` : ""}</tr></thead>
         <tbody>${liste.map((p) => {
           const r = rangVon(p);
           const ki = darfKiNutzer(p);
-          const limit = kiLimitVon(p);
-          const offset = Number(p.ki_limit_offset) || 0;
-          const heute = nutzung[p.user_id] || 0;
+          const budget = kiBudgetVon(p);
+          const offset = Number(p.ki_budget_offset) || 0;
+          const verbraucht = nutzung ? nutzung.kosten[p.user_id] || 0 : null;
           return html`<tr class="${ki ? "" : "gedimmt"}">
             <td><span class="name-mit-avatar">${avatar(p.user_id)}<a href="#/team/${p.user_id}"><strong>${personName(p.user_id)}</strong></a></span>
               ${istAdminUser(p.user_id) ? html` <span class="badge alert">Admin</span>` : ""}</td>
             <td>${rangName(p) || html`<span class="muted">kein Rang</span>`}</td>
             <td class="center">${ki ? html`<span class="badge ok">ja</span>` : html`<span class="badge">nein</span>`}</td>
-            <td class="num">${r ? rangKiLimit(r) : html`<span class="muted" title="ohne Rang">${KI_LIMIT_OHNE_RANG}</span>`}</td>
-            <td class="center"><input type="number" class="ki-limit-feld" min="-100000" max="100000" step="1" inputmode="numeric"
-              value="${offset}" data-change="ki-limit-offset" data-id="${p.user_id}" aria-label="${personName(p.user_id)}: Abweichung vom Grundwert"
-              title="Abweichung vom Grundwert des Rangs (+/−)" ${admin ? "" : "disabled"}></td>
-            <td class="num"><strong>${limit}</strong>${offset ? html` <span class="small ${offset > 0 ? "ok-text" : "danger-text"}">(${offset > 0 ? "+" : ""}${offset})</span>` : ""}</td>
-            ${admin ? html`<td class="num ${ki && heute >= limit ? "danger-text" : ""}">${ui.kiNutzungHeute ? heute : "…"}</td>
-              <td class="num">${ui.kiKostenHeute ? (ui.kiKostenHeute[p.user_id] ? "$" + ui.kiKostenHeute[p.user_id].toFixed(3) : "–") : ui.kiNutzungHeute ? "–" : "…"}</td>` : ""}
+            <td class="num">${r ? kiDollar(rangKiBudget(r)) : html`<span class="muted" title="ohne Rang">$0.00</span>`}</td>
+            <td class="center">${dollarFeld(html`min="-1000" max="1000" value="${offset.toFixed(2)}" data-change="ki-budget-offset" data-id="${p.user_id}" aria-label="${personName(p.user_id)}: Abweichung vom Grundwert in US-Dollar" title="Abweichung vom Grundwert des Rangs (+/−)"`)}</td>
+            <td class="num"><strong>${kiDollar(budget)}</strong>${offset ? html` <span class="small ${offset > 0 ? "ok-text" : "danger-text"}">(${offset > 0 ? "+" : "−"}${kiDollar(Math.abs(offset))})</span>` : ""}</td>
+            ${admin ? html`<td class="num ${ki && verbraucht !== null && verbraucht >= budget && budget > 0 ? "danger-text" : ""}">${verbraucht === null ? "…" : verbraucht ? html`${kiDollar(verbraucht)} <span class="muted small">(${nutzung.anfragen[p.user_id]}×)</span>` : "–"}</td>
+              <td class="num">${verbraucht === null || !ki ? "–" : kiDollar(Math.max(0, budget - verbraucht))}</td>` : ""}
           </tr>`;
         })}</tbody>
       </table></div>
-      <p class="muted small" style="margin:8px 0 0">Ein Limit von 0 sperrt die KI für das Mitglied, auch wenn der Rang sie erlaubt. Gezählt wird pro Kalendertag (UTC).</p>
+      <p class="muted small" style="margin:8px 0 0">Ein Budget von $0 sperrt die KI für das Mitglied, auch wenn der Rang sie erlaubt. Abgerechnet wird pro Kalendermonat (UTC); am 1. beginnt jedes Budget von vorn.
+        Zusätzlich begrenzt „Max. Kosten pro Anfrage“ (Nigel → Einstellungen → Kanzlei-Vorgaben) jede einzelne Anfrage. Tipp: Bei OpenRouter dem Schlüssel zusätzlich ein Limit geben – als zweite Sicherung.</p>
     </div>`;
 }
 
-CHANGES["rang-ki-limit"] = async (el) => {
+// Eingabe in US-Dollar (Komma oder Punkt), auf Cent gerundet; null bei ungültiger Eingabe
+function kiDollarEingabe(el, min, max) {
+  const wert = el.value === "" ? 0 : kiCent(String(el.value).replace(",", "."));
+  return Number.isFinite(wert) && wert >= min && wert <= max ? wert : null;
+}
+
+CHANGES["ki-deckel"] = async (el) => {
+  const wert = kiDollarEingabe(el, 0, 10000);
+  if (wert === null) {
+    toast("Bitte einen Betrag von 0 bis 10000 Dollar eingeben.", "error");
+    el.value = kiDeckel().toFixed(2);
+    return;
+  }
+  if (wert === kiDeckel()) return;
+  await attempt(() => updateRow("einstellungen", 1, { ki_budget_monat: wert }), `Kanzlei-Deckel: ${kiDollar(wert)} pro Monat`);
+};
+
+CHANGES["rang-ki-budget"] = async (el) => {
   const r = byId("raenge", el.dataset.id);
-  const wert = Math.round(Number(el.value));
   if (!r) return;
-  if (!Number.isFinite(wert) || wert < 0 || wert > 100000 || el.value === "") {
-    toast("Bitte eine Zahl von 0 bis 100000 eingeben.", "error");
-    el.value = rangKiLimit(r);
+  const wert = kiDollarEingabe(el, 0, 1000);
+  if (wert === null) {
+    toast("Bitte einen Betrag von 0 bis 1000 Dollar eingeben.", "error");
+    el.value = rangKiBudget(r).toFixed(2);
     return;
   }
-  if (wert === rangKiLimit(r)) return;
-  await attempt(() => updateRow("raenge", r.id, { ki_tageslimit: wert }), `${r.name}: KI-Limit ${wert} pro Tag`);
+  if (wert === rangKiBudget(r)) return;
+  await attempt(() => updateRow("raenge", r.id, { ki_budget_monat: wert }), `${r.name}: KI-Budget ${kiDollar(wert)} pro Monat`);
 };
 
-CHANGES["ki-limit-offset"] = async (el) => {
+CHANGES["ki-budget-offset"] = async (el) => {
   const p = profileOf(el.dataset.id);
-  const wert = el.value === "" ? 0 : Math.round(Number(el.value));
   if (!p) return;
-  if (!Number.isFinite(wert) || Math.abs(wert) > 100000) {
-    toast("Bitte eine ganze Zahl eingeben (z. B. 20 oder -10).", "error");
-    el.value = Number(p.ki_limit_offset) || 0;
+  const wert = kiDollarEingabe(el, -1000, 1000);
+  if (wert === null) {
+    toast("Bitte einen Betrag eingeben (z. B. 1.50 oder -0.50).", "error");
+    el.value = (Number(p.ki_budget_offset) || 0).toFixed(2);
     return;
   }
-  if (wert === (Number(p.ki_limit_offset) || 0)) return;
-  await attempt(() => updateRow("profiles", p.user_id, { ki_limit_offset: wert }),
-    `${personName(p.user_id)}: Abweichung ${wert > 0 ? "+" : ""}${wert} → ${Math.max(0, kiLimitVon({ ...p, ki_limit_offset: wert }))} pro Tag`);
+  if (wert === (Number(p.ki_budget_offset) || 0)) return;
+  await attempt(() => updateRow("profiles", p.user_id, { ki_budget_offset: wert }),
+    `${personName(p.user_id)}: Abweichung ${wert > 0 ? "+" : wert < 0 ? "−" : ""}${kiDollar(Math.abs(wert))} → ${kiDollar(kiBudgetVon({ ...p, ki_budget_offset: wert }))} pro Monat`);
 };
 
-ACTIONS["ki-nutzung-neu"] = () => ladeKiNutzungHeute();
+// Deckel gleichmäßig auf alle Mitglieder mit KI-Recht verteilen: Abweichungen auf 0,
+// jeder Rang mit KI-Recht bekommt denselben Grundwert (abgerundet auf Cent)
+ACTIONS["ki-budget-verteilen"] = async () => {
+  const mitglieder = kiMitglieder();
+  if (!mitglieder.length) return;
+  const je = Math.floor((kiDeckel() / mitglieder.length) * 100) / 100;
+  const ohneRang = mitglieder.filter((p) => !rangVon(p));
+  if (!confirm(`Den Deckel von ${kiDollar(kiDeckel())} gleichmäßig verteilen?\n\nJedes der ${mitglieder.length} Mitglieder mit KI-Recht bekommt ${kiDollar(je)} pro Monat. `
+    + `Alle Ränge mit KI-Recht erhalten diesen Grundwert, alle Abweichungen werden auf $0 gesetzt${ohneRang.length ? " (Mitglieder ohne Rang erhalten den Betrag als Abweichung)" : ""}.`)) return;
+  await attempt(async () => {
+    for (const r of rangeSortiert().filter((r) => hatRangRecht(r, "ki_assistent") && rangKiBudget(r) !== je)) {
+      await updateRow("raenge", r.id, { ki_budget_monat: je });
+    }
+    for (const p of team().filter((p) => p.status !== "Ausgeschieden")) {
+      const soll = rangVon(p) ? 0 : mitglieder.includes(p) ? je : 0;
+      // Mitglieder mit Rang ohne KI-Recht behalten ihre Abweichung (wirkt ohnehin nicht)
+      if (rangVon(p) && !mitglieder.includes(p)) continue;
+      if ((Number(p.ki_budget_offset) || 0) !== soll) await updateRow("profiles", p.user_id, { ki_budget_offset: soll });
+    }
+  }, `Verteilt: ${kiDollar(je)} je Mitglied, zusammen ${kiDollar(kiCent(je * mitglieder.length))}`);
+};
+
+ACTIONS["ki-nutzung-neu"] = () => ladeKiNutzungMonat();
 
 function tabEinstellungen() {
   const st = state.settings;

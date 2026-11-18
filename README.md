@@ -95,8 +95,10 @@ und Änderungen erscheinen bei allen sofort.
   Die KI antwortet in **Markdown**, das im Browser mit Showdown in HTML umgewandelt (und mit DOMPurify bereinigt) wird.
   Antworten sind auf **4000 Zeichen** begrenzt – das interne Nachdenken (Reasoning) zählt nicht mit. Unter jeder Antwort
   stehen die nachgeschlagenen Paragraphen (anklickbar). Eigenes Recht „KI-Assistent“ (anfangs nur Chairman).
-  **Tageslimit:** Grundwert je Rang (Spalte „KI-Limit pro Tag“) plus Abweichung je Mitglied (+/−), beides unter
-  **Personal → Ränge & Berechtigungen** einstellbar (nur Admin). Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
+  **KI-Budget:** US-Dollar pro Kalendermonat – Grundwert je Rang plus Abweichung je Mitglied (+/−), darüber ein
+  **Kanzlei-Deckel** (Standard 10 $), alles unter **Personal → Ränge & Berechtigungen → KI-Budget pro Monat** einstellbar (nur Admin).
+  Die Übersicht zeigt, was im schlimmsten Fall ausgegeben wird („Wenn alle ausschöpfen“), den bisherigen Verbrauch mit
+  Hochrechnung und was eine Anfrage im Schnitt kostet. Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
   unten rechts aus der Ecke schaut: antippen (oder Taste `K`) holt es heraus. Herausgeholt lässt es sich mit dem
   Klapp-Knopf (oder Doppelklick aufs Scharnier) auf- und zuklappen: zugeklappt ein kompakter Chat auf dem
   Außendisplay, aufgeklappt links Akte und Schnellaktionen, rechts der Chat. `Esc` steckt es wieder ein. Ist eine Akte geöffnet, nimmt es diese als Kontext.
@@ -121,12 +123,11 @@ und Änderungen erscheinen bei allen sofort.
   - **Vorlagen:** Standard-, Kanzlei- und eigene Vorlagen (Auftrag + Modus). Kanzlei-Vorlagen pflegt, wer die Kanzlei-Einstellungen bearbeiten darf.
   - **Persönliche Einstellungen** (gelten auch fürs Handy): Anrede (Sir, Madam, ohne), Ton (Butler, dezent, sachlich),
     Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren, Standardmodus, Senden mit Enter oder Strg+Enter.
-  - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, Gewichtung beim Tageslimit
-    (z. B. Gutachten zählt 2×), höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
+  - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
     **maximale Kosten pro Anfrage** (US-Dollar, gilt auch fürs Handy). Nigel rechnet vor jedem Schritt mit den Preisen des Modells:
     Wird es knapp, schlägt er weniger nach, denkt kürzer und begrenzt die Antwortlänge; reicht das Budget gar nicht, lehnt er ab,
-    bevor Geld ausgegeben wird. Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (heute) und für den Admin
-    je Mitglied unter Personal → Ränge & Berechtigungen.
+    bevor Geld ausgegeben wird. Dieselbe Bremse greift, wenn das restliche Monatsbudget (eigenes oder das der Kanzlei) kleiner ist.
+    Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (Monat) und für den Admin je Mitglied unter Personal → Ränge & Berechtigungen.
   - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
 - **iPhone & iPad:** Alle Seiten passen sich an Handy und Tablet an (große Tippflächen, kein Hineinzoomen in Eingabefelder,
   wischbare Navigation, Rücksicht auf Notch und Home-Leiste). Tipp: In Safari über **Teilen → „Zum Home-Bildschirm“**
@@ -136,7 +137,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) und [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -145,7 +146,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql), [`supabase-update-13.sql`](supabase-update-13.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten
    (für den Discord-Login wird er später eingeschaltet – erst nachdem der Hook aus „Discord-Login einrichten“ aktiv ist).
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
@@ -196,13 +197,16 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
-auch das **KI-Limit pro Tag** je Rang (Grundwert, Standard 100) und darunter je Mitglied eine **Abweichung** fest
-(z. B. −20 oder +50; ein wirksames Limit von 0 sperrt die KI für dieses Mitglied). Gespeichert wird der Grundwert in
-`raenge.ki_tageslimit`, die Abweichung in `profiles.ki_limit_offset`. Unter **Gesetze** die Gesetzbücher anlegen
+das **KI-Budget pro Monat** fest: den **Kanzlei-Deckel** (Standard 10 $), je Rang einen Grundwert in US-Dollar (Standard 2,50 $)
+und je Mitglied eine **Abweichung** (z. B. −1,00 oder +2,50; ein Budget von 0 sperrt die KI für dieses Mitglied). „Deckel gleichmäßig
+verteilen“ teilt den Deckel auf alle Mitglieder mit KI-Recht auf. Gespeichert wird der Deckel in `einstellungen.ki_budget_monat`,
+der Grundwert in `raenge.ki_budget_monat`, die Abweichung in `profiles.ki_budget_offset`. Unter **Gesetze** die Gesetzbücher anlegen
 und die Paragraphen per Massenimport einfügen – nur was dort steht, kann die KI nachschlagen.
 
-Hinweise: OpenRouter rechnet pro Token ab; die Preise je Modell stehen auf der Modellseite. Eine Frage kann mehrere Anfragen an das Modell auslösen (Nachschlagen),
-zählt beim Tageslimit aber nur einmal (im Arbeitsbereich so oft, wie die Kanzlei-Vorgaben für den Modus festlegen, z. B. Gutachten 2×) – die Limits sind damit auch die Kostenbremse; die Ausgaben stehen bei
+Hinweise: OpenRouter rechnet pro Token ab; die Preise je Modell stehen auf der Modellseite. Vom Budget abgezogen wird, was eine Frage
+tatsächlich gekostet hat (inklusive aller Nachschlage-Schritte) – aufwendige Modi verbrauchen also automatisch mehr. Nigel prüft vor jeder
+Anfrage das Restbudget und plant die Antwort so, dass es nicht überschritten wird. Laufen mehrere Anfragen genau gleichzeitig, kann der Deckel
+um wenige Cent überschritten werden – als zweite Sicherung dem OpenRouter-Schlüssel ein eigenes Limit geben. Die Ausgaben stehen bei
 OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
 trainieren. An den KI-Anbieter gehen die gewählten Akten,
 der Strafkatalog, die nachgeschlagenen und angehefteten Paragraphen, Notizen und ggf. der Entwurf.
@@ -244,5 +248,5 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
 | `supabase/functions/discord-pruefung/` | Edge Function: prüft nach der Discord-Anmeldung die Mitgliedschaft im Discord-Server |
 | `tools/test-konten/` | lokaler Test für Update 11 und 12 (Nachbau der Supabase-Umgebung + Szenarien) |
-| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |
+| `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, KI-Budget, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

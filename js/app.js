@@ -81,7 +81,7 @@ const AKTIONS_RECHTE = {
 };
 const AENDERUNGS_RECHTE = {
   "akte-status": "akten_schreiben", "ki-akte": "ki_assistent", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
-  "rang-ki-limit": "admin", "ki-limit-offset": "admin",
+  "rang-ki-budget": "admin", "ki-budget-offset": "admin", "ki-deckel": "admin", "ki-budget-verteilen": "admin",
 };
 const FORMULAR_RECHTE = { eintrag: "akten_schreiben", "aufgabe-schnell": "termine_schreiben", "ki-frage": "ki_assistent" };
 

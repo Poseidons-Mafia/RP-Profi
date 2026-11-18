@@ -275,3 +275,27 @@ function isImageUrl(url) {
 function safeUrl(url) {
   return /^https?:\/\//i.test(url || "") ? url : null;
 }
+
+
+// ---------- KI-Budget (US-Dollar pro Monat) ----------
+// Dollarbeträge: kleine Summen mit mehr Nachkommastellen
+function kiDollar(n) {
+  if (n === null || n === undefined || !isFinite(n)) return "–";
+  const st = n !== 0 && Math.abs(n) < 0.01 ? 4 : n !== 0 && Math.abs(n) < 1 ? 3 : 2;
+  return "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: st, maximumFractionDigits: st });
+}
+// Budget-Stand aus ki_budget_status() bzw. der Antwort der Edge Function
+function kiBudgetStand(roh) {
+  if (!roh || typeof roh !== "object") return null;
+  const z = (v) => Math.max(0, Number(v) || 0);
+  return { budget: z(roh.budget), genutzt: z(roh.genutzt), kanzlei_budget: z(roh.kanzlei_budget), kanzlei_genutzt: z(roh.kanzlei_genutzt) };
+}
+const kiProzent = (genutzt, max) => (max > 0 ? Math.min(100, Math.round((genutzt / max) * 100)) : 100);
+// Anzeige: eigenes Monatsbudget mit Balken, darunter der Stand der Kanzlei
+function kiBudgetHtml(b) {
+  if (!b) return html`<div class="ki-nutzung"><span>Budget diesen Monat</span><strong>–</strong></div><div class="ki-balken"><span style="width:0%"></span></div>`;
+  return html`
+    <div class="ki-nutzung"><span>Mein Budget (Monat)</span><strong>${kiDollar(b.genutzt)} / ${kiDollar(b.budget)}</strong></div>
+    <div class="ki-balken"><span style="width:${kiProzent(b.genutzt, b.budget)}%"></span></div>
+    <div class="ki-nutzung"><span>Kanzlei gesamt</span><strong>${kiDollar(b.kanzlei_genutzt)} / ${kiDollar(b.kanzlei_budget)}</strong></div>`;
+}

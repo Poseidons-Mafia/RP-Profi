@@ -9,8 +9,8 @@
 --  nur dem Rang "Chairman" gegeben; weitere Ränge kann der Admin unter
 --  Personal → Ränge & Berechtigungen freischalten.
 --  Die KI selbst läuft in der Edge Function "ki-assistent"
---  (supabase/functions/ki-assistent), der Google-Schlüssel liegt dort
---  als Secret GEMINI_API_KEY – nie im Browser.
+--  (supabase/functions/ki-assistent), der OpenRouter-Schlüssel liegt dort
+--  als Secret OPENROUTER_API_KEY – nie im Browser.
 -- =============================================================
 
 
