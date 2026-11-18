@@ -67,7 +67,8 @@ function openProfilForm(userId) {
   const fields = [
     { name: "anzeigename", label: "Anzeigename", required: true, half: true, placeholder: "z. B. Günther Freitag" },
     { name: "telefon", label: "Telefon (ingame)", half: true, placeholder: "z. B. 555-0100" },
-    { name: "discord", label: "Discord", half: true },
+    { name: "discord", label: "Discord", half: true, placeholder: "Benutzername oder Discord-ID",
+      help: "Damit Nigel dich auch ohne verknüpftes Discord-Konto anpingen kann." },
   ];
   // Anrede (pro Charakter); erst verfügbar, wenn supabase-update-15.sql gelaufen ist
   if (!profileOf(userId) || "anrede" in profileOf(userId)) {
@@ -96,7 +97,8 @@ function openPersonalForm(userId) {
   const fields = [
     { name: "anzeigename", label: "Name", required: true, half: true },
     { name: "telefon", label: "Telefon (ingame)", half: true },
-    { name: "discord", label: "Discord", half: true },
+    { name: "discord", label: "Discord", half: true, placeholder: "Benutzername oder Discord-ID",
+      help: "Damit Nigel die Person auch ohne verknüpftes Discord-Konto anpingen kann." },
     { name: "personalnummer", label: "Personalnummer", half: true, placeholder: "z. B. WL-07" },
   ];
   if (verwalten) {
