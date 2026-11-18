@@ -1,12 +1,21 @@
 # Wiwang Law – Aktensystem
 
 Gemeinsames Aktensystem für die RP-Kanzlei Wiwang Law.
+Anmeldung mit **Discord**; jede Person kann **mehrere RP-Charaktere** haben und über das Logo zwischen ihnen wechseln.
 Nur HTML, CSS und JavaScript, ohne Build-Schritt. Die Daten liegen in einer kostenlosen
 **Supabase**-Datenbank: Jedes Kanzlei-Mitglied meldet sich an, alle sehen dieselben Daten,
 und Änderungen erscheinen bei allen sofort.
 
 ## Was das System kann
 
+- **Anmeldung mit Discord & mehrere Charaktere:** Wer auf dem Wiwang-Discord-Server ist, registriert sich mit Discord
+  und legt seinen RP-Charakter an; ein Admin gibt die Registrierung frei (Personal → **Accounts**). Danach meldet man sich
+  mit Discord an und landet direkt im zuletzt gespielten Charakter. Weitere Charaktere lassen sich beantragen (ebenfalls mit
+  Freigabe) und per Klick aufs **Logo** wechseln. Jeder Charakter hat eigenen Rang, eigene Rechte, Aufgaben,
+  Benachrichtigungen und Nigel-Chats – man sieht immer nur, was der aktive Charakter sehen darf. Optional ein eigenes
+  Passwort für die Anmeldung ohne Discord. Bestehende Mitglieder übernehmen ihren Charakter einmalig mit den alten
+  Zugangsdaten. Admin-Rechte gelten für die Person (alle ihre Charaktere). Der Admin sieht unter **Accounts** alle
+  Discord-Konten mit ihren Charakteren, gibt frei, lehnt ab, sperrt und ernennt Admins.
 - **Übersicht:** Kennzahlen, Termine der nächsten 7 Tage, überfällige Fristen, eigene Aufgaben,
   Mandanten in Haft, dringende Akten, **liegen gebliebene Akten** (offen, seit X Tagen ohne Eintrag, Aufgabe
   oder Termin – mit „Wiedervorlage“ per Klick), Pinnwand, letzte Aktivitäten im Team, Statistik
@@ -110,7 +119,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung) und [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -119,12 +128,39 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql).
-3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten.
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql).
+3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten
+   (für den Discord-Login wird er später eingeschaltet – erst nachdem der Hook aus „Discord-Login einrichten“ aktiv ist).
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
    Dieser erste Account ist Admin. Weitere Mitglieder legt der Admin danach direkt im Aktensystem unter **Personal** an.
 5. **Project URL** und **anon/publishable Key** (Project Settings → API) in [`config.js`](config.js) eintragen.
    Den **service_role/secret Key niemals** eintragen.
+
+## Discord-Login einrichten
+
+1. **Discord-Anwendung:** <https://discord.com/developers/applications> → **New Application** (z. B. „Wiwang Law“) →
+   **OAuth2** → unter **Redirects** eintragen: `https://<projekt>.supabase.co/auth/v1/callback`
+   (bei uns `https://btpgnraeumxortphkpgz.supabase.co/auth/v1/callback`). **Client ID** und **Client Secret** kopieren.
+2. **Supabase → Authentication → Sign In / Providers → Discord:** einschalten, Client ID und Client Secret eintragen.
+3. **Supabase → Authentication → Hooks → „Before User Created“:** Postgres-Funktion `public.registrierung_pruefen` wählen.
+   Damit kann sich niemand per E-Mail selbst registrieren – nur mit Discord.
+4. Erst danach unter **Authentication → Sign In / Providers** „**Allow new users to sign up**“ einschalten
+   (nötig, damit neue Discord-Konten angelegt werden).
+5. **Authentication → URL Configuration:** Site URL `https://wiwang.de`, Redirect URLs `https://wiwang.de/**`.
+6. **Edge Function** [`supabase/functions/discord-pruefung`](supabase/functions/discord-pruefung/index.ts) als
+   `discord-pruefung` anlegen (**Verify JWT aus**). Sie prüft bei jeder Discord-Anmeldung, ob die Person auf dem
+   Discord-Server ist (Server-ID im Code; abweichend per Secret `DISCORD_SERVER_ID`).
+
+So funktioniert es: Eine **Person** meldet sich mit Discord an (eigenes Login-Konto ohne Profil – es sieht keine
+Kanzleidaten). Jeder **Charakter** ist ein eigenes Konto mit Profil, Rang und Rechten, genau wie die bisherigen
+Mitglieder. Beim Wechsel prüft die Datenbank (`charakter_zugang`), dass der Charakter zur Person gehört, freigegeben ist
+und die Person auf dem Server ist, und gibt einen Einmal-Zugang aus, der direkt nach der Anmeldung wieder ungültig wird.
+Die Server-Mitgliedschaft wird bei jeder Discord-Anmeldung neu geprüft; wer den Server verlässt, behält den Zugang bis
+zur nächsten Discord-Anmeldung – oder bis ein Admin ihn sperrt. Mitglieder lassen sich weiterhin auch ohne Discord unter
+**Personal → Mitglied einstellen** anlegen.
+
+Test (nur lokal, nie gegen die Live-Datenbank): `PGHOST=… ./tools/test-konten/run.sh` spielt alle SQL-Dateien in eine
+lokale Postgres-Datenbank ein und prüft Registrierung, Freigabe, Wechsel, Übernahme, Sperren und Rechte.
 
 ## KI-Assistent einrichten
 
@@ -175,6 +211,7 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/data.js` | Laden, Live-Updates, Speichern |
 | `js/forms.js` | Formulare und Dialoge |
 | `js/app.js` | Anmeldung, Seitenwechsel, Tastenkürzel |
+| `js/konto.js` | Discord-Anmeldung, Registrierung, Charaktere beantragen/übernehmen, Charakter-Wechsel (Logo) |
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
 | `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |
@@ -185,5 +222,7 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
+| `supabase/functions/discord-pruefung/` | Edge Function: prüft nach der Discord-Anmeldung die Mitgliedschaft im Discord-Server |
+| `tools/test-konten/` | lokaler Test für Update 11 (Nachbau der Supabase-Umgebung + Szenarien) |
 | `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, Tageslimit, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |
 | `assets/fonts/` | Schreibschrift „Great Vibes“ für Unterschriften (SIL Open Font License) |

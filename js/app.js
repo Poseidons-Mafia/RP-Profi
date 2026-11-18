@@ -75,6 +75,7 @@ const AKTIONS_RECHTE = {
   "rang-neu": "admin", "rang-bearbeiten": "admin", "rang-sort": "admin", "nutzer-loeschen": "admin",
   "ablauf-starten": "termine_schreiben", "wiedervorlage": "termine_schreiben",
   "ablauf-neu": "einstellungen_schreiben", "ablauf-bearbeiten": "einstellungen_schreiben",
+  "konten-laden": "admin", "konto-freigeben": "admin", "konto-ablehnen": "admin", "konto-person": "admin", "konto-charakter": "admin",
 };
 const AENDERUNGS_RECHTE = {
   "akte-status": "akten_schreiben", "ki-akte": "ki_assistent", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
@@ -197,6 +198,8 @@ function renderNav(route) {
   navAusrichten(route.page);
   // Auf dem Handy nur der Vorname, damit die Kopfzeile nicht umbricht
   $("btn-me").textContent = (window.innerWidth < 700 ? firstName(myName()) : myName()) || "Profil";
+  // Logo zeigt an, dass man hier den Charakter wechselt (Discord-Konten)
+  $("brand-wechsel").hidden = !(state.konto && state.konto.art === "charakter");
 }
 
 // Schmale Bildschirme (Handy, iPad hochkant): Navigation lässt sich seitlich wischen.
@@ -229,7 +232,7 @@ window.addEventListener("resize", () => { if (!$("nav").hidden) navRaender(); })
 
 // ---------- Bildschirme ----------
 function showScreen(name) {
-  for (const s of ["setup", "login", "loading", "update"]) $(`${s}-screen`).hidden = s !== name;
+  for (const s of ["setup", "login", "loading", "update", "konto"]) $(`${s}-screen`).hidden = s !== name;
   const inApp = name === "app";
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
@@ -255,12 +258,15 @@ $("login-form").addEventListener("submit", async (e) => {
 });
 
 async function onSession(session) {
+  // Beim Charakter-Wechsel lädt die Seite gleich neu – Zwischenstände ignorieren
+  if (ui.charakterWechsel) return;
   if (!session) {
     stopLive();
     state.session = null;
     state.me = null;
     state.loaded = false;
     state.isAdmin = false;
+    state.konto = null;
     ui.adminUsers = null;
     closeDialogs();
     showScreen("login");
@@ -269,6 +275,25 @@ async function onSession(session) {
   state.session = session;
   state.me = { id: session.user.id, email: session.user.email };
   showScreen("loading");
+  $("loading-text").textContent = "Anmeldung wird geprüft …";
+
+  // Discord-Person (ohne aktiven Charakter)? Dann Registrierung bzw. Charakter-Auswahl.
+  let konto;
+  try {
+    konto = await kontoPruefen(session);
+  } catch (e) {
+    console.error(e);
+    $("loading-text").textContent = "Die Anmeldung konnte nicht geprüft werden: " + errorText(e);
+    return;
+  }
+  state.konto = konto;
+  if (konto && ["person", "neu", "unbekannt"].includes(konto.art)) {
+    if (konto.art === "person" && await automatischWechseln(konto)) return;
+    kontoBildschirm();
+    return;
+  }
+
+  $("loading-text").textContent = "Akten werden geladen …";
   try {
     await loadAll();
   } catch (e) {
@@ -283,8 +308,12 @@ async function onSession(session) {
   const { data: admin } = await db.rpc("is_admin");
   state.isAdmin = admin === true;
   state.rechteSig = RECHTE.map((r) => (darf(r.key) ? 1 : 0)).join("");
-  if (!profileOf(state.me.id)) {
-    await attempt(() => insertRow("profiles", { user_id: state.me.id }));
+  // Profile legt nur noch die Datenbank an (Mitglied einstellen bzw. Charakter freigeben)
+  if (!profileOf(state.me.id) && !state.isAdmin) {
+    state.loaded = false;
+    state.konto = { art: "unbekannt" };
+    kontoBildschirm();
+    return;
   }
   startLive();
   showScreen("app");
@@ -354,7 +383,9 @@ function start() {
     showScreen("setup");
     return;
   }
-  db = window.supabase.createClient(config.supabaseUrl, config.supabaseKey);
+  // PKCE: Discord leitet mit ?code=… zurück (stört die #/-Adressen nicht)
+  db = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, { auth: { flowType: "pkce" } });
+  anmeldeFehlerAusAdresse();
   let currentUserId;
   db.auth.onAuthStateChange((event, session) => {
     const userId = (session && session.user && session.user.id) || null;

@@ -961,6 +961,42 @@ dialog::backdrop { background: rgba(20, 10, 10, 0.55); }
 .login-card label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; }
 .login-card input { display: block; margin-top: 4px; padding: 10px; }
 .error { color: var(--red); font-size: 0.9rem; }
+.right { text-align: right; }
+
+/* ---------- Discord-Anmeldung & Charaktere ---------- */
+.btn.discord { background: #5865f2; border-color: #5865f2; color: #fff; font-weight: bold; gap: 10px; padding: 11px 14px; }
+.btn.discord:hover { background: #4752c4; border-color: #4752c4; }
+.btn.discord svg { width: 22px; height: 22px; flex: none; }
+.konto-trenner { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; color: var(--muted); font-size: 0.78rem; }
+.konto-trenner::before, .konto-trenner::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.center-screen .konto-card { width: min(540px, 100%); }
+.konto-card .form { margin: 4px 0 0; }
+.konto-card .actions-row { margin-top: 14px; }
+.discord-kopf { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.discord-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex: none; }
+.discord-avatar.klein { width: 30px; height: 30px; }
+.discord-avatar.leer { display: inline-grid; place-items: center; background: #5865f2; color: #fff; font-weight: bold; }
+.charakter-liste { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; margin: 12px 0; }
+.charakter-zeile {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+}
+.charakter-zeile.klickbar { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.charakter-zeile.klickbar:hover, .charakter-zeile.klickbar:focus-visible { border-color: var(--red); background: var(--red-soft); outline: none; }
+.charakter-initiale {
+  width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--black); color: var(--gold); font-weight: bold; font-size: 0.85rem;
+}
+.charakter-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.charakter-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.charakter-los { color: var(--red); font-weight: bold; font-size: 0.85rem; white-space: nowrap; }
+.dialog-body .dialog-actions { padding-left: 0; padding-right: 0; }
+.brand-wechsel {
+  align-self: flex-end; margin: 0 0 6px -14px; width: 20px; height: 20px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; background: var(--gold); color: var(--black);
+  font-size: 0.72rem; font-weight: bold; box-shadow: 0 0 0 2px var(--red);
+}
+.konto-char { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 0; }
 
 /* Dezenter Leitfaden-Knopf am Rand */
 .guide-btn {
