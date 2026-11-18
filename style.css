@@ -839,6 +839,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .rights-table th.grp { border-left: 1px solid var(--line); text-align: center; font-weight: bold; color: var(--text); }
 .rights-table th.sub { font-size: 0.6rem; min-width: 44px; }
 .rights-table th.rt { min-width: 44px; }
+.rights-table th.gruppe { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 0; padding-bottom: 2px; }
+.rights-table td.grp { border-left: 1px solid var(--line); }
+.rights-table th.gruppe, .rights-table th.grp-start, .rights-table td.grp-start { border-left: 2px solid var(--text); }
 .rights-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
 .rights-table input[type="checkbox"]:disabled { cursor: default; opacity: 0.7; }
 
@@ -1257,6 +1260,19 @@ body.in-app .guide-btn span { display: none; }
 .beitrag-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .beitrag.kompakt .beitrag-fuss { margin-top: 8px; padding-top: 8px; }
 .team-rows > li { align-items: center; }
+/* Pinnwand auf der Übersicht: Beiträge sitzen in der Karte, daher ohne eigenen Schatten */
+.pinnwand-karte .beitrag { box-shadow: none; padding: 12px 14px; }
+.pinnwand-karte .beitrag.wichtig { background: #fff9f6; }
+
+/* ---------- Finanzen (Rechnungen & Buchhaltung) ---------- */
+.finanz-leiste { display: flex; align-items: flex-end; gap: 12px; margin: 0 0 16px; border-bottom: 1px solid var(--line); }
+.finanz-leiste .tabs { flex: 1; min-width: 0; margin: 0; padding: 0; border-bottom: 0; }
+.tabs .tab-gruppe { align-self: center; flex: none; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0 4px 0 14px; }
+.tabs .tab-gruppe:first-child { padding-left: 2px; }
+.tabs .tab-gruppe:not(:first-child) { border-left: 1px solid var(--line); margin-left: 6px; }
+.finanz-jahr { flex: none; padding-bottom: 6px; white-space: nowrap; }
+.finanz-jahr select { width: auto; margin-left: 6px; }
+.chip .chip-n { opacity: 0.6; font-size: 0.85em; margin-left: 2px; }
 
 /* Abläufe */
 .ablauf-liste button .badge { margin-left: 4px; font-weight: bold; }
@@ -1275,6 +1291,8 @@ body.in-app .guide-btn span { display: none; }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cal-layout { grid-template-columns: minmax(0, 1fr); }
   .pinnwand-layout { grid-template-columns: minmax(0, 1fr); }
+  .finanz-leiste { flex-wrap: wrap; }
+  .finanz-jahr { order: -1; width: 100%; padding: 0 0 4px; }
 }
 
 @media (max-width: 700px) {

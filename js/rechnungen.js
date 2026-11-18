@@ -1,5 +1,5 @@
 // =============================================================
-//  Wiwang Law – Rechnungen & Gebührenkatalog
+//  Wiwang Law – Rechnungen & Gebührenkatalog (Reiter im Bereich Finanzen)
 // =============================================================
 
 function rechnungStatusBadge(r) {
@@ -186,58 +186,45 @@ function openRechnungForm(r, preset = {}) {
   });
 }
 
-// ---------- Seite ----------
-VIEWS.rechnungen = () => {
+// ---------- Reiter im Bereich Finanzen (js/finanzen.js) ----------
+function tabRechnungen() {
   const f = ui.rechnungen;
   const list = state.rechnungen
     .filter((r) => f.status === "alle" || (f.status === "ueberfaellig" ? rechnungUeberfaellig(r) : r.status === f.status))
     .filter((r) => matches(f.q, r.nummer, r.empfaenger, r.betreff, (byId("akten", r.akte_id) || {}).number))
     .sort((a, b) => String(b.datum).localeCompare(String(a.datum)) || (b.nummer || "").localeCompare(a.nummer || ""));
-
-  const offen = state.rechnungen.filter((r) => r.status === "Offen");
-  const ueberfaellig = offen.filter(rechnungUeberfaellig);
-  const monat = ymd(new Date()).slice(0, 7);
-  const bezahltMonat = state.rechnungen.filter((r) => r.status === "Bezahlt" && String(r.bezahlt_am || r.datum).startsWith(monat));
-  const bezahltGesamt = state.rechnungen.filter((r) => r.status === "Bezahlt");
-  const sum = (l) => l.reduce((t, r) => t + (Number(r.summe) || 0), 0);
-
+  const anzahl = (status) => state.rechnungen.filter((r) => (status === "ueberfaellig" ? rechnungUeberfaellig(r) : status === "alle" || r.status === status)).length;
   return html`
-    <div class="page">
-      <div class="page-head">
-        <div><h1>Rechnungen</h1><p class="muted">Rechnungen erstellen, drucken und den Zahlungseingang verfolgen.</p></div>
-        ${darf("rechnungen") ? html`<button class="btn primary" data-action="rechnung-neu">+ Neue Rechnung</button>` : ""}
-      </div>
-      <div class="kpis">
-        <a class="kpi" href="#/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(sum(offen))}</span><span class="label">${offen.length} offen</span></a>
-        <a class="kpi ${ueberfaellig.length ? "alert" : ""}" href="#/rechnungen" data-action="rechnungen-filter" data-status="ueberfaellig"><span class="value">${ueberfaellig.length}</span><span class="label">Überfällig (> ${state.settings.zahlungsziel_tage} Tage)</span></a>
-        <a class="kpi" href="#/rechnungen" data-action="rechnungen-filter" data-status="Bezahlt"><span class="value">${fmt.geld(sum(bezahltMonat))}</span><span class="label">Eingang ${MONATE[new Date().getMonth()]}</span></a>
-        <div class="kpi"><span class="value">${fmt.geld(sum(bezahltGesamt))}</span><span class="label">Umsatz gesamt</span></div>
-      </div>
-      <div class="card">
-        <div class="toolbar">
-          <div class="chips">
-            ${[["Offen", "Offen"], ["ueberfaellig", "Überfällig"], ["Bezahlt", "Bezahlt"], ["Storniert", "Storniert"], ["alle", "Alle"]]
-              .map(([v, l]) => html`<button class="chip ${f.status === v ? "active" : ""}" data-action="rechnungen-filter" data-status="${v}">${l}</button>`)}
-          </div>
-          <div class="search"><input type="search" id="rechnungen-q" data-search data-input="rechnungen-q" value="${f.q}" placeholder="Nummer, Empfänger, Betreff …"></div>
+    <div class="card">
+      <div class="toolbar">
+        <div class="chips">
+          ${[["Offen", "Offen"], ["ueberfaellig", "Überfällig"], ["Bezahlt", "Bezahlt"], ["Storniert", "Storniert"], ["alle", "Alle"]]
+            .map(([v, l]) => html`<button class="chip ${f.status === v ? "active" : ""}" data-action="rechnungen-filter" data-status="${v}">${l} <span class="chip-n">${anzahl(v)}</span></button>`)}
         </div>
-        ${list.length ? rechnungTabelle(list) : html`<p class="empty">Keine Rechnungen in dieser Ansicht.</p>`}
+        <div class="search"><input type="search" id="rechnungen-q" data-search data-input="rechnungen-q" value="${f.q}" placeholder="Nummer, Empfänger, Betreff …"></div>
       </div>
-      <div class="card">
-        <div class="card-head">
-          <div><h2>Gebührenkatalog</h2><p class="muted small" style="margin:0">Feste Preise der Kanzlei – in Rechnungen mit einem Klick übernehmen.</p></div>
-          ${darf("gesetzbuch") ? html`<button class="btn small primary" data-action="gebuehr-neu">+ Gebühr</button>` : ""}
-        </div>
-        ${state.gebuehren.length ? html`
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th>Leistung</th><th class="num">Preis</th><th></th></tr></thead>
-            <tbody>${[...state.gebuehren].sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung, "de")).map((g) => html`
-              <tr><td>${g.bezeichnung}</td><td class="num">${fmt.geld(g.preis)}</td>
-                <td class="row-actions">${darf("gesetzbuch") ? html`<button class="icon-btn" data-action="gebuehr-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button>` : ""}</td></tr>`)}
-            </tbody></table></div>` : html`<p class="empty">Noch keine Gebühren hinterlegt, z. B. „Beratung U-Haft – $50.000“.</p>`}
-      </div>
+      ${list.length ? rechnungTabelle(list) : html`<p class="empty">Keine Rechnungen in dieser Ansicht.</p>`}
     </div>`;
-};
+}
+
+function tabGebuehren() {
+  const pflegen = darf("einstellungen_schreiben");
+  return html`
+    <div class="card">
+      <div class="card-head">
+        <div><h2>Gebührenkatalog</h2><p class="muted small" style="margin:0">Feste Preise der Kanzlei – in Rechnungen mit einem Klick übernehmen.
+          ${pflegen ? "" : "Pflegen dürfen Ränge mit „Kanzlei-Einstellungen bearbeiten“."}</p></div>
+        ${pflegen ? html`<button class="btn small primary" data-action="gebuehr-neu">+ Gebühr</button>` : ""}
+      </div>
+      ${state.gebuehren.length ? html`
+        <div class="table-wrap"><table class="table">
+          <thead><tr><th>Leistung</th><th class="num">Preis</th><th></th></tr></thead>
+          <tbody>${[...state.gebuehren].sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung, "de")).map((g) => html`
+            <tr><td>${g.bezeichnung}</td><td class="num">${fmt.geld(g.preis)}</td>
+              <td class="row-actions">${pflegen ? html`<button class="icon-btn" data-action="gebuehr-bearbeiten" data-id="${g.id}" title="Bearbeiten">✎</button>` : ""}</td></tr>`)}
+          </tbody></table></div>` : html`<p class="empty">Noch keine Gebühren hinterlegt, z. B. „Beratung U-Haft – $50.000“.</p>`}
+    </div>`;
+}
 
 INPUTS["rechnungen-q"] = (el) => { ui.rechnungen.q = el.value; scheduleRender(); };
 
@@ -249,7 +236,7 @@ function gebuehrFields() {
 }
 
 Object.assign(ACTIONS, {
-  "rechnungen-filter": (d) => { ui.rechnungen.status = d.status; if (parseRoute().page !== "rechnungen") go("rechnungen"); else render(); },
+  "rechnungen-filter": (d) => { ui.rechnungen.status = d.status; go("finanzen/rechnungen"); },
   "rechnung-neu": (d) => openRechnungForm(null, { akte_id: d.akte || null, mandant_id: d.mandant || null }),
   "rechnung-bearbeiten": (d) => openRechnungForm(byId("rechnungen", d.id)),
   "rechnung-bezahlt": (d) => {

@@ -7,7 +7,7 @@
 // Zustand der Oberfläche (Filter, Entwürfe, …) – nur im Browser
 const ui = {
   akten: { q: "", status: "aktiv", typ: "", sort: "aktiv", meine: false },
-  pinnwand: { archiv: false },
+  pinnwand: { archiv: false, alle: false },
   mandanten: { q: "", markierung: "" },
   kalender: { modus: "agenda", monat: ymd(new Date()).slice(0, 7), vergangene: false, meine: false },
   rechnungen: { status: "Offen", q: "" },
@@ -33,9 +33,7 @@ const NAV = [
   { page: "akten", label: "Akten", href: "#/akten" },
   { page: "mandanten", label: "Mandanten", href: "#/mandanten" },
   { page: "kalender", label: "Kalender", href: "#/kalender" },
-  { page: "pinnwand", label: "Pinnwand", href: "#/pinnwand" },
-  { page: "rechnungen", label: "Rechnungen", href: "#/rechnungen" },
-  { page: "buchhaltung", label: "Buchhaltung", href: "#/buchhaltung" },
+  { page: "finanzen", label: "Finanzen", href: "#/finanzen" },
   { page: "gesetze", label: "Gesetze", href: "#/gesetze" },
   { page: "gesetzbuch", label: "Strafkatalog", href: "#/gesetzbuch" },
   { page: "nigel", label: "Nigel", href: "#/nigel" },
@@ -44,9 +42,10 @@ const NAV = [
 
 // ---------- Rechte für Seiten und Aktionen ----------
 // Was hier fehlt, darf jedes Mitglied. Die Datenbank prüft zusätzlich selbst.
+// Eine Liste heißt: eines der Rechte genügt (Finanzen: Rechnungen oder Buchhaltung lesen).
 const SEITEN_RECHTE = {
   akten: "akten_lesen", mandanten: "mandanten_lesen", kalender: "termine_lesen",
-  rechnungen: "rechnungen_lesen", buchhaltung: "buchhaltung_lesen", gesetzbuch: "gesetzbuch_lesen", gesetze: "gesetzbuch_lesen",
+  finanzen: ["rechnungen_lesen", "buchhaltung_lesen"], gesetzbuch: "gesetzbuch_lesen", gesetze: "gesetzbuch_lesen",
   nigel: "ki_sehen", // nur „Sehen“: Arbeitsbereich als zensierte Vorschau (js/nigel.js)
 };
 const AKTIONS_RECHTE = {
@@ -58,7 +57,7 @@ const AKTIONS_RECHTE = {
   "mandant-neu": "mandanten_schreiben", "mandant-bearbeiten": "mandanten_schreiben",
   "termin-neu": "termine_schreiben", "termin-bearbeiten": "termine_schreiben", "aufgabe-bearbeiten": "termine_schreiben",
   "rechnung-neu": "rechnungen_schreiben", "rechnung-bearbeiten": "rechnungen_schreiben", "rechnung-bezahlt": "rechnungen_schreiben",
-  "gebuehr-neu": "gesetzbuch_schreiben", "gebuehr-bearbeiten": "gesetzbuch_schreiben", "gesetz-neu": "gesetzbuch_schreiben",
+  "gebuehr-neu": "einstellungen_schreiben", "gebuehr-bearbeiten": "einstellungen_schreiben", "gesetz-neu": "gesetzbuch_schreiben",
   "gesetz-bearbeiten": "gesetzbuch_schreiben", "gesetze-import": "gesetzbuch_schreiben",
   "gesetzbuch-neu": "gesetzbuch_schreiben", "gesetzbuch-bearbeiten": "gesetzbuch_schreiben", "paragraph-neu": "gesetzbuch_schreiben",
   "paragraph-bearbeiten": "gesetzbuch_schreiben", "paragraphen-import": "gesetzbuch_schreiben", "gb-ki": "ki_assistent",
@@ -87,6 +86,7 @@ const AENDERUNGS_RECHTE = {
 const FORMULAR_RECHTE = { eintrag: "akten_schreiben", "aufgabe-schnell": "termine_schreiben", "ki-frage": "ki_assistent" };
 
 function erlaubt(recht) {
+  if (Array.isArray(recht)) return recht.some(erlaubt);
   return !recht || (recht === "admin" ? state.isAdmin : darf(recht));
 }
 
@@ -110,8 +110,24 @@ function rechteAnwenden(root = document) {
 }
 
 // ---------- Routing ----------
+// Frühere eigene Seiten, die jetzt Teil einer anderen sind (alte Links, Lesezeichen, Benachrichtigungen):
+// Pinnwand und „Team heute“ stehen auf der Übersicht, Rechnungen und Buchhaltung unter Finanzen.
+const ALTE_SEITEN = {
+  pinnwand: () => ({ ziel: "", anker: "pinnwand" }),
+  "team-heute": () => ({ ziel: "", anker: "team-heute" }),
+  rechnungen: () => ({ ziel: "finanzen/rechnungen" }),
+  buchhaltung: (id) => ({ ziel: `finanzen/${id || "bilanz"}` }),
+};
 function parseRoute() {
-  const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+  let parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+  // Nur im Aktensystem – das Mandantenportal hat eigene Adressen (u. a. #/rechnungen)
+  const alt = state.loaded && !document.body.classList.contains("im-portal") && ALTE_SEITEN[parts[0]];
+  if (alt) {
+    const { ziel, anker } = alt(parts[1]);
+    history.replaceState(null, "", "#/" + ziel); // löst kein hashchange aus
+    if (anker) ui.anker = anker;
+    parts = ziel.split("/").filter(Boolean);
+  }
   return { page: parts[0] || "uebersicht", id: parts[1] || null, sub: parts[2] || null };
 }
 
@@ -178,6 +194,12 @@ function render() {
     }
   }
   renderNav(route);
+  // Sprungmarke (z. B. #/pinnwand → Pinnwand auf der Übersicht) erst nach dem Hochscrollen anfahren
+  if (ui.anker) {
+    const anker = ui.anker;
+    ui.anker = null;
+    requestAnimationFrame(() => { const el = document.getElementById(anker); if (el) el.scrollIntoView({ block: "start" }); });
+  }
   document.querySelectorAll(".topbar [data-action]").forEach((el) => { el.hidden = !erlaubt(AKTIONS_RECHTE[el.dataset.action]); });
   rechteAnwenden(main);
   if (typeof kiAktualisieren === "function") kiAktualisieren();
@@ -193,7 +215,7 @@ function renderNav(route) {
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
   const pinnwand = typeof pinnwandOffen === "function" ? pinnwandOffen().length : 0;
   const antraege = typeof portalAntraege === "function" ? portalAntraege().length : 0;
-  const badges = { kalender: heute, rechnungen: offen, pinnwand, mandanten: antraege };
+  const badges = { kalender: heute, finanzen: offen, uebersicht: pinnwand, mandanten: antraege };
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
