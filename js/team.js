@@ -71,8 +71,7 @@ function openProfilForm(userId) {
   ];
   // Anrede (pro Charakter); erst verfügbar, wenn supabase-update-15.sql gelaufen ist
   if (!profileOf(userId) || "anrede" in profileOf(userId)) {
-    fields.push({ name: "anrede", label: "Anrede", type: "select", half: true, options: ANREDEN, required: true,
-      help: "Nigel spricht dich als „Sir“ (Herr) bzw. „Madam“ (Frau) an – oder ganz ohne Anrede." });
+    fields.push({ name: "anrede", label: "Anrede", type: "select", half: true, options: ANREDEN, required: true });
   }
   if (r && r.ist_sonstiges) {
     fields.push({ name: "rang_eigen", label: "Meine Rangbezeichnung", half: true, required: true,

@@ -1210,9 +1210,6 @@ function nwEinstellungenZeichnen() {
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
-      <h3>Wie Nigel Sie anspricht</h3>
-      <div class="nw-zeile nw-anrede-zeile"><strong>${(ANREDEN.find((a) => a.value === ((myProfile() || {}).anrede || "sir")) || ANREDEN[0]).label}</strong>
-        <button type="button" class="btn small" data-action="profil-bearbeiten">In „Mein Profil“ ändern</button></div>
       <h3>Ton</h3>
       ${auswahl("ton", [["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]])}
       <p class="nw-hilfe">Butler: die volle Persona. Dezent: höflich, kaum Floskeln. Sachlich: nüchtern und direkt.</p>
@@ -1226,7 +1223,7 @@ function nwEinstellungenZeichnen() {
       ${auswahl("modus", NW_MODI.filter((m) => nwModusErlaubt(m.key)).map((m) => [m.key, m.label]))}
       <h3>Senden mit</h3>
       ${auswahl("senden", [["enter", "Enter"], ["strg", "Strg + Enter"]])}
-      <p class="nw-hilfe">Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy. Die Anrede gehört zum Profil – jeder Charakter hat seine eigene.</p>
+      <p class="nw-hilfe">Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
     </section>
     <section class="nw-block">
       <h3>${state.isAdmin ? "KI-Budget diesen Monat" : "Kontingent diesen Monat"}</h3>
