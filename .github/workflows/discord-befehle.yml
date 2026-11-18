@@ -1,0 +1,40 @@
+# Meldet die Slash-Befehle des Discord-Bots beim Wiwang-Server an.
+# Start von Hand: GitHub → Actions → "Discord-Befehle anmelden" → "Run workflow".
+# Nötig sind die Repository-Secrets DISCORD_APP_ID und DISCORD_BOT_TOKEN
+# (Settings → Secrets and variables → Actions). Nur nach Änderungen an
+# tools/discord-bot/befehle.json erneut ausführen.
+name: Discord-Befehle anmelden
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  anmelden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Befehle an Discord senden
+        env:
+          DISCORD_APP_ID: ${{ secrets.DISCORD_APP_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_SERVER_ID: "1572531594227355739"
+        run: |
+          if [ -z "$DISCORD_APP_ID" ] || [ -z "$DISCORD_BOT_TOKEN" ]; then
+            echo "::error::Secrets DISCORD_APP_ID und DISCORD_BOT_TOKEN fehlen."
+            exit 1
+          fi
+          status=$(curl -sS -o antwort.json -w '%{http_code}' -X PUT \
+            "https://discord.com/api/v10/applications/$DISCORD_APP_ID/guilds/$DISCORD_SERVER_ID/commands" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data @tools/discord-bot/befehle.json)
+          if [ "$status" != "200" ]; then
+            echo "::error::Discord antwortet mit $status"
+            cat antwort.json
+            exit 1
+          fi
+          echo "Angemeldete Befehle:"
+          grep -o '"name": *"[^"]*"' antwort.json

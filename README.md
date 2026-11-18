@@ -195,6 +195,40 @@ Test (nur lokal, nie gegen die Live-Datenbank): `PGHOST=… ./tools/test-konten/
 lokale Postgres-Datenbank ein und prüft Registrierung, Freigabe, Wechsel, Übernahme, Sperren und Rechte – und fürs
 Mandantenportal, dass ein Mandant wirklich nur seine eigenen, freigegebenen Daten sieht.
 
+## Discord-Bot einrichten
+
+Der Bot ist die Schnittstelle zwischen Discord-Server und Website. Es läuft **kein eigener Bot-Prozess**: Discord schickt
+jeden Slash-Befehl an die Edge Function [`supabase/functions/discord-bot`](supabase/functions/discord-bot/index.ts),
+die die Daten aus Supabase liest und antwortet. Die Antworten sieht nur die Person, die den Befehl nutzt.
+
+| Befehl | Zeigt |
+|---|---|
+| `/ping` | ob der Bot erreichbar ist |
+| `/konto` | eigenes Website-Konto und eigene Charaktere mit Status |
+| `/termine` | eigene nächste Termine und offene Aufgaben (alle freigegebenen, aktiven Charaktere) |
+
+Die Person wird über ihre Discord-ID erkannt, die beim Login mit Discord gespeichert wird. Wer sich noch nie auf der
+Website mit Discord angemeldet hat, bekommt einen Hinweis darauf. Keine Datenbank-Änderung nötig.
+
+1. **Discord-Anwendung** (dieselbe wie für den Login): <https://discord.com/developers/applications>
+   - **General Information:** **Application ID** und **Public Key** kopieren.
+   - **Bot:** **Reset Token** → **Bot-Token** kopieren (nur einmal sichtbar, geheim halten). Keine Privileged Intents nötig.
+   - **OAuth2 → URL Generator:** Scopes `bot` und `applications.commands`, keine Bot-Rechte → Link öffnen und den Bot
+     auf den Wiwang-Server einladen.
+2. **Supabase → Edge Functions:** Funktion `discord-bot` mit dem Code aus
+   [`supabase/functions/discord-bot/index.ts`](supabase/functions/discord-bot/index.ts) anlegen, **Verify JWT aus**
+   (Discord schickt kein Supabase-Login, die Funktion prüft die Discord-Signatur).
+   **Edge Functions → Secrets:** `DISCORD_PUBLIC_KEY` = Public Key aus Schritt 1.
+3. **Discord → General Information → Interactions Endpoint URL:**
+   `https://btpgnraeumxortphkpgz.supabase.co/functions/v1/discord-bot` eintragen und speichern. Discord prüft die
+   Adresse sofort; klappt das Speichern, stimmen Funktion und Public Key.
+4. **GitHub → Settings → Secrets and variables → Actions:** Secrets `DISCORD_APP_ID` (Application ID) und
+   `DISCORD_BOT_TOKEN` (Bot-Token) anlegen. Dann **Actions → „Discord-Befehle anmelden“ → Run workflow**. Der Workflow
+   meldet die Befehle aus [`tools/discord-bot/befehle.json`](tools/discord-bot/befehle.json) beim Server an; nach
+   Änderungen an der Datei erneut ausführen.
+
+Danach in Discord `/ping` eingeben. Bot-Token und Public Key gehören **nie** in `config.js` oder anderen Website-Code.
+
 ## KI-Assistent einrichten
 
 Die Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) wird in Supabase unter
