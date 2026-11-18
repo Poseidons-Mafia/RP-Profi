@@ -107,31 +107,55 @@ function portalZugaengeSeite() {
 function zugangAktionen(z) {
   if (z.person_status === "gesperrt") return "";
   return html`
-    ${z.status === "frei" ? html`<button class="btn small" data-action="zugang-verknuepfen" data-id="${z.id}">Zuordnung ändern</button>
+    ${z.status === "frei" ? html`<button class="btn small" data-action="zugang-verknuepfen" data-id="${z.id}" title="Nur nötig, wenn der Zugang dem falschen Mandanten zugeordnet wurde">Anderem Mandanten zuordnen</button>
       <button class="btn small danger" data-action="zugang-aktion" data-aktion="sperren" data-id="${z.id}">Sperren</button>` : ""}
     ${z.status === "gesperrt" ? html`<button class="btn small" data-action="zugang-aktion" data-aktion="entsperren" data-id="${z.id}">Entsperren</button>` : ""}
     ${z.status === "abgelehnt" ? html`<button class="btn small" data-action="zugang-freigeben" data-id="${z.id}">Doch freigeben</button>` : ""}`;
 }
 
 // ---------- Block in der Mandanten-Detailansicht ----------
+// Zeigt nur: Welches Discord-Konto kommt als DIESER Mandant ins Portal – und was sieht es?
 function mandantPortalBlock(m) {
   if (ui.portalZugaenge === null) ladePortalZugaenge();
-  const zugaenge = portalZugaengeVon(m.id);
+  // eigene Zugänge + offene Anträge, deren Name zu diesem Mandanten passt
+  const zugaenge = [...portalZugaengeVon(m.id),
+    ...portalAntraege().filter((z) => !z.mandant_id && z.vorschlag === m.id)];
   const einblick = einblickAkten(m.id);
+  const zuletzt = (z) => z.zuletzt_aktiv ? `zuletzt im Portal ${fmt.relativ(z.zuletzt_aktiv)}` : "war noch nie im Portal";
   return html`
-    <h3 class="section-title" style="margin-top:20px">Mandantenportal</h3>
-    ${zugaenge.length ? html`<ul class="rows">${zugaenge.map((z) => html`<li>
-        <div class="grow"><div class="title">${z.name} ${zugangStatusBadge(z)}</div>
-          <div class="meta">Discord: ${z.discord_name || "–"}${z.discord_benutzer ? ` (@${z.discord_benutzer})` : ""} ·
-            zuletzt im Portal: ${z.zuletzt_aktiv ? fmt.relativ(z.zuletzt_aktiv) : "noch nie"}</div></div>
-        <div class="nowrap">${z.status === "wartet" ? html`<button class="btn small primary" data-action="zugang-freigeben" data-id="${z.id}">Freigeben</button>` : zugangAktionen(z)}</div>
-      </li>`)}</ul>`
-      : html`<p class="empty">Kein Portal-Zugang. Der Mandant kann sich mit Discord registrieren („Ich bin Mandant“) – danach unter
-          <a href="#/mandanten/portal">Portal-Anträge</a> freigeben.</p>`}
-    ${einblick.length ? html`<p class="small muted">Hat zusätzlich Einblick in: ${einblick.map((x, i) => {
-      const a = byId("akten", x.akte_id);
-      return a ? html`${i ? ", " : ""}<a href="#/akten/${a.id}/beteiligte">${a.number}</a> (${x.rolle})` : "";
-    })}</p>` : ""}`;
+    <h3 class="section-title" style="margin-top:20px">Online-Zugang (Mandantenportal)</h3>
+    <div class="portal-einblick">
+      ${zugaenge.length ? html`
+        <p class="small muted" style="margin-top:0">Mit diesem Discord-Konto meldet sich <strong>${m.name}</strong> im Mandantenportal an
+          und sieht dort die eigenen Akten, Termine, Rechnungen und alles, was ihr „für Mandant sichtbar“ macht.</p>
+        <ul class="rows">${zugaenge.map((z) => html`<li>
+          <div class="grow">
+            <div class="title">${discordZeile(z)}</div>
+            <div class="meta">${zugangStatusBadge(z)} · ${z.status === "wartet" ? html`neuer Antrag als „${z.name}“ – wartet auf Freigabe` : zuletzt(z)}</div>
+          </div>
+          <div class="nowrap">${mandantZugangAktionen(z)}</div>
+        </li>`)}</ul>
+        ${zugaenge.some((z) => z.status === "frei" && z.person_status !== "gesperrt") ? html`<p class="small muted" style="margin-bottom:0">
+          Falsches Discord-Konto? <button class="link-btn" data-action="zugang-verknuepfen" data-id="${zugaenge.find((z) => z.status === "frei").id}">Einem anderen Mandanten zuordnen</button></p>` : ""}`
+      : html`<p class="small" style="margin-top:0"><strong>${m.name}</strong> hat noch keinen Online-Zugang.</p>
+        <p class="small muted" style="margin-bottom:0">So geht's: Der Mandant registriert sich auf der Startseite mit Discord („Ich bin Mandant“).
+          Der Antrag erscheint dann unter <a href="#/mandanten/portal">Mandantenportal → Anträge</a> und hier – einmal auf „Freigeben“ klicken, fertig.</p>`}
+      ${einblick.length ? html`<div class="group-title" style="margin-top:12px">Sieht im Portal außerdem</div>
+        <ul class="rows">${einblick.map((x) => {
+          const a = byId("akten", x.akte_id);
+          return a ? html`<li><div class="grow"><div class="title"><a href="#/akten/${a.id}/beteiligte">${a.number} · ${a.title}</a></div>
+            <div class="meta">als ${x.rolle} · Mandant der Akte: ${mandantName(a)}</div></div></li>` : "";
+        })}</ul>` : ""}
+    </div>`;
+}
+
+function mandantZugangAktionen(z) {
+  if (z.person_status === "gesperrt") return "";
+  if (z.status === "wartet") return html`<button class="btn small primary" data-action="zugang-freigeben" data-id="${z.id}">Freigeben</button>
+    <button class="btn small danger" data-action="zugang-aktion" data-aktion="ablehnen" data-id="${z.id}">Ablehnen</button>`;
+  if (z.status === "frei") return html`<button class="btn small danger" data-action="zugang-aktion" data-aktion="sperren" data-id="${z.id}">Zugang sperren</button>`;
+  if (z.status === "gesperrt") return html`<button class="btn small" data-action="zugang-aktion" data-aktion="entsperren" data-id="${z.id}">Entsperren</button>`;
+  return "";
 }
 
 // ---------- Block in der Akte (Tab Beteiligte) ----------
@@ -195,11 +219,18 @@ Object.assign(ACTIONS, {
     if (!findeZugang(d.id)) await ladePortalZugaenge();
     const z = findeZugang(d.id);
     if (!z) return;
+    const bisher = z.mandant_id && byId("mandanten", z.mandant_id);
     openForm({
-      title: `Zuordnung von ${z.name}`,
-      fields: [{ name: "mandant", label: "Mandant (Kartei)", type: "select", required: true, options: mandantOptionen }],
-      values: { mandant: z.mandant_id || "" },
-      onSubmit: (v) => zugangRpc({ p_charakter: z.id, p_aktion: "verknuepfen", p_mandant: v.mandant }, "Zuordnung gespeichert"),
+      title: "Zugang einem anderen Mandanten zuordnen",
+      intro: html`Discord-Konto <strong>${z.discord_name || z.name}</strong>${z.discord_benutzer ? ` (@${z.discord_benutzer})` : ""}
+        gehört im Moment zu <strong>${bisher ? bisher.name : "keinem Mandanten"}</strong>.<br>
+        Nur ändern, wenn der Zugang versehentlich der falschen Person zugeordnet wurde – danach sieht dieses Konto
+        die Akten und Rechnungen des neu gewählten Mandanten${bisher ? html` und <strong>nicht mehr</strong> die von ${bisher.name}` : ""}.`,
+      fields: [{ name: "mandant", label: "Gehört stattdessen zu", type: "select", required: true, empty: true, emptyLabel: "— Mandant wählen —",
+        options: () => mandantOptionen().filter((o) => o.value !== z.mandant_id) }],
+      values: { mandant: "" },
+      submitLabel: "Neu zuordnen",
+      onSubmit: (v) => zugangRpc({ p_charakter: z.id, p_aktion: "verknuepfen", p_mandant: v.mandant }, `Zugang gehört jetzt zu ${byId("mandanten", v.mandant)?.name || "dem Mandanten"}`),
     });
   },
   "zugang-aktion": async (d) => {

@@ -1,5 +1,5 @@
 // =============================================================
-//  Wiwang Law – Pinnwand & Team heute
+//  Wiwang Law – Pinnwand & Team heute (beides auf der Übersicht)
 //  Ankündigungen für alle (optional mit Lesebestätigung) und wer
 //  gerade da ist, woran er sitzt und wie viel er auf dem Tisch hat.
 //  Schreiben darf jedes Mitglied; ändern/löschen der Verfasser und
@@ -43,14 +43,13 @@ function textMitLinks(text) {
   return new SafeHtml(s.replace(/\n/g, "<br>"));
 }
 
-function beitragKarte(b, { kompakt = false } = {}) {
+function beitragKarte(b) {
   const st = b.bestaetigen ? bestaetigungStand(b) : null;
   const ichSoll = st && b.created_by !== state.me.id && st.soll.some((p) => p.user_id === state.me.id);
   const ichHab = hatBestaetigt(b.id, state.me.id);
   const zeigeFehlt = st && st.fehlt.length && (isMe(b.created_by) || darf("einstellungen_schreiben"));
-  const text = kompakt ? truncate(b.text || "", 180) : b.text;
   return html`
-    <article class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""} ${kompakt ? "kompakt" : ""}">
+    <article class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""}">
       <div class="beitrag-kopf">
         ${avatar(b.created_by)}
         <div class="grow">
@@ -59,12 +58,12 @@ function beitragKarte(b, { kompakt = false } = {}) {
             ${b.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
             ${ichSoll && !ichHab ? html`<span class="badge offen">Bitte bestätigen</span>` : ""}
           </div>
-          <h3>${kompakt ? html`<a href="#/pinnwand">${b.titel}</a>` : b.titel}</h3>
+          <h3>${b.titel}</h3>
           <div class="meta">${personName(b.created_by)} · ${fmt.relativ(b.created_at)}${b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? " · bearbeitet" : ""}${b.bis ? ` · bis ${fmt.datum(b.bis)}` : ""}</div>
         </div>
-        ${!kompakt && darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
+        ${darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
       </div>
-      ${text ? html`<div class="beitrag-text">${kompakt ? text : textMitLinks(text)}</div>` : ""}
+      ${b.text ? html`<div class="beitrag-text">${textMitLinks(b.text)}</div>` : ""}
       ${st ? html`
         <div class="beitrag-fuss">
           ${ichSoll ? ichHab
@@ -72,7 +71,7 @@ function beitragKarte(b, { kompakt = false } = {}) {
             : html`<button class="btn small gold" data-action="pinnwand-bestaetigen" data-id="${b.id}">Gelesen & verstanden</button>` : ""}
           <span class="small muted">${st.ja.length} von ${st.soll.length} bestätigt</span>
           ${st.ja.length ? html`<span class="avatars" title="Bestätigt: ${st.ja.map((p) => personName(p.user_id)).join(", ")}">${st.ja.slice(0, 8).map((p) => avatar(p.user_id, { punkt: false }))}</span>` : ""}
-          ${!kompakt && zeigeFehlt ? html`<span class="small muted">Fehlt noch: ${st.fehlt.map((p) => personName(p.user_id)).join(", ")}</span>` : ""}
+          ${zeigeFehlt ? html`<span class="small muted">Fehlt noch: ${st.fehlt.map((p) => personName(p.user_id)).join(", ")}</span>` : ""}
         </div>` : ""}
     </article>`;
 }
@@ -88,7 +87,7 @@ function teamHeute() {
   const online = mitglieder.filter((p) => onlineStatus(p.user_id)).length;
   const akten = darf("akten_lesen"), termine = darf("termine_lesen");
   return html`
-    <div class="card">
+    <div class="card" id="team-heute">
       <div class="card-head"><h2>Team heute</h2><span class="muted small">${online} online</span></div>
       <ul class="rows team-rows">${mitglieder.map((p) => {
         const id = p.user_id;
@@ -121,37 +120,39 @@ function teamHeute() {
     </div>`;
 }
 
-// ---------- Seite ----------
-VIEWS.pinnwand = () => {
+// ---------- Pinnwand-Karte auf der Übersicht ----------
+// Angeheftete und noch zu bestätigende Beiträge stehen immer oben; der Rest ist aufklappbar.
+const PINNWAND_KURZ = 3;
+function pinnwandKarte() {
   const archiv = ui.pinnwand.archiv;
-  const alle = state.pinnwand.filter((b) => (archiv ? !pinnwandAktuell(b) : pinnwandAktuell(b)));
-  const list = pinnwandSortiert(alle);
-  const offen = pinnwandOffen().length;
+  const aktuell = state.pinnwand.filter(pinnwandAktuell);
+  const imArchiv = state.pinnwand.length - aktuell.length;
+  const offenIds = new Set(pinnwandOffen().map((b) => b.id));
+  const list = archiv ? pinnwandSortiert(state.pinnwand.filter((b) => !pinnwandAktuell(b)))
+    : [...pinnwandSortiert(aktuell)].sort((a, b) => offenIds.has(b.id) - offenIds.has(a.id));
+  // Eingeklappt: mindestens die ersten 3, dazu alles Angeheftete und Unbestätigte
+  const kurz = list.filter((b, i) => i < PINNWAND_KURZ || b.angeheftet || offenIds.has(b.id));
+  const zeigen = ui.pinnwand.alle || archiv ? list : kurz;
+  const mehr = list.length - zeigen.length;
   return html`
-    <div class="page">
-      <div class="page-head">
-        <div><h1>Pinnwand</h1>
-          <p class="muted">Ankündigungen und Dienstanweisungen für alle${offen ? html` · <strong class="danger-text">${offen} ${offen === 1 ? "Beitrag wartet" : "Beiträge warten"} auf deine Bestätigung</strong>` : ""}</p></div>
+    <div class="card pinnwand-karte" id="pinnwand">
+      <div class="card-head">
+        <div><h2>Pinnwand</h2>
+          <p class="muted small" style="margin:0">Ankündigungen und Dienstanweisungen für alle${offenIds.size ? html` · <strong class="danger-text">${offenIds.size} ${offenIds.size === 1 ? "wartet" : "warten"} auf deine Bestätigung</strong>` : ""}</p></div>
         <div class="actions-row">
-          <div class="chips">
+          ${imArchiv || archiv ? html`<div class="chips">
             <button class="chip ${archiv ? "" : "active"}" data-action="pinnwand-archiv" data-archiv="0">Aktuell</button>
-            <button class="chip ${archiv ? "active" : ""}" data-action="pinnwand-archiv" data-archiv="1">Archiv</button>
-          </div>
-          <button class="btn primary" data-action="pinnwand-neu">+ Beitrag</button>
+            <button class="chip ${archiv ? "active" : ""}" data-action="pinnwand-archiv" data-archiv="1">Archiv${imArchiv ? ` (${imArchiv})` : ""}</button>
+          </div>` : ""}
+          <button class="btn small primary" data-action="pinnwand-neu">+ Beitrag</button>
         </div>
       </div>
-      <div class="pinnwand-layout">
-        <div class="stack">
-          ${list.length ? list.map((b) => beitragKarte(b)) : html`<div class="card empty-state">
-            <h2>${archiv ? "Archiv ist leer" : "Noch nichts angepinnt"}</h2>
-            <p>${archiv ? "Hier landen Beiträge, deren „Sichtbar bis“-Datum vorbei ist." : "Neue Dienstzeiten, Regeln, Erfolge, Termine fürs ganze Team – alles, was alle wissen sollen."}</p>
-            ${archiv ? "" : html`<button class="btn primary" data-action="pinnwand-neu">+ Erster Beitrag</button>`}
-          </div>`}
-        </div>
-        <div class="stack">${teamHeute()}</div>
-      </div>
+      ${zeigen.length ? html`<div class="stack">${zeigen.map((b) => beitragKarte(b))}</div>`
+        : html`<p class="empty">${archiv ? "Hier landen Beiträge, deren „Sichtbar bis“-Datum vorbei ist." : "Noch nichts angepinnt – neue Dienstzeiten, Regeln, Erfolge, Termine fürs ganze Team: alles, was alle wissen sollen."}</p>`}
+      ${mehr > 0 ? html`<div class="actions-row" style="margin-top:10px"><button class="btn small" data-action="pinnwand-alle" data-alle="1">${mehr === 1 ? "1 weiteren Beitrag" : `${mehr} weitere Beiträge`} anzeigen</button></div>`
+        : ui.pinnwand.alle && !archiv && list.length > kurz.length ? html`<div class="actions-row" style="margin-top:10px"><button class="btn small" data-action="pinnwand-alle" data-alle="0">Weniger anzeigen</button></div>` : ""}
     </div>`;
-};
+}
 
 // ---------- Formular ----------
 function openBeitragForm(b) {
@@ -189,6 +190,7 @@ Object.assign(ACTIONS, {
     if (b && darfBeitragAendern(b)) openBeitragForm(b);
   },
   "pinnwand-archiv": (d) => { ui.pinnwand.archiv = d.archiv === "1"; render(); },
+  "pinnwand-alle": (d) => { ui.pinnwand.alle = d.alle === "1"; render(); },
   "pinnwand-bestaetigen": async (d) => {
     if (hatBestaetigt(d.id, state.me.id)) return;
     await attempt(() => insertRow("pinnwand_gelesen", { beitrag_id: d.id }), "Danke – als gelesen bestätigt");

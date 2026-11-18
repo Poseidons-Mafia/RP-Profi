@@ -1,7 +1,7 @@
 // =============================================================
 //  Wiwang Law – Zusammenarbeit
 //  - Wer ist online? (Supabase Presence, ohne Datenbank)
-//  - Benachrichtigungen (Glocke oben rechts, Taste B)
+//  - Benachrichtigungen (Glocke oben rechts)
 //  - @-Erwähnungen im Verlauf (Vorschlagsliste beim Tippen)
 //  Die Benachrichtigungen schreibt nur die Datenbank selbst
 //  (supabase-update-7.sql), nie der Browser.
@@ -379,7 +379,7 @@ RENDER_HOOKS.push(() => {
   zahl.hidden = !n;
   zahl.textContent = n > 99 ? "99+" : String(n);
   $("btn-glocke").classList.toggle("hat-neue", n > 0);
-  $("btn-glocke").title = n ? `${n} neue Benachrichtigung${n === 1 ? "" : "en"} (Taste B)` : "Benachrichtigungen (Taste B)";
+  $("btn-glocke").title = n ? `${n} neue Benachrichtigung${n === 1 ? "" : "en"}` : "Benachrichtigungen";
   if (n) document.title = `(${n}) ${document.title}`;
   onlineZeichnen();
   if (!glockePanel.hidden) glockeZeichnen();

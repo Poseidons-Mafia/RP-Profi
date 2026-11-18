@@ -69,7 +69,7 @@ function globaleSuche(q) {
   add("Termine", state.termine.filter((t) => matches(q, t.titel, t.ort, t.notiz, t.art)).map((t) => ({
     href: t.akte_id ? `#/akten/${t.akte_id}/termine` : "#/kalender", titel: `${t.titel} (${t.art})`, sub: fmt.datumZeit(t.beginn) })));
   add("Rechnungen", state.rechnungen.filter((r) => matches(q, r.nummer, r.empfaenger, r.betreff)).map((r) => ({
-    href: r.akte_id ? `#/akten/${r.akte_id}/rechnungen` : "#/rechnungen", titel: `${r.nummer} · ${r.empfaenger}`, sub: `${fmt.geld(r.summe)} · ${r.status}` })));
+    href: r.akte_id ? `#/akten/${r.akte_id}/rechnungen` : "#/finanzen/rechnungen", titel: `${r.nummer} · ${r.empfaenger}`, sub: `${fmt.geld(r.summe)} · ${r.status}` })));
   add("Gesetze", state.paragraphen.filter((p) => matches(q, p.nummer, p.titel, p.text, (byId("gesetzbuecher", p.gesetzbuch_id) || {}).kuerzel)).map((p) => ({
     href: `#/gesetze/${p.gesetzbuch_id}/${p.id}`, titel: `${paragraphZitat(p)} ${p.titel || ""}`, sub: truncate(String(p.text || "").replace(/\s+/g, " "), 90) })));
   add("Strafkatalog", state.gesetze.filter((g) => matches(q, g.paragraph, g.titel, g.kategorie)).map((g) => ({
@@ -85,6 +85,8 @@ function balken(rows, color = "") {
 }
 
 function statistik() {
+  const A = darf("akten_lesen"), R = darf("rechnungen_lesen");
+  if (!A && !R) return "";
   const akten = state.akten;
   const mitErgebnis = akten.filter((a) => a.ergebnis);
   const erfolge = mitErgebnis.filter((a) => ERFOLGE.includes(a.ergebnis)).length;
@@ -102,23 +104,24 @@ function statistik() {
     umsatzMonate.push({ label: MONATE[d.getMonth()].slice(0, 3) + " " + String(d.getFullYear()).slice(2), n, text: fmt.geld(n) });
   }
   return html`
+    <h2 style="margin:28px 0 12px">Statistik</h2>
     <div class="grid-2">
-      <div class="card">
+      ${A ? html`<div class="card">
         <h3 class="section-title">Ergebnisse${mitErgebnis.length ? ` – Erfolgsquote ${Math.round((erfolge / mitErgebnis.length) * 100)} %` : ""}</h3>
         ${ergebnisRows.length ? balken(ergebnisRows) : html`<p class="empty">Noch keine abgeschlossenen Fälle mit Ergebnis.</p>`}
-      </div>
-      <div class="card">
+      </div>` : ""}
+      ${R ? html`<div class="card">
         <h3 class="section-title">Umsatz (bezahlte Rechnungen)</h3>
         ${balken(umsatzMonate, "green")}
-      </div>
-      <div class="card">
+      </div>` : ""}
+      ${A ? html`<div class="card">
         <h3 class="section-title">Akten nach Rechtsgebiet</h3>
         ${gebiete.length ? balken(gebiete) : html`<p class="empty">Noch keine Akten.</p>`}
       </div>
       <div class="card">
-        <h3 class="section-title">Team – aktive Akten & Umsatz</h3>
-        ${anwalt.length ? balken(anwalt.map((x) => ({ label: x.label, n: x.n, text: `${x.n} · ${fmt.geld(x.umsatz)}` })), "red") : ""}
-      </div>
+        <h3 class="section-title">Team – aktive Akten${R ? " & Umsatz" : ""}</h3>
+        ${anwalt.length ? balken(anwalt.map((x) => ({ label: x.label, n: x.n, text: R ? `${x.n} · ${fmt.geld(x.umsatz)}` : String(x.n) })), "red") : ""}
+      </div>` : ""}
     </div>`;
 }
 
@@ -140,8 +143,8 @@ VIEWS.uebersicht = () => {
   const meineAkten = offeneAkten.filter((a) => a.zustaendig_id === state.me.id).sort((a, b) => zuletztAktiv(b) - zuletztAktiv(a));
   const liegen = offeneAkten.filter(liegenGeblieben)
     .sort((a, b) => (b.zustaendig_id === state.me.id) - (a.zustaendig_id === state.me.id) || zuletztAktiv(a) - zuletztAktiv(b));
-  const zuBestaetigen = pinnwandOffen();
-  const beitraege = pinnwandSortiert(state.pinnwand.filter(pinnwandAktuell)).slice(0, 3);
+  // Was der Rang nicht lesen darf, erscheint auch nicht auf der Übersicht
+  const A = darf("akten_lesen"), T = darf("termine_lesen"), R = darf("rechnungen_lesen");
   const profil = myProfile();
   const stunde = now.getHours();
   const gruss = stunde < 11 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
@@ -154,7 +157,7 @@ VIEWS.uebersicht = () => {
           <h1>${gruss}${profil && profil.anzeigename ? `, ${firstName(profil.anzeigename)}` : ""}</h1>
           <p class="muted">${fmt.tagLang(now)} · ${state.settings.kanzlei}</p>
         </div>
-        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise … (Taste /)"></div>
+        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise …"></div>
       </div>
 
       ${profil && !profil.anzeigename ? html`
@@ -162,24 +165,19 @@ VIEWS.uebersicht = () => {
           <div class="actions-row"><button class="btn small gold" data-action="profil-bearbeiten">Profil ausfüllen</button></div></div>` : ""}
 
       ${q ? sucheErgebnisse(q) : html`
-        ${zuBestaetigen.length ? html`
-          <div class="box warning bestaetigen-box">
-            <strong>Bitte lesen und bestätigen:</strong>
-            <ul>${zuBestaetigen.map((b) => html`<li><a href="#/pinnwand">${b.titel}</a> <span class="small">– ${personName(b.created_by)}, ${fmt.relativ(b.created_at)}</span></li>`)}</ul>
-            <div class="actions-row"><a class="btn small gold" href="#/pinnwand">Zur Pinnwand</a></div>
-          </div>` : ""}
         <div class="kpis">
-          <a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>
-          <a class="kpi ${termineHeute.length ? "alert" : ""}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
-          <a class="kpi ${ueberfaellig.length ? "alert" : ""}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>
-          <a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>
-          <a class="kpi" href="#/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>
-          <a class="kpi ${liegen.length ? "warn" : ""}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>
+          ${A ? html`<a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>` : ""}
+          ${T ? html`<a class="kpi ${termineHeute.length ? "alert" : ""}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
+          <a class="kpi ${ueberfaellig.length ? "alert" : ""}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>` : ""}
+          ${A ? html`<a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>` : ""}
+          ${R ? html`<a class="kpi" href="#/finanzen/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>` : ""}
+          ${A ? html`<a class="kpi ${liegen.length ? "warn" : ""}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>` : ""}
         </div>
 
         <div class="grid-2">
           <div class="stack">
-            <div class="card">
+            ${pinnwandKarte()}
+            ${T ? html`<div class="card">
               <div class="card-head"><h2>Die nächsten 7 Tage</h2><a class="btn small" href="#/kalender">Kalender</a></div>
               ${ueberfaellig.length ? html`<div class="group-title danger-text">Überfällig</div><ul class="rows">${ueberfaellig.map((t) => terminRow(t))}</ul>` : ""}
               ${naechste.length ? html`<ul class="rows">${naechste.map((t) => terminRow(t))}</ul>` : html`<p class="empty">Keine Termine in den nächsten 7 Tagen.</p>`}
@@ -188,7 +186,7 @@ VIEWS.uebersicht = () => {
               <div class="card-head"><h2>Meine Aufgaben</h2><span class="muted small">${meineAufgaben.length} offen</span></div>
               ${aufgabeSchnellForm(null)}
               ${meineAufgaben.length ? html`<ul class="rows">${meineAufgaben.slice(0, 12).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
-            </div>
+            </div>` : ""}
             ${liegen.length ? html`<div class="card">
               <div class="card-head"><h2>Liegen geblieben</h2>
                 <a class="btn small" href="#/akten" data-action="akten-zeigen" data-status="liegen">Alle ${liegen.length}</a></div>
@@ -204,10 +202,7 @@ VIEWS.uebersicht = () => {
             </div>` : ""}
           </div>
           <div class="stack">
-            ${beitraege.length ? html`<div class="card">
-              <div class="card-head"><h2>Pinnwand</h2><a class="btn small" href="#/pinnwand">Alle</a></div>
-              <div class="stack">${beitraege.map((b) => beitragKarte(b, { kompakt: true }))}</div>
-            </div>` : ""}
+            ${teamHeute()}
             ${inHaft.length ? html`<div class="card">
               <div class="card-head"><h2>Mandanten in Haft</h2></div>
               <ul class="rows">${inHaft.map((a) => html`<li>
@@ -218,10 +213,10 @@ VIEWS.uebersicht = () => {
             ${dringend.length ? html`<div class="card">
               <div class="card-head"><h2>Dringende Akten</h2></div>
               <ul class="item-list">${dringend.slice(0, 8).map((a) => html`<li>${akteListItem(a)}</li>`)}</ul></div>` : ""}
-            <div class="card">
+            ${A ? html`<div class="card">
               <div class="card-head"><h2>Meine Akten</h2><a class="btn small" href="#/akten" data-action="akten-zeigen" data-status="aktiv" data-meine="1">Alle</a></div>
               ${meineAkten.length ? html`<ul class="item-list">${meineAkten.slice(0, 6).map((a) => html`<li>${akteListItem(a)}</li>`)}</ul>` : html`<p class="empty">Dir sind keine aktiven Akten zugewiesen.</p>`}
-            </div>
+            </div>` : ""}
             <div class="card">
               <div class="card-head"><h2>Letzte Aktivitäten</h2><span class="muted small">live</span></div>
               ${state.protokoll.length ? html`<ul class="rows">${state.protokoll.slice(0, window.innerWidth < 700 ? 8 : 15).map((p) => protokollZeile(p))}</ul>` : html`<p class="empty">Noch keine Aktivitäten.</p>`}
@@ -229,7 +224,6 @@ VIEWS.uebersicht = () => {
           </div>
         </div>
 
-        <h2 style="margin:28px 0 12px">Statistik</h2>
         ${statistik()}`}
     </div>`;
 };

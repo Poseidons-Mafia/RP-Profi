@@ -839,6 +839,9 @@ table.table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .rights-table th.grp { border-left: 1px solid var(--line); text-align: center; font-weight: bold; color: var(--text); }
 .rights-table th.sub { font-size: 0.6rem; min-width: 44px; }
 .rights-table th.rt { min-width: 44px; }
+.rights-table th.gruppe { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 0; padding-bottom: 2px; }
+.rights-table td.grp { border-left: 1px solid var(--line); }
+.rights-table th.gruppe, .rights-table th.grp-start, .rights-table td.grp-start { border-left: 2px solid var(--text); }
 .rights-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
 .rights-table input[type="checkbox"]:disabled { cursor: default; opacity: 0.7; }
 
@@ -1257,6 +1260,19 @@ body.in-app .guide-btn span { display: none; }
 .beitrag-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .beitrag.kompakt .beitrag-fuss { margin-top: 8px; padding-top: 8px; }
 .team-rows > li { align-items: center; }
+/* Pinnwand auf der Übersicht: Beiträge sitzen in der Karte, daher ohne eigenen Schatten */
+.pinnwand-karte .beitrag { box-shadow: none; padding: 12px 14px; }
+.pinnwand-karte .beitrag.wichtig { background: #fff9f6; }
+
+/* ---------- Finanzen (Rechnungen & Buchhaltung) ---------- */
+.finanz-leiste { display: flex; align-items: flex-end; gap: 12px; margin: 0 0 16px; border-bottom: 1px solid var(--line); }
+.finanz-leiste .tabs { flex: 1; min-width: 0; margin: 0; padding: 0; border-bottom: 0; }
+.tabs .tab-gruppe { align-self: center; flex: none; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0 4px 0 14px; }
+.tabs .tab-gruppe:first-child { padding-left: 2px; }
+.tabs .tab-gruppe:not(:first-child) { border-left: 1px solid var(--line); margin-left: 6px; }
+.finanz-jahr { flex: none; padding-bottom: 6px; white-space: nowrap; }
+.finanz-jahr select { width: auto; margin-left: 6px; }
+.chip .chip-n { opacity: 0.6; font-size: 0.85em; margin-left: 2px; }
 
 /* Abläufe */
 .ablauf-liste button .badge { margin-left: 4px; font-weight: bold; }
@@ -1275,6 +1291,8 @@ body.in-app .guide-btn span { display: none; }
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cal-layout { grid-template-columns: minmax(0, 1fr); }
   .pinnwand-layout { grid-template-columns: minmax(0, 1fr); }
+  .finanz-leiste { flex-wrap: wrap; }
+  .finanz-jahr { order: -1; width: 100%; padding: 0 0 4px; }
 }
 
 @media (max-width: 700px) {
@@ -1679,15 +1697,13 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .ki-knopf.leise:hover { border-color: var(--red); color: var(--red); }
 .ki-aktenliste { display: grid; gap: 4px; margin-top: 10px; }
 .ki-aktenliste button {
+  min-width: 0; width: 100%; color: inherit; font-family: inherit;
   display: flex; align-items: center; gap: 8px;
   padding: 7px 8px; border: 0; border-radius: 10px;
   background: var(--bg); text-align: left; cursor: pointer; font-size: 0.78rem;
 }
 .ki-aktenliste button:hover { background: var(--gold-soft); }
-.ki-aktenliste .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ki-tipps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 0.76rem; color: var(--muted); }
-.ki-tipps li { display: flex; align-items: center; gap: 8px; }
-.ki-tipps kbd { min-width: 22px; padding: 1px 6px; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 1px 0 1px var(--line-soft); color: var(--text); font: 700 0.7rem/1.5 inherit; text-align: center; }
+.ki-aktenliste .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ki-panel-fuss { margin-top: auto; padding-top: 6px; }
 .ki-nutzung { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted); }
 .ki-nutzung strong { color: var(--text); }
@@ -2092,7 +2108,6 @@ body.nw-seite .guide-btn { display: none; }
 .nw-kontext-plus:hover { border-color: var(--red); color: var(--red); }
 .nw-schalter { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .nw-schalter input { width: 14px; height: 14px; margin: 0; accent-color: var(--red); }
-.nw-leiste-tipp { margin-left: auto; color: var(--muted); }
 .nw-eingabe-feld {
   display: flex; align-items: flex-end; gap: 8px;
   max-width: 940px; margin: 0 auto; padding: 6px 6px 6px 14px;
@@ -2232,7 +2247,6 @@ body.nw-seite .guide-btn { display: none; }
   .nw-msg-inhalt { padding: 10px 12px 6px; }
   .nw-dokument-text { padding: 12px; }
   .nw-eingabe { padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); }
-  .nw-leiste-tipp { display: none; }
   .nw-eingabe-feld textarea, .nw input, .nw select, .nw textarea { font-size: 16px; }
   .nw-modus-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nw-gruss { font-size: 1.3rem; }

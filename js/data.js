@@ -273,36 +273,43 @@ function teamOptions() {
 }
 
 // ---------- Ränge & Berechtigungen ----------
-// Bereiche mit getrennten Rechten: Lesen und Bearbeiten (Bearbeiten schließt Lesen ein)
+// Bereiche mit gestuften Rechten: Lesen → Bearbeiten (→ Löschen). Jede Stufe schließt die vorherigen ein.
+// Die Gruppen ordnen die Rechte-Tabelle (Personal → Ränge & Berechtigungen).
 const BEREICHE = [
-  { key: "akten", label: "Akten", text: "inkl. Verlauf, Beteiligte, Beweise, Tatvorwürfe" },
-  { key: "mandanten", label: "Mandanten", text: "Mandantenkartei" },
-  { key: "termine", label: "Termine & Aufgaben", text: "Kalender und Aufgaben" },
-  { key: "rechnungen", label: "Rechnungen", text: "Bearbeiten = erstellen, ändern, als bezahlt markieren" },
-  { key: "buchhaltung", label: "Buchhaltung", text: "Bearbeiten = buchen, stornieren, Konten anlegen" },
-  { key: "gesetzbuch", label: "Gesetzbuch & Gebühren", text: "Gesetzbuch und Gebührenkatalog" },
-  { key: "personal", label: "Personalakten", text: "Lesen = Gehalt & Vermerke aller sehen; Bearbeiten = Personal verwalten" },
-  { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle; Bearbeiten = auch Abläufe (Checklisten) verwalten und die Pinnwand moderieren", nurSchreiben: true },
+  { key: "akten", gruppe: "Fallarbeit", label: "Akten",
+    extra: [{ key: "akten_loeschen", label: "Löschen", lang: "Akten löschen" }],
+    text: "Lesen = Akten mit Verlauf, Beteiligten, Beweisen und Tatvorwürfen ansehen. Bearbeiten = anlegen, ändern, Einträge für den Mandanten freigeben. Löschen = Akten endgültig entfernen (nicht rückgängig zu machen)" },
+  { key: "mandanten", gruppe: "Fallarbeit", label: "Mandanten",
+    text: "Lesen = Mandantenkartei ansehen. Bearbeiten = Mandanten pflegen und Zugänge zum Mandantenportal freigeben" },
+  { key: "termine", gruppe: "Fallarbeit", label: "Termine & Aufgaben",
+    text: "Lesen = Kalender und Aufgaben ansehen. Bearbeiten = anlegen, verschieben, erledigen, Abläufe in Akten starten" },
+  { key: "rechnungen", gruppe: "Finanzen", label: "Rechnungen",
+    text: "Lesen = Rechnungen und Gebührenkatalog ansehen. Bearbeiten = Rechnungen erstellen, ändern, als bezahlt markieren" },
+  { key: "buchhaltung", gruppe: "Finanzen", label: "Buchhaltung",
+    text: "Lesen = Bilanz, GuV, Grundbuch und Hauptbuch ansehen. Bearbeiten = buchen, stornieren, Konten anlegen" },
+  { key: "gesetzbuch", gruppe: "Recht & KI", label: "Gesetze & Strafkatalog",
+    text: "Lesen = Gesetzestexte und Strafkatalog ansehen. Bearbeiten = Gesetzbücher, Paragraphen und Delikte pflegen" },
   // Nigel hat eigene Namen: "ki_assistent" (= Verwenden) gab es schon vor "ki_sehen" und wird in der Datenbank geprüft
-  { key: "ki", label: "Nigel (KI-Butler)", lesen: "ki_sehen", schreiben: "ki_assistent", lesenLabel: "Sehen", schreibenLabel: "Verwenden",
-    text: "Sehen = das iFruit-Handy herausholen (nur Sperrbildschirm) und den Arbeitsbereich ansehen – Inhalte bleiben zensiert. Verwenden = Nigel Aufträge geben (schließt Sehen ein)" },
+  { key: "ki", gruppe: "Recht & KI", label: "Nigel (KI-Butler)", lesen: "ki_sehen", schreiben: "ki_assistent", lesenLabel: "Sehen", schreibenLabel: "Verwenden",
+    text: "Sehen = das iFruit-Handy herausholen (nur Sperrbildschirm) und den Arbeitsbereich ansehen – Inhalte bleiben zensiert. Verwenden = Nigel Aufträge geben" },
+  { key: "personal", gruppe: "Verwaltung", label: "Personalakten",
+    text: "Lesen = Personalakten aller ansehen (Gehalt, Vermerke). Bearbeiten = Personal verwalten: Mitglieder einstellen, Rang und Status ändern, Zugang sperren" },
+  { key: "einstellungen", gruppe: "Verwaltung", label: "Kanzlei-Einstellungen", nurSchreiben: true,
+    text: "Lesen dürfen immer alle. Bearbeiten = Kanzleidaten, Gebührenkatalog, Abläufe (Checklisten), Nigels Kanzlei-Vorgaben und -Vorlagen ändern und die Pinnwand moderieren" },
 ];
-const SONDERRECHTE = [
-  { key: "akten_loeschen", label: "Akten löschen" },
-];
-// Schlüssel und Bezeichnung der beiden Stufen eines Bereichs
+// Schlüssel und Bezeichnung der Stufen eines Bereichs
 const rechtLesen = (b) => b.lesen || `${b.key}_lesen`;
 const rechtSchreiben = (b) => b.schreiben || `${b.key}_schreiben`;
 const stufeLesen = (b) => b.lesenLabel || "Lesen";
 const stufeSchreiben = (b) => b.schreibenLabel || "Bearbeiten";
-// Alle einzelnen Rechte (für Vergleiche)
-const RECHTE = [
-  ...BEREICHE.flatMap((b) => [
-    ...(b.nurSchreiben ? [] : [{ key: rechtLesen(b), label: `${b.label} ${stufeLesen(b).toLowerCase()}` }]),
-    { key: rechtSchreiben(b), label: `${b.label} ${stufeSchreiben(b).toLowerCase()}` },
-  ]),
-  ...SONDERRECHTE,
+// Alle Stufen eines Bereichs in Reihenfolge – jede schließt die vorherigen ein
+const rechtStufen = (b) => [
+  ...(b.nurSchreiben ? [] : [{ key: rechtLesen(b), label: stufeLesen(b) }]),
+  { key: rechtSchreiben(b), label: stufeSchreiben(b) },
+  ...(b.extra || []),
 ];
+// Alle einzelnen Rechte (für Vergleiche)
+const RECHTE = BEREICHE.flatMap((b) => rechtStufen(b).map((x) => ({ key: x.key, label: x.lang || `${b.label} ${x.label.toLowerCase()}` })));
 // Lese-Recht → Schreib-Recht, das es einschließt (z. B. ki_sehen → ki_assistent)
 const SCHLIESST_EIN = Object.fromEntries(BEREICHE.filter((b) => !b.nurSchreiben).map((b) => [rechtLesen(b), rechtSchreiben(b)]));
 // Alte Rechtenamen (vor Update 5)
@@ -437,11 +444,11 @@ function gegnerNamen(akte) {
 // Interessenkonflikte: Gegner hier ist anderswo unser Mandant – oder umgekehrt
 function konflikte(akte) {
   const result = [];
-  const mandant = norm(mandantName(akte));
+  const mandant = akte.mandant_id || akte.client ? norm(mandantName(akte)) : "";
   const gegner = new Set(gegnerNamen(akte));
   for (const other of state.akten) {
     if (other.id === akte.id) continue;
-    const otherMandant = norm(mandantName(other));
+    const otherMandant = other.mandant_id || other.client ? norm(mandantName(other)) : "";
     if (otherMandant && gegner.has(otherMandant)) {
       result.push({ akte: other, grund: `${mandantName(other)} ist dort unser Mandant` });
     } else if (mandant && gegnerNamen(other).includes(mandant)) {

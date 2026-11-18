@@ -503,7 +503,7 @@ VIEWS.nigel.aktualisieren = (route) => {
         <h2>Datenbank-Update 9 nötig</h2>
         <p>Für Nigels Arbeitsbereich (gespeicherte Chats, Entwürfe, Vorlagen) muss der Admin einmal
         <code>supabase-update-9.sql</code> im Supabase SQL Editor ausführen und die Edge Function <code>ki-assistent</code> neu bereitstellen.</p>
-        <p class="muted">Bis dahin steht Nigel wie gewohnt auf dem iFruit-Handy zur Verfügung (Taste <kbd>K</kbd>).</p>
+        <p class="muted">Bis dahin steht Nigel wie gewohnt auf dem iFruit-Handy zur Verfügung.</p>
       </div>` : n.fehler ? html`<div class="card nw-hinweis"><h2>Konnte nicht laden</h2><p>${n.fehler}</p>
         <button class="btn" data-action="nw-erneut">Erneut versuchen</button></div>`
       : html`<div class="nw-laden"><span class="spinner"></span> Nigel legt die Unterlagen bereit …</div>`);
@@ -978,17 +978,15 @@ setInterval(() => {
   if (Object.keys(ui.nigel.laeuft).length && parseRoute().page === "nigel" && !document.hidden) nwLaufendZeichnen();
 }, 1000);
 
-// Leiste über dem Eingabefeld: Kontext, Entwurf mitsenden, Tastenhinweis
+// Leiste über dem Eingabefeld: Kontext, Entwurf mitsenden
 function nwLeisteZeichnen(chat) {
   const akten = chat.akte_ids.map((id) => byId("akten", id)).filter(Boolean);
   const hatEntwurf = !!String(chat.entwurf || "").trim();
-  const strg = ui.nigel.profil.senden === "strg";
   nwSetzen(nwEl("leiste"), html`
     <span class="nw-leiste-modus m-${chat.modus}">${NW_MODUS_NAME[chat.modus]}</span>
     ${akten.map((a) => html`<span class="nw-kontext-chip" title="${a.title}">${new SafeHtml(KI_ICON.akte)}${a.number}<button type="button" data-action="nw-akte-weg" data-id="${a.id}" aria-label="Akte ${a.number} entfernen">×</button></span>`)}
     <button type="button" class="nw-kontext-plus" data-action="nw-tab" data-tab="kontext">${akten.length ? "+ Kontext" : "+ Akte / Kontext"}</button>
-    ${hatEntwurf ? html`<label class="nw-schalter" title="Den aktuellen Entwurf bei der nächsten Frage mitschicken"><input type="checkbox" data-change="nw-mit-entwurf" ${nwMitEntwurf(chat) ? "checked" : ""}> Entwurf mitsenden</label>` : ""}
-    <span class="nw-leiste-tipp">${strg ? "Strg+Enter senden" : "Enter senden · Shift+Enter neue Zeile"}</span>`);
+    ${hatEntwurf ? html`<label class="nw-schalter" title="Den aktuellen Entwurf bei der nächsten Frage mitschicken"><input type="checkbox" data-change="nw-mit-entwurf" ${nwMitEntwurf(chat) ? "checked" : ""}> Entwurf mitsenden</label>` : ""}`);
   const senden = document.querySelector("#main [data-nw-senden]");
   if (senden) senden.disabled = !!(chat.id && ui.nigel.laeuft[chat.id]);
   const feld = nwFeld("nw-text");

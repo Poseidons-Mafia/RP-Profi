@@ -86,7 +86,7 @@ kiPhone.innerHTML = `
           ${KI_STATUS(true, true)}
           <div class="ki-slot" data-slot="chat-cover"></div>
           <div class="ki-home"></div>
-          <button type="button" class="ki-lock" aria-label="Nigel rufen (Taste K)">
+          <button type="button" class="ki-lock" aria-label="Nigel rufen">
             <span class="ki-lock-marke">${KI_ICON.ifruit}iFruit</span>
             <span class="ki-lock-datum" data-ki="datum"></span>
             <span class="ki-lock-uhr" data-ki="uhr"></span>
@@ -116,7 +116,7 @@ kiChatBlock.innerHTML = `
     <div class="ki-appbar-btns">
       <button type="button" class="ki-icon-btn ki-klapp-btn" data-action="ki-klappen" data-ki="klapp-btn">${KI_ICON.aufklappen}</button>
       <button type="button" class="ki-icon-btn" data-action="ki-neu" title="Neuer Chat" aria-label="Neuer Chat">${KI_ICON.neu}</button>
-      <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken (Esc)" aria-label="Einstecken">${KI_ICON.zu}</button>
+      <button type="button" class="ki-icon-btn" data-action="ki-schliessen" title="Einstecken" aria-label="Einstecken">${KI_ICON.zu}</button>
     </div>
   </header>
   <div class="ki-chat" data-ki="chat" aria-live="polite"></div>
@@ -355,6 +355,7 @@ function kiPanelZeichnen(akte, akten) {
   const s = ui.assistent;
   const vorwuerfe = akte ? (akte.vorwuerfe || []) : [];
   const zustaendig = akte && akte.zustaendig_id ? personName(akte.zustaendig_id) : "";
+  const mandant = akte ? mandantName(akte) : "";
   const offene = akten.filter((a) => a.status !== "Geschlossen").slice(0, 5);
   kiSetzen(kiEl("panel"), html`
     <div class="ki-panel-kopf">
@@ -369,7 +370,7 @@ function kiPanelZeichnen(akte, akten) {
         </div>
         <h3>${akte.title || "–"}</h3>
         <dl>
-          <dt>Mandant</dt><dd>${mandantName(akte)}</dd>
+          ${mandant && mandant !== "–" ? html`<dt>Mandant</dt><dd>${mandant}</dd>` : ""}
           ${zustaendig ? html`<dt>Zuständig</dt><dd>${zustaendig}</dd>` : ""}
           ${akte.in_haft ? html`<dt>Haft</dt><dd class="danger-text">in Haft${akte.haft_bis ? ` bis ${fmt.datum(akte.haft_bis)}` : ""}</dd>` : ""}
         </dl>
@@ -386,29 +387,20 @@ function kiPanelZeichnen(akte, akten) {
       </section>` : html`
       <section class="ki-karte ki-allgemein">
         <h3>Allgemeine Rechtsfragen</h3>
-        <p class="ki-leise">Nigel, Butler und Jurist, beantwortet Ihre Rechtsfragen und schlägt dafür selbst in den Gesetzen und im Strafkatalog nach. Für Rechtsfragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:</p>
+        <p class="ki-leise">${offene.length ? `Für Fragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:` : "Nigel schlägt in den Gesetzen und im Strafkatalog nach."}</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
       </section>`}
     <section class="ki-karte ki-arbeitsbereich">
-      <p class="ki-mini-titel" style="margin-top:0">Eine größere Aufgabe${anredeKomma()}?</p>
-      <p class="ki-leise">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich – mit gespeicherten Chats, mehreren Akten und einem Entwurf.</p>
+      <p class="ki-leise" style="margin-top:0">Gutachten, Schriftsätze und Fallanalysen erledige ich im Arbeitsbereich.</p>
       <div class="ki-karte-aktionen">
         <button type="button" class="ki-knopf" data-action="ki-arbeitsbereich">${s.verlauf.length ? "Im Arbeitsbereich fortsetzen" : "Arbeitsbereich öffnen"}</button>
       </div>
     </section>
-    <section class="ki-karte">
-      <p class="ki-mini-titel" style="margin-top:0">Wie Sie Nigel bedienen${anredeKomma()}</p>
-      <ul class="ki-tipps">
-        <li><kbd>Enter</kbd>senden · <kbd>⇧</kbd>+<kbd>Enter</kbd>neue Zeile</li>
-        <li><kbd>K</kbd>Nigel rufen · <kbd>Esc</kbd>entlassen</li>
-        <li><kbd>2×</kbd>aufs Scharnier klicken: auf- und zuklappen</li>
-      </ul>
-    </section>
     <div class="ki-panel-fuss">
       ${kiBudgetHtml(s.info && s.info.budget, kiAnzeige("kontingent"))}
-      <p class="ki-leise">${s.info && s.info.modell ? html`Modell: ${s.info.modell} · ` : ""}Nur Rechtsfragen · max. 4000 Zeichen · bitte prüfen.</p>
+      <p class="ki-leise">Antworten bitte stets prüfen.</p>
     </div>`);
 }
 
@@ -510,18 +502,36 @@ const kiWarte = (ms) => new Promise((r) => setTimeout(r, ms));
 const kiReduziert = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const kiDarfAuf = () => !kiMobil.matches;
 
-// Kurz eine Effekt-Klasse setzen (Animation neu starten)
+// Kurz eine Effekt-Klasse setzen (Animation neu starten). Ein älterer Timer darf die
+// Klasse einer neueren Bewegung nicht vorzeitig entfernen.
+const kiEffektTimer = {};
 function kiEffekt(klasse, ms) {
+  clearTimeout(kiEffektTimer[klasse]);
   kiPhone.classList.remove(klasse);
   void kiPhone.offsetWidth;
   kiPhone.classList.add(klasse);
-  setTimeout(() => kiPhone.classList.remove(klasse), ms);
+  kiEffektTimer[klasse] = setTimeout(() => kiPhone.classList.remove(klasse), ms);
+}
+
+// Neue Bewegung beginnen: die laufende abbrechen und deren Zwischenzustand aufräumen.
+// Ohne das blieben nach einer unterbrochenen Faltung „faltet“/„glas“ hängen – der
+// Klapp-Knopf reagierte dann nicht mehr, und der Chat lag im falschen Display, sodass
+// auch „Einstecken“ unter der durchsichtigen Klappe nicht mehr erreichbar war.
+function kiNeueBewegung() {
+  const lauf = ++kiLauf;
+  kiPhone.classList.remove("faltet", "glas");
+  kiAbbilderWeg();
+  kiLayout(kiPhone.classList.contains("auf") ? "auf" : "zu");
+  return lauf;
 }
 
 // Zustand ohne Animation herstellen (Seitenstart, Benutzerwechsel)
 function kiZustandSofort() {
   const s = ui.assistent;
   const auf = s.offen && s.modus === "auf" && kiDarfAuf();
+  kiLauf++;
+  kiPhone.classList.remove("faltet", "glas");
+  kiAbbilderWeg();
   kiPhone.classList.add("ohne-anim");
   kiPhone.classList.toggle("offen", s.offen);
   kiPhone.classList.toggle("auf", auf);
@@ -566,7 +576,6 @@ function kiAbbilderWeg() {
 //              Außendisplay über ihm ein.
 async function kiFalten(auf, lauf) {
   if (kiPhone.classList.contains("auf") === auf) return;
-  kiAbbilderWeg();
   if (kiReduziert()) {
     kiPhone.classList.remove("glas", "faltet");
     kiPhone.classList.toggle("auf", auf);
@@ -605,7 +614,7 @@ async function kiFalten(auf, lauf) {
 
 async function kiOeffnen(akteId) {
   const s = ui.assistent;
-  const lauf = ++kiLauf;
+  const lauf = kiNeueBewegung();
   if (akteId && akteId !== s.akteId) {
     s.akteId = akteId;
     s.verlauf = []; // neue Akte → neuer Chat
@@ -627,7 +636,7 @@ async function kiOeffnen(akteId) {
 
 async function kiSchliessen() {
   const s = ui.assistent;
-  const lauf = ++kiLauf;
+  const lauf = kiNeueBewegung();
   s.offen = false;
   kiSpeichern();
   kiTextarea.blur();
@@ -643,20 +652,16 @@ async function kiSchliessen() {
 
 async function kiKlappen() {
   const s = ui.assistent;
-  if (!s.offen || !kiDarfAuf() || kiPhone.classList.contains("faltet")) return;
-  const lauf = ++kiLauf;
-  s.modus = kiPhone.classList.contains("auf") ? "zu" : "auf";
+  if (!s.offen || !kiDarfAuf()) return;
+  // Während einer Faltung kehrt ein Klick die Bewegung einfach um
+  const lauf = kiNeueBewegung();
+  s.modus = s.modus === "auf" ? "zu" : "auf"; // Ziel der letzten Bewegung umkehren
   kiSpeichern();
   await kiFalten(s.modus === "auf", lauf);
 }
 
 // Wechsel zwischen Handy- und Desktopbreite: auf dem Handy immer zugeklappt
-kiMobil.addEventListener("change", () => {
-  kiLauf++;
-  kiPhone.classList.remove("faltet", "glas");
-  kiAbbilderWeg();
-  kiZustandSofort();
-});
+kiMobil.addEventListener("change", () => kiZustandSofort());
 
 function kiTextareaHoehe() {
   kiTextarea.style.height = "auto";
