@@ -283,19 +283,28 @@ const BEREICHE = [
   { key: "gesetzbuch", label: "Gesetzbuch & Gebühren", text: "Gesetzbuch und Gebührenkatalog" },
   { key: "personal", label: "Personalakten", text: "Lesen = Gehalt & Vermerke aller sehen; Bearbeiten = Personal verwalten" },
   { key: "einstellungen", label: "Kanzlei-Einstellungen", text: "Lesen dürfen immer alle; Bearbeiten = auch Abläufe (Checklisten) verwalten und die Pinnwand moderieren", nurSchreiben: true },
+  // Nigel hat eigene Namen: "ki_assistent" (= Verwenden) gab es schon vor "ki_sehen" und wird in der Datenbank geprüft
+  { key: "ki", label: "Nigel (KI-Butler)", lesen: "ki_sehen", schreiben: "ki_assistent", lesenLabel: "Sehen", schreibenLabel: "Verwenden",
+    text: "Sehen = das iFruit-Handy herausholen (nur Sperrbildschirm) und den Arbeitsbereich ansehen – Inhalte bleiben zensiert. Verwenden = Nigel Aufträge geben (schließt Sehen ein)" },
 ];
 const SONDERRECHTE = [
   { key: "akten_loeschen", label: "Akten löschen" },
-  { key: "ki_assistent", label: "KI-Assistent (Nigel)" },
 ];
+// Schlüssel und Bezeichnung der beiden Stufen eines Bereichs
+const rechtLesen = (b) => b.lesen || `${b.key}_lesen`;
+const rechtSchreiben = (b) => b.schreiben || `${b.key}_schreiben`;
+const stufeLesen = (b) => b.lesenLabel || "Lesen";
+const stufeSchreiben = (b) => b.schreibenLabel || "Bearbeiten";
 // Alle einzelnen Rechte (für Vergleiche)
 const RECHTE = [
   ...BEREICHE.flatMap((b) => [
-    ...(b.nurSchreiben ? [] : [{ key: `${b.key}_lesen`, label: `${b.label} lesen` }]),
-    { key: `${b.key}_schreiben`, label: `${b.label} bearbeiten` },
+    ...(b.nurSchreiben ? [] : [{ key: rechtLesen(b), label: `${b.label} ${stufeLesen(b).toLowerCase()}` }]),
+    { key: rechtSchreiben(b), label: `${b.label} ${stufeSchreiben(b).toLowerCase()}` },
   ]),
   ...SONDERRECHTE,
 ];
+// Lese-Recht → Schreib-Recht, das es einschließt (z. B. ki_sehen → ki_assistent)
+const SCHLIESST_EIN = Object.fromEntries(BEREICHE.filter((b) => !b.nurSchreiben).map((b) => [rechtLesen(b), rechtSchreiben(b)]));
 // Alte Rechtenamen (vor Update 5)
 const ALTE_RECHTE = {
   personal_verwalten: "personal_schreiben", personal_sehen: "personal_lesen", rechnungen: "rechnungen_schreiben",
@@ -323,8 +332,11 @@ function darf(recht) {
   if (!r || p.status === "Ausgeschieden") return false;
   const k = ALTE_RECHTE[recht] || recht;
   const hat = (x) => (r.berechtigungen || []).some((b) => b === x || ALTE_RECHTE[b] === x);
-  return hat(k) || (k.endsWith("_lesen") && hat(k.replace(/_lesen$/, "_schreiben")));
+  return hat(k) || (!!SCHLIESST_EIN[k] && hat(SCHLIESST_EIN[k])) || (k.endsWith("_lesen") && hat(k.replace(/_lesen$/, "_schreiben")));
 }
+
+// Nigel nur ansehen (Sehen ohne Verwenden): Sperrbildschirm am Handy, zensierter Arbeitsbereich
+const nigelNurAnsehen = () => darf("ki_sehen") && !darf("ki_assistent");
 
 function isMe(idOrEmail) {
   if (!state.me || !idOrEmail) return false;

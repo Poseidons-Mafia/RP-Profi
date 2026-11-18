@@ -236,7 +236,7 @@ function tabRaenge() {
     <div class="card">
       <div class="card-head">
         <div><h2>Ränge & Berechtigungen</h2>
-          <p class="muted small" style="margin:0">Für jeden Bereich getrennt: <strong>Lesen</strong> (ansehen) und <strong>Bearbeiten</strong> (anlegen, ändern – schließt Lesen ein).
+          <p class="muted small" style="margin:0">Für jeden Bereich getrennt: <strong>Lesen</strong> (ansehen) und <strong>Bearbeiten</strong> (anlegen, ändern – schließt Lesen ein), bei Nigel <strong>Sehen</strong> und <strong>Verwenden</strong>.
             Die Datenbank prüft jede Aktion selbst. Der Admin (Inhaber) hat immer alle Rechte. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
         ${admin ? html`<button class="btn small primary" data-action="rang-neu">+ Rang</button>` : ""}
       </div>
@@ -246,14 +246,15 @@ function tabRaenge() {
             ${BEREICHE.map((b) => html`<th class="rt grp" colspan="${b.nurSchreiben ? 1 : 2}" title="${b.text}">${b.label}</th>`)}
             ${SONDERRECHTE.map((x) => html`<th class="rt grp" rowspan="2">${x.label}</th>`)}
             ${admin ? html`<th rowspan="2"></th>` : ""}</tr>
-          <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>` : html`<th class="rt sub">Lesen</th><th class="rt sub">Bearb.</th>`)}</tr>
+          <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>`
+            : html`<th class="rt sub">${stufeLesen(b)}</th><th class="rt sub">${b.schreibenLabel || "Bearb."}</th>`)}</tr>
         </thead>
         <tbody>${raenge.map((r, i) => {
           const n = state.profiles.filter((p) => p.rang_id === r.id && p.status !== "Ausgeschieden").length;
           return html`<tr>
             <td><strong>${r.name}</strong>${r.ist_sonstiges ? html`<div class="small muted">benennt sich selbst</div>` : ""}</td>
             <td class="num">${n}</td>
-            ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, `${b.key}_lesen`, `${b.label} lesen`)}${zelle(r, `${b.key}_schreiben`, `${b.label} bearbeiten`)}`)}
+            ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, rechtLesen(b), `${b.label} ${stufeLesen(b).toLowerCase()}`)}${zelle(r, rechtSchreiben(b), `${b.label} ${stufeSchreiben(b).toLowerCase()}`)}`)}
             ${SONDERRECHTE.map((x) => zelle(r, x.key, x.label))}
             ${admin ? html`<td class="row-actions">
               <button class="icon-btn" title="Nach oben" data-action="rang-sort" data-id="${r.id}" data-delta="-1" ${i === 0 ? "disabled" : ""}>↑</button>
@@ -267,13 +268,13 @@ function tabRaenge() {
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
         <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
-        <li><strong>KI-Assistent</strong>: „Nigel“, der KI-Butler (KI-Modell über OpenRouter) – beantwortet ausschließlich Rechtsfragen und schlägt dafür in den Gesetzen nach. Er sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
-        <li><strong>KI-Budget</strong>: US-Dollar pro Monat je Mitglied, darüber der Deckel der Kanzlei – siehe unten.</li>
+        <li>Nigel beantwortet ausschließlich Rechtsfragen (KI-Modell über OpenRouter) und schlägt dafür in den Gesetzen nach. Er sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
+        ${admin ? html`<li><strong>KI-Budget</strong>: US-Dollar pro Monat je Mitglied, darüber der Deckel der Kanzlei – siehe unten. Die Beträge sieht nur der Admin.</li>` : ""}
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
         <li>Personal verwalten (= Personalakten bearbeiten): Man kann nur Ränge vergeben, deren Rechte man selbst hat, und nie den eigenen.</li>
       </ul>
     </div>
-    ${kiBudgetKarte()}`;
+    ${admin ? kiBudgetKarte() : ""}`;
 }
 
 // ---------- KI-Budget (US-Dollar pro Kalendermonat, UTC) ----------
@@ -599,7 +600,7 @@ function personalDetail(p) {
         <h3 class="section-title">Rechte</h3>
         <div class="badges" style="margin-bottom:18px">
           ${rechte === null ? html`<span class="badge alert">Alle Rechte (Inhaber)</span>`
-            : rechteText(r).length ? rechteText(r).map((x) => html`<span class="badge ${x.stufe === "Bearbeiten" ? "gold" : "blue"}">${x.label}: ${x.stufe}</span>`)
+            : rechteText(r).length ? rechteText(r).map((x) => html`<span class="badge ${x.voll ? "gold" : "blue"}">${x.label}: ${x.stufe}</span>`)
             : html`<span class="muted small">Keine Rechte – sieht nur die eigene Personalakte.</span>`}
         </div>
 
@@ -654,10 +655,10 @@ function rechteText(r) {
   if (!r) return [];
   const out = [];
   for (const b of BEREICHE) {
-    if (hatRangRecht(r, `${b.key}_schreiben`)) out.push({ label: b.label, stufe: "Bearbeiten" });
-    else if (!b.nurSchreiben && hatRangRecht(r, `${b.key}_lesen`)) out.push({ label: b.label, stufe: "Lesen" });
+    if (hatRangRecht(r, rechtSchreiben(b))) out.push({ label: b.label, stufe: stufeSchreiben(b), voll: true });
+    else if (!b.nurSchreiben && hatRangRecht(r, rechtLesen(b))) out.push({ label: b.label, stufe: stufeLesen(b) });
   }
-  for (const x of SONDERRECHTE) if (hatRangRecht(r, x.key)) out.push({ label: x.label, stufe: "Bearbeiten" });
+  for (const x of SONDERRECHTE) if (hatRangRecht(r, x.key)) out.push({ label: x.label, stufe: "Bearbeiten", voll: true });
   return out;
 }
 
@@ -960,12 +961,14 @@ CHANGES["rang-recht"] = async (el) => {
   const key = el.dataset.key;
   // alte Namen übersetzen, dann ändern
   const set = new Set((r.berechtigungen || []).map((b) => ALTE_RECHTE[b] || b));
+  // Bearbeiten/Verwenden schließt Lesen/Sehen ein – beides wird zusammen gesetzt bzw. entzogen
+  const bereich = BEREICHE.find((b) => !b.nurSchreiben && (rechtLesen(b) === key || rechtSchreiben(b) === key));
   if (el.checked) {
     set.add(key);
-    if (key.endsWith("_schreiben") && !key.startsWith("einstellungen")) set.add(key.replace(/_schreiben$/, "_lesen"));
+    if (bereich && key === rechtSchreiben(bereich)) set.add(rechtLesen(bereich));
   } else {
     set.delete(key);
-    if (key.endsWith("_lesen")) set.delete(key.replace(/_lesen$/, "_schreiben"));
+    if (bereich && key === rechtLesen(bereich)) set.delete(rechtSchreiben(bereich));
   }
   const liste = RECHTE.map((x) => x.key).filter((k) => set.has(k));
   const label = (RECHTE.find((x) => x.key === key) || { label: key }).label;

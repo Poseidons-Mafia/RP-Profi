@@ -94,9 +94,13 @@ und Änderungen erscheinen bei allen sofort.
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
   Die KI antwortet in **Markdown**, das im Browser mit Showdown in HTML umgewandelt (und mit DOMPurify bereinigt) wird.
   Antworten sind auf **4000 Zeichen** begrenzt – das interne Nachdenken (Reasoning) zählt nicht mit. Unter jeder Antwort
-  stehen die nachgeschlagenen Paragraphen (anklickbar). Eigenes Recht „KI-Assistent“ (anfangs nur Chairman).
+  stehen die nachgeschlagenen Paragraphen (anklickbar). Rechte je Rang in zwei Stufen (wie Lesen/Bearbeiten):
+  **Nigel sehen** – das iFruit Duo lässt sich herausholen, zeigt aber nur einen Sperrbildschirm („Berechtigung fehlt“);
+  der Arbeitsbereich ist als Vorschau offen (Modi, Beispiele, Reiter), alle Inhalte liegen zensiert unter Milchglas.
+  **Nigel verwenden** – volle Nutzung wie bisher (schließt Sehen ein).
   **KI-Budget:** US-Dollar pro Kalendermonat – Grundwert je Rang plus Abweichung je Mitglied (+/−), darüber ein
-  **Kanzlei-Deckel** (Standard 10 $), alles unter **Personal → Ränge & Berechtigungen → KI-Budget pro Monat** einstellbar (nur Admin).
+  **Kanzlei-Deckel** (Standard 10 $), alles unter **Personal → Ränge & Berechtigungen → KI-Budget pro Monat** einstellbar.
+  Die Dollar-Beträge sieht nur der Admin; alle anderen sehen ihr Kontingent in Prozent.
   Die Übersicht zeigt, was im schlimmsten Fall ausgegeben wird („Wenn alle ausschöpfen“), den bisherigen Verbrauch mit
   Hochrechnung und was eine Anfrage im Schnitt kostet. Der Assistent ist ein faltbares Smartphone der fiktiven Marke „iFruit“, das zugeklappt
   unten rechts aus der Ecke schaut: antippen (oder Taste `K`) holt es heraus. Herausgeholt lässt es sich mit dem
@@ -137,7 +141,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -146,7 +150,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql), [`supabase-update-13.sql`](supabase-update-13.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql), [`supabase-update-13.sql`](supabase-update-13.sql), [`supabase-update-14.sql`](supabase-update-14.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten
    (für den Discord-Login wird er später eingeschaltet – erst nachdem der Hook aus „Discord-Login einrichten“ aktiv ist).
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
@@ -196,7 +200,7 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 | `KI_KOSTEN_MAX` | optional: Höchstkosten pro Anfrage in US-Dollar (z. B. `0.05`), falls in Nigels Kanzlei-Vorgaben nichts eingestellt ist |
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
 
-Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → KI-Assistent** frei. Dort legt er
+Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → Nigel (Sehen / Verwenden)** frei. Dort legt er
 das **KI-Budget pro Monat** fest: den **Kanzlei-Deckel** (Standard 10 $), je Rang einen Grundwert in US-Dollar (Standard 2,50 $)
 und je Mitglied eine **Abweichung** (z. B. −1,00 oder +2,50; ein Budget von 0 sperrt die KI für dieses Mitglied). „Deckel gleichmäßig
 verteilen“ teilt den Deckel auf alle Mitglieder mit KI-Recht auf. Gespeichert wird der Deckel in `einstellungen.ki_budget_monat`,

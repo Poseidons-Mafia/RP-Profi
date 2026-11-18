@@ -150,16 +150,19 @@ Deno.serve(async (req) => {
     return fehler("Das KI-Budget ist noch nicht eingerichtet (supabase-update-13.sql im SQL Editor ausführen).", 500);
   }
   const b = budgetStand(budgetDb);
+  // Dollarbeträge nennt Nigel nur dem Admin (alle anderen sehen ihr Kontingent nur in Prozent)
+  const { data: istAdmin } = await db.rpc("is_admin");
+  const mitDollar = istAdmin === true;
   const restIch = b.budget - b.genutzt;
   const restKanzlei = b.kanzlei_budget - b.kanzlei_genutzt;
   if (b.budget <= 0) {
     return fehler(`Ich bedaure, ${ich.anrede}, doch für Sie ist kein KI-Budget hinterlegt. Bitte wenden Sie sich an den Admin.`, 429);
   }
   if (restIch < MIN_REST) {
-    return fehler(`Verzeihung, ${ich.anrede} – Ihr KI-Budget für diesen Monat ist aufgebraucht (${dollarText(b.genutzt)} von ${dollarText(b.budget)}). Ab dem 1. stehe ich Ihnen wieder zu Diensten.`, 429);
+    return fehler(`Verzeihung, ${ich.anrede} – Ihr KI-Budget für diesen Monat ist aufgebraucht${mitDollar ? ` (${dollarText(b.genutzt)} von ${dollarText(b.budget)})` : ""}. Ab dem 1. stehe ich Ihnen wieder zu Diensten.`, 429);
   }
   if (restKanzlei < MIN_REST) {
-    return fehler(`Verzeihung, ${ich.anrede} – das KI-Budget der Kanzlei für diesen Monat ist aufgebraucht (${dollarText(b.kanzlei_genutzt)} von ${dollarText(b.kanzlei_budget)}). Ab dem 1. stehe ich wieder zu Diensten.`, 429);
+    return fehler(`Verzeihung, ${ich.anrede} – das KI-Budget der Kanzlei für diesen Monat ist aufgebraucht${mitDollar ? ` (${dollarText(b.kanzlei_genutzt)} von ${dollarText(b.kanzlei_budget)})` : ""}. Ab dem 1. stehe ich wieder zu Diensten.`, 429);
   }
   // Die Anfrage darf höchstens kosten, was pro Anfrage erlaubt ist UND im Budget noch übrig ist
   const grenze = [
@@ -192,7 +195,7 @@ Deno.serve(async (req) => {
     const schritte: Schritt[] = [];
     const schritt = (s: Schritt) => { schritte.push(s); melden({ typ: "schritt", ...s }); };
     const ergebnis = await frageModell(orKey, system, nachrichten, {
-      werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, maxZeichen: m.max,
+      werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, mitDollar, maxZeichen: m.max,
       werkzeug: (name, args) => werkzeugAusfuehren(db, kanzleiDaten, name, args, { nachgeschlagen, aktenGelesen, schritt }),
     });
 
@@ -297,7 +300,7 @@ function persoenlich(roh: unknown) {
 //  Zur Sicherheit wird das antwortende Modell zusätzlich geprüft.
 // =============================================================
 async function frageModell(key: string, system: string, nachrichten: Nachricht[],
-  opt: { werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; kostenGrund: string; maxZeichen: number }): Promise<Ergebnis> {
+  opt: { werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; kostenGrund: string; mitDollar: boolean; maxZeichen: number }): Promise<Ergebnis> {
   const verlauf: Zeile[] = [
     { role: "system", content: system },
     ...nachrichten.map((n) => ({ role: n.rolle === "ki" ? "assistant" : "user", content: n.text })),
@@ -310,6 +313,8 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
   const preis = opt.kostenMax > 0 ? await modellPreis(key) : null;
   const dollar = (n: number) => `$${n < 0.01 ? n.toFixed(4) : n.toFixed(3)}`;
   const grenze = () => `${dollar(opt.kostenMax)} (${opt.kostenGrund})`;
+  // „Das Kostenlimit von $0.050 (Limit pro Anfrage)“ – ohne Admin-Recht ohne Betrag
+  const limit = () => opt.mitDollar ? `Das Kostenlimit von ${grenze()}` : `Das Kostenlimit (${opt.kostenGrund})`;
   // Tokens der fertigen Antwort (sichtbarer Text + Nachdenken), grob geschätzt
   const antwortTokens = Math.ceil(opt.maxZeichen / 3) + 2500;
 
@@ -331,8 +336,10 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
         const moeglich = Math.floor((offen - einKosten) / preis.aus);
         if (moeglich < MIN_ANTWORT_TOKENS) {
           throw new KiFehler(runde === 0
-            ? `Diese Anfrage würde schon beim Lesen des Kontexts etwa ${dollar(einKosten)} kosten – mehr als erlaubt: ${grenze()}. Bitte weniger Akten oder Paragraphen anheften oder einen neuen Chat beginnen.`
-            : `Das Kostenlimit von ${grenze()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
+            ? (opt.mitDollar
+              ? `Diese Anfrage würde schon beim Lesen des Kontexts etwa ${dollar(einKosten)} kosten – mehr als erlaubt: ${grenze()}. Bitte weniger Akten oder Paragraphen anheften oder einen neuen Chat beginnen.`
+              : `Diese Anfrage würde schon beim Lesen des Kontexts mehr kosten als erlaubt (${opt.kostenGrund}). Bitte weniger Akten oder Paragraphen anheften oder einen neuen Chat beginnen.`)
+            : `${limit()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
         }
         maxTokens = Math.min(moeglich, letzteRunde ? antwortTokens * 2 : 16000);
         // Ist das Budget knapp, denkt Nigel kürzer nach, damit Platz für die Antwort bleibt
@@ -390,7 +397,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
     const msg = wahl?.message;
 
     if (msg?.tool_calls?.length && !letzteRunde && opt.kostenMax > 0 && kosten >= opt.kostenMax) {
-      throw new KiFehler(`Das Kostenlimit von ${grenze()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
+      throw new KiFehler(`${limit()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
     }
     if (msg?.tool_calls?.length && !letzteRunde) {
       // Nachricht unverändert zurückgeben (enthält ggf. reasoning_details, die das Modell braucht)
@@ -408,7 +415,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
     const inhalt = msg?.content;
     const text = (Array.isArray(inhalt) ? inhalt.map((t: Zeile) => t?.text || "").join("") : String(inhalt || "")).trim();
     if (!text && wahl?.finish_reason === "length" && maxTokens) {
-      throw new KiFehler(`Das Kostenlimit von ${grenze()} hat nicht für eine Antwort gereicht. Bitte die Frage enger fassen, weniger Kontext anheften oder „Gründlichkeit“ niedriger stellen.`, 402);
+      throw new KiFehler(`${limit()} hat nicht für eine Antwort gereicht. Bitte die Frage enger fassen, weniger Kontext anheften oder „Gründlichkeit“ niedriger stellen.`, 402);
     }
     if (!text) throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${wahl?.finish_reason || "unbekannt"}).`);
     const gekappt = wahl?.finish_reason === "length" && maxTokens
