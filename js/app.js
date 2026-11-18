@@ -28,17 +28,40 @@ const RENDER_HOOKS = [];
 
 // Seiten (von den Seiten-Dateien befüllt)
 const VIEWS = {};
+// Hauptmenü in drei Gruppen – auf großen Bildschirmen als Seitenleiste, auf Tablets als Leiste
+// oben, auf dem Handy als Leiste unten (die ersten Punkte aus TABBAR) plus „Mehr“-Kachelmenü.
 const NAV = [
-  { page: "uebersicht", label: "Übersicht", href: "#/" },
-  { page: "akten", label: "Akten", href: "#/akten" },
-  { page: "mandanten", label: "Mandanten", href: "#/mandanten" },
-  { page: "kalender", label: "Kalender", href: "#/kalender" },
-  { page: "finanzen", label: "Finanzen", href: "#/finanzen" },
-  { page: "gesetze", label: "Gesetze", href: "#/gesetze" },
-  { page: "gesetzbuch", label: "Strafkatalog", href: "#/gesetzbuch" },
-  { page: "nigel", label: "Nigel", href: "#/nigel" },
-  { page: "team", label: "Personal", href: "#/team" },
+  { page: "uebersicht", label: "Übersicht", href: "#/", gruppe: "Arbeit" },
+  { page: "akten", label: "Akten", href: "#/akten", gruppe: "Arbeit" },
+  { page: "mandanten", label: "Mandanten", href: "#/mandanten", gruppe: "Arbeit" },
+  { page: "kalender", label: "Kalender", href: "#/kalender", gruppe: "Arbeit" },
+  { page: "gesetze", label: "Gesetze", href: "#/gesetze", gruppe: "Recht" },
+  { page: "gesetzbuch", label: "Strafkatalog", href: "#/gesetzbuch", gruppe: "Recht" },
+  { page: "nigel", label: "Nigel", href: "#/nigel", gruppe: "Recht" },
+  { page: "finanzen", label: "Finanzen", href: "#/finanzen", gruppe: "Kanzlei" },
+  { page: "team", label: "Personal", href: "#/team", gruppe: "Kanzlei" },
 ];
+// Handy: diese Bereiche (sofern erlaubt) stehen direkt in der unteren Leiste, der Rest unter „Mehr“
+const TABBAR = ["uebersicht", "akten", "kalender", "mandanten"];
+const TABBAR_PLAETZE = 4;
+const NAV_ICON_PFADE = {
+  uebersicht: "M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z",
+  akten: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  mandanten: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14.5a6.5 6.5 0 0 1 3.5 5.5",
+  kalender: "M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM4 10h16M8 2.5v3M16 2.5v3",
+  gesetze: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14H6.5A1.5 1.5 0 0 0 5 18.5zM5 18.5A1.5 1.5 0 0 0 6.5 20H19M9 7h6",
+  gesetzbuch: "M12 4v16M8 20h8M4 7h16M6 7l-3 7h6zM18 7l-3 7h6z",
+  nigel: "M4 5h16v11H9l-5 4zM9 10.5h.01M12 10.5h.01M15 10.5h.01",
+  finanzen: "M3 7a2 2 0 0 1 2-2h13v4M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16 14h1.5",
+  team: "M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM5.5 16.5a3.5 3.5 0 0 1 7 0M15 9h3M15 13h3",
+  mehr: "M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z",
+  profil: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0",
+  leitfaden: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14H6.5A1.5 1.5 0 0 0 5 18.5zM5 18.5A1.5 1.5 0 0 0 6.5 20H19",
+  abmelden: "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10",
+};
+function navIcon(name) {
+  return new SafeHtml(`<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${NAV_ICON_PFADE[name] || ""}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`);
+}
 
 // ---------- Rechte für Seiten und Aktionen ----------
 // Was hier fehlt, darf jedes Mitglied. Die Datenbank prüft zusätzlich selbst.
@@ -139,6 +162,7 @@ function go(path) {
 
 window.addEventListener("hashchange", () => {
   closeDialogs();
+  if (!$("nav-sheet").hidden) navSheet(false);
   render();
   window.scrollTo(0, 0);
 });
@@ -209,6 +233,10 @@ function render() {
   }
 }
 
+function navAktiv(n, route) {
+  return route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]);
+}
+
 function renderNav(route) {
   const heute = state.termine.filter((t) => !t.erledigt && sameDay(t.beginn, new Date())).length
     + state.termine.filter(terminUeberfaellig).length;
@@ -216,17 +244,68 @@ function renderNav(route) {
   const pinnwand = typeof pinnwandOffen === "function" ? pinnwandOffen().length : 0;
   const antraege = typeof portalAntraege === "function" ? portalAntraege().length : 0;
   const badges = { kalender: heute, finanzen: offen, uebersicht: pinnwand, mandanten: antraege };
+  const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
-  $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
-    <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
-      ${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}
-    </a>`)}`);
+  const gruppen = [...new Set(sichtbar.map((n) => n.gruppe))].map((g) => ({ name: g, items: sichtbar.filter((n) => n.gruppe === g) }));
+  const link = (n) => html`<a href="${n.href}" class="${navAktiv(n, route) ? "active" : ""}"${navAktiv(n, route) ? html` aria-current="page"` : ""}>
+      ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
+
+  // Seitenleiste (Desktop) bzw. Leiste oben (Tablet): alle Bereiche, nach Gruppen getrennt
+  $("nav").innerHTML = String(html`${gruppen.map((g) => html`
+    <div class="nav-gruppe" role="group" aria-label="${g.name}">
+      <span class="nav-titel">${g.name}</span>
+      ${g.items.map(link)}
+    </div>`)}`);
   navAusrichten(route.page);
+
+  // Handy: die wichtigsten Bereiche unten, alles andere im „Mehr“-Menü (immer da: dort stehen auch Profil und Abmelden)
+  const direkt = [...TABBAR.map((p) => sichtbar.find((n) => n.page === p)).filter(Boolean),
+    ...sichtbar.filter((n) => !TABBAR.includes(n.page))].slice(0, TABBAR_PLAETZE);
+  const rest = sichtbar.filter((n) => !direkt.includes(n));
+  const restAktiv = rest.some((n) => navAktiv(n, route)) || document.body.classList.contains("nav-sheet-offen");
+  const restBadges = rest.reduce((t, n) => t + (badges[n.page] || 0), 0);
+  $("tabbar").innerHTML = String(html`${direkt.map(link)}
+    ${html`<button type="button" class="${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${document.body.classList.contains("nav-sheet-offen")}">
+      ${navIcon("mehr")}<span class="nav-label">Mehr</span>${restBadges ? html`<span class="nav-badge">${restBadges}</span>` : ""}</button>`}`);
+
+  // Kachelmenü „Mehr“ (nur Handy): alle Bereiche nach Gruppen + Profil, Leitfaden, Abmelden
+  $("nav-sheet-inhalt").innerHTML = String(html`
+    ${gruppen.map((g) => html`
+      <h3 class="nav-sheet-titel">${g.name}</h3>
+      <div class="nav-kacheln">${g.items.map((n) => html`<a href="${n.href}" class="nav-kachel ${navAktiv(n, route) ? "active" : ""}">
+        ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`)}</div>`)}
+    <h3 class="nav-sheet-titel">Konto</h3>
+    <div class="nav-kacheln">
+      <button type="button" class="nav-kachel" data-action="nav-profil">${navIcon("profil")}<span class="nav-label">${myName() || "Mein Profil"}</span></button>
+      <a class="nav-kachel" href="leitfaden/straftat.html?v=52">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
+      <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
+    </div>`);
+
   // Auf dem Handy nur der Vorname, damit die Kopfzeile nicht umbricht
   $("btn-me").textContent = (window.innerWidth < 700 ? firstName(myName()) : myName()) || "Profil";
   // Logo zeigt an, dass man hier den Charakter wechselt (Discord-Konten)
   $("brand-wechsel").hidden = !(state.konto && state.konto.art === "charakter");
 }
+
+// ---------- Handy: Kachelmenü „Mehr“ ----------
+function navSheet(offen) {
+  const sheet = $("nav-sheet");
+  if (offen === undefined) offen = sheet.hidden;
+  sheet.hidden = !offen;
+  document.body.classList.toggle("nav-sheet-offen", offen);
+  if (state.loaded) renderNav(parseRoute()); // „Mehr“-Knopf markieren
+  if (offen) { const erstes = sheet.querySelector(".nav-kachel"); if (erstes) erstes.focus({ preventScroll: true }); }
+}
+Object.assign(ACTIONS, {
+  "nav-sheet": () => navSheet(),
+  "nav-sheet-zu": () => navSheet(false),
+  "nav-profil": () => { navSheet(false); ACTIONS["profil-bearbeiten"]({}); },
+});
+// Link im Menü angetippt (auch die aktuelle Seite) → Menü schließen
+$("nav-sheet").addEventListener("click", (e) => { if (e.target.closest("a[href]")) navSheet(false); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("nav-sheet").hidden) navSheet(false); });
+// Wird das Fenster breiter (iPad drehen), gibt es kein „Mehr“ mehr
+window.matchMedia("(min-width: 701px)").addEventListener("change", (m) => { if (m.matches) navSheet(false); });
 
 // Schmale Bildschirme (Handy, iPad hochkant): Navigation lässt sich seitlich wischen.
 // Beim Seitenwechsel den aktiven Punkt ins Bild holen und Ränder andeuten, wo es weitergeht.
@@ -263,6 +342,8 @@ function showScreen(name) {
   const imPortal = name === "portal";
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
+  $("tabbar").hidden = !inApp;
+  if (!inApp) navSheet(false);
   $("topbar-actions").hidden = !inApp;
   $("portal").hidden = !imPortal;
   $("portal-nav").hidden = !imPortal;

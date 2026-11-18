@@ -166,12 +166,12 @@ VIEWS.uebersicht = () => {
 
       ${q ? sucheErgebnisse(q) : html`
         <div class="kpis">
-          ${A ? html`<a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>` : ""}
-          ${T ? html`<a class="kpi ${termineHeute.length ? "alert" : ""}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
-          <a class="kpi ${ueberfaellig.length ? "alert" : ""}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>` : ""}
-          ${A ? html`<a class="kpi" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>` : ""}
-          ${R ? html`<a class="kpi" href="#/finanzen/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>` : ""}
-          ${A ? html`<a class="kpi ${liegen.length ? "warn" : ""}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>` : ""}
+          ${A ? html`<a class="kpi ${offeneAkten.length ? "" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>` : ""}
+          ${T ? html`<a class="kpi ${termineHeute.length ? "alert" : "ruhig"}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
+          <a class="kpi ${ueberfaellig.length ? "alert" : "ruhig"}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>` : ""}
+          ${A ? html`<a class="kpi ${inHaft.length ? "" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>` : ""}
+          ${R ? html`<a class="kpi ${offeneRechnungen.length ? "" : "ruhig"}" href="#/finanzen/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>` : ""}
+          ${A ? html`<a class="kpi ${liegen.length ? "warn" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>` : ""}
         </div>
 
         <div class="grid-2">

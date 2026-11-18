@@ -153,8 +153,13 @@ und Änderungen erscheinen bei allen sofort.
     bevor Geld ausgegeben wird. Dieselbe Bremse greift, wenn das restliche Monatsbudget (eigenes oder das der Kanzlei) kleiner ist.
     Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (Monat) und für den Admin je Mitglied unter Personal → Ränge & Berechtigungen.
   - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
+- **Menüführung:** Die Bereiche sind in drei Gruppen sortiert – *Arbeit* (Übersicht, Akten, Mandanten, Kalender),
+  *Recht* (Gesetze, Strafkatalog, Nigel) und *Kanzlei* (Finanzen, Personal). Am Computer stehen sie als Seitenleiste links,
+  auf dem Tablet als Leiste oben (Gruppen durch Striche getrennt), auf dem Handy als feste Leiste unten mit
+  Übersicht, Akten, Kalender, Mandanten und **„Mehr“** – einem Kachelmenü mit allen Bereichen, Profil, Leitfaden und Abmelden.
+  Bereiche ohne Recht erscheinen nirgends. Kennzahl-Kacheln mit 0 treten blass zurück, damit Auffälliges heraussticht.
 - **iPhone & iPad:** Alle Seiten passen sich an Handy und Tablet an (große Tippflächen, kein Hineinzoomen in Eingabefelder,
-  wischbare Navigation, Rücksicht auf Notch und Home-Leiste). Tipp: In Safari über **Teilen → „Zum Home-Bildschirm“**
+  Menüleiste unten in Daumennähe, Rücksicht auf Notch und Home-Leiste). Tipp: In Safari über **Teilen → „Zum Home-Bildschirm“**
   ablegen – dann startet das Aktensystem wie eine App ohne Browserleisten (einmalig neu anmelden).
 
 ## Update von einer älteren Version
