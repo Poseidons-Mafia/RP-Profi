@@ -157,7 +157,8 @@ und Änderungen erscheinen bei allen sofort.
   *Recht* (Gesetze, Strafkatalog, Nigel) und *Kanzlei* (Finanzen, Personal). Am Computer stehen sie als Seitenleiste links,
   auf dem Tablet als Leiste oben (Gruppen durch Striche getrennt), auf dem Handy als feste Leiste unten mit
   Übersicht, Akten, Kalender, Mandanten und **„Mehr“** – einem Kachelmenü mit allen Bereichen, Profil, Leitfaden und Abmelden.
-  Bereiche ohne Recht erscheinen nirgends. Kennzahl-Kacheln mit 0 treten blass zurück, damit Auffälliges heraussticht.
+  Die Seitenleiste lässt sich oben mit dem Pfeil auf **nur Symbole** einklappen (Name als Tooltip, Zähler als Punkt);
+  der Browser merkt sich die Einstellung. Bereiche ohne Recht erscheinen nirgends. Kennzahl-Kacheln mit 0 treten blass zurück, damit Auffälliges heraussticht.
 - **iPhone & iPad:** Alle Seiten passen sich an Handy und Tablet an (große Tippflächen, kein Hineinzoomen in Eingabefelder,
   Menüleiste unten in Daumennähe, Rücksicht auf Notch und Home-Leiste). Tipp: In Safari über **Teilen → „Zum Home-Bildschirm“**
   ablegen – dann startet das Aktensystem wie eine App ohne Browserleisten (einmalig neu anmelden).

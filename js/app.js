@@ -57,6 +57,8 @@ const NAV_ICON_PFADE = {
   mehr: "M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z",
   profil: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0",
   leitfaden: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14H6.5A1.5 1.5 0 0 0 5 18.5zM5 18.5A1.5 1.5 0 0 0 6.5 20H19",
+  einklappen: "M14 6l-6 6 6 6M19 5v14",
+  ausklappen: "M10 6l6 6-6 6M5 5v14",
   abmelden: "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10",
 };
 function navIcon(name) {
@@ -247,11 +249,16 @@ function renderNav(route) {
   const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   const gruppen = [...new Set(sichtbar.map((n) => n.gruppe))].map((g) => ({ name: g, items: sichtbar.filter((n) => n.gruppe === g) }));
-  const link = (n) => html`<a href="${n.href}" class="${navAktiv(n, route) ? "active" : ""}"${navAktiv(n, route) ? html` aria-current="page"` : ""}>
+  const link = (n) => html`<a href="${n.href}" title="${n.label}" class="${navAktiv(n, route) ? "active" : ""}"${navAktiv(n, route) ? html` aria-current="page"` : ""}>
       ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
 
   // Seitenleiste (Desktop) bzw. Leiste oben (Tablet): alle Bereiche, nach Gruppen getrennt
-  $("nav").innerHTML = String(html`${gruppen.map((g) => html`
+  const zu = navEingeklappt();
+  $("nav").innerHTML = String(html`
+    <button type="button" class="nav-klappen" data-action="nav-klappen" aria-expanded="${!zu}"
+      title="${zu ? "Menü ausklappen" : "Menü einklappen (nur Symbole)"}" aria-label="${zu ? "Menü ausklappen" : "Menü einklappen"}">
+      ${navIcon(zu ? "ausklappen" : "einklappen")}<span class="nav-label">Einklappen</span></button>
+    ${gruppen.map((g) => html`
     <div class="nav-gruppe" role="group" aria-label="${g.name}">
       <span class="nav-titel">${g.name}</span>
       ${g.items.map(link)}
@@ -277,7 +284,7 @@ function renderNav(route) {
     <h3 class="nav-sheet-titel">Konto</h3>
     <div class="nav-kacheln">
       <button type="button" class="nav-kachel" data-action="nav-profil">${navIcon("profil")}<span class="nav-label">${myName() || "Mein Profil"}</span></button>
-      <a class="nav-kachel" href="leitfaden/straftat.html?v=52">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
+      <a class="nav-kachel" href="leitfaden/straftat.html?v=53">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
       <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
     </div>`);
 
@@ -286,6 +293,17 @@ function renderNav(route) {
   // Logo zeigt an, dass man hier den Charakter wechselt (Discord-Konten)
   $("brand-wechsel").hidden = !(state.konto && state.konto.art === "charakter");
 }
+
+// ---------- Seitenleiste einklappen (nur Symbole) – merkt sich der Browser ----------
+const NAV_KLAPP_KEY = "wiwang-nav-eingeklappt";
+function navEingeklappt() { return document.body.classList.contains("nav-eingeklappt"); }
+try { if (localStorage.getItem(NAV_KLAPP_KEY) === "1") document.body.classList.add("nav-eingeklappt"); } catch {}
+ACTIONS["nav-klappen"] = () => {
+  const zu = !navEingeklappt();
+  document.body.classList.toggle("nav-eingeklappt", zu);
+  try { localStorage.setItem(NAV_KLAPP_KEY, zu ? "1" : "0"); } catch {}
+  renderNav(parseRoute());
+};
 
 // ---------- Handy: Kachelmenü „Mehr“ ----------
 function navSheet(offen) {
