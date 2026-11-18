@@ -2,10 +2,15 @@
 //  Wiwang Law – Discord-Server einrichten
 //
 //  Legt Rollen, Kategorien und Kanäle für die Kanzlei an.
-//  - Löscht, benennt oder ändert NIE etwas Bestehendes um.
-//  - Was es schon gibt (gleicher Name), wird übersprungen –
-//    das Skript kann gefahrlos mehrfach laufen.
-//  - Standard ist die Vorschau (nichts wird angelegt).
+//  Die Rollen entsprechen den Rängen der Website (Personal → Ränge).
+//
+//  Sicherheit:
+//  - Kanäle und Kategorien werden NIE gelöscht, umbenannt oder verschoben.
+//  - Bestehende Rechte werden nicht verändert; fehlende Rollen werden nur
+//    ergänzt.
+//  - Gelöscht werden ausschließlich Rollen aus der Liste VERALTET, und nur
+//    wenn niemand sie trägt.
+//  - Standard ist die Vorschau (nichts wird geändert).
 //
 //  Aufruf (über GitHub → Actions → "Discord-Server einrichten"):
 //    DISCORD_BOT_TOKEN=… DISCORD_SERVER_ID=… node server-einrichten.mjs [--ausfuehren]
@@ -31,18 +36,23 @@ const SENDEN = 1n << 11n;    // Nachrichten senden
 const VERLAUF = 1n << 16n;   // Nachrichtenverlauf lesen
 
 // ---------- Plan ----------
-// Rollen entsprechen den Rängen auf der Website (Personal → Ränge).
+// Rollen = Ränge der Website, von oben nach unten (Tabelle public.raenge).
+// "Mandant" ist kein Rang, sondern der Zugang zum Mandantenportal.
+// Ändern sich die Ränge auf der Website, hier nachziehen.
 const ROLLEN = [
-  { name: "Chairman",     farbe: 0xc9a227, sichtbar: true },
-  { name: "Partner",      farbe: 0xb8860b, sichtbar: true },
-  { name: "Rechtsanwalt", farbe: 0x2e5aa8, sichtbar: true },
-  { name: "Referendar",   farbe: 0x3a7ca5, sichtbar: true },
-  { name: "Praktikant",   farbe: 0x6b8fa8, sichtbar: true },
-  { name: "Sekretariat",  farbe: 0x7a5fa0, sichtbar: true },
-  { name: "Mandant",      farbe: 0x4a9d6e, sichtbar: false },
+  { name: "Chairman",            farbe: 0xc9a227, sichtbar: true },
+  { name: "Vice Chairman",       farbe: 0xdcb43c, sichtbar: true },
+  { name: "Partner",             farbe: 0xb8860b, sichtbar: true },
+  { name: "Rechtsanwalt",        farbe: 0x2e5aa8, sichtbar: true },
+  { name: "Fraktionsverwaltung", farbe: 0x8a5a9e, sichtbar: true },
+  { name: "Sonstiges",           farbe: 0x8a8f98, sichtbar: true },
+  { name: "Mandant",             farbe: 0x4a9d6e, sichtbar: false },
 ];
-const KANZLEI = ["Chairman", "Partner", "Rechtsanwalt", "Referendar", "Praktikant", "Sekretariat"];
-const LEITUNG = ["Chairman", "Partner"];
+// Frühere Rollen, die es auf der Website nicht gibt (nur löschen, wenn niemand sie trägt)
+const VERALTET = ["Referendar", "Praktikant", "Sekretariat"];
+
+const KANZLEI = ["Chairman", "Vice Chairman", "Partner", "Rechtsanwalt", "Fraktionsverwaltung", "Sonstiges"];
+const LEITUNG = ["Chairman", "Vice Chairman", "Partner"];
 
 // zugang: "lesen" = alle sehen, nur Team schreibt | "alle" = alle sehen und schreiben | Liste = nur diese Rollen
 const KATEGORIEN = [
@@ -66,7 +76,7 @@ const KATEGORIEN = [
   {
     name: "👔 LEITUNG", zugang: LEITUNG,
     kanaele: [
-      ["leitung", "Nur für Chairman und Partner."],
+      ["leitung", "Nur für Chairman, Vice Chairman und Partner."],
       ["personal", "Personalfragen."],
       ["finanzen", "Buchhaltung und Rechnungen."],
     ],
@@ -122,18 +132,18 @@ const gleich = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
 const bits = (...werte) => werte.reduce((s, w) => s | w, 0n).toString();
 
 // ---------- Ablauf ----------
-console.log(AUSFUEHREN ? "AUSFÜHREN – Änderungen werden vorgenommen.\n" : "VORSCHAU – es wird nichts angelegt.\n");
+console.log(AUSFUEHREN ? "AUSFÜHREN – Änderungen werden vorgenommen.\n" : "VORSCHAU – es wird nichts geändert.\n");
 
 const server = await discord("GET", `/guilds/${SERVER}`);
 console.log(`Server: ${server.name}\n`);
-const rollen = await discord("GET", `/guilds/${SERVER}/roles`);
+let rollen = await discord("GET", `/guilds/${SERVER}/roles`);
 const kanaele = await discord("GET", `/guilds/${SERVER}/channels`);
 
-let neu = 0, vorhanden = 0;
+let neu = 0, vorhanden = 0, ergaenzt = 0, geloescht = 0;
 
-// Rollen
+// ----- Rollen anlegen -----
 console.log("Rollen:");
-const rolleId = new Map(); // Name → ID (bestehende und neue)
+const rolleId = new Map(); // Name (klein) → ID
 for (const r of rollen) rolleId.set(r.name.toLowerCase(), r.id);
 for (const r of ROLLEN) {
   const bestehend = rollen.find((x) => gleich(x.name, r.name));
@@ -147,26 +157,38 @@ for (const r of ROLLEN) {
   } else rolleId.set(r.name.toLowerCase(), `(neu:${r.name})`);
 }
 const idVon = (name) => rolleId.get(name.toLowerCase());
+const echt = (id) => id && !id.startsWith("(neu:");
 
-// Kategorien und Kanäle
+// ----- Kategorien und Kanäle -----
 for (const k of KATEGORIEN) {
   console.log(`\n${k.name}`);
+  const alle = SERVER; // die Rolle @everyone hat die ID des Servers
+  const team = (n) => ({ id: idVon(n), type: 0, allow: bits(ANSEHEN, SENDEN, VERLAUF), deny: "0" });
+  let rechte;
+  if (k.zugang === "alle") rechte = [];
+  else if (k.zugang === "lesen") {
+    rechte = [{ id: alle, type: 0, allow: bits(ANSEHEN, VERLAUF), deny: bits(SENDEN) }];
+    for (const n of KANZLEI) if (idVon(n)) rechte.push(team(n));
+  } else {
+    rechte = [{ id: alle, type: 0, allow: "0", deny: bits(ANSEHEN) }];
+    for (const n of k.zugang) if (idVon(n)) rechte.push(team(n));
+  }
+
   let kategorie = kanaele.find((c) => c.type === 4 && gleich(c.name, k.name));
-  if (kategorie) { console.log("  = Kategorie gibt es schon (Rechte bleiben unverändert)"); vorhanden++; }
-  else {
-    neu++;
-    const alle = SERVER; // die Rolle @everyone hat die ID des Servers
-    let rechte;
-    if (k.zugang === "alle") rechte = [];
-    else if (k.zugang === "lesen") {
-      rechte = [{ id: alle, type: 0, allow: bits(ANSEHEN, VERLAUF), deny: bits(SENDEN) }];
-      for (const n of KANZLEI) if (idVon(n)) rechte.push({ id: idVon(n), type: 0, allow: bits(ANSEHEN, SENDEN, VERLAUF), deny: "0" });
-    } else {
-      rechte = [{ id: alle, type: 0, allow: "0", deny: bits(ANSEHEN) }];
-      for (const n of k.zugang) if (idVon(n)) rechte.push({ id: idVon(n), type: 0, allow: bits(ANSEHEN, SENDEN, VERLAUF), deny: "0" });
+  if (kategorie) {
+    vorhanden++;
+    // Nur fehlende Rollen ergänzen – bestehende Rechte bleiben unverändert
+    const fehlend = rechte.filter((o) => o.id !== alle && !(kategorie.permission_overwrites || []).some((x) => x.id === o.id));
+    if (!fehlend.length) console.log("  = Kategorie gibt es schon (Rechte vollständig)");
+    for (const o of fehlend) {
+      const name = rollen.find((r) => r.id === o.id)?.name || [...rolleId].find(([, id]) => id === o.id)?.[0] || o.id;
+      console.log(`  ~ Rechte ergänzen für ${name}`); ergaenzt++;
+      if (AUSFUEHREN && echt(o.id)) await discord("PUT", `/channels/${kategorie.id}/permissions/${o.id}`, { type: 0, allow: o.allow, deny: o.deny });
     }
+  } else {
+    neu++;
     console.log(`  + Kategorie (${k.zugang === "alle" ? "für alle" : k.zugang === "lesen" ? "alle lesen, Team schreibt" : "nur " + k.zugang.join(", ")})`);
-    if (AUSFUEHREN) kategorie = await discord("POST", `/guilds/${SERVER}/channels`, { name: k.name, type: 4, permission_overwrites: rechte });
+    if (AUSFUEHREN) kategorie = await discord("POST", `/guilds/${SERVER}/channels`, { name: k.name, type: 4, permission_overwrites: rechte.filter((o) => echt(o.id) || o.id === alle) });
   }
 
   for (const [name, thema, art] of k.kanaele) {
@@ -183,5 +205,32 @@ for (const k of KATEGORIEN) {
   }
 }
 
-console.log(`\n${AUSFUEHREN ? "Angelegt" : "Würde anlegen"}: ${neu} · Schon vorhanden: ${vorhanden}`);
-if (!AUSFUEHREN) console.log("Nichts verändert. Zum Anlegen den Workflow mit \"ausfuehren\" starten.");
+// ----- Veraltete Rollen entfernen (nur wenn leer) -----
+console.log("\nVeraltete Rollen (gibt es auf der Website nicht):");
+let anzahl = {};
+try { anzahl = await discord("GET", `/guilds/${SERVER}/roles/member-counts`); } catch { anzahl = null; }
+for (const name of VERALTET) {
+  const r = rollen.find((x) => gleich(x.name, name));
+  if (!r) { console.log(`  = ${name} (gibt es nicht)`); continue; }
+  if (anzahl === null) { console.log(`  ! ${name} bleibt – Mitgliederzahl nicht abfragbar, bitte von Hand prüfen`); continue; }
+  const n = anzahl[r.id] ?? 0;
+  if (n > 0) { console.log(`  ! ${name} bleibt – wird von ${n} Person(en) getragen`); continue; }
+  console.log(`  - ${name} (leer, wird gelöscht)`); geloescht++;
+  if (AUSFUEHREN) await discord("DELETE", `/guilds/${SERVER}/roles/${r.id}`);
+}
+
+// ----- Reihenfolge der Rollen: wie auf der Website -----
+// Die Rollen tauschen nur untereinander die Plätze, die sie schon belegen.
+if (AUSFUEHREN) {
+  rollen = await discord("GET", `/guilds/${SERVER}/roles`);
+  const unsere = ROLLEN.map((r) => rollen.find((x) => gleich(x.name, r.name))).filter(Boolean);
+  const plaetze = unsere.map((r) => r.position).sort((a, b) => b - a);
+  const gewuenscht = unsere.map((r, i) => ({ id: r.id, position: plaetze[i] }));
+  if (gewuenscht.some((g, i) => unsere[i].position !== g.position)) {
+    await discord("PATCH", `/guilds/${SERVER}/roles`, gewuenscht);
+    console.log("\nReihenfolge der Rollen angepasst (Chairman oben).");
+  }
+}
+
+console.log(`\n${AUSFUEHREN ? "Angelegt" : "Würde anlegen"}: ${neu} · Rechte ergänzt: ${ergaenzt} · ${AUSFUEHREN ? "Gelöscht" : "Würde löschen"}: ${geloescht} · Schon vorhanden: ${vorhanden}`);
+if (!AUSFUEHREN) console.log("Nichts verändert. Zum Anwenden den Workflow mit \"ausfuehren\" starten.");

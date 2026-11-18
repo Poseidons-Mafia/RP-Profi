@@ -232,13 +232,16 @@ Danach in Discord `/ping` eingeben. Bot-Token und Public Key gehören **nie** in
 ### Discord-Server einrichten lassen
 
 Der Workflow **Discord-Server einrichten** legt Rollen, Kategorien und Kanäle an (Skript
-[`tools/discord-bot/server-einrichten.mjs`](tools/discord-bot/server-einrichten.mjs)). Er **legt nur an**: Bestehendes wird
-nie gelöscht, umbenannt oder verschoben, und was es unter gleichem Namen schon gibt, wird übersprungen.
+[`tools/discord-bot/server-einrichten.mjs`](tools/discord-bot/server-einrichten.mjs)). Kanäle und Kategorien werden **nie**
+gelöscht, umbenannt oder verschoben, und bestehende Rechte bleiben unverändert (fehlende Rollen werden nur ergänzt).
 
-- **Rollen** wie die Ränge der Website: Chairman, Partner, Rechtsanwalt, Referendar, Praktikant, Sekretariat und Mandant
-  (ohne Sonderrechte).
-- **Kategorien und Kanäle:** 📢 Informationen (alle lesen, nur das Team schreibt), 🏛️ Kanzlei (nur Team), 👔 Leitung (nur
-  Chairman und Partner), 🤝 Mandanten (Team und Mandanten), 🤖 Website & Bot, 💬 Allgemein (alle).
+- **Rollen = Ränge der Website** (Personal → Ränge): Chairman, Vice Chairman, Partner, Rechtsanwalt, Fraktionsverwaltung,
+  Sonstiges – in dieser Reihenfolge – plus **Mandant** (Mandantenportal), alle ohne Sonderrechte. Ändern sich die Ränge auf
+  der Website, die Liste `ROLLEN` im Skript nachziehen. Frühere Rollen, die es auf der Website nicht gibt (Referendar,
+  Praktikant, Sekretariat), werden nur gelöscht, wenn **niemand** sie trägt; sonst bleiben sie stehen und werden gemeldet.
+- **Kategorien und Kanäle:** 📢 Informationen (alle lesen, nur das Team schreibt), 🏛️ Kanzlei (nur Team), 👔 Leitung (Chairman,
+  Vice Chairman, Partner), 🤝 Mandanten (Team und Mandanten), 🤖 Website & Bot, 💬 Allgemein (alle). „Team“ sind alle Ränge
+  der Website.
 
 Voraussetzung: Der Bot braucht die Rechte **Rollen verwalten, Kanäle verwalten, Kanäle ansehen, Nachrichten senden,
 Nachrichtenverlauf anzeigen**. Im Discord-Portal unter **OAuth2 → URL Generator** Scopes `bot` und `applications.commands`
