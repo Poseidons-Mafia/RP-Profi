@@ -91,6 +91,14 @@ function nwVorgaben() {
   };
 }
 const nwDollar = kiDollar;
+// Kosten einer Antwort oben an der Nachricht: Prozent des Monatsbudgets und/oder Dollar (siehe kiAnzeige)
+function nwKostenBadge(m) {
+  if (m.kosten === null || m.kosten === undefined) return "";
+  const budget = ((ui.assistent.info || {}).budget || {}).budget || 0;
+  const modus = kiAnzeige("antwort");
+  if (modus !== "dollar" && !(budget > 0) && !state.isAdmin) return "";
+  return html`<span class="nw-kosten" title="${modus === "dollar" ? "Kosten dieser Anfrage" : "Verbrauch dieser Anfrage (Anteil am Monatsbudget)"}">${kiBetragText(Number(m.kosten), budget, modus)}</span>`;
+}
 const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" ? "schriftsatz" : m);
 const nwAnrede = () => meineAnrede(); // aus „Mein Profil“ (pro Charakter)
 
@@ -805,7 +813,7 @@ function nwListeZeichnen(aktiv) {
     ${!liste.length && n.q ? html`<p class="nw-leer-hinweis">Keine Chats zu „${n.q}“.</p>` : ""}
     ${!n.chats.length && !n.q ? html`<p class="nw-leer-hinweis">Ihre Chats mit Nigel erscheinen hier – gespeichert und jederzeit fortsetzbar.</p>` : ""}`);
 
-  nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget, state.isAdmin));
+  nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget, kiAnzeige("kontingent")));
 }
 
 // ---------- Kopf: Titel, Modus, Aktionen ----------
@@ -909,7 +917,7 @@ function nwNachricht(chat, m, i, letzte) {
         ${m.modus ? html`<span class="nw-modus-badge m-${m.modus}">${NW_MODUS_NAME[m.modus] || m.modus}</span>` : ""}
         <time>${zeit}</time>
         ${m.gekuerzt ? html`<span class="badge" title="Die Antwort hat das Längenlimit erreicht">gekürzt</span>` : ""}
-        ${state.isAdmin && m.kosten !== null && m.kosten !== undefined ? html`<span class="nw-kosten" title="Kosten dieser Anfrage bei OpenRouter">${nwDollar(Number(m.kosten))}</span>` : ""}
+        ${nwKostenBadge(m)}
       </div>
       ${schritte.length ? html`<details class="nw-schritte"><summary>${anzahl(schritte.length, "Arbeitsschritt", "Arbeitsschritte")}${quellen.length ? ` · ${anzahl(quellen.length, "Paragraph", "Paragraphen")}` : ""}${akten.length ? ` · ${anzahl(akten.length, "Akte", "Akten")}` : ""}</summary>
         <ol>${schritte.map((s) => nwSchrittZeile(s))}</ol></details>` : ""}
@@ -1205,8 +1213,8 @@ function nwVorlagenZeichnen(chat) {
 function nwEinstellungenZeichnen() {
   const p = ui.nigel.profil;
   const v = nwVorgaben();
-  const auswahl = (key, optionen) => html`<div class="nw-segment breit">${optionen.map(([wert, label]) => html`
-    <button type="button" class="${String(p[key]) === String(wert) ? "aktiv" : ""}" data-action="nw-einstellung" data-key="${key}" data-wert="${wert}">${label}</button>`)}</div>`;
+  const auswahl = (key, optionen, aktiv = p[key]) => html`<div class="nw-segment breit">${optionen.map(([wert, label]) => html`
+    <button type="button" class="${String(aktiv) === String(wert) ? "aktiv" : ""}" data-action="nw-einstellung" data-key="${key}" data-wert="${wert}">${label}</button>`)}</div>`;
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
@@ -1223,11 +1231,16 @@ function nwEinstellungenZeichnen() {
       ${auswahl("modus", NW_MODI.filter((m) => nwModusErlaubt(m.key)).map((m) => [m.key, m.label]))}
       <h3>Senden mit</h3>
       ${auswahl("senden", [["enter", "Enter"], ["strg", "Strg + Enter"]])}
+      ${state.isAdmin ? html`<h3>Kosten bei Antworten</h3>
+      ${auswahl("anzeige_antwort", KI_ANZEIGEN.map(([k, l]) => [k, l]), kiAnzeige("antwort"))}
+      <h3>Kontingent-Anzeige</h3>
+      ${auswahl("anzeige_kontingent", KI_ANZEIGEN.map(([k, l]) => [k, l]), kiAnzeige("kontingent"))}
+      <p class="nw-hilfe">Prozent = Anteil an Ihrem Monatsbudget.</p>` : ""}
       <p class="nw-hilfe">Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
     </section>
     <section class="nw-block">
       <h3>${state.isAdmin ? "KI-Budget diesen Monat" : "Kontingent diesen Monat"}</h3>
-      ${kiBudgetHtml((ui.assistent.info || {}).budget, state.isAdmin)}
+      ${kiBudgetHtml((ui.assistent.info || {}).budget, kiAnzeige("kontingent"))}
       ${state.isAdmin && v.kosten_max ? html`<p class="nw-hilfe">Eine Anfrage darf höchstens <strong>${nwDollar(v.kosten_max)}</strong> kosten. Reicht das nicht, schlägt Nigel weniger nach und antwortet kürzer.</p>` : ""}
       <p class="nw-hilfe">Abgerechnet wird, was eine Anfrage tatsächlich kostet – aufwendige Modi verbrauchen also automatisch mehr. ${state.isAdmin ? "Das Budget legst du unter Personal → Ränge & Berechtigungen fest" : "Das Kontingent legt der Admin fest"}; es gilt pro Kalendermonat (UTC).</p>
     </section>
