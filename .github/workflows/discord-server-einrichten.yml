@@ -1,7 +1,8 @@
 # Richtet den Discord-Server ein (Rollen, Kategorien, Kanäle).
 # Start von Hand: GitHub → Actions → "Discord-Server einrichten" → "Run workflow".
 # Erst "vorschau" wählen (ändert nichts, zeigt nur den Plan), danach "ausfuehren".
-# Legt nur an – löscht oder ändert nie etwas Bestehendes. Mehrfaches Ausführen ist unschädlich.
+# Legt an und ergänzt fehlende Rollen in bestehenden Kategorien; löscht nur leere, veraltete Rollen
+# (siehe tools/discord-bot/server-einrichten.mjs). Mehrfaches Ausführen ist unschädlich.
 # Nötig: Repository-Secret DISCORD_BOT_TOKEN.
 name: Discord-Server einrichten
 
