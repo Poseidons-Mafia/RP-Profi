@@ -292,13 +292,13 @@ function kiBudgetStand(roh) {
 }
 const kiProzent = (genutzt, max) => (max > 0 ? Math.min(100, Math.round((genutzt / max) * 100)) : 100);
 // Wie Kosten angezeigt werden: "prozent", "dollar" oder "beides" – getrennt für Antworten ("antwort")
-// und die Kontingent-Anzeige ("kontingent"). Dollar sieht nur der Admin (in Nigels Einstellungen wählbar,
-// Standard Dollar); alle anderen sehen immer Prozent.
+// und die Kontingent-Anzeige ("kontingent"). Wählbar in Nigels Einstellungen für alle mit „Nigel verwenden“
+// (Standard: Admin Dollar, sonst Prozent); wer Nigel nur sehen darf, sieht nie Dollar.
 const KI_ANZEIGEN = [["prozent", "Prozent"], ["dollar", "Dollar"], ["beides", "Prozent / Dollar"]];
 function kiAnzeige(art) {
-  if (!state.isAdmin) return "prozent";
+  if (!darf("ki_assistent")) return "prozent";
   const w = ((typeof ui !== "undefined" && ui.nigel && ui.nigel.profil) || {})[`anzeige_${art}`];
-  return KI_ANZEIGEN.some(([k]) => k === w) ? w : "dollar";
+  return KI_ANZEIGEN.some(([k]) => k === w) ? w : state.isAdmin ? "dollar" : "prozent";
 }
 // Prozent mit zwei Nachkommastellen (damit auch 0,01 % sichtbar ist)
 function kiProzentText(genutzt, max) {

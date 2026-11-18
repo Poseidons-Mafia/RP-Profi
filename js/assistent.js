@@ -182,8 +182,8 @@ async function kiInfoLaden(userId) {
     const { data, error } = await db.rpc("ki_budget_status");
     if (error || ui.assistent.userId !== userId) return;
     ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(data) };
-    // Kontingent-Anzeige (Prozent/Dollar) aus Nigels Einstellungen – nur für den Admin wählbar
-    if (state.isAdmin && !ui.nigel.geladen) {
+    // Kontingent-Anzeige (Prozent/Dollar) aus Nigels Einstellungen
+    if (!ui.nigel.geladen) {
       const { data: profil } = await db.from("ki_profil").select("einstellungen").eq("user_id", userId).maybeSingle();
       if (profil && profil.einstellungen && !ui.nigel.geladen) Object.assign(ui.nigel.profil, profil.einstellungen);
     }

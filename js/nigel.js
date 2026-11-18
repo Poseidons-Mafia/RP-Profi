@@ -1231,7 +1231,7 @@ function nwEinstellungenZeichnen() {
       ${auswahl("modus", NW_MODI.filter((m) => nwModusErlaubt(m.key)).map((m) => [m.key, m.label]))}
       <h3>Senden mit</h3>
       ${auswahl("senden", [["enter", "Enter"], ["strg", "Strg + Enter"]])}
-      ${state.isAdmin ? html`<h3>Kosten bei Antworten</h3>
+      ${darf("ki_assistent") ? html`<h3>Kosten bei Antworten</h3>
       ${auswahl("anzeige_antwort", KI_ANZEIGEN.map(([k, l]) => [k, l]), kiAnzeige("antwort"))}
       <h3>Kontingent-Anzeige</h3>
       ${auswahl("anzeige_kontingent", KI_ANZEIGEN.map(([k, l]) => [k, l]), kiAnzeige("kontingent"))}
