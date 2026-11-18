@@ -1230,15 +1230,15 @@ body.in-app .guide-btn span { display: none; }
 
 /* ---------- Mobil ---------- */
 @media (max-width: 980px) {
-  .split { grid-template-columns: 1fr; }
+  .split { grid-template-columns: minmax(0, 1fr); }
   .list-pane { position: static; max-height: none; }
   .split.has-detail .list-pane { display: none; }
   .liste-umschalten { display: none; }
   .split:not(.has-detail) .detail-pane { display: none; }
   .back-link { display: inline-block; }
-  .grid-3 { grid-template-columns: 1fr 1fr; }
-  .cal-layout { grid-template-columns: 1fr; }
-  .pinnwand-layout { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cal-layout { grid-template-columns: minmax(0, 1fr); }
+  .pinnwand-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 700px) {
@@ -1249,7 +1249,7 @@ body.in-app .guide-btn span { display: none; }
   .nav { padding: 0 6px; }
   .nav a { padding: 10px 10px 8px; }
   .page { padding: 16px 12px 60px; }
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   .field.half, .field.third { grid-column: span 6; }
   .form-grid { padding: 8px 16px 4px; gap: 10px; }
   .dialog-head, .dialog-body { padding-left: 16px; padding-right: 16px; }
@@ -1267,11 +1267,11 @@ body.in-app .guide-btn span { display: none; }
   .doc-page { width: 100%; min-height: 0; padding: 8mm 6mm; font-size: 10pt; }
   .pos-table .c-preis { width: 92px; }
   .pos-table .c-sum { width: 84px; }
-  .tk-grid { grid-template-columns: 1fr; }
+  .tk-grid { grid-template-columns: minmax(0, 1fr); }
   .tkonto { font-size: 0.8rem; }
   .kpi .value { font-size: 1.35rem; }
   .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .quick-add { grid-template-columns: 1fr 1fr; }
+  .quick-add { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .quick-add select, .quick-add input[type="date"] { width: 100%; max-width: none; }
   .quick-add .btn { grid-column: 1 / -1; justify-content: center; }
   .rows .when { min-width: 58px; }
@@ -1660,7 +1660,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 
 /* Handy: kein Aufklappen; herausgeholt füllt das Außendisplay den ganzen Bildschirm */
 @media (max-width: 700px) {
-  .ki-phone { --W: min(calc(var(--H) * 0.71), calc(100vw - 32px)); --s: 0.5; --peek: 84px; right: -10px; }
+  .ki-phone { --W: min(calc(var(--H) * 0.71), calc(100vw - 32px)); --s: 0.4; --peek: 54px; right: -10px; }
   .ki-phone:not(.offen) { transform: translateY(calc(var(--s) * 100% - var(--peek))) rotate(-5deg) scale(var(--s)); }
   .ki-phone:not(.offen):hover { transform: translateY(calc(var(--s) * 100% - var(--peek) - 16px)) rotate(-3deg) scale(var(--s)); }
   .ki-phone.offen { inset: 0; width: auto; height: auto; }
@@ -1796,7 +1796,7 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 .gb-beispiel { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 0.8rem; white-space: pre-wrap; margin: 0 0 10px; }
 
 @media (max-width: 980px) {
-  .gb-layout { grid-template-columns: 1fr; }
+  .gb-layout { grid-template-columns: minmax(0, 1fr); }
   .gb-inhalt { position: static; max-height: 240px; }
 }
 @media (max-width: 700px) {
@@ -2191,7 +2191,7 @@ body.nw-seite .guide-btn { display: none; }
   .nw-eingabe { padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); }
   .nw-leiste-tipp { display: none; }
   .nw-eingabe-feld textarea, .nw input, .nw select, .nw textarea { font-size: 16px; }
-  .nw-modus-karten { grid-template-columns: 1fr 1fr; }
+  .nw-modus-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nw-gruss { font-size: 1.3rem; }
 }
 
@@ -2200,3 +2200,131 @@ body.nw-seite .guide-btn { display: none; }
 
 /* Fließtext in der Akte nicht über die volle Breite ziehen (besser lesbar) */
 .tab-body p.pre { max-width: 90ch; }
+
+/* =============================================================
+   iPhone & iPad
+   Touch-Bedienung, Notch/Home-Indikator (Safe Areas), kein
+   automatisches Hineinzoomen in Eingabefelder, Home-Bildschirm-App.
+   ============================================================= */
+html { -webkit-tap-highlight-color: rgba(204, 158, 0, 0.2); }
+
+/* Lange Badges (z. B. „Mandantengespräch“) sprengen schmale Zeilen nicht */
+.badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* Ränder an Notch und abgerundete Ecken anpassen (iPhone quer, Home-Bildschirm-App) */
+.topbar { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+.nav { padding-left: max(18px, env(safe-area-inset-left)); padding-right: max(18px, env(safe-area-inset-right)); }
+.page { padding-left: max(20px, env(safe-area-inset-left)); padding-right: max(20px, env(safe-area-inset-right)); padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+#toasts { bottom: max(16px, calc(env(safe-area-inset-bottom) + 8px)); }
+@media (max-width: 700px) {
+  .topbar { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  .nav { padding-left: max(6px, env(safe-area-inset-left)); padding-right: max(6px, env(safe-area-inset-right)); }
+  .page { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+  /* Platz unten, damit das eingesteckte Nigel-Handy nichts verdeckt */
+  body.ki-da .page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+
+/* Als App auf dem Home-Bildschirm liegt die Statusleiste über der Seite:
+   die feste Navigation rutscht darunter, ein roter Streifen hinterlegt die Uhrzeit. */
+.nav { top: env(safe-area-inset-top); }
+body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--red);
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* Navigation: Hinweis, dass man seitlich wischen kann */
+.nav.mehr-links { -webkit-mask-image: linear-gradient(to right, transparent, #000 32px); mask-image: linear-gradient(to right, transparent, #000 32px); }
+.nav.mehr-rechts { -webkit-mask-image: linear-gradient(to left, transparent, #000 32px); mask-image: linear-gradient(to left, transparent, #000 32px); }
+.nav.mehr-links.mehr-rechts {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+.nav, .tabs, .nw-tabs, .nw-modi, .ki-chips, .table-wrap { -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+
+/* Kalender (Monat) auf dem Handy: Einträge als kleine Farbbalken statt abgeschnittener Texte */
+@media (max-width: 480px) {
+  .day-cell { min-height: 54px; }
+  .day-cell .cal-item { height: 6px; padding: 0; margin-top: 3px; font-size: 0; border-radius: 3px; background: var(--gold); }
+  .day-cell .cal-item.frist, .day-cell .cal-item.wiedervorlage { background: var(--red); }
+  .day-cell .cal-item.verhandlung, .day-cell .cal-item.haftprufung { background: var(--black); }
+  .cal-more { font-size: 0.62rem; }
+}
+
+/* ---------- Finger statt Maus (iPhone, iPad) ---------- */
+@media (pointer: coarse) {
+  /* iOS zoomt in jedes Feld mit weniger als 16px Schrift – das verhindert es */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select, textarea { font-size: 16px !important; }
+
+  /* größere Tippflächen */
+  .btn { min-height: 40px; }
+  .btn.small { min-height: 34px; padding: 6px 12px; }
+  .btn.icon-only { width: 40px; height: 40px; }
+  .icon-btn { min-width: 36px; min-height: 36px; display: inline-grid; place-items: center; padding: 6px; }
+  .timeline .head { padding-right: 80px; }
+  .mini-card .title { padding-right: 80px; }
+  .chip { padding: 7px 13px; }
+  .check { min-height: 32px; }
+  .check input { width: 20px; height: 20px; }
+  .rows input[type="checkbox"], .rights-table input[type="checkbox"] { width: 22px; height: 22px; }
+  .stepper button { width: 34px; height: 34px; }
+  .stepper span { min-width: 26px; }
+  .nav a { padding: 13px 14px 11px; }
+  .tabs a { padding: 12px 12px; }
+  .menue-punkt { padding: 12px 12px; }
+  .item-list a.item { padding: 11px 12px; }
+  .gp-item { padding: 12px 14px; }
+  .link-btn { padding: 4px 0; }
+  .nigel-btn { --nb-size: 40px; }
+  .kopf-aktionen .nigel-btn { --nb-size: 40px; }
+  .nw-icon { width: 40px; height: 40px; }
+  .nw-modus { padding: 8px 14px; }
+  .nw-schalter input { width: 20px; height: 20px; }
+  .ki-icon-btn { width: 38px; height: 38px; }
+  .ki-chip { padding: 8px 13px; }
+  .ki-msg-aktionen button, .nw-msg-fuss button, .nw-msg-aktionen button { padding: 6px 9px; }
+  .guide-btn { padding: 9px 14px 9px 12px; }
+  body.in-app .guide-btn { padding: 10px; }
+}
+
+/* Touch kennt kein „Überfahren“: keine hängenbleibenden Hover-Effekte */
+@media (hover: none) {
+  .gb-kachel:hover, .nw-modus-karte:hover:not(:disabled) { transform: none; box-shadow: var(--shadow); }
+  .ki-phone:not(.offen):hover { transform: translateY(calc(var(--s) * 100% - var(--peek))) rotate(-7deg) scale(var(--s)); }
+}
+@media (hover: none) and (max-width: 700px) {
+  .ki-phone:not(.offen):hover { transform: translateY(calc(var(--s) * 100% - var(--peek))) rotate(-5deg) scale(var(--s)); }
+}
+@media (pointer: coarse) and (min-width: 701px) {
+  .ki-phone { --s: 0.5; --peek: 92px; }
+}
+dialog {
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+/* Rechnungspositionen auf dem Handy: je Leistung ein Block statt enger Tabellenspalten */
+@media (max-width: 560px) {
+  .pos-table thead { display: none; }
+  .pos-table, .pos-table tbody { display: block; }
+  .pos-table tr {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) auto auto;
+    gap: 6px 8px;
+    align-items: end;
+    padding: 8px 0 10px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .pos-table td { display: block; padding: 0; width: auto !important; }
+  .pos-table td:first-child { grid-column: 1 / -1; }
+  .pos-table .c-menge::before, .pos-table .c-preis::before { display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 2px; }
+  .pos-table .c-menge::before { content: "Anzahl"; }
+  .pos-table .c-preis::before { content: "Einzelpreis"; }
+  .pos-table .c-sum { padding-bottom: 10px; }
+  .pos-total { width: 100%; text-align: right; }
+}
+.rows .title, .item .title { overflow-wrap: anywhere; }

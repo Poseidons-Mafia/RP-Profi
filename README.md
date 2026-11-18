@@ -102,6 +102,9 @@ und Änderungen erscheinen bei allen sofort.
     bevor Geld ausgegeben wird. Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (heute) und für den Admin
     je Mitglied unter Personal → Ränge & Berechtigungen.
   - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
+- **iPhone & iPad:** Alle Seiten passen sich an Handy und Tablet an (große Tippflächen, kein Hineinzoomen in Eingabefelder,
+  wischbare Navigation, Rücksicht auf Notch und Home-Leiste). Tipp: In Safari über **Teilen → „Zum Home-Bildschirm“**
+  ablegen – dann startet das Aktensystem wie eine App ohne Browserleisten (einmalig neu anmelden).
 
 ## Update von einer älteren Version
 

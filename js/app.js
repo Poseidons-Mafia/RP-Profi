@@ -194,9 +194,38 @@ function renderNav(route) {
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
       ${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}
     </a>`)}`);
+  navAusrichten(route.page);
   // Auf dem Handy nur der Vorname, damit die Kopfzeile nicht umbricht
   $("btn-me").textContent = (window.innerWidth < 700 ? firstName(myName()) : myName()) || "Profil";
 }
+
+// Schmale Bildschirme (Handy, iPad hochkant): Navigation lässt sich seitlich wischen.
+// Beim Seitenwechsel den aktiven Punkt ins Bild holen und Ränder andeuten, wo es weitergeht.
+let navSeite = null;
+function navAusrichten(page) {
+  if (page !== navSeite) {
+    navSeite = page;
+    aktivInsBild($("nav"));
+  }
+  navRaender();
+  // Reiter (Akte, Buchhaltung, Personal) werden neu gezeichnet – aktiven Reiter sichtbar halten
+  $("main").querySelectorAll(".tabs").forEach(aktivInsBild);
+}
+function aktivInsBild(leiste) {
+  const aktiv = leiste.querySelector("a.active");
+  if (!aktiv || leiste.scrollWidth <= leiste.clientWidth) return;
+  const start = aktiv.offsetLeft - leiste.firstElementChild.offsetLeft;
+  if (start < leiste.scrollLeft + 32 || start + aktiv.offsetWidth > leiste.scrollLeft + leiste.clientWidth - 32) {
+    leiste.scrollLeft = start - (leiste.clientWidth - aktiv.offsetWidth) / 2; // mittig
+  }
+}
+function navRaender() {
+  const nav = $("nav");
+  nav.classList.toggle("mehr-links", nav.scrollLeft > 4);
+  nav.classList.toggle("mehr-rechts", nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
+}
+$("nav").addEventListener("scroll", navRaender, { passive: true });
+window.addEventListener("resize", () => { if (!$("nav").hidden) navRaender(); });
 
 // ---------- Bildschirme ----------
 function showScreen(name) {
