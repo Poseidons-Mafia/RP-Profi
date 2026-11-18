@@ -75,6 +75,9 @@ const MAX_DISCORD = 3;                // Discord-Nachrichten
 const DISCORD_TOKEN = Deno.env.get("DISCORD_BOT_TOKEN") || "";
 const DISCORD_SERVER = Deno.env.get("DISCORD_SERVER_ID") || "1572531594227355739";
 const DISCORD_KANAL_STANDARD = "kanzlei-chat";
+const WEBSITE = "https://wiwang.de";
+const NIGEL_BILD = `${WEBSITE}/assets/nigel.png`; // Discord zeigt in Karten nur PNG/JPG, kein SVG
+const DISCORD_FARBE = 0xc9a227;                     // Gold der Kanzlei
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -210,7 +213,7 @@ Deno.serve(async (req) => {
     let orga: OrgaKontext | null = null;
     try {
       if (modus === "orga") {
-        orga = await orgaKontextLaden(db, userId, { zeitzone, akteIds, discord: discordAn, kanal: vorgaben.discord_kanal });
+        orga = await orgaKontextLaden(db, userId, { zeitzone, akteIds, discord: discordAn, kanal: vorgaben.discord_kanal, kanzlei: kanzleiEinheiten(kanzleiDaten).kanzlei });
         kontext = orgaKontextText(orga, kanzleiDaten, notiz);
       } else {
         kontext = await kontextBauen(db, kanzleiDaten, { akteIds, paragraphIds, notiz, entwurf: modus === "ueberarbeiten" || body.entwurf_mitsenden ? entwurf : "" });
@@ -863,7 +866,7 @@ type Mitglied = { id: string; name: string; rang: string; status: string; anrede
 type OrgaKontext = {
   zeitzone: string; ich: Mitglied | null; mitglieder: Mitglied[];
   akten: Zeile[];                     // im Chat gewählte Akten (id, number, title)
-  discord: boolean; kanal: string;
+  discord: boolean; kanal: string; kanzlei: string;
   zaehler: { aktionen: number; discord: number };
 };
 
@@ -950,7 +953,8 @@ const ORGA_WERKZEUGE = [
       type: "object",
       properties: {
         empfaenger: { type: "array", items: { type: "string" }, description: "Namen der Mitglieder (Charakternamen wie in der Mitgliederliste). Leer = Nachricht ohne Erwähnung in den Kanal." },
-        nachricht: { type: "string", description: "Der Text der Nachricht (max. 1500 Zeichen) – höflich im Butler-Ton, OHNE die @-Erwähnung (die setzt das System selbst davor)." },
+        betreff: { type: "string", description: "Kurzer Betreff (max. 80 Zeichen), z. B. \"Kleine Verspätung\" oder \"Termin morgen, 15:00 Uhr\"." },
+        nachricht: { type: "string", description: "Der Text der Nachricht (max. 2500 Zeichen, Discord-Markdown) – im Butler-Ton: Anrede, Mitteilung, Schlussformel. OHNE @-Erwähnung und ohne Absenderzeile (setzt das System)." },
         privat: { type: "boolean", description: "Optional: true = als Direktnachricht an jeden Empfänger statt in den Kanal." },
         kanal: { type: "string", description: "Optional: Name eines anderen Textkanals (ohne #). Standard ist der Kanal aus den Kanzlei-Vorgaben." },
       },
@@ -996,7 +1000,7 @@ const heuteOrt = (tz: string) => new Intl.DateTimeFormat("en-CA", { timeZone: tz
 
 // ---------- Kontext ----------
 async function orgaKontextLaden(db: SupabaseClient, userId: string,
-  o: { zeitzone: string; akteIds: string[]; discord: boolean; kanal: string }): Promise<OrgaKontext> {
+  o: { zeitzone: string; akteIds: string[]; discord: boolean; kanal: string; kanzlei: string }): Promise<OrgaKontext> {
   const [profile, raenge, akten] = await Promise.all([
     db.from("profiles").select("*").neq("status", "Ausgeschieden"),
     db.from("raenge").select("id,name,ist_sonstiges"),
@@ -1015,7 +1019,7 @@ async function orgaKontextLaden(db: SupabaseClient, userId: string,
   if (o.discord) mitglieder = await discordIdsLaden(mitglieder);
   return {
     zeitzone: o.zeitzone, ich: mitglieder.find((x) => x.id === userId) || null, mitglieder,
-    akten: akten.data || [], discord: o.discord, kanal: o.kanal, zaehler: { aktionen: 0, discord: 0 },
+    akten: akten.data || [], discord: o.discord, kanal: o.kanal, kanzlei: o.kanzlei, zaehler: { aktionen: 0, discord: 0 },
   };
 }
 
@@ -1229,7 +1233,8 @@ async function kanalFinden(name: string): Promise<{ id?: string; fehler?: string
 async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) => void, erledigt: (a: Aktion) => void): Promise<Zeile> {
   if (!o.discord) return { fehler: "Discord ist nicht eingerichtet." };
   if (o.zaehler.discord >= MAX_DISCORD) return { fehler: `Höchstens ${MAX_DISCORD} Discord-Nachrichten pro Auftrag.` };
-  const text = String(args.nachricht ?? "").trim().slice(0, 1500);
+  const text = String(args.nachricht ?? "").trim().slice(0, 2500);
+  const betreff = String(args.betreff ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
   if (!text) return { fehler: "Kein Nachrichtentext." };
   const namen: string[] = (Array.isArray(args.empfaenger) ? args.empfaenger : args.empfaenger ? [args.empfaenger] : []).map(String).slice(0, 10);
   const empfaenger: Mitglied[] = [];
@@ -1244,10 +1249,20 @@ async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) 
   o.zaehler.discord++;
 
   // Keine Massen-Pings: Erwähnungen nur der Empfänger, @everyone/@here/Rollen werden nie ausgelöst
-  const absender = o.ich ? `${o.ich.name}${o.ich.discord ? ` (<@${o.ich.discord}>)` : ""}` : "einem Mitglied der Kanzlei";
-  const fuss = `\n-# Nigel · im Auftrag von ${absender} · über das Aktensystem`;
+  // Gestaltet als Karte (Embed): Nigel als Absender mit Bild, Betreff, Text, darunter in wessen Auftrag.
+  // Die @-Erwähnung steht über der Karte (nur dort pingt Discord).
+  const absender = o.ich ? o.ich.name : "einem Mitglied der Kanzlei";
+  const auftrag = o.ich?.discord ? `<@${o.ich.discord}>` : `**${absender}**`;
   const inhalt = (erwaehnt: Mitglied[]) => ({
-    content: `${erwaehnt.map((x) => `<@${x.discord}>`).join(" ")}${erwaehnt.length ? " " : ""}${text}${fuss}`.slice(0, 2000),
+    content: erwaehnt.map((x) => `<@${x.discord}>`).join(" "),
+    embeds: [{
+      color: DISCORD_FARBE,
+      author: { name: `Nigel · Butler der ${o.kanzlei}`, icon_url: NIGEL_BILD, url: WEBSITE },
+      ...(betreff ? { title: betreff } : {}),
+      description: `${text}\n\n-# Im Auftrag von ${auftrag}`.slice(0, 4000),
+      footer: { text: `Übermittelt über das Aktensystem · ${absender}`, icon_url: NIGEL_BILD },
+      timestamp: new Date().toISOString(),
+    }],
     allowed_mentions: { parse: [], users: erwaehnt.map((x) => x.discord) },
   });
   const wem = empfaenger.map((x) => x.name).join(", ");
@@ -1315,11 +1330,17 @@ So arbeitest du:
 - Einträge, Termine, Aufgaben und Pinnwand-Beiträge schreibst du sachlich und knapp – ohne Butler-Ton, ohne „Sir“, so wie ein
   Mitarbeiter sie selbst eintragen würde.
 ${discord ? `- Discord: Nur wenn der Benutzer in seiner LETZTEN Nachricht ausdrücklich darum bittet (z. B. „gib X Bescheid“, „schreib X
-  auf Discord“, „sag X, dass …“). Die Nachricht schreibst du im Butler-Ton an den Empfänger: höflich, warm, kurz (1–3 Sätze), mit
-  Anrede nach der Mitgliederliste (Herr → „Mr. Nachname“ bzw. „Sir“, Frau → „Miss/Mrs. Nachname“ bzw. „Madam“, sonst ohne
-  Anrede) und in der dritten Person über den Auftraggeber („Mr. Palermo lässt ausrichten, dass …“). Gib die Mitteilung
-  inhaltlich treu wieder, erfinde nichts dazu. Die @-Erwähnung und den Absender-Hinweis setzt das System selbst – nicht in den
-  Text schreiben. Standard ist der Kanal mit Erwähnung; eine Direktnachricht (privat) nur, wenn der Benutzer das möchte oder
+  auf Discord“, „sag X, dass …“). Die Nachricht ist ein kleiner, formvollendeter Butler-Brief
+  an den Empfänger (Discord-Markdown, er erscheint als Karte mit Nigels Bild):
+    1. Anrede als eigene Zeile nach der Mitgliederliste: Herr → „Sehr geehrter Mr. Nachname,“, Frau → „Sehr geehrte
+       Miss Nachname,“ (verheiratet bekannt → Mrs.), ohne Anrede → „Guten Tag, Vorname Nachname,“.
+    2. Leerzeile, dann die Mitteilung in 2–4 vollständigen, eleganten Sätzen in der dritten Person über den Auftraggeber
+       („Mr. Miller bat mich, Ihnen auszurichten, dass …“). Das Wichtigste (Uhrzeit, Ort, Dauer, Akte) **fett**. Gern ein
+       freundlicher Satz zum Umgang damit („Er bittet um Ihr Verständnis und …“) – aber nichts inhaltlich Neues erfinden.
+    3. Leerzeile, dann eine Schlussformel mit Butler-Charme, z. B. „Mit vorzüglicher Hochachtung,“ + neue Zeile „*Nigel*“,
+       gern mit einer kleinen englischen Wendung („Very well.“, „At your service.“) – sparsam.
+  Dazu immer einen kurzen „betreff“ (z. B. „Kleine Verspätung“). Die @-Erwähnung und die Zeile „Im Auftrag von …“ setzt
+  das System selbst – nicht in den Text schreiben. Standard ist der Kanal mit Erwähnung; eine Direktnachricht (privat) nur, wenn der Benutzer das möchte oder
   die Sache vertraulich ist. Nachrichten an viele Personen gleichzeitig oder an @everyone gibt es nicht.\n` : `- Discord-Nachrichten kannst du derzeit nicht schreiben (in der Kanzlei nicht eingerichtet). Bittet der Benutzer darum, sag das
   höflich und biete einen Pinnwand-Beitrag oder eine Aufgabe für die Person an.\n`}
 Was du NICHT tust:

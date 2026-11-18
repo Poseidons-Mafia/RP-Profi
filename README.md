@@ -250,7 +250,9 @@ Damit Nigel Kollegen auf Discord Bescheid geben kann:
    `kanzlei-chat`) ein- und ausschalten bzw. ändern. Keine Datenbank-Änderung nötig.
 
 So läuft es: Nigel findet den Empfänger in der Mitgliederliste (Charaktername), sucht über Charakter → Person die Discord-ID
-(gespeichert beim Login mit Discord) und schreibt in den Kanal: `@Empfänger` + Nachricht, darunter „Nigel · im Auftrag von …“.
+(gespeichert beim Login mit Discord) und schreibt in den Kanal: `@Empfänger` und darunter eine **Karte** in Kanzlei-Gold mit
+Nigels Bild ([`assets/nigel.png`](assets/nigel.png), muss unter wiwang.de erreichbar sein), Betreff, einem kleinen Butler-Brief
+(Anrede, Mitteilung mit dem Wichtigsten fett, Schlussformel) und „Im Auftrag von …“.
 Erwähnt (gepingt) werden nur die genannten Empfänger. Darf der Bot im Kanal nicht schreiben, stellt er die Nachricht als
 Direktnachricht zu; auf Wunsch („schreib ihr privat“) schickt er gleich eine Direktnachricht. Wer sich noch nie mit Discord
 auf der Website angemeldet hat, kann nicht angeschrieben werden – Nigel sagt das und bietet z. B. eine Aufgabe an.
