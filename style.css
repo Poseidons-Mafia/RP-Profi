@@ -1850,6 +1850,13 @@ body.ki-da .guide-btn { right: auto; left: max(14px, env(safe-area-inset-left));
 
 /* ---------- KI-Limits (Ränge & Berechtigungen) ---------- */
 .ki-limit-feld { width: 78px; padding: 4px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+.ki-dollar-feld { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.ki-budget-kpis { margin: 4px 0 10px; }
+.ki-budget-kpis .kpi { cursor: default; }
+.ki-budget-kpis .kpi .label { line-height: 1.35; }
+.ki-deckel .ki-limit-feld { width: 110px; font-size: 1.25rem; font-weight: bold; padding: 2px 6px; }
+.ki-balken-gross { height: 10px; border-radius: 5px; }
+.ki-balken-gross span { border-radius: 5px; }
 .ki-limit-tabelle tr.gedimmt td { opacity: 0.55; }
 .ki-limit-tabelle td.center, .ki-limit-tabelle th.center { text-align: center; }
 

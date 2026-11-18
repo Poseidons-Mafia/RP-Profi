@@ -60,7 +60,7 @@ ui.nigel = {
   neu: null, angezeigt: undefined,
   q: "", paraQ: "", tab: "kontext", ansicht: "chat", panel: window.innerWidth > 1250,
   entwurfAnsicht: "bearbeiten", entwurfVorher: {}, mitEntwurf: {},
-  laeuft: {}, profil: { ...NW_STANDARD }, vorlagen: [], info: null, nutzungAlle: null,
+  laeuft: {}, profil: { ...NW_STANDARD }, vorlagen: [], nutzungAlle: null,
 };
 const nwFormat = new Map();   // formatiertes Markdown je Nachricht
 const nwGesetzt = new WeakMap();
@@ -86,15 +86,12 @@ function nwVorgaben() {
     anweisungen: typeof v.anweisungen === "string" ? v.anweisungen : "",
     modi: Array.isArray(v.modi) ? alle.filter((m) => v.modi.includes(m)) : alle,
     reasoning_max: ["low", "medium", "high"].includes(v.reasoning_max) ? v.reasoning_max : "high",
-    gewichte: v.gewichte && typeof v.gewichte === "object" ? v.gewichte : {},
     akten_werkzeuge: v.akten_werkzeuge !== false,
     kosten_max: Math.max(0, Number(v.kosten_max) || 0),
   };
 }
-// Dollarbeträge: kleine Summen mit mehr Nachkommastellen
-const nwDollar = (n) => (n === null || n === undefined || !isFinite(n)) ? "–" : "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: n < 0.01 ? 4 : n < 1 ? 3 : 2, maximumFractionDigits: n < 0.01 ? 4 : n < 1 ? 3 : 2 });
+const nwDollar = kiDollar;
 const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" ? "schriftsatz" : m);
-const nwGewicht = (m) => (m === "frage" ? 1 : Math.max(1, Math.min(10, Number(nwVorgaben().gewichte[m === "ueberarbeiten" ? "schriftsatz" : m]) || 1)));
 const nwAnrede = () => ({ madam: "Madam", neutral: "" }[ui.nigel.profil.anrede] ?? "Sir");
 
 // ---------- Laden ----------
@@ -126,21 +123,12 @@ async function nwLaden() {
   scheduleRender();
 }
 
-// Heutige Nutzung und Tageslimit (gewichtete Summe; ohne Update 9 Anzahl)
+// Verbrauch und Budget im laufenden Monat (gleiche Anzeige wie auf dem Handy)
 async function nwInfoLaden() {
   try {
-    const [limit, heute] = await Promise.all([db.rpc("ki_tageslimit"), db.rpc("ki_heute_genutzt")]);
-    if (limit.error) return;
-    let genutzt = heute.data;
-    if (heute.error) {
-      const tagesbeginn = new Date();
-      tagesbeginn.setUTCHours(0, 0, 0, 0);
-      const r = await db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", state.me.id).gte("zeit", tagesbeginn.toISOString());
-      genutzt = r.count || 0;
-    }
-    const kosten = await db.rpc("ki_kosten_heute");
-    ui.nigel.info = { heute: genutzt || 0, limit: limit.data, kosten: kosten.error ? null : Number(kosten.data) || 0 };
-    ui.assistent.info = { ...(ui.assistent.info || {}), heute: genutzt || 0, limit: limit.data };
+    const { data, error } = await db.rpc("ki_budget_status");
+    if (error) return;
+    ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(data) };
     scheduleRender();
   } catch (e) {
     console.warn(e);
@@ -281,8 +269,7 @@ async function nwAnfrage(chat, modus, frageText) {
     if (error) throw error;
     (n.nachrichten[chat.id] = n.nachrichten[chat.id] || []).push(data);
     nwSpeichernLeise(chat, { modus: chat.modus }); // nach oben in der Liste
-    n.info = { heute: ergebnis.heute, limit: ergebnis.limit, kosten: n.info && n.info.kosten !== null && n.info.kosten !== undefined ? n.info.kosten + (Number(ergebnis.kosten) || 0) : null };
-    ui.assistent.info = { ...(ui.assistent.info || {}), heute: ergebnis.heute, limit: ergebnis.limit, modell: ergebnis.modell };
+    ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(ergebnis.budget) || (ui.assistent.info || {}).budget || null, modell: ergebnis.modell };
     if (ergebnis.vorschlag && modus === "schriftsatz" && !String(chat.entwurf || "").trim()) {
       // Erster Schriftsatz landet direkt im (leeren) Entwurf
       nwEntwurfSetzen(chat, nwTeile(ergebnis.antwort).find((t) => t.entwurf).md, "Schriftsatz in den Entwurf übernommen");
@@ -578,11 +565,7 @@ function nwListeZeichnen(aktiv) {
     ${!liste.length && n.q ? html`<p class="nw-leer-hinweis">Keine Chats zu „${n.q}“.</p>` : ""}
     ${!n.chats.length && !n.q ? html`<p class="nw-leer-hinweis">Ihre Chats mit Nigel erscheinen hier – gespeichert und jederzeit fortsetzbar.</p>` : ""}`);
 
-  const info = n.info;
-  const prozent = info && info.limit ? Math.min(100, Math.round((info.heute / info.limit) * 100)) : info ? 100 : 0;
-  nwSetzen(nwEl("nutzung"), html`
-    <div class="ki-nutzung"><span>Heute genutzt</span><strong>${info ? `${info.heute} / ${info.limit}` : "–"}</strong></div>
-    <div class="ki-balken"><span style="width:${prozent}%"></span></div>`);
+  nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget));
 }
 
 // ---------- Kopf: Titel, Modus, Aktionen ----------
@@ -614,10 +597,9 @@ function nwKopfZeichnen(chat) {
     <div class="nw-modi" role="radiogroup" aria-label="Arbeitsmodus">
       ${NW_MODI.map((m) => {
         const erlaubt = nwModusErlaubt(m.key);
-        const g = nwGewicht(m.key);
         return html`<button type="button" role="radio" aria-checked="${chat.modus === m.key}" class="nw-modus m-${m.key} ${chat.modus === m.key ? "aktiv" : ""}"
-          data-action="nw-modus" data-modus="${m.key}" ${erlaubt ? "" : "disabled"} title="${erlaubt ? m.text + (g > 1 ? ` (zählt ${g}× beim Tageslimit)` : "") : "In der Kanzlei nicht freigegeben"}">
-          ${m.label}${g > 1 ? html`<small>${g}×</small>` : ""}</button>`;
+          data-action="nw-modus" data-modus="${m.key}" ${erlaubt ? "" : "disabled"} title="${erlaubt ? m.text : "In der Kanzlei nicht freigegeben"}">
+          ${m.label}</button>`;
       })}
     </div>`);
 }
@@ -752,10 +734,9 @@ setInterval(() => {
 function nwLeisteZeichnen(chat) {
   const akten = chat.akte_ids.map((id) => byId("akten", id)).filter(Boolean);
   const hatEntwurf = !!String(chat.entwurf || "").trim();
-  const g = nwGewicht(chat.modus);
   const strg = ui.nigel.profil.senden === "strg";
   nwSetzen(nwEl("leiste"), html`
-    <span class="nw-leiste-modus m-${chat.modus}">${NW_MODUS_NAME[chat.modus]}${g > 1 ? ` · zählt ${g}×` : ""}</span>
+    <span class="nw-leiste-modus m-${chat.modus}">${NW_MODUS_NAME[chat.modus]}</span>
     ${akten.map((a) => html`<span class="nw-kontext-chip" title="${a.title}">${new SafeHtml(KI_ICON.akte)}${a.number}<button type="button" data-action="nw-akte-weg" data-id="${a.id}" aria-label="Akte ${a.number} entfernen">×</button></span>`)}
     <button type="button" class="nw-kontext-plus" data-action="nw-tab" data-tab="kontext">${akten.length ? "+ Kontext" : "+ Akte / Kontext"}</button>
     ${hatEntwurf ? html`<label class="nw-schalter" title="Den aktuellen Entwurf bei der nächsten Frage mitschicken"><input type="checkbox" data-change="nw-mit-entwurf" ${nwMitEntwurf(chat) ? "checked" : ""}> Entwurf mitsenden</label>` : ""}
@@ -987,7 +968,6 @@ function nwEinstellungenZeichnen() {
   const auswahl = (key, optionen) => html`<div class="nw-segment breit">${optionen.map(([wert, label]) => html`
     <button type="button" class="${String(p[key]) === String(wert) ? "aktiv" : ""}" data-action="nw-einstellung" data-key="${key}" data-wert="${wert}">${label}</button>`)}</div>`;
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
-  const info = ui.nigel.info;
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
       <h3>Wie Nigel Sie anspricht</h3>
@@ -1008,12 +988,10 @@ function nwEinstellungenZeichnen() {
       <p class="nw-hilfe">Anrede, Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
     </section>
     <section class="nw-block">
-      <h3>Nutzung heute</h3>
-      <div class="ki-nutzung"><span>Anfragen</span><strong>${info ? `${info.heute} / ${info.limit}` : "–"}</strong></div>
-      <div class="ki-balken"><span style="width:${info && info.limit ? Math.min(100, Math.round((info.heute / info.limit) * 100)) : 0}%"></span></div>
-      ${info && info.kosten !== null && info.kosten !== undefined ? html`<div class="ki-nutzung"><span>Kosten heute</span><strong>${nwDollar(info.kosten)}</strong></div>` : ""}
+      <h3>KI-Budget diesen Monat</h3>
+      ${kiBudgetHtml((ui.assistent.info || {}).budget)}
       ${v.kosten_max ? html`<p class="nw-hilfe">Eine Anfrage darf höchstens <strong>${nwDollar(v.kosten_max)}</strong> kosten. Reicht das nicht, schlägt Nigel weniger nach und antwortet kürzer.</p>` : ""}
-      <p class="nw-hilfe">${NW_MODI.filter((m) => m.key !== "frage" && nwModusErlaubt(m.key)).map((m) => `${m.label} zählt ${nwGewicht(m.key)}×`).join(" · ")}. Das Tageslimit legt der Admin unter Personal → Ränge & Berechtigungen fest.</p>
+      <p class="nw-hilfe">Abgerechnet wird, was eine Anfrage tatsächlich kostet – aufwendige Modi verbrauchen also automatisch mehr. Das Budget legt der Admin unter Personal → Ränge & Berechtigungen fest; es gilt pro Kalendermonat (UTC).</p>
     </section>
     ${darf("einstellungen_schreiben") ? html`<section class="nw-block">
       <div class="nw-block-kopf"><h3>Kanzlei-Vorgaben für Nigel</h3><button type="button" class="btn small" data-action="nw-vorgaben">Bearbeiten</button></div>
@@ -1347,8 +1325,6 @@ Object.assign(ACTIONS, {
       wide: true,
       fields: [
         { name: "modi", label: "Freigegebene Modi (Rechtsfrage ist immer frei)", type: "checks", options: NW_MODI.filter((m) => m.key !== "frage").map((m) => ({ value: m.key, label: m.label })) },
-        { type: "section", label: "Gewichtung beim Tageslimit (wie oft eine Anfrage zählt)" },
-        ...NW_MODI.filter((m) => m.key !== "frage").map((m) => ({ name: "g_" + m.key, label: m.label, type: "number", third: true, placeholder: "1" })),
         { type: "section", label: "Kosten" },
         { name: "kosten_max", label: "Max. Kosten pro Anfrage (US-Dollar)", type: "number", half: true, placeholder: "z. B. 0,05 – leer = kein Limit",
           help: "Gilt für Handy und Arbeitsbereich. Wird es knapp, schlägt Nigel weniger nach, denkt kürzer und antwortet knapper; reicht es gar nicht, lehnt er die Anfrage ab, statt Geld auszugeben." },
@@ -1360,12 +1336,10 @@ Object.assign(ACTIONS, {
           placeholder: "z. B. „Schriftsätze immer mit ‚Sehr geehrte Damen und Herren‘ beginnen.“ oder „Bei Haftsachen immer auf die Frist für die Haftprüfung hinweisen.“",
           help: "Zusätzliche Anweisungen für alle Antworten (max. 4000 Zeichen). Sie ergänzen Nigels Regeln, heben sie aber nicht auf." },
       ],
-      values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen,
-        ...Object.fromEntries(NW_MODI.filter((m) => m.key !== "frage").map((m) => ["g_" + m.key, nwGewicht(m.key)])) },
+      values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen },
       onSubmit: async (w) => {
-        const gewichte = Object.fromEntries(NW_MODI.filter((m) => m.key !== "frage").map((m) => [m.key, Math.max(1, Math.min(10, Math.round(Number(w["g_" + m.key]) || 1)))]));
         const kostenMax = Number(w.kosten_max) > 0 ? Math.min(100, Math.round(Number(w.kosten_max) * 10000) / 10000) : 0;
-        const nigel = { kosten_max: kostenMax, modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000), gewichte };
+        const nigel = { kosten_max: kostenMax, modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000) };
         await updateRow("einstellungen", 1, { daten: { ...((state.einstellungen[0] || {}).daten || {}), nigel } });
         toast("Vorgaben gespeichert");
       },

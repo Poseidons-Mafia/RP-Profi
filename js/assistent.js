@@ -10,7 +10,7 @@
 //  ausschließlich Rechtsfragen. Dabei schlägt sie mit Werkzeugen in den
 //  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
-//  Recht: "ki_assistent". Tageslimit: Grundwert des Rangs + Abweichung
+//  Recht: "ki_assistent". Budget: US-Dollar pro Monat (Grundwert des Rangs + Abweichung)
 //  des Mitglieds (Personal → Ränge & Berechtigungen).
 //  Für größere Aufgaben gibt es Nigels Arbeitsbereich (js/nigel.js, #/nigel);
 //  das Handy bleibt das schnelle Nachschlage-Werkzeug.
@@ -172,21 +172,12 @@ function kiLaden(userId) {
   kiInfoLaden(userId);
 }
 
-// Heutige Nutzung und wirksames Tageslimit (Rang + Abweichung) anzeigen
+// Verbrauch und Budget im laufenden Monat (eigenes und das der Kanzlei) anzeigen
 async function kiInfoLaden(userId) {
   try {
-    const tagesbeginn = new Date();
-    tagesbeginn.setUTCHours(0, 0, 0, 0);
-    // Heute verbraucht: gewichtete Summe (Update 9), sonst Anzahl der Anfragen
-    const [limit, summe] = await Promise.all([db.rpc("ki_tageslimit"), db.rpc("ki_heute_genutzt")]);
-    let heute = summe.data;
-    if (summe.error) {
-      const nutzung = await db.from("ki_nutzung").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("zeit", tagesbeginn.toISOString());
-      if (nutzung.error) return;
-      heute = nutzung.count;
-    }
-    if (limit.error || ui.assistent.userId !== userId) return;
-    ui.assistent.info = { ...(ui.assistent.info || {}), heute: heute || 0, limit: limit.data };
+    const { data, error } = await db.rpc("ki_budget_status");
+    if (error || ui.assistent.userId !== userId) return;
+    ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(data) };
     kiAktualisieren();
   } catch (e) {
     console.warn(e);
@@ -340,7 +331,6 @@ function kiPanelZeichnen(akte, akten) {
   const vorwuerfe = akte ? (akte.vorwuerfe || []) : [];
   const zustaendig = akte && akte.zustaendig_id ? personName(akte.zustaendig_id) : "";
   const offene = akten.filter((a) => a.status !== "Geschlossen").slice(0, 5);
-  const prozent = s.info ? (s.info.limit ? Math.min(100, Math.round((s.info.heute / s.info.limit) * 100)) : 100) : 0;
   kiSetzen(kiEl("panel"), html`
     <div class="ki-panel-kopf">
       <span class="ki-panel-titel">Nigels Notizbuch</span>
@@ -392,8 +382,7 @@ function kiPanelZeichnen(akte, akten) {
       </ul>
     </section>
     <div class="ki-panel-fuss">
-      <div class="ki-nutzung"><span>Heute genutzt</span><strong>${s.info ? `${s.info.heute} / ${s.info.limit}` : "–"}</strong></div>
-      <div class="ki-balken"><span style="width:${prozent}%"></span></div>
+      ${kiBudgetHtml(s.info && s.info.budget)}
       <p class="ki-leise">${s.info && s.info.modell ? html`Modell: ${s.info.modell} · ` : ""}Nur Rechtsfragen · max. 4000 Zeichen · bitte prüfen.</p>
     </div>`);
 }
@@ -628,7 +617,7 @@ async function kiFragen(text) {
       throw new Error(msg);
     }
     s.verlauf.push({ rolle: "ki", text: data.antwort, zeit: new Date().toISOString(), quellen: data.nachgeschlagen || [], gekuerzt: !!data.gekuerzt });
-    s.info = { heute: data.heute, limit: data.limit, modell: data.modell, anbieter: data.anbieter };
+    s.info = { ...(s.info || {}), budget: kiBudgetStand(data.budget) || (s.info && s.info.budget) || null, modell: data.modell };
   } catch (e) {
     console.error(e);
     s.verlauf.pop(); // Frage zurück ins Eingabefeld, damit nichts verloren geht

@@ -5,8 +5,8 @@
 //  (Akten, angeheftete Paragraphen, Notizen, Entwurf, Arbeitsmodus).
 //  Diese Funktion
 //    1. prüft die Anmeldung, das Recht "ki_assistent", den Arbeitsmodus
-//       und das Tageslimit des Mitglieds (Grundwert des Rangs + Abweichung;
-//       aufwendige Modi können mehrfach zählen),
+//       und das KI-Budget (US-Dollar pro Monat: eigenes Budget = Grundwert
+//       des Rangs + Abweichung, dazu der Deckel der ganzen Kanzlei),
 //    2. liest die Daten MIT DEM LOGIN DES MITGLIEDS (es gelten also
 //       dieselben Leserechte wie im Aktensystem),
 //    3. fragt GENAU EIN Modell über OpenRouter (Secret OPENROUTER_MODELL) –
@@ -29,7 +29,6 @@
 //                         (genau EIN Modell; Standard siehe MODELL_STANDARD)
 //    KI_REASONING         optional, "low" | "medium" | "high" (Standard "medium") –
 //                         Standard-Gründlichkeit, wenn das Mitglied nichts anderes eingestellt hat
-//    KI_TAGESLIMIT        optional, nur noch Notlösung, falls Update 8 fehlt
 //    KI_KOSTEN_MAX        optional, Höchstkosten pro Anfrage in US-Dollar (z. B. "0.05"), falls in den
 //                         Kanzlei-Vorgaben (Nigel → Einstellungen) nichts eingestellt ist
 // =============================================================
@@ -41,7 +40,6 @@ const MODELL_STANDARD = "deepseek/deepseek-v4.1-flash-1017";
 const MODELL = ((Deno.env.get("OPENROUTER_MODELL") || MODELL_STANDARD).split(",")[0] || MODELL_STANDARD).trim();
 const STUFEN = ["low", "medium", "high"];
 const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "medium";
-const TAGESLIMIT_NOTFALL = Number(Deno.env.get("KI_TAGESLIMIT") || 100);
 const MAX_ZEICHEN_NACHRICHT = 20000;  // je Nachricht im Verlauf
 const MAX_ZEICHEN_VERLAUF = 120000;   // Verlauf insgesamt (älteste fallen zuerst heraus)
 const MAX_PARAGRAPH_TEXT = 4000;
@@ -49,6 +47,7 @@ const MAX_AKTEN_LESEN = 4;            // akte_lesen je Anfrage
 const ZEIT_BUDGET_MS = 105000;        // danach muss die KI antworten (Edge Functions haben ein Zeitlimit)
 const KOSTEN_MAX_NOTFALL = Number(Deno.env.get("KI_KOSTEN_MAX") || 0) || 0;
 const MIN_ANTWORT_TOKENS = 600;       // so viel muss für eine brauchbare Antwort mindestens übrig sein
+const MIN_REST = 0.001;               // weniger als 0,1 Cent Restbudget gilt als aufgebraucht
 
 // Arbeitsmodi: maximale Antwortlänge, Werkzeug-Runden, Verlaufslänge
 const MODI: Record<string, { name: string; max: number; runden: number; nachrichten: number }> = {
@@ -142,19 +141,32 @@ Deno.serve(async (req) => {
     return fehler(`Der Modus „${m.name}“ ist in der Kanzlei nicht freigegeben, ${ich.anrede}.`, 403);
   }
   const reasoning = STUFEN[Math.min(STUFEN.indexOf(ich.gruendlichkeit || OR_REASONING), STUFEN.indexOf(vorgaben.reasoning_max))];
-  const gewicht = modus === "frage" ? 1 : Math.max(1, Math.min(10, Number(vorgaben.gewichte[modus === "ueberarbeiten" ? "schriftsatz" : modus]) || 1));
 
-  // ---------- Tageslimit (Grundwert des Rangs + Abweichung des Mitglieds) ----------
-  const { data: limitDb, error: limitFehler } = await db.rpc("ki_tageslimit");
-  const limit = !limitFehler && typeof limitDb === "number" ? limitDb : TAGESLIMIT_NOTFALL;
-  const heute = await heuteGenutzt(db, userId);
-  if (heute + gewicht > limit) {
-    return fehler(limit === 0
-      ? `Ich bedaure, ${ich.anrede}, doch man hat mir untersagt, Ihnen zu dienen (Tageslimit 0). Bitte wenden Sie sich an den Admin.`
-      : heute < limit
-        ? `Verzeihung, ${ich.anrede} – „${m.name}“ zählt ${gewicht}-fach, Ihr Kontingent reicht heute nur noch für ${limit - heute} ${limit - heute === 1 ? "Anfrage" : "Anfragen"}.`
-        : `Verzeihung, ${ich.anrede} – Ihr Kontingent für heute ist erschöpft (${limit} Anfragen). Morgen stehe ich Ihnen wieder zu Diensten.`, 429);
+  // ---------- KI-Budget (US-Dollar im laufenden Monat): eigenes Budget und Deckel der Kanzlei ----------
+  // Ohne Update 13 gibt es kein Budget – dann lieber gar nicht antworten als unbegrenzt Geld ausgeben.
+  const { data: budgetDb, error: budgetFehler } = await db.rpc("ki_budget_status");
+  if (budgetFehler) {
+    console.error("ki_budget_status", budgetFehler);
+    return fehler("Das KI-Budget ist noch nicht eingerichtet (supabase-update-13.sql im SQL Editor ausführen).", 500);
   }
+  const b = budgetStand(budgetDb);
+  const restIch = b.budget - b.genutzt;
+  const restKanzlei = b.kanzlei_budget - b.kanzlei_genutzt;
+  if (b.budget <= 0) {
+    return fehler(`Ich bedaure, ${ich.anrede}, doch für Sie ist kein KI-Budget hinterlegt. Bitte wenden Sie sich an den Admin.`, 429);
+  }
+  if (restIch < MIN_REST) {
+    return fehler(`Verzeihung, ${ich.anrede} – Ihr KI-Budget für diesen Monat ist aufgebraucht (${dollarText(b.genutzt)} von ${dollarText(b.budget)}). Ab dem 1. stehe ich Ihnen wieder zu Diensten.`, 429);
+  }
+  if (restKanzlei < MIN_REST) {
+    return fehler(`Verzeihung, ${ich.anrede} – das KI-Budget der Kanzlei für diesen Monat ist aufgebraucht (${dollarText(b.kanzlei_genutzt)} von ${dollarText(b.kanzlei_budget)}). Ab dem 1. stehe ich wieder zu Diensten.`, 429);
+  }
+  // Die Anfrage darf höchstens kosten, was pro Anfrage erlaubt ist UND im Budget noch übrig ist
+  const grenze = [
+    { wert: vorgaben.kosten_max, grund: "Limit pro Anfrage" },
+    { wert: restIch, grund: "Ihr restliches Monatsbudget" },
+    { wert: restKanzlei, grund: "restliches Monatsbudget der Kanzlei" },
+  ].filter((g) => g.wert > 0).sort((x, y) => x.wert - y.wert)[0];
 
   // ---------- Werkzeuge (Akten nur mit Leserecht und wenn die Kanzlei es erlaubt) ----------
   let aktenWerkzeuge = false;
@@ -180,7 +192,7 @@ Deno.serve(async (req) => {
     const schritte: Schritt[] = [];
     const schritt = (s: Schritt) => { schritte.push(s); melden({ typ: "schritt", ...s }); };
     const ergebnis = await frageModell(orKey, system, nachrichten, {
-      werkzeuge, reasoning, runden: m.runden, melden, kostenMax: vorgaben.kosten_max, maxZeichen: m.max,
+      werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, maxZeichen: m.max,
       werkzeug: (name, args) => werkzeugAusfuehren(db, kanzleiDaten, name, args, { nachgeschlagen, aktenGelesen, schritt }),
     });
 
@@ -189,9 +201,8 @@ Deno.serve(async (req) => {
 
     const nutzung = { user_id: userId, akte_id: akteIds[0] || null, tokens_ein: ergebnis.tokensEin || null, tokens_aus: ergebnis.tokensAus || null };
     const kosten = Math.round(ergebnis.kosten * 1e6) / 1e6;
-    let { error: nutzungFehler } = await db.from("ki_nutzung").insert({ ...nutzung, gewicht, modus, kosten });
-    if (nutzungFehler) ({ error: nutzungFehler } = await db.from("ki_nutzung").insert({ ...nutzung, gewicht, modus })); // ohne Update 10
-    if (nutzungFehler) await db.from("ki_nutzung").insert(nutzung); // ohne Update 9 (Spalten fehlen)
+    const { error: nutzungFehler } = await db.from("ki_nutzung").insert({ ...nutzung, modus, kosten });
+    if (nutzungFehler) console.error("ki_nutzung", nutzungFehler);
 
     return {
       antwort: fertig, format: "markdown", gekuerzt, zeichen: fertig.length, max_zeichen: m.max, modus,
@@ -199,8 +210,8 @@ Deno.serve(async (req) => {
       nachgeschlagen: [...new Set(nachgeschlagen)].slice(0, 30),
       akten: aktenGelesen.filter((a, i) => aktenGelesen.findIndex((b) => b.id === a.id) === i),
       schritte,
-      modell: ergebnis.modell, heute: heute + gewicht, limit, gewicht,
-      kosten: Math.round(ergebnis.kosten * 1e6) / 1e6, kosten_max: vorgaben.kosten_max || null,
+      modell: ergebnis.modell, kosten, kosten_max: vorgaben.kosten_max || null,
+      budget: { ...b, genutzt: b.genutzt + kosten, kanzlei_genutzt: b.kanzlei_genutzt + kosten },
     };
   };
 
@@ -223,7 +234,7 @@ Deno.serve(async (req) => {
       const schreiben = (s: string) => { if (!offen) return; try { ctrl.enqueue(enc.encode(s)); } catch { offen = false; } };
       const melden: Melden = (e) => schreiben(`data: ${JSON.stringify(e)}\n\n`);
       const ping = setInterval(() => schreiben(": ping\n\n"), 10000);
-      melden({ typ: "start", modus, gewicht });
+      melden({ typ: "start", modus });
       try {
         melden({ typ: "fertig", ...(await ausfuehren(melden)) });
       } catch (e) {
@@ -240,16 +251,13 @@ Deno.serve(async (req) => {
 });
 
 
-// Heute verbrauchte Anfragen (Summe der Gewichte; ohne Update 9: Anzahl)
-async function heuteGenutzt(db: SupabaseClient, userId: string): Promise<number> {
-  const { data, error } = await db.rpc("ki_heute_genutzt");
-  if (!error && typeof data === "number") return data;
-  const tagesbeginn = new Date();
-  tagesbeginn.setUTCHours(0, 0, 0, 0);
-  const { count } = await db.from("ki_nutzung").select("id", { count: "exact", head: true })
-    .eq("user_id", userId).gte("zeit", tagesbeginn.toISOString());
-  return count ?? 0;
+// Budget-Stand aus ki_budget_status() (alles in US-Dollar; fehlt etwas, zählt es als 0)
+function budgetStand(roh: unknown) {
+  const d: Zeile = roh && typeof roh === "object" ? roh as Zeile : {};
+  const zahl = (v: unknown) => Math.max(0, Number(v) || 0);
+  return { budget: zahl(d.budget), genutzt: zahl(d.genutzt), kanzlei_budget: zahl(d.kanzlei_budget), kanzlei_genutzt: zahl(d.kanzlei_genutzt) };
 }
+const dollarText = (n: number) => `$${n < 0.01 ? n.toFixed(4) : n.toFixed(2)}`;
 
 // Kanzlei-Vorgaben (Personal → Nigel), mit sicheren Standardwerten
 function kanzleiVorgaben(roh: unknown) {
@@ -259,7 +267,6 @@ function kanzleiVorgaben(roh: unknown) {
     anweisungen: typeof v.anweisungen === "string" ? v.anweisungen.slice(0, 4000).trim() : "",
     modi: Array.isArray(v.modi) ? alle.filter((x) => v.modi.includes(x)) : alle,
     reasoning_max: STUFEN.includes(v.reasoning_max) ? v.reasoning_max as string : "high",
-    gewichte: (v.gewichte && typeof v.gewichte === "object" ? v.gewichte : {}) as Zeile,
     akten_werkzeuge: v.akten_werkzeuge !== false,
     // Höchstkosten pro Anfrage in US-Dollar (0 = kein Limit)
     kosten_max: Math.max(0, Number(v.kosten_max) || KOSTEN_MAX_NOTFALL),
@@ -290,7 +297,7 @@ function persoenlich(roh: unknown) {
 //  Zur Sicherheit wird das antwortende Modell zusätzlich geprüft.
 // =============================================================
 async function frageModell(key: string, system: string, nachrichten: Nachricht[],
-  opt: { werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; maxZeichen: number }): Promise<Ergebnis> {
+  opt: { werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; kostenGrund: string; maxZeichen: number }): Promise<Ergebnis> {
   const verlauf: Zeile[] = [
     { role: "system", content: system },
     ...nachrichten.map((n) => ({ role: n.rolle === "ki" ? "assistant" : "user", content: n.text })),
@@ -302,6 +309,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
   // vorab rechnen – dann wird nur nach jedem Schritt mit den tatsächlichen Kosten geprüft.
   const preis = opt.kostenMax > 0 ? await modellPreis(key) : null;
   const dollar = (n: number) => `$${n < 0.01 ? n.toFixed(4) : n.toFixed(3)}`;
+  const grenze = () => `${dollar(opt.kostenMax)} (${opt.kostenGrund})`;
   // Tokens der fertigen Antwort (sichtbarer Text + Nachdenken), grob geschätzt
   const antwortTokens = Math.ceil(opt.maxZeichen / 3) + 2500;
 
@@ -323,8 +331,8 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
         const moeglich = Math.floor((offen - einKosten) / preis.aus);
         if (moeglich < MIN_ANTWORT_TOKENS) {
           throw new KiFehler(runde === 0
-            ? `Diese Anfrage würde schon beim Lesen des Kontexts etwa ${dollar(einKosten)} kosten – mehr als das Limit von ${dollar(opt.kostenMax)} pro Anfrage. Bitte weniger Akten oder Paragraphen anheften oder einen neuen Chat beginnen.`
-            : `Das Kostenlimit von ${dollar(opt.kostenMax)} pro Anfrage ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
+            ? `Diese Anfrage würde schon beim Lesen des Kontexts etwa ${dollar(einKosten)} kosten – mehr als erlaubt: ${grenze()}. Bitte weniger Akten oder Paragraphen anheften oder einen neuen Chat beginnen.`
+            : `Das Kostenlimit von ${grenze()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
         }
         maxTokens = Math.min(moeglich, letzteRunde ? antwortTokens * 2 : 16000);
         // Ist das Budget knapp, denkt Nigel kürzer nach, damit Platz für die Antwort bleibt
@@ -382,7 +390,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
     const msg = wahl?.message;
 
     if (msg?.tool_calls?.length && !letzteRunde && opt.kostenMax > 0 && kosten >= opt.kostenMax) {
-      throw new KiFehler(`Das Kostenlimit von ${dollar(opt.kostenMax)} pro Anfrage ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
+      throw new KiFehler(`Das Kostenlimit von ${grenze()} ist erreicht, bevor Nigel antworten konnte. Bitte die Frage enger fassen.`, 402);
     }
     if (msg?.tool_calls?.length && !letzteRunde) {
       // Nachricht unverändert zurückgeben (enthält ggf. reasoning_details, die das Modell braucht)
@@ -400,11 +408,11 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
     const inhalt = msg?.content;
     const text = (Array.isArray(inhalt) ? inhalt.map((t: Zeile) => t?.text || "").join("") : String(inhalt || "")).trim();
     if (!text && wahl?.finish_reason === "length" && maxTokens) {
-      throw new KiFehler(`Das Kostenlimit von ${dollar(opt.kostenMax)} pro Anfrage hat nicht für eine Antwort gereicht. Bitte die Frage enger fassen, weniger Kontext anheften oder „Gründlichkeit“ niedriger stellen.`, 402);
+      throw new KiFehler(`Das Kostenlimit von ${grenze()} hat nicht für eine Antwort gereicht. Bitte die Frage enger fassen, weniger Kontext anheften oder „Gründlichkeit“ niedriger stellen.`, 402);
     }
     if (!text) throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${wahl?.finish_reason || "unbekannt"}).`);
     const gekappt = wahl?.finish_reason === "length" && maxTokens
-      ? "\n\n*… Antwort wegen des Kostenlimits pro Anfrage abgeschnitten.*" : "";
+      ? `\n\n*… Antwort wegen des Kostenlimits abgeschnitten (${opt.kostenGrund}).*` : "";
     return { text: text + gekappt, tokensEin, tokensAus, modell: MODELL.split("/").pop() || MODELL, kosten };
   }
   throw new KiFehler("Die KI hat keine Antwort geliefert.");
