@@ -1092,6 +1092,12 @@ body.in-app .guide-btn span { display: none; }
   user-select: none;
 }
 .avatar.gross { width: 36px; height: 36px; font-size: 0.82rem; }
+/* Nigel als Absender (Orga-Modus) */
+.avatar.nigel { background: #fff; border: 1.5px solid var(--gold); padding: 0; overflow: hidden; }
+.avatar.nigel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.timeline .head .avatar.nigel { width: 20px; height: 20px; margin-right: 6px; vertical-align: -5px; display: inline-flex; }
+.von-nigel { display: inline-flex; align-items: center; gap: 5px; color: var(--gold-text); }
+.von-nigel .avatar.nigel { width: 16px; height: 16px; border-width: 1px; }
 .avatar.mehr { background: var(--line); color: var(--text); }
 .avatar-punkt {
   position: absolute;

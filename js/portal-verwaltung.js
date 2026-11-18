@@ -34,6 +34,7 @@ const findeZugang = (id) => portalZugaenge().find((z) => z.id === id);
 
 // Absender in der Glocke: Mandanten-Nachrichten kommen "vom Portal"
 function benachrichtigungAbsender(b) {
+  if (b.von_nigel) return `Nigel (im Auftrag von ${personName(b.von, "–")})`;
   return b.art === "mandant" ? "Mandantenportal:" : personName(b.von, "System");
 }
 
@@ -43,7 +44,7 @@ function eintragAutor(e) {
     const m = byId("mandanten", e.mandant_id);
     return m ? m.name : "Mandant";
   }
-  return personName(e.author);
+  return e.von_nigel ? `Nigel (im Auftrag von ${personName(e.author)})` : personName(e.author);
 }
 
 // Akten, in die ein Mandant (zusätzlich) Einblick hat

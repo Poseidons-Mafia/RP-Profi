@@ -51,7 +51,7 @@ function beitragKarte(b) {
   return html`
     <article class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""}">
       <div class="beitrag-kopf">
-        ${avatar(b.created_by)}
+        ${b.von_nigel ? nigelAvatar({ gross: true }) : avatar(b.created_by)}
         <div class="grow">
           <div class="badges">
             ${b.angeheftet ? html`<span class="badge haft">Angeheftet</span>` : ""}
@@ -59,7 +59,7 @@ function beitragKarte(b) {
             ${ichSoll && !ichHab ? html`<span class="badge offen">Bitte bestätigen</span>` : ""}
           </div>
           <h3>${b.titel}</h3>
-          <div class="meta">${personName(b.created_by)} · ${fmt.relativ(b.created_at)}${b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? " · bearbeitet" : ""}${b.bis ? ` · bis ${fmt.datum(b.bis)}` : ""}</div>
+          <div class="meta">${b.von_nigel ? `Nigel · im Auftrag von ${personName(b.created_by)}` : personName(b.created_by)} · ${fmt.relativ(b.created_at)}${b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? " · bearbeitet" : ""}${b.bis ? ` · bis ${fmt.datum(b.bis)}` : ""}</div>
         </div>
         ${darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
       </div>

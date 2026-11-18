@@ -405,7 +405,7 @@ function tabVerlauf(a) {
           <span class="badge ${e.mandant_id ? "mandant" : "gold"}">${e.mandant_id ? "Nachricht vom Mandanten" : e.art || "Notiz"}</span>
           ${e.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
           ${e.fuer_mandant && !e.mandant_id ? html`<span class="badge sichtbar" title="Im Mandantenportal sichtbar">für Mandant sichtbar</span>` : ""}
-          <strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}
+          ${e.von_nigel ? nigelAvatar() : ""}<strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}
           ${(e.erwaehnt || []).length ? html`<span class="erw-an" title="Erwähnt und benachrichtigt">→ ${e.erwaehnt.map((id) => personName(id)).join(", ")}</span>` : ""}
         </div>
         <p>${mitErwaehnungen(e.text)}</p>
