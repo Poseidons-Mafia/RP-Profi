@@ -38,7 +38,7 @@ const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "be
                 "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen",
                 "raenge", "personalakte", "personal_vermerke",
                 "benachrichtigungen", "pinnwand", "pinnwand_gelesen", "ablaeufe",
-                "gesetzbuecher", "paragraphen"];
+                "gesetzbuecher", "paragraphen", "akten_mandanten"];
 const PK = { profiles: "user_id", personalakte: "user_id" };
 const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
 const PROTOKOLL_LIMIT = 500;
@@ -46,6 +46,12 @@ const BENACHRICHTIGUNG_LIMIT = 200;
 
 // Tabellen, die nicht komplett geladen werden (nur die neuesten Zeilen)
 const LADER = {
+  // Mandantenportal (Update 12): fehlt die Tabelle noch, läuft der Rest trotzdem
+  akten_mandanten: async () => {
+    const { data, error } = await db.from("akten_mandanten").select("*");
+    if (error) { if (isMissingSchema(error)) return []; throw error; }
+    return data;
+  },
   benachrichtigungen: async () => {
     const { data, error } = await db.from("benachrichtigungen").select("*")
       .order("zeit", { ascending: false }).limit(BENACHRICHTIGUNG_LIMIT);

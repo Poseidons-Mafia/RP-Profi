@@ -60,7 +60,7 @@ function globaleSuche(q) {
   }));
   add("Verlauf", state.eintraege.filter((e) => matches(q, e.text)).map((e) => {
     const a = byId("akten", e.akte_id);
-    return { href: `#/akten/${e.akte_id}/verlauf`, titel: truncate(e.text, 90), sub: `${a ? a.number : ""} · ${fmt.datum(e.created_at)} · ${personName(e.author)}` };
+    return { href: `#/akten/${e.akte_id}/verlauf`, titel: truncate(e.text, 90), sub: `${a ? a.number : ""} · ${fmt.datum(e.created_at)} · ${eintragAutor(e)}` };
   }));
   add("Beweismittel", state.beweise.filter((b) => matches(q, b.titel, b.beschreibung, b.art)).map((b) => {
     const a = byId("akten", b.akte_id);

@@ -2364,3 +2364,72 @@ dialog {
   .pos-total { width: 100%; text-align: right; }
 }
 .rows .title, .item .title { overflow-wrap: anywhere; }
+
+/* =============================================================
+   Mandantenportal
+   ============================================================= */
+body.im-portal .ki-phone { display: none; }
+.portal-seite { max-width: 1100px; }
+.portal-kopf { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 10px 24px; margin-bottom: 16px; }
+.portal-kopf h1 { margin: 0 0 2px; font-size: 1.6rem; color: var(--red-dark); }
+.portal-kopf p { margin: 0; }
+.portal-kontakt { font-size: 0.85rem; color: var(--muted); }
+.portal-kontakt strong { color: var(--text); }
+.portal-kontakt a { color: var(--red); }
+
+.portal-akten { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.portal-akten.breit { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.portal-akte {
+  display: flex; flex-direction: column; gap: 3px; padding: 12px 14px;
+  border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: var(--radius);
+  background: var(--panel); color: inherit; text-decoration: none; transition: border-color 0.15s, background 0.15s;
+}
+.portal-akte:hover, .portal-akte:focus-visible { border-color: var(--red); background: var(--red-soft); outline: none; }
+.portal-akte-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.portal-akte .title { font-weight: bold; font-size: 1.02rem; }
+.portal-akte .meta { font-size: 0.8rem; color: var(--muted); }
+
+.portal-termin-datum { min-width: 78px; font-size: 0.8rem; color: var(--muted); }
+.portal-termin-datum strong { display: block; color: var(--text); font-size: 0.92rem; }
+.rows > li.erledigt { opacity: 0.6; }
+.portal-hinweis a { color: inherit; text-decoration: none; }
+.portal-hinweis a:hover .title { color: var(--red); }
+.portal-vergangen { margin-top: 8px; }
+.portal-vergangen summary { cursor: pointer; }
+
+.portal-nachricht-form { display: grid; gap: 8px; margin-bottom: 14px; }
+.portal-chat { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.portal-chat li {
+  max-width: 82%; padding: 8px 12px; border-radius: 12px;
+  background: var(--bg); border: 1px solid var(--line-soft);
+}
+.portal-chat li.von-kanzlei { justify-self: start; border-left: 3px solid var(--gold); border-top-left-radius: 4px; }
+.portal-chat li.vom-mandanten { justify-self: end; background: var(--blue-soft); border-color: #c9daf0; border-top-right-radius: 4px; }
+.portal-chat .head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 0.76rem; color: var(--muted); }
+.portal-chat .head strong { color: var(--text); }
+.portal-chat p { margin: 4px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  .portal-chat li { max-width: 94%; }
+  .portal-kopf h1 { font-size: 1.3rem; }
+}
+
+/* Registrierung: Mitarbeiter oder Mandant */
+.reg-wahl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 4px 0 14px; }
+.reg-wahl button {
+  display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--text); font: inherit;
+}
+.reg-wahl button span { font-size: 0.78rem; color: var(--muted); }
+.reg-wahl button.aktiv { border-color: var(--red); background: var(--red-soft); box-shadow: inset 0 0 0 1px var(--red); }
+@media (max-width: 480px) { .reg-wahl { grid-template-columns: 1fr; } }
+.charakter-initiale.mandant { background: var(--blue-soft); color: var(--blue); }
+
+/* Kanzlei-Seite: was sieht der Mandant? */
+.badge.mandant { background: var(--blue-soft); color: var(--blue); }
+.badge.sichtbar { background: var(--blue-soft); color: var(--blue); font-weight: normal; }
+.timeline li.vom-mandanten { border-left-color: var(--blue); background: #f1f6fc; }
+.icon-btn svg { width: 16px; height: 16px; display: block; }
+.icon-btn.an { color: var(--blue); }
+.portal-einblick { border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px 12px; }
+.portal-einblick .actions-row { margin-top: 6px; }
+.portal-link { display: inline-flex; align-items: center; gap: 6px; }

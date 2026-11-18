@@ -76,6 +76,8 @@ const AKTIONS_RECHTE = {
   "ablauf-starten": "termine_schreiben", "wiedervorlage": "termine_schreiben",
   "ablauf-neu": "einstellungen_schreiben", "ablauf-bearbeiten": "einstellungen_schreiben",
   "konten-laden": "admin", "konto-freigeben": "admin", "konto-ablehnen": "admin", "konto-person": "admin", "konto-charakter": "admin",
+  "zugang-freigeben": "mandanten_schreiben", "zugang-aktion": "mandanten_schreiben", "zugang-verknuepfen": "mandanten_schreiben",
+  "mitmandant-neu": "akten_schreiben", "mitmandant-entfernen": "akten_schreiben", "eintrag-fuer-mandant": "akten_schreiben",
 };
 const AENDERUNGS_RECHTE = {
   "akte-status": "akten_schreiben", "ki-akte": "ki_assistent", "termin-erledigt": "termine_schreiben", "aufgabe-erledigt": "termine_schreiben", "rang-recht": "admin",
@@ -189,7 +191,8 @@ function renderNav(route) {
     + state.termine.filter(terminUeberfaellig).length;
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
   const pinnwand = typeof pinnwandOffen === "function" ? pinnwandOffen().length : 0;
-  const badges = { kalender: heute, rechnungen: offen, pinnwand };
+  const antraege = typeof portalAntraege === "function" ? portalAntraege().length : 0;
+  const badges = { kalender: heute, rechnungen: offen, pinnwand, mandanten: antraege };
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   $("nav").innerHTML = String(html`${sichtbar.map((n) => html`
     <a href="${n.href}" class="${route.page === n.page || (n.page === "uebersicht" && !VIEWS[route.page]) ? "active" : ""}">
@@ -234,10 +237,16 @@ window.addEventListener("resize", () => { if (!$("nav").hidden) navRaender(); })
 function showScreen(name) {
   for (const s of ["setup", "login", "loading", "update", "konto"]) $(`${s}-screen`).hidden = s !== name;
   const inApp = name === "app";
+  const imPortal = name === "portal";
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
   $("topbar-actions").hidden = !inApp;
+  $("portal").hidden = !imPortal;
+  $("portal-nav").hidden = !imPortal;
+  $("portal-actions").hidden = !imPortal;
   document.body.classList.toggle("in-app", inApp);
+  document.body.classList.toggle("im-portal", imPortal);
+  $("brand-sub").textContent = imPortal ? "Mandantenportal" : "Aktensystem";
 }
 
 // ---------- Anmeldung ----------
@@ -262,6 +271,8 @@ async function onSession(session) {
   if (ui.charakterWechsel) return;
   if (!session) {
     stopLive();
+    if (typeof portalStoppen === "function") portalStoppen();
+    if (typeof portal !== "undefined") { portal.aktiv = false; portal.daten = null; }
     state.session = null;
     state.me = null;
     state.loaded = false;
@@ -287,6 +298,11 @@ async function onSession(session) {
     return;
   }
   state.konto = konto;
+  // Mandanten-Charakter: nur das Mandantenportal
+  if (konto && konto.art === "mandant") {
+    portalStarten();
+    return;
+  }
   if (konto && ["person", "neu", "unbekannt"].includes(konto.art)) {
     if (konto.art === "person" && await automatischWechseln(konto)) return;
     kontoBildschirm();
@@ -318,6 +334,7 @@ async function onSession(session) {
   startLive();
   showScreen("app");
   render();
+  if (typeof ladePortalZugaenge === "function") ladePortalZugaenge();
 }
 
 // ---------- Globale Aktionen ----------
