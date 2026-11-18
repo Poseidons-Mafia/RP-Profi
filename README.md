@@ -229,6 +229,25 @@ Website mit Discord angemeldet hat, bekommt einen Hinweis darauf. Keine Datenban
 
 Danach in Discord `/ping` eingeben. Bot-Token und Public Key gehören **nie** in `config.js` oder anderen Website-Code.
 
+### Discord-Server einrichten lassen
+
+Der Workflow **Discord-Server einrichten** legt Rollen, Kategorien und Kanäle an (Skript
+[`tools/discord-bot/server-einrichten.mjs`](tools/discord-bot/server-einrichten.mjs)). Er **legt nur an**: Bestehendes wird
+nie gelöscht, umbenannt oder verschoben, und was es unter gleichem Namen schon gibt, wird übersprungen.
+
+- **Rollen** wie die Ränge der Website: Chairman, Partner, Rechtsanwalt, Referendar, Praktikant, Sekretariat und Mandant
+  (ohne Sonderrechte).
+- **Kategorien und Kanäle:** 📢 Informationen (alle lesen, nur das Team schreibt), 🏛️ Kanzlei (nur Team), 👔 Leitung (nur
+  Chairman und Partner), 🤝 Mandanten (Team und Mandanten), 🤖 Website & Bot, 💬 Allgemein (alle).
+
+Voraussetzung: Der Bot braucht die Rechte **Rollen verwalten, Kanäle verwalten, Kanäle ansehen, Nachrichten senden,
+Nachrichtenverlauf anzeigen**. Im Discord-Portal unter **OAuth2 → URL Generator** Scopes `bot` und `applications.commands`
+anhaken, diese Rechte wählen und den Link öffnen (der Bot ist schon auf dem Server, die Rechte werden dabei erweitert).
+In den Servereinstellungen die **Bot-Rolle ganz nach oben** ziehen (über die neuen Rollen).
+
+Ablauf: **GitHub → Actions → „Discord-Server einrichten“ → Run workflow**. Erst **vorschau** (ändert nichts, zeigt den
+Plan im Protokoll), dann **ausfuehren**. Rollen werden nicht automatisch an Personen vergeben.
+
 ## KI-Assistent einrichten
 
 Die Edge Function [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts) wird in Supabase unter

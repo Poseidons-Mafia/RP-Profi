@@ -1,0 +1,40 @@
+# Richtet den Discord-Server ein (Rollen, Kategorien, Kanäle).
+# Start von Hand: GitHub → Actions → "Discord-Server einrichten" → "Run workflow".
+# Erst "vorschau" wählen (ändert nichts, zeigt nur den Plan), danach "ausfuehren".
+# Legt nur an – löscht oder ändert nie etwas Bestehendes. Mehrfaches Ausführen ist unschädlich.
+# Nötig: Repository-Secret DISCORD_BOT_TOKEN.
+name: Discord-Server einrichten
+
+on:
+  workflow_dispatch:
+    inputs:
+      modus:
+        description: "vorschau = nur anzeigen, ausfuehren = anlegen"
+        type: choice
+        options:
+          - vorschau
+          - ausfuehren
+        default: vorschau
+
+permissions:
+  contents: read
+
+jobs:
+  einrichten:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Server einrichten
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_SERVER_ID: "1572531594227355739"
+          MODUS: ${{ inputs.modus }}
+        run: |
+          if [ "$MODUS" = "ausfuehren" ]; then
+            node tools/discord-bot/server-einrichten.mjs --ausfuehren
+          else
+            node tools/discord-bot/server-einrichten.mjs
+          fi
