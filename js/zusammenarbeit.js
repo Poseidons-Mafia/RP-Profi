@@ -25,6 +25,16 @@ function onlineStatus(userId) {
   return o ? (o.weg ? "weg" : "online") : null;
 }
 
+// Nigel als Absender (alles, was er im Modus „Organisatorisch“ anlegt)
+function nigelAvatar({ gross = false } = {}) {
+  return html`<span class="avatar nigel ${gross ? "gross" : ""}" title="Nigel (KI-Butler)"><img src="assets/nigel.svg" alt=""></span>`;
+}
+// „Nigel · im Auftrag von …“ für Termine und Aufgaben
+function vonNigel(zeile) {
+  return zeile && zeile.von_nigel
+    ? html`<span class="von-nigel">${nigelAvatar()}Nigel · im Auftrag von ${personName(zeile.created_by)}</span>` : null;
+}
+
 function avatar(userId, { gross = false, punkt = true } = {}) {
   const name = personName(userId, "System");
   let h = 0;
@@ -143,7 +153,7 @@ function glockeZeichnen() {
     <div class="gp-list">
       ${list.length ? list.map((b) => html`
         <a class="gp-item ${b.gelesen ? "" : "neu"}" href="${b.link || "#/"}" data-action="benachrichtigung-oeffnen" data-id="${b.id}">
-          ${avatar(b.von)}
+          ${b.von_nigel ? nigelAvatar() : avatar(b.von)}
           <span class="gp-text"><strong>${benachrichtigungAbsender(b)}</strong> ${b.text}
             <span class="gp-zeit">${fmt.relativ(b.zeit)}</span></span>
           ${b.gelesen ? "" : html`<span class="gp-punkt" title="ungelesen"></span>`}

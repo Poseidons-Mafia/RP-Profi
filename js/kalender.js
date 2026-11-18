@@ -37,6 +37,7 @@ function terminRow(t, { akte = true, datum = true } = {}) {
           t.ort,
           akte && a ? html`<a href="#/akten/${a.id}">${a.number} · ${truncate(mandantName(a), 30)}</a>` : null,
           t.verantwortlich ? personName(t.verantwortlich) : null,
+          vonNigel(t),
         ])}</div>
         ${t.notiz ? html`<div class="meta pre">${t.notiz}</div>` : ""}
       </div>
@@ -66,6 +67,7 @@ function aufgabeRow(t, { akte = true } = {}) {
           t.zustaendig ? personName(t.zustaendig) : null,
           akte && a ? html`<a href="#/akten/${a.id}">${a.number} · ${truncate(a.title, 30)}</a>` : null,
           t.erledigt && t.erledigt_am ? `erledigt ${fmt.relativ(t.erledigt_am)}` : null,
+          vonNigel(t),
         ])}</div>
       </div>
       <div class="tools"><button class="icon-btn" title="Bearbeiten" data-action="aufgabe-bearbeiten" data-id="${t.id}">✎</button></div>

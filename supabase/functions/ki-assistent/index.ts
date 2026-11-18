@@ -126,6 +126,12 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await db.auth.getUser(token);
   if (userError || !userData?.user) return fehler("Anmeldung abgelaufen. Bitte neu anmelden.", 401);
   const userId = userData.user.id;
+  // Für Nigels Aktionen im Orga-Modus: gleiches Login, dazu die Kopfzeile x-wiwang-nigel – so markiert die
+  // Datenbank daraus entstehende Benachrichtigungen als „von Nigel“ (Update 18; nur Anzeige, keine Rechte)
+  const dbNigel = createClient(Deno.env.get("SUPABASE_URL")!, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}`, "x-wiwang-nigel": "1" } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   const { data: darf } = await db.rpc("hat_recht", { p_recht: "ki_assistent" });
   if (darf !== true) return fehler("Ich bedaure, Sir, Ihr Rang gestattet es nicht, Nigel in Anspruch zu nehmen.", 403);
@@ -232,7 +238,7 @@ Deno.serve(async (req) => {
     const ergebnis = await frageModell(orKey, system, nachrichten, {
       werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, mitDollar, maxZeichen: m.max,
       werkzeug: (name, args) => orga && ORGA_NAMEN.has(name)
-        ? orgaWerkzeug(db, kanzleiDaten, orga, name, args, { schritt, aktionen, melden })
+        ? orgaWerkzeug(dbNigel, kanzleiDaten, orga, name, args, { schritt, aktionen, melden })
         : werkzeugAusfuehren(db, kanzleiDaten, name, args, { nachgeschlagen, aktenGelesen, schritt }),
     });
 
@@ -1103,6 +1109,14 @@ function dbFehler(e: Zeile | null | undefined, was: string) {
   return `${was[0].toUpperCase()}${was.slice(1)} ist fehlgeschlagen (Datenbank).`;
 }
 
+// Zeile als „von Nigel“ anlegen; fehlt die Spalte (Update 18 noch nicht ausgeführt), ohne Markierung
+// deno-lint-ignore no-explicit-any
+async function nigelAnlegen(db: SupabaseClient, tabelle: string, zeileNeu: Zeile): Promise<{ data: any; error: any }> {
+  let r = await db.from(tabelle).insert({ ...zeileNeu, von_nigel: true }).select("id").single();
+  if (r.error && /42703|PGRST204|von_nigel/i.test(`${r.error.code} ${r.error.message}`)) r = await db.from(tabelle).insert(zeileNeu).select("id").single();
+  return r;
+}
+
 // ---------- Werkzeuge ausführen ----------
 async function orgaWerkzeug(db: SupabaseClient, kanzleiDaten: Zeile, o: OrgaKontext, name: string, args: Zeile,
   ctx: { schritt: (s: Schritt) => void; aktionen: Aktion[]; melden: Melden }): Promise<Zeile> {
@@ -1118,7 +1132,7 @@ async function orgaWerkzeug(db: SupabaseClient, kanzleiDaten: Zeile, o: OrgaKont
       const { akte, fehler } = await akteFinden(db, o, args.aktenzeichen, true);
       if (!akte) return { fehler };
       const art = artWaehlen(args.art, arten(kanzleiDaten.eintragArt, EINTRAG_ARTEN), "Notiz");
-      const { error } = await db.from("eintraege").insert({ akte_id: akte.id, text, art, wichtig: args.wichtig === true });
+      const { error } = await nigelAnlegen(db, "eintraege", { akte_id: akte.id, text, art, wichtig: args.wichtig === true });
       ctx.schritt({ werkzeug: name, text: `Akte ${akte.number} · ${art}`, treffer: error ? 0 : 1 });
       if (error) { console.error(name, error); return { fehler: dbFehler(error, "in diese Akte zu schreiben") }; }
       erledigt({ typ: "akte", text: `Eintrag in ${akte.number} (${art})`, link: `#/akten/${akte.id}` });
@@ -1134,7 +1148,7 @@ async function orgaWerkzeug(db: SupabaseClient, kanzleiDaten: Zeile, o: OrgaKont
       if (wer.fehler) return { fehler: wer.fehler };
       const art = artWaehlen(args.art, arten(kanzleiDaten.terminArt, TERMIN_ARTEN), "Termin");
       const zeileNeu = { titel, beginn, art, ort: str(args.ort, 200), notiz: str(args.notiz, 2000), akte_id: akte?.id || null, verantwortlich: wer.treffer?.id || null };
-      const { data, error } = await db.from("termine").insert(zeileNeu).select("id").single();
+      const { data, error } = await nigelAnlegen(db, "termine", zeileNeu);
       const wann = ortszeitText(beginn, o.zeitzone);
       ctx.schritt({ werkzeug: name, text: `${titel} · ${wann}`, treffer: error ? 0 : 1 });
       if (error) { console.error(name, error); return { fehler: dbFehler(error, "Termine anzulegen") }; }
@@ -1150,7 +1164,7 @@ async function orgaWerkzeug(db: SupabaseClient, kanzleiDaten: Zeile, o: OrgaKont
       if (fehler) return { fehler };
       const wer = args.zustaendig ? mitgliedFinden(o, args.zustaendig) : { treffer: o.ich || undefined };
       if (wer.fehler) return { fehler: wer.fehler };
-      const { error } = await db.from("aufgaben").insert({ text, faellig, akte_id: akte?.id || null, zustaendig: wer.treffer?.id || null });
+      const { error } = await nigelAnlegen(db, "aufgaben", { text, faellig, akte_id: akte?.id || null, zustaendig: wer.treffer?.id || null });
       ctx.schritt({ werkzeug: name, text: kurz(text, 60), treffer: error ? 0 : 1 });
       if (error) { console.error(name, error); return { fehler: dbFehler(error, "Aufgaben anzulegen") }; }
       erledigt({ typ: "aufgabe", text: `Aufgabe „${kurz(text, 60)}“${faellig ? ` bis ${faellig.split("-").reverse().join(".")}` : ""}${wer.treffer && wer.treffer.id !== o.ich?.id ? ` für ${wer.treffer.name}` : ""}`, link: akte ? `#/akten/${akte.id}` : "#/kalender" });
@@ -1160,7 +1174,7 @@ async function orgaWerkzeug(db: SupabaseClient, kanzleiDaten: Zeile, o: OrgaKont
       const titel = str(args.titel, 200);
       if (!titel) return { fehler: "Kein Titel für den Beitrag." };
       const bis = args.bis ? datumGueltig(args.bis) : null;
-      const { error } = await db.from("pinnwand").insert({
+      const { error } = await nigelAnlegen(db, "pinnwand", {
         titel, text: str(args.text, 4000), wichtig: args.wichtig === true, bestaetigen: args.bestaetigen === true, bis,
       });
       ctx.schritt({ werkzeug: name, text: kurz(titel, 60), treffer: error ? 0 : 1 });
@@ -1327,8 +1341,15 @@ So arbeitest du:
 - Relative Zeitangaben („morgen um 3“, „Freitag“) rechnest du mit dem heutigen Datum und der Uhrzeit aus dem Kontext um.
   Nachmittags-Uhrzeiten ohne Angabe („um 3“) sind im Büroalltag meist 15:00 – im Zweifel nachfragen.
 - Personen nennst du so, wie sie in der Mitgliederliste stehen. Mitglieder werden mit ihrem Charakternamen angesprochen.
-- Einträge, Termine, Aufgaben und Pinnwand-Beiträge schreibst du sachlich und knapp – ohne Butler-Ton, ohne „Sir“, so wie ein
-  Mitarbeiter sie selbst eintragen würde.
+- Alles, was du anlegst, erscheint auf der Website unter DEINEM Namen: „Nigel · im Auftrag von [Auftraggeber]“. Schreib es
+  deshalb aus deiner Sicht als Butler, nie in der Ich-Form des Auftraggebers, und ohne „Sir“/„Madam“ (es lesen alle):
+  • Akteneinträge: sachlich und knapp in der dritten Person über den Auftraggeber, z. B. „Mr. Miller hat heute mit dem
+    Mandanten telefoniert: …“ – keine Floskeln, das ist eine Akte.
+  • Pinnwand-Beiträge: an alle gerichtet, höflich mit dezentem Butler-Charme, z. B. „Im Auftrag von Mr. Miller darf ich
+    mitteilen, dass …“ – Titel kurz und klar. Gern eine kurze Schlussformel („Stets zu Diensten.“).
+  • Termine und Aufgaben: Titel neutral und kurz („Mandantengespräch Palermo“, „Akteneinsicht beantragen“); in der Notiz
+    darf stehen, worum es geht.
+  Den Hinweis „im Auftrag von …“ setzt die Website selbst – im Titel nicht wiederholen.
 ${discord ? `- Discord: Nur wenn der Benutzer in seiner LETZTEN Nachricht ausdrücklich darum bittet (z. B. „gib X Bescheid“, „schreib X
   auf Discord“, „sag X, dass …“). Die Nachricht ist ein kleiner, formvollendeter Butler-Brief
   an den Empfänger (Discord-Markdown, er erscheint als Karte mit Nigels Bild):
