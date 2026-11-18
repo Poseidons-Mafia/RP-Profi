@@ -24,7 +24,7 @@ const NW_MODI = [
 const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung" };
 const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 10000, ueberarbeiten: 16000 };
 
-const NW_STANDARD = { ton: "butler", laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
+const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
 
 const NW_VORLAGEN_STANDARD = [
   { titel: "Rechtslage der Akte", modus: "frage", akte: true, text: "Wie ist die Rechtslage in dieser Akte? Welche Paragraphen sind einschlägig, und welche rechtlichen Einwände gibt es?" },
@@ -761,14 +761,13 @@ function nwVorschauPanel(tab) {
       "Vorlagen", "Häufige Aufträge – eigene und die der Kanzlei."],
     einstellungen: [html`
       <section class="nw-block">
-        <h3>Ton</h3>${segment([["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]], p.ton)}
         <h3>Antwortlänge</h3>${segment([["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]], p.laenge)}
         <h3>Gründlichkeit</h3>${segment([["", "Standard"], ["low", "Schnell"], ["medium", "Gründlich"], ["high", "Sehr gründlich"]], p.gruendlichkeit)}
         <label class="check nw-check"><input type="checkbox" checked disabled> Wortlaut der Paragraphen zitieren</label>
         <h3>Standardmodus für neue Aufgaben</h3>${segment(NW_MODI.map((m) => [m.key, m.label]), p.modus)}
         <h3>Senden mit</h3>${segment([["enter", "Enter"], ["strg", "Strg + Enter"]], p.senden)}
       </section>`,
-      "Einstellungen", "Ton, Antwortlänge und Gründlichkeit."],
+      "Einstellungen", "Antwortlänge und Gründlichkeit."],
   }[tab] || [html``, "Gesperrt", ""];
   return html`<div class="nw-vorschau-tab" data-tab="${tab}">${nwZensiert(inhalt[0], { titel: inhalt[1], text: inhalt[2], stempel: tab === "einstellungen" ? "Gesperrt" : "Vertraulich" })}</div>`;
 }
@@ -1216,9 +1215,6 @@ function nwEinstellungenZeichnen() {
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
-      <h3>Ton</h3>
-      ${auswahl("ton", [["butler", "Butler"], ["dezent", "Dezent"], ["sachlich", "Sachlich"]])}
-      <p class="nw-hilfe">Butler: die volle Persona. Dezent: höflich, kaum Floskeln. Sachlich: nüchtern und direkt.</p>
       <h3>Antwortlänge</h3>
       ${auswahl("laenge", [["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]])}
       <h3>Gründlichkeit</h3>
@@ -1234,7 +1230,7 @@ function nwEinstellungenZeichnen() {
       <h3>Kontingent-Anzeige</h3>
       ${auswahl("anzeige_kontingent", KI_ANZEIGEN.map(([k, l]) => [k, l]), kiAnzeige("kontingent"))}
       <p class="nw-hilfe">Prozent = Anteil an Ihrem Monatsbudget.</p>` : ""}
-      <p class="nw-hilfe">Ton, Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
+      <p class="nw-hilfe">Länge und Gründlichkeit gelten auch für das iFruit-Handy.</p>
     </section>
     <section class="nw-block">
       <h3>${state.isAdmin ? "KI-Budget diesen Monat" : "Kontingent diesen Monat"}</h3>

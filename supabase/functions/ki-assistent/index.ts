@@ -286,7 +286,7 @@ function persoenlich(roh: unknown) {
   return {
     anredeArt,
     anrede: anredeArt === "madam" ? "Madam" : anredeArt === "neutral" ? "verehrtes Mitglied" : "Sir",
-    ton: wahl(e.ton, ["butler", "dezent", "sachlich"], "butler"),
+    ton: "butler", // immer die volle Butler-Persona (früher wählbar: dezent, sachlich)
     laenge: wahl(e.laenge, ["knapp", "normal", "ausfuehrlich"], "normal"),
     gruendlichkeit: STUFEN.includes(e.gruendlichkeit) ? e.gruendlichkeit as string : "",
     wortlaut: e.wortlaut !== false,
