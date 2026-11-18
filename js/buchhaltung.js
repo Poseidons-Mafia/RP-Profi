@@ -1,18 +1,11 @@
 // =============================================================
-//  Wiwang Law – Buchhaltung (doppelte Buchführung)
+//  Wiwang Law – Buchhaltung (doppelte Buchführung, Reiter im Bereich Finanzen)
 //  Grundbuch → Hauptbuch (T-Konten) → Summen-/Saldenliste → Bilanz & GuV
 //  Buchungen sind unveränderbar; Korrekturen nur per Storno.
 // =============================================================
 
-ui.buch = { tab: "bilanz", jahr: String(new Date().getFullYear()), q: "", konto: "" };
-
-const BUCH_TABS = [
-  { key: "bilanz", label: "Bilanz & GuV" },
-  { key: "grundbuch", label: "Grundbuch" },
-  { key: "hauptbuch", label: "Hauptbuch (T-Konten)" },
-  { key: "salden", label: "Summen- & Saldenliste" },
-  { key: "konten", label: "Kontenplan" },
-];
+// Die Reiter (Bilanz, Grundbuch, …) zeigt der Bereich Finanzen (js/finanzen.js).
+ui.buch = { jahr: String(new Date().getFullYear()), q: "", konto: "" };
 
 const r2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 const istEK = (k) => k.typ === "Passiv" && String(k.nummer).startsWith("2");
@@ -92,7 +85,7 @@ function tKonto({ titel, sub, links, rechts, lt = "Soll", rt = "Haben", saldo, a
   const zeile = (x) => html`<div class="tk-row ${x.cls || ""}"><span class="tk-text">${x.text}${x.sub ? html`<small>${x.sub}</small>` : ""}</span><span class="tk-betrag">${fmt.geld(x.betrag)}</span></div>`;
   return html`
     <div class="tkonto">
-      <div class="tk-head">${action ? html`<a href="#/buchhaltung" data-action="${action.name}" data-id="${action.id}">${titel}</a>` : titel}${sub ? html`<small>${sub}</small>` : ""}</div>
+      <div class="tk-head">${action ? html`<a href="#/finanzen/hauptbuch" data-action="${action.name}" data-id="${action.id}">${titel}</a>` : titel}${sub ? html`<small>${sub}</small>` : ""}</div>
       <div class="tk-cols">
         <div class="tk-side"><div class="tk-label">${lt}</div>${l.map(zeile)}</div>
         <div class="tk-side"><div class="tk-label">${rt}</div>${r.map(zeile)}</div>
@@ -100,34 +93,6 @@ function tKonto({ titel, sub, links, rechts, lt = "Soll", rt = "Haben", saldo, a
       <div class="tk-cols tk-total"><div>${fmt.geld(summe)}</div><div>${fmt.geld(summe)}</div></div>
     </div>`;
 }
-
-// ---------- Seite ----------
-VIEWS.buchhaltung = () => {
-  if (!darf("buchhaltung_sehen")) {
-    return html`<div class="page"><div class="card empty-state"><h2>Kein Zugriff</h2><p>Dein Rang erlaubt es nicht, die Buchhaltung anzusehen.</p></div></div>`;
-  }
-  const b = ui.buch;
-  const tab = BUCH_TABS.some((t) => t.key === b.tab) ? b.tab : "bilanz";
-  const body = { bilanz: tabBilanz, grundbuch: tabGrundbuch, hauptbuch: tabHauptbuch, salden: tabSalden, konten: tabKontenplan }[tab];
-  return html`
-    <div class="page">
-      <div class="page-head">
-        <div><h1>Buchhaltung</h1>
-          <p class="muted">Doppelte Buchführung · Rechnungen und Zahlungseingänge werden automatisch gebucht.</p></div>
-        <div class="actions-row">
-          <label class="muted small">Geschäftsjahr
-            <select id="buch-jahr" data-change="buch-jahr" style="width:auto;margin-left:6px">
-              ${buchJahre().map((y) => html`<option ${y === b.jahr ? "selected" : ""}>${y}</option>`)}
-            </select></label>
-          ${darf("buchhaltung_buchen") ? html`<button class="btn primary" data-action="buchung-neu">+ Buchung</button>` : ""}
-        </div>
-      </div>
-      <nav class="tabs" style="margin:0 0 16px;padding:0">
-        ${BUCH_TABS.map((t) => html`<a href="#/buchhaltung" data-action="buch-tab" data-tab="${t.key}" class="${t.key === tab ? "active" : ""}">${t.label}</a>`)}
-      </nav>
-      ${state.konten.length ? body() : html`<div class="card"><p class="empty">Noch kein Kontenrahmen vorhanden – bitte <code>supabase-update-3.sql</code> in Supabase ausführen.</p></div>`}
-    </div>`;
-};
 
 function tabBilanz() {
   const d = bilanzDaten();
@@ -146,15 +111,10 @@ function tabBilanz() {
   if (gewinn < 0) ertrag.push({ text: "Verlust", betrag: -gewinn, cls: "saldo" });
 
   return html`
-    <div class="kpis">
-      <div class="kpi"><span class="value">${fmt.geld(d.sumAktiva)}</span><span class="label">Bilanzsumme</span></div>
-      <div class="kpi ${gewinn < 0 ? "alert" : ""}"><span class="value">${fmt.geld(gewinn)}</span><span class="label">${gewinn >= 0 ? "Gewinn" : "Verlust"} ${ui.buch.jahr}</span></div>
-      <div class="kpi"><span class="value">${fmt.geld(d.ekSumme)}</span><span class="label">Eigenkapital</span></div>
-      <div class="kpi"><span class="value">${fmt.geld(natSaldo(kontoNr("1200") || { typ: "Aktiv" }, summen(state.buchungen.filter((b) => b.datum <= d.bis)).get((kontoNr("1200") || {}).id)))}</span><span class="label">Bank</span></div>
-    </div>
     <div class="card">
       <div class="card-head">
-        <h2>Bilanz zum ${fmt.datum(d.bis)}</h2>
+        <div><h2>Bilanz zum ${fmt.datum(d.bis)}</h2>
+          <p class="muted small" style="margin:0">Bilanzsumme ${fmt.geld(d.sumAktiva)} · Eigenkapital ${fmt.geld(d.ekSumme)}</p></div>
         <div class="actions-row">
           <span class="badge ${ok ? "ok" : "alert"}">${ok ? "✓ Aktiva = Passiva" : "Bilanz nicht ausgeglichen"}</span>
           <button class="btn small" data-action="bilanz-drucken">Drucken / PDF</button>
@@ -380,8 +340,7 @@ CHANGES["buch-jahr"] = (el) => { ui.buch.jahr = el.value; render(); };
 CHANGES["buch-konto"] = (el) => { ui.buch.konto = el.value; render(); };
 
 Object.assign(ACTIONS, {
-  "buch-tab": (d) => { ui.buch.tab = d.tab; if (parseRoute().page !== "buchhaltung") go("buchhaltung"); else render(); },
-  "hauptbuch-konto": (d) => { ui.buch.konto = d.id; ui.buch.tab = "hauptbuch"; render(); window.scrollTo(0, 0); },
+  "hauptbuch-konto": (d) => { ui.buch.konto = d.id; go("finanzen/hauptbuch"); },
   "buchung-neu": () => openBuchungForm(),
   "buchung-storno": async (d) => {
     const b = byId("buchungen", d.id);

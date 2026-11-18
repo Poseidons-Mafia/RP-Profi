@@ -35,8 +35,9 @@ und Änderungen erscheinen bei allen sofort.
   Status bzw. Ergebnis der Akte ändern. Mitarbeiter können zusätzlich einen Mandanten-Charakter haben und über das Logo wechseln.
 - **Übersicht:** Kennzahlen, Termine der nächsten 7 Tage, überfällige Fristen, eigene Aufgaben,
   Mandanten in Haft, dringende Akten, **liegen gebliebene Akten** (offen, seit X Tagen ohne Eintrag, Aufgabe
-  oder Termin – mit „Wiedervorlage“ per Klick), Pinnwand, letzte Aktivitäten im Team, Statistik
-  (Erfolgsquote, Umsatz) und eine **Suche über alles** (Taste `/`).
+  oder Termin – mit „Wiedervorlage“ per Klick), **Pinnwand** und **Team heute** (beides direkt auf der Übersicht,
+  keine eigene Seite mehr), letzte Aktivitäten im Team, Statistik (Erfolgsquote, Umsatz) und eine **Suche über alles**
+  (Taste `/`). Die Übersicht zeigt nur, was der Rang lesen darf.
 - **Benachrichtigungen** (Glocke oben rechts, Taste `B`): wenn dir jemand eine Akte, Aufgabe oder einen Termin
   gibt, einen Termin verschiebt, deine Aufgabe erledigt, in deiner Akte etwas einträgt, dich mit **@Name**
   erwähnt oder etwas an die Pinnwand hängt. Live, mit Meldung und auf Wunsch als Desktop-Hinweis, wenn der
@@ -44,8 +45,9 @@ und Änderungen erscheinen bei allen sofort.
 - **@-Erwähnungen im Verlauf:** `@` tippen, Kollegen aus der Liste wählen – sie werden benachrichtigt.
 - **Wer ist online?** Avatare oben in der Kopfzeile; in einer Akte steht, wer sie gerade auch geöffnet hat
   (damit niemand gleichzeitig dasselbe ändert).
-- **Pinnwand:** Ankündigungen und Dienstanweisungen für alle, anheften, als „Wichtig“ markieren, mit Ablaufdatum
-  und **Lesebestätigung** („3 von 5 bestätigt“, wer fehlt noch). Daneben **Team heute**: wer ist online, wer im
+- **Pinnwand** (auf der Übersicht): Ankündigungen und Dienstanweisungen für alle, anheften, als „Wichtig“ markieren, mit Ablaufdatum
+  und **Lesebestätigung** („3 von 5 bestätigt“, wer fehlt noch). Angeheftete und noch zu bestätigende Beiträge stehen
+  immer oben, ältere lassen sich aufklappen, abgelaufene liegen im Archiv. Daneben **Team heute**: wer ist online, wer im
   Urlaub, wie viele Akten, Aufgaben (überfällige) und Termine jede/r heute hat.
 - **Abläufe (Checklisten):** Vorlagen wie „Strafverteidigung“, „Haftprüfung“, „Zivilklage“, „Mandat abschließen“.
   In der Akte „Ablauf starten“ (oder direkt beim Anlegen) legt alle Aufgaben mit Fälligkeit und Termine
@@ -66,10 +68,14 @@ und Änderungen erscheinen bei allen sofort.
 - **Mandantenkartei:** Kontaktdaten, Markierungen (Stammkunde, VIP, zahlt schlecht …), alle Akten,
   frühere Ergebnisse, offene Rechnungen.
 - **Kalender & Aufgaben:** Liste und Monatsansicht, Fristen-Warnung, Export in den Handy-Kalender (`.ics`).
-- **Rechnungen** im Stil der Kanzlei-Vorlage mit Gebührenkatalog, Zahlungsstatus, Zahlungserinnerung.
-- **Buchhaltung** (doppelte Buchführung): Kontenrahmen, Grundbuch mit unveränderbaren Buchungen
-  (Korrektur nur per Storno), Hauptbuch mit T-Konten, Summen- und Saldenliste, Bilanz und GuV.
-  Rechnungen und Zahlungseingänge werden automatisch gebucht. Buchen darf nur der Admin.
+- **Finanzen** (ein Menüpunkt für Rechnungen und Buchhaltung): oben die wichtigsten Zahlen (offene und überfällige
+  Rechnungen, Zahlungseingang im Monat, Bank & Kasse, Gewinn), darunter Reiter in zwei Gruppen – jede nur mit dem
+  passenden Leserecht:
+  - **Rechnungen** im Stil der Kanzlei-Vorlage mit Zahlungsstatus und Zahlungserinnerung, dazu der **Gebührenkatalog**
+    (lesen mit „Rechnungen lesen“, pflegen mit „Kanzlei-Einstellungen bearbeiten“).
+  - **Buchhaltung** (doppelte Buchführung): Bilanz und GuV, Grundbuch mit unveränderbaren Buchungen
+    (Korrektur nur per Storno), Hauptbuch mit T-Konten, Summen- und Saldenliste, Kontenplan.
+    Rechnungen und Zahlungseingänge werden automatisch gebucht.
 - **Gesetze:** alle Gesetzbücher eures Servers (StGB, StVO, Waffengesetz …) im Wortlaut, auf der Übersicht als
   **Kacheln** – ein Gesetzbuch je Kachel. Darin die Paragraphen nach Abschnitten mit Inhaltsverzeichnis, Suche
   (auch über alle Gesetze), Link je Paragraph und „KI fragen“. Gesetzestext lässt sich per **Massenimport** einfach
@@ -82,8 +88,9 @@ und Änderungen erscheinen bei allen sofort.
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
   dann drucken oder als PDF speichern.
-- **Personal:** Ränge mit Rechte-Matrix – je Bereich getrennt **Lesen** und **Bearbeiten** (z. B. alles sehen,
-  nichts ändern), Rang „Sonstiges“ mit
+- **Personal:** Ränge mit Rechte-Matrix, gruppiert nach Fallarbeit, Finanzen, Recht & KI und Verwaltung – je Bereich
+  gestuft **Lesen** → **Bearbeiten** (bei Akten zusätzlich → **Löschen**, bei Nigel **Sehen** → **Verwenden**); jede Stufe
+  schließt die vorherigen ein (z. B. alles sehen, nichts ändern). Rang „Sonstiges“ mit
   selbst gewähltem Namen, Status (Aktiv, Urlaub, Krank, Ausgeschieden), Eintritt, Personalnummer,
   vertrauliche Personalakte (Gehalt, Notizen, Vermerke wie Lob oder Abmahnung), Zugang sperren,
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
@@ -143,7 +150,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 

@@ -226,6 +226,9 @@ function tabMitglieder() {
     </div>`;
 }
 
+// Kurze Spaltenköpfe der Rechte-Tabelle
+const KURZ_STUFE = { Bearbeiten: "Bearb.", Verwenden: "Verw." };
+
 function hatRangRecht(r, key) {
   const liste = r.berechtigungen || [];
   return liste.some((b) => b === key || ALTE_RECHTE[b] === key);
@@ -234,32 +237,38 @@ function hatRangRecht(r, key) {
 function tabRaenge() {
   const admin = state.isAdmin;
   const raenge = rangeSortiert();
-  const zelle = (r, key, label) => html`<td class="center"><input type="checkbox" title="${r.name}: ${label}"
+  // Gruppen (Fallarbeit, Finanzen, …) als oberste Kopfzeile; jede Gruppe beginnt mit einem Trennstrich
+  const gruppen = [];
+  const gruppenStart = new Set();
+  for (const b of BEREICHE) {
+    const g = gruppen[gruppen.length - 1];
+    if (g && g.name === b.gruppe) g.spalten += rechtStufen(b).length;
+    else { gruppen.push({ name: b.gruppe, spalten: rechtStufen(b).length }); gruppenStart.add(b); }
+  }
+  const zelle = (r, key, label, cls = "") => html`<td class="center ${cls}"><input type="checkbox" title="${r.name}: ${label}"
     data-change="rang-recht" data-id="${r.id}" data-key="${key}" ${hatRangRecht(r, key) ? "checked" : ""} ${admin ? "" : "disabled"}></td>`;
   return html`
     <div class="card">
       <div class="card-head">
         <div><h2>Ränge & Berechtigungen</h2>
-          <p class="muted small" style="margin:0">Für jeden Bereich getrennt: <strong>Lesen</strong> (ansehen) und <strong>Bearbeiten</strong> (anlegen, ändern – schließt Lesen ein), bei Nigel <strong>Sehen</strong> und <strong>Verwenden</strong>.
+          <p class="muted small" style="margin:0">Für jeden Bereich gestuft: <strong>Lesen</strong> (ansehen) → <strong>Bearbeiten</strong> (anlegen, ändern) → bei Akten zusätzlich <strong>Löschen</strong>; bei Nigel <strong>Sehen</strong> → <strong>Verwenden</strong>. Jede Stufe schließt die vorherigen ein.
             Die Datenbank prüft jede Aktion selbst. Der Admin (Inhaber) hat immer alle Rechte. ${admin ? "" : "Ändern kann nur der Admin."}</p></div>
         ${admin ? html`<button class="btn small primary" data-action="rang-neu">+ Rang</button>` : ""}
       </div>
       <div class="table-wrap"><table class="table rights-table">
         <thead>
-          <tr><th rowspan="2">Rang</th><th rowspan="2" class="num">Mitgl.</th>
-            ${BEREICHE.map((b) => html`<th class="rt grp" colspan="${b.nurSchreiben ? 1 : 2}" title="${b.text}">${b.label}</th>`)}
-            ${SONDERRECHTE.map((x) => html`<th class="rt grp" rowspan="2">${x.label}</th>`)}
-            ${admin ? html`<th rowspan="2"></th>` : ""}</tr>
-          <tr>${BEREICHE.map((b) => b.nurSchreiben ? html`<th class="rt sub">Bearb.</th>`
-            : html`<th class="rt sub">${stufeLesen(b)}</th><th class="rt sub">${b.schreibenLabel || "Bearb."}</th>`)}</tr>
+          <tr><th rowspan="3">Rang</th><th rowspan="3" class="num">Mitgl.</th>
+            ${gruppen.map((g) => html`<th class="rt grp gruppe" colspan="${g.spalten}">${g.name}</th>`)}
+            ${admin ? html`<th rowspan="3"></th>` : ""}</tr>
+          <tr>${BEREICHE.map((b) => html`<th class="rt grp ${gruppenStart.has(b) ? "grp-start" : ""}" colspan="${rechtStufen(b).length}" title="${b.text}">${b.label}</th>`)}</tr>
+          <tr>${BEREICHE.map((b) => rechtStufen(b).map((x, i) => html`<th class="rt sub ${i === 0 ? "grp" : ""} ${i === 0 && gruppenStart.has(b) ? "grp-start" : ""}">${KURZ_STUFE[x.label] || x.label}</th>`))}</tr>
         </thead>
         <tbody>${raenge.map((r, i) => {
           const n = state.profiles.filter((p) => p.rang_id === r.id && p.status !== "Ausgeschieden").length;
           return html`<tr>
             <td><strong>${r.name}</strong>${r.ist_sonstiges ? html`<div class="small muted">benennt sich selbst</div>` : ""}</td>
             <td class="num">${n}</td>
-            ${BEREICHE.map((b) => html`${b.nurSchreiben ? "" : zelle(r, rechtLesen(b), `${b.label} ${stufeLesen(b).toLowerCase()}`)}${zelle(r, rechtSchreiben(b), `${b.label} ${stufeSchreiben(b).toLowerCase()}`)}`)}
-            ${SONDERRECHTE.map((x) => zelle(r, x.key, x.label))}
+            ${BEREICHE.map((b) => rechtStufen(b).map((x, j) => zelle(r, x.key, (RECHTE.find((y) => y.key === x.key) || x).label, j === 0 ? (gruppenStart.has(b) ? "grp grp-start" : "grp") : "")))}
             ${admin ? html`<td class="row-actions">
               <button class="icon-btn" title="Nach oben" data-action="rang-sort" data-id="${r.id}" data-delta="-1" ${i === 0 ? "disabled" : ""}>↑</button>
               <button class="icon-btn" title="Nach unten" data-action="rang-sort" data-id="${r.id}" data-delta="1" ${i === raenge.length - 1 ? "disabled" : ""}>↓</button>
@@ -271,7 +280,7 @@ function tabRaenge() {
       <h3 class="section-title" style="margin-top:18px">Die Bereiche</h3>
       <ul class="small" style="margin:0;padding-left:18px;color:var(--muted)">
         ${BEREICHE.map((b) => html`<li><strong>${b.label}</strong>: ${b.text}</li>`)}
-        <li><strong>Akten löschen</strong>: eigenes Recht, weil Löschen nicht rückgängig zu machen ist.</li>
+        <li><strong>Ohne eigenes Recht</strong>: Pinnwand lesen, Beiträge schreiben und bestätigen, „Team heute“ und das eigene Profil – das darf jedes Mitglied.</li>
         <li>Nigel beantwortet ausschließlich Rechtsfragen (KI-Modell über OpenRouter) und schlägt dafür in den Gesetzen nach. Er sieht nur Daten, die das Mitglied selbst lesen darf; die Inhalte gehen dafür an den KI-Anbieter.</li>
         ${admin ? html`<li><strong>KI-Budget</strong>: US-Dollar pro Monat je Mitglied, darüber der Deckel der Kanzlei – siehe unten. Die Beträge sieht nur der Admin.</li>` : ""}
         <li>Wer einen Bereich nicht lesen darf, sieht ihn auch nicht im Menü, auf der Übersicht oder in der Suche.</li>
@@ -659,10 +668,13 @@ function rechteText(r) {
   if (!r) return [];
   const out = [];
   for (const b of BEREICHE) {
-    if (hatRangRecht(r, rechtSchreiben(b))) out.push({ label: b.label, stufe: stufeSchreiben(b), voll: true });
-    else if (!b.nurSchreiben && hatRangRecht(r, rechtLesen(b))) out.push({ label: b.label, stufe: stufeLesen(b) });
+    // höchste Stufe, die der Rang hat (z. B. Akten: Bearbeiten & Löschen)
+    const stufen = rechtStufen(b);
+    const i = stufen.map((x) => hatRangRecht(r, x.key)).lastIndexOf(true);
+    if (i < 0) continue;
+    const schreiben = b.nurSchreiben ? 0 : 1;
+    out.push({ label: b.label, stufe: i > schreiben ? `${stufen[schreiben].label} & ${stufen[i].label}` : stufen[i].label, voll: i >= schreiben });
   }
-  for (const x of SONDERRECHTE) if (hatRangRecht(r, x.key)) out.push({ label: x.label, stufe: "Bearbeiten", voll: true });
   return out;
 }
 
@@ -965,15 +977,13 @@ CHANGES["rang-recht"] = async (el) => {
   const key = el.dataset.key;
   // alte Namen übersetzen, dann ändern
   const set = new Set((r.berechtigungen || []).map((b) => ALTE_RECHTE[b] || b));
-  // Bearbeiten/Verwenden schließt Lesen/Sehen ein – beides wird zusammen gesetzt bzw. entzogen
-  const bereich = BEREICHE.find((b) => !b.nurSchreiben && (rechtLesen(b) === key || rechtSchreiben(b) === key));
-  if (el.checked) {
-    set.add(key);
-    if (bereich && key === rechtSchreiben(bereich)) set.add(rechtLesen(bereich));
-  } else {
-    set.delete(key);
-    if (bereich && key === rechtLesen(bereich)) set.delete(rechtSchreiben(bereich));
-  }
+  // Stufen schließen die vorherigen ein (Löschen → Bearbeiten → Lesen): anhaken setzt alle darunter,
+  // abhaken entzieht alle darüber
+  const bereich = BEREICHE.find((b) => rechtStufen(b).some((x) => x.key === key));
+  const stufen = bereich ? rechtStufen(bereich).map((x) => x.key) : [key];
+  const i = stufen.indexOf(key);
+  if (el.checked) stufen.slice(0, i + 1).forEach((k) => set.add(k));
+  else stufen.slice(i).forEach((k) => set.delete(k));
   const liste = RECHTE.map((x) => x.key).filter((k) => set.has(k));
   const label = (RECHTE.find((x) => x.key === key) || { label: key }).label;
   await attempt(() => updateRow("raenge", r.id, { berechtigungen: liste }), `${r.name}: „${label}“ ${el.checked ? "erlaubt" : "entzogen"}`);
