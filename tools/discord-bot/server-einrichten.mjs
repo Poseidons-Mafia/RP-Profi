@@ -10,6 +10,9 @@
 //    ergänzt.
 //  - Gelöscht werden ausschließlich Rollen aus der Liste VERALTET, und nur
 //    wenn niemand sie trägt.
+//  - Die eigene Rolle des Bots bekommt in nicht-öffentlichen Kategorien
+//    Lesen/Schreiben, damit Nigel (Orga-Modus) z. B. in #kanzlei-chat
+//    Kollegen Bescheid geben kann.
 //  - Standard ist die Vorschau (nichts wird geändert).
 //
 //  Aufruf (über GitHub → Actions → "Discord-Server einrichten"):
@@ -138,6 +141,10 @@ const server = await discord("GET", `/guilds/${SERVER}`);
 console.log(`Server: ${server.name}\n`);
 let rollen = await discord("GET", `/guilds/${SERVER}/roles`);
 const kanaele = await discord("GET", `/guilds/${SERVER}/channels`);
+// Die Rolle, die Discord dem Bot beim Einladen gibt (für Nigels Nachrichten in den Kanzlei-Kanälen)
+const botNutzer = await discord("GET", "/users/@me");
+const botRolle = rollen.find((r) => r.tags && r.tags.bot_id === botNutzer.id);
+if (!botRolle) console.log("Hinweis: Rolle des Bots nicht gefunden – Nigel kann ggf. nicht in geschlossenen Kanälen schreiben.\n");
 
 let neu = 0, vorhanden = 0, ergaenzt = 0, geloescht = 0;
 
@@ -173,6 +180,7 @@ for (const k of KATEGORIEN) {
     rechte = [{ id: alle, type: 0, allow: "0", deny: bits(ANSEHEN) }];
     for (const n of k.zugang) if (idVon(n)) rechte.push(team(n));
   }
+  if (rechte.length && botRolle) rechte.push({ id: botRolle.id, type: 0, allow: bits(ANSEHEN, SENDEN, VERLAUF), deny: "0" });
 
   let kategorie = kanaele.find((c) => c.type === 4 && gleich(c.name, k.name));
   if (kategorie) {

@@ -97,7 +97,7 @@ und Änderungen erscheinen bei allen sofort.
 - **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (genau **ein** Modell über
   **OpenRouter**, derzeit DeepSeek V4.1 Flash, keine Ausweich-Modelle): beantwortet
   **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
-  Strafrahmen) und lehnt alles andere ab. Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
+  Strafrahmen) und lehnt alles andere ab – außer Büroarbeit für die Kanzlei im Modus *Organisatorisch* (Arbeitsbereich). Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
   Die KI antwortet in **Markdown**, das im Browser mit Showdown in HTML umgewandelt (und mit DOMPurify bereinigt) wird.
   Antworten sind auf **4000 Zeichen** begrenzt – das interne Nachdenken (Reasoning) zählt nicht mit. Unter jeder Antwort
@@ -123,6 +123,14 @@ und Änderungen erscheinen bei allen sofort.
   - **Arbeitsmodi:** *Rechtsfrage* (kurz, wie auf dem Handy), *Gutachten* (Gutachtenstil mit Strafrahmen), *Schriftsatz*
     (Anträge, Stellungnahmen, Schreiben – landet direkt im Entwurf) und *Fallanalyse* (Stärken, Risiken, Beweislage, Strategie,
     nächste Schritte, Fragen an den Mandanten). Lange Modi dürfen deutlich längere Antworten schreiben (bis 14 000 Zeichen).
+  - **Modus *Organisatorisch*:** Nigel erledigt Büroarbeit selbst – mit den Rechten des Mitglieds (was man von Hand nicht darf,
+    darf Nigel auch nicht): **in den Verlauf einer Akte notieren**, **Termine** und **Aufgaben** anlegen (auch für Kollegen),
+    anstehende Termine/Aufgaben ansehen, **an die Pinnwand hängen** und **Kollegen auf Discord Bescheid geben**. Beispiel:
+    „Gib bitte Niklas Palermo Bescheid, dass ich mich um zehn Minuten verspäte“ → Nigel erwähnt sie im Kanal `#kanzlei-chat`
+    mit @ und schreibt ihr im Butler-Ton, darunter klein „im Auftrag von …“. Zeitangaben wie „morgen um 15 Uhr“ rechnet er in
+    der Ortszeit des Browsers um. Bei unklaren Namen, Akten oder Zeiten fragt er nach. Unter der Antwort steht, was erledigt
+    wurde (mit Link). Grenzen: höchstens 8 Aktionen und 3 Discord-Nachrichten pro Auftrag, Empfänger nur aktive Mitglieder mit
+    verknüpftem Discord, keine @everyone-/Rollen-Pings. Einrichtung siehe **Nigel schreibt auf Discord**.
   - **Live-Arbeitsschritte:** Während Nigel arbeitet, sieht man, welche Paragraphen und Akten er gerade nachschlägt (mit Laufzeit
     und „Abbrechen“); unter jeder Antwort bleiben die Schritte aufklappbar.
   - **Kontext** (rechts): bis zu 5 Akten gleichzeitig, bis zu 20 angeheftete Paragraphen im Wortlaut und eigene Notizen zum Sachverhalt.
@@ -137,7 +145,7 @@ und Änderungen erscheinen bei allen sofort.
   - **Persönliche Einstellungen** (gelten auch fürs Handy): Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren,
     Standardmodus, Senden mit Enter oder Strg+Enter, Kosten-Anzeige (Prozent/Dollar). Der Ton ist immer der Butler;
     die Anrede kommt aus „Mein Profil“ (Herr → Sir, Frau → Madam, Keine Anrede).
-  - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi, höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
+  - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi (auch *Organisatorisch*), Discord-Nachrichten an/aus und Kanal, höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
     **maximale Kosten pro Anfrage** (US-Dollar, gilt auch fürs Handy). Nigel rechnet vor jedem Schritt mit den Preisen des Modells:
     Wird es knapp, schlägt er weniger nach, denkt kürzer und begrenzt die Antwortlänge; reicht das Budget gar nicht, lehnt er ab,
     bevor Geld ausgegeben wird. Dieselbe Bremse greift, wenn das restliche Monatsbudget (eigenes oder das der Kanzlei) kleiner ist.
@@ -229,6 +237,24 @@ Website mit Discord angemeldet hat, bekommt einen Hinweis darauf. Keine Datenban
 
 Danach in Discord `/ping` eingeben. Bot-Token und Public Key gehören **nie** in `config.js` oder anderen Website-Code.
 
+### Nigel schreibt auf Discord (Modus „Organisatorisch“)
+
+Damit Nigel Kollegen auf Discord Bescheid geben kann:
+
+1. **Supabase → Edge Functions → Secrets:** `DISCORD_BOT_TOKEN` = derselbe Bot-Token wie im GitHub-Secret.
+   (Optional `DISCORD_SERVER_ID`, falls es nicht der Wiwang-Server ist.)
+2. Die Edge Function **`ki-assistent` neu bereitstellen** (Code aus [`supabase/functions/ki-assistent`](supabase/functions/ki-assistent/index.ts)).
+3. Der Bot muss im Kanal schreiben dürfen. **GitHub → Actions → „Discord-Server einrichten“ → ausfuehren** gibt der Rolle des Bots
+   Lesen/Schreiben in den geschlossenen Kategorien (u. a. 🏛️ Kanzlei). Alternativ von Hand in den Kanal-Einstellungen.
+4. Unter **Nigel → Einstellungen → Kanzlei-Vorgaben** lassen sich der Modus, Discord-Nachrichten und der Kanal (Standard
+   `kanzlei-chat`) ein- und ausschalten bzw. ändern. Keine Datenbank-Änderung nötig.
+
+So läuft es: Nigel findet den Empfänger in der Mitgliederliste (Charaktername), sucht über Charakter → Person die Discord-ID
+(gespeichert beim Login mit Discord) und schreibt in den Kanal: `@Empfänger` + Nachricht, darunter „Nigel · im Auftrag von …“.
+Erwähnt (gepingt) werden nur die genannten Empfänger. Darf der Bot im Kanal nicht schreiben, stellt er die Nachricht als
+Direktnachricht zu; auf Wunsch („schreib ihr privat“) schickt er gleich eine Direktnachricht. Wer sich noch nie mit Discord
+auf der Website angemeldet hat, kann nicht angeschrieben werden – Nigel sagt das und bietet z. B. eine Aufgabe an.
+
 ### Discord-Server einrichten lassen
 
 Der Workflow **Discord-Server einrichten** legt Rollen, Kategorien und Kanäle an (Skript
@@ -265,6 +291,7 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 | `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
 | `KI_KOSTEN_MAX` | optional: Höchstkosten pro Anfrage in US-Dollar (z. B. `0.05`), falls in Nigels Kanzlei-Vorgaben nichts eingestellt ist |
 | `KI_REASONING` | optional: `low`, `medium` (Standard) oder `high` – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
+| `DISCORD_BOT_TOKEN` | optional: Bot-Token, damit Nigel im Modus *Organisatorisch* Discord-Nachrichten schreiben kann (siehe **Nigel schreibt auf Discord**) |
 
 Weitere Ränge schaltet der Admin unter **Personal → Ränge & Berechtigungen → Nigel (Sehen / Verwenden)** frei. Dort legt er
 das **KI-Budget pro Monat** fest: den **Kanzlei-Deckel** (Standard 10 $), je Rang einen Grundwert in US-Dollar (Standard 2,50 $)
@@ -279,7 +306,8 @@ Anfrage das Restbudget und plant die Antwort so, dass es nicht überschritten wi
 um wenige Cent überschritten werden – als zweite Sicherung dem OpenRouter-Schlüssel ein eigenes Limit geben. Die Ausgaben stehen bei
 OpenRouter unter **Activity**. Unter **OpenRouter → Settings → Privacy** Anbieter ausschließen, die mit Eingaben
 trainieren. An den KI-Anbieter gehen die gewählten Akten,
-der Strafkatalog, die nachgeschlagenen und angehefteten Paragraphen, Notizen und ggf. der Entwurf.
+der Strafkatalog, die nachgeschlagenen und angehefteten Paragraphen, Notizen und ggf. der Entwurf – im Modus *Organisatorisch*
+stattdessen Namen, Ränge und Anrede der aktiven Mitglieder, die gewählten Akten (Aktenzeichen und Titel) und die gelesenen Termine.
 Lange Aufträge sind auf rund 105 Sekunden Arbeitszeit begrenzt (danach antwortet Nigel mit dem, was er hat), weil
 Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 

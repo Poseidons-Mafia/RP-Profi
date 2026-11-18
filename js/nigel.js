@@ -5,7 +5,9 @@
 //  das schnelle Nachschlage-Werkzeug; hier ist Platz für alles andere:
 //    links   – gespeicherte Chats (Suche, angeheftet, nach Datum)
 //    Mitte   – Chat mit Arbeitsmodus (Rechtsfrage, Gutachten, Schriftsatz,
-//              Fallanalyse), Live-Arbeitsschritten und Aktionen je Antwort
+//              Fallanalyse, Organisatorisch), Live-Arbeitsschritten und Aktionen je Antwort
+//              (im Modus „Organisatorisch“ erledigt Nigel selbst Akteneinträge,
+//              Termine, Aufgaben, Pinnwand-Beiträge und Discord-Nachrichten)
 //    rechts  – Arbeitsfläche: Kontext (mehrere Akten, angeheftete
 //              Paragraphen, Notizen), Entwurf (bearbeiten, von Nigel
 //              überarbeiten lassen, drucken), Quellen, Vorlagen, Einstellungen
@@ -20,9 +22,12 @@ const NW_MODI = [
   { key: "gutachten", label: "Gutachten", text: "Tatbestände im Gutachtenstil prüfen, mit Strafrahmen und Ergebnis." },
   { key: "schriftsatz", label: "Schriftsatz", text: "Anträge, Stellungnahmen, Schreiben – landen direkt im Entwurf." },
   { key: "strategie", label: "Fallanalyse", text: "Stärken, Risiken, Beweislage, Strategie und nächste Schritte." },
+  { key: "orga", label: "Organisatorisch", text: "Nigel erledigt Büroarbeit: in Akten notieren, Termine und Aufgaben anlegen, Pinnwand, Discord-Nachrichten." },
 ];
-const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung" };
-const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 10000, ueberarbeiten: 16000 };
+const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung", orga: "Organisatorisch" };
+const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 10000, ueberarbeiten: 16000, orga: 3000 };
+// Modi, die die Kanzlei an- und abschalten kann („orga“ hat einen eigenen Schalter, damit er auch bei gespeicherten Vorgaben an ist)
+const NW_MODI_SCHALTBAR = ["gutachten", "schriftsatz", "strategie"];
 
 const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
 
@@ -35,6 +40,11 @@ const NW_VORLAGEN_STANDARD = [
   { titel: "Vernehmung vorbereiten", modus: "strategie", akte: true, text: "Bereite den Mandanten auf seine Vernehmung vor: Rechte, Risiken, was er sagen sollte und was besser nicht." },
   { titel: "Paragraphen zum Sachverhalt", modus: "frage", text: "Welche Paragraphen passen auf folgenden Sachverhalt?\n" },
   { titel: "Paragraph erklären", modus: "frage", text: "Erkläre mir " },
+  { titel: "Jemandem Bescheid geben", modus: "orga", text: "Gib bitte [Name] auf Discord Bescheid, dass " },
+  { titel: "Termin eintragen", modus: "orga", text: "Trag mir bitte einen Termin ein: " },
+  { titel: "In der Akte notieren", modus: "orga", akte: true, text: "Notiere bitte in dieser Akte: " },
+  { titel: "Was steht an?", modus: "orga", text: "Was steht diese Woche bei mir an?" },
+  { titel: "An die Pinnwand", modus: "orga", text: "Häng bitte an die Pinnwand: " },
 ];
 
 const NW_UEBERARBEITEN = ["Formeller formulieren", "Kürzen und straffen", "Rechtliche Begründung stärken", "Platzhalter aus der Akte füllen", "Rechtschreibung und Stil prüfen"];
@@ -81,10 +91,12 @@ function nwSetzen(el, inhalt) {
 // ---------- Kanzlei-Vorgaben (Personal → Kanzlei & Daten bzw. hier unter Einstellungen) ----------
 function nwVorgaben() {
   const v = (state.settings && state.settings.nigel) || {};
-  const alle = ["gutachten", "schriftsatz", "strategie"];
+  const alle = NW_MODI_SCHALTBAR;
   return {
     anweisungen: typeof v.anweisungen === "string" ? v.anweisungen : "",
-    modi: Array.isArray(v.modi) ? alle.filter((m) => v.modi.includes(m)) : alle,
+    modi: [...(Array.isArray(v.modi) ? alle.filter((m) => v.modi.includes(m)) : alle), ...(v.orga !== false ? ["orga"] : [])],
+    discord: v.discord !== false,
+    discord_kanal: (typeof v.discord_kanal === "string" && v.discord_kanal.trim()) || "kanzlei-chat",
     reasoning_max: ["low", "medium", "high"].includes(v.reasoning_max) ? v.reasoning_max : "high",
     akten_werkzeuge: v.akten_werkzeuge !== false,
     kosten_max: Math.max(0, Number(v.kosten_max) || 0),
@@ -247,7 +259,7 @@ async function nwSenden(text, { modus } = {}) {
 
 async function nwAnfrage(chat, modus, frageText) {
   const n = ui.nigel;
-  const lauf = { schritte: [], start: Date.now(), runde: 0, schreibt: false, modus, abbruch: new AbortController() };
+  const lauf = { schritte: [], aktionen: [], start: Date.now(), runde: 0, schreibt: false, modus, abbruch: new AbortController() };
   n.laeuft[chat.id] = lauf;
   nwAmEnde = true;
   scheduleRender();
@@ -262,6 +274,7 @@ async function nwAnfrage(chat, modus, frageText) {
     notiz: chat.notiz || "",
     entwurf: mitEntwurf ? chat.entwurf || "" : "",
     entwurf_mitsenden: mitEntwurf,
+    zeitzone: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; } })(),
   };
 
   let ergebnis = null;
@@ -269,7 +282,7 @@ async function nwAnfrage(chat, modus, frageText) {
     ergebnis = await nwStream(body, lauf);
     const zeile = {
       chat_id: chat.id, rolle: "ki", text: ergebnis.antwort, modus,
-      quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [] },
+      quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [], ...(ergebnis.aktionen && ergebnis.aktionen.length ? { aktionen: ergebnis.aktionen } : {}) },
       schritte: ergebnis.schritte || [], vorschlag: !!ergebnis.vorschlag, gekuerzt: !!ergebnis.gekuerzt,
     };
     let { data, error } = await db.from("ki_nachrichten").insert({ ...zeile, kosten: ergebnis.kosten ?? null }).select().single();
@@ -277,6 +290,7 @@ async function nwAnfrage(chat, modus, frageText) {
     if (error) throw error;
     (n.nachrichten[chat.id] = n.nachrichten[chat.id] || []).push(data);
     nwSpeichernLeise(chat, { modus: chat.modus }); // nach oben in der Liste
+    nwNachAktionen(ergebnis.aktionen);
     ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(ergebnis.budget) || (ui.assistent.info || {}).budget || null, modell: ergebnis.modell };
     if (ergebnis.vorschlag && modus === "schriftsatz" && !String(chat.entwurf || "").trim()) {
       // Erster Schriftsatz landet direkt im (leeren) Entwurf
@@ -338,6 +352,7 @@ async function nwStream(body, lauf) {
       let e;
       try { e = JSON.parse(zeile); } catch { continue; }
       if (e.typ === "schritt") lauf.schritte.push(e);
+      else if (e.typ === "aktion" && e.aktion) lauf.aktionen.push(e.aktion);
       else if (e.typ === "runde") { lauf.runde = e.runde; lauf.schreibt = !!e.schreibt; }
       else if (e.typ === "fertig") return e;
       else if (e.typ === "fehler") throw new Error(e.text);
@@ -345,6 +360,23 @@ async function nwStream(body, lauf) {
     }
   }
   throw new Error("Die Verbindung zu Nigel wurde unterbrochen. Bitte erneut versuchen.");
+}
+
+// Orga-Modus: Was Nigel angelegt hat, sofort in der Website zeigen (Live-Updates kommen zusätzlich)
+function nwNachAktionen(aktionen) {
+  if (!Array.isArray(aktionen) || !aktionen.length) return;
+  const tabellen = { akte: ["eintraege"], termin: ["termine"], aufgabe: ["aufgaben"], pinnwand: ["pinnwand"] };
+  const neu = [...new Set(aktionen.flatMap((a) => tabellen[a.typ] || []))];
+  if (neu.length) neuLaden(neu).catch((e) => console.warn(e));
+}
+
+// Liste „Erledigt“ unter einer Orga-Antwort
+const NW_AKTION_ZEICHEN = { akte: "A", termin: "T", aufgabe: "✓", pinnwand: "P", discord: "@" };
+function nwAktionenHtml(aktionen, live = false) {
+  if (!Array.isArray(aktionen) || !aktionen.length) return "";
+  return html`<div class="nw-aktionen ${live ? "live" : ""}"><p class="nw-gruppe">${live ? "Bereits erledigt" : "Erledigt"}</p>
+    <ul>${aktionen.map((a) => html`<li><span class="nw-aktion-zeichen">${NW_AKTION_ZEICHEN[a.typ] || "•"}</span>
+      ${/^#\/[\w\/-]*$/.test(a.link || "") ? html`<a href="${a.link}">${a.text}</a>` : html`<span>${a.text}</span>`}</li>`)}</ul></div>`;
 }
 
 function nwMitEntwurf(chat) {
@@ -571,6 +603,11 @@ const NW_VORSCHAU_BEISPIEL = {
     antwort: "Stärken: … Risiken: … Beweislage: Die Aussage des Zeugen … ist widersprüchlich … Strategie: … Nächste Schritte: – [ ] Akteneinsicht beantragen – [ ] Zeugen befragen – [ ] …",
     schritte: ["Akte gelesen", "Beweise geprüft", "Paragraphen nachgeschlagen"],
   },
+  orga: {
+    frage: "Gib bitte Mr. Miller Bescheid, dass ich mich um zehn Minuten verspäte, und trag mir für morgen 15 Uhr ein Mandantengespräch ein.",
+    antwort: "Consider it done. Ich habe Mr. Miller auf Discord benachrichtigt und den Termin für morgen eingetragen. – Discord #kanzlei-chat … – Termin „Mandantengespräch“ am … um 15:00 …",
+    schritte: ["Discord-Nachricht gesendet", "Termin angelegt"],
+  },
 };
 
 const NW_VORSCHAU_KANN = [
@@ -578,6 +615,7 @@ const NW_VORSCHAU_KANN = [
   ["G", "Prüft die Tatvorwürfe einer Akte im Gutachtenstil, mit Strafrahmen"],
   ["S", "Entwirft Schriftsätze und überarbeitet sie auf Anweisung"],
   ["F", "Analysiert Fälle: Stärken, Risiken, Beweislage, nächste Schritte"],
+  ["O", "Erledigt Büroarbeit: Akteneinträge, Termine, Aufgaben, Pinnwand und Discord-Nachrichten an Kollegen"],
   ["A", "Arbeitet mit mehreren Akten, Paragraphen und Notizen als Kontext"],
   ["✓", "Übernimmt Antworten in die Akte oder legt daraus Aufgaben an"],
   ["★", "Speichert Chats – zum Fortsetzen, Anheften und Exportieren"],
@@ -928,12 +966,13 @@ function nwNachricht(chat, m, i, letzte) {
             <div class="ki-md nw-dokument-text">${new SafeHtml(nwFormatiert(m.id + "/" + j, t.md))}</div>
           </div>` : html`<div class="ki-md nw-text">${new SafeHtml(nwFormatiert(m.id + "/" + j, t.md))}</div>`)}
       </div>
+      ${nwAktionenHtml(m.quellen && m.quellen.aktionen)}
       ${quellen.length || akten.length ? html`<div class="ki-quellen"><span>Nachgeschlagen:</span>
         ${quellen.map((q) => html`<button type="button" class="ki-quelle" data-action="nw-quelle" data-q="${q}">${q}</button>`)}
         ${akten.map((a) => html`<a class="ki-quelle nw-akte-quelle" href="#/akten/${a.id}">${a.number}</a>`)}</div>` : ""}
       <div class="nw-msg-aktionen">
         <button type="button" data-action="nw-kopieren" data-id="${m.id}">${new SafeHtml(KI_ICON.kopieren)}Kopieren</button>
-        ${hatEntwurf ? "" : html`<button type="button" data-action="nw-in-entwurf" data-id="${m.id}">${new SafeHtml(NW_ICON.entwurf)}In Entwurf</button>`}
+        ${hatEntwurf || m.modus === "orga" ? "" : html`<button type="button" data-action="nw-in-entwurf" data-id="${m.id}">${new SafeHtml(NW_ICON.entwurf)}In Entwurf</button>`}
         <button type="button" data-action="nw-in-akte" data-id="${m.id}">${new SafeHtml(KI_ICON.akte)}In Akte</button>
         ${checkliste.length ? html`<button type="button" data-action="nw-aufgaben" data-id="${m.id}">${new SafeHtml(NW_ICON.aufgabe)}${anzahl(checkliste.length, "Aufgabe", "Aufgaben")} anlegen</button>` : ""}
         ${letzte && !ui.nigel.laeuft[chat.id] ? html`<button type="button" data-action="nw-nochmal" title="Antwort neu erzeugen">${new SafeHtml(NW_ICON.nochmal)}Neu</button>` : ""}
@@ -942,7 +981,11 @@ function nwNachricht(chat, m, i, letzte) {
   </article>`;
 }
 
-const NW_WERKZEUG = { gesetze_finden: ["GB", "Gesetzbücher"], paragraphen_finden: ["§", "Paragraphen"], akten_suchen: ["A", "Akten durchsucht"], akte_lesen: ["A", "Akte gelesen"] };
+const NW_WERKZEUG = {
+  gesetze_finden: ["GB", "Gesetzbücher"], paragraphen_finden: ["§", "Paragraphen"], akten_suchen: ["A", "Akten durchsucht"], akte_lesen: ["A", "Akte gelesen"],
+  akte_eintrag: ["A", "In Akte notiert"], termin_anlegen: ["T", "Termin angelegt"], aufgabe_anlegen: ["✓", "Aufgabe angelegt"],
+  pinnwand_beitrag: ["P", "Pinnwand"], termine_ansehen: ["T", "Kalender angesehen"], discord_nachricht: ["@", "Discord"],
+};
 function nwSchrittZeile(s) {
   const [zeichen, name] = NW_WERKZEUG[s.werkzeug] || ["•", s.werkzeug];
   return html`<li><span class="nw-schritt-zeichen">${zeichen}</span><span class="nw-schritt-text"><strong>${name}</strong> ${s.text || ""}</span>
@@ -960,7 +1003,7 @@ function nwLaufendZeichnen() {
   if (!lauf) { nwSetzen(el, ""); return; }
   const sek = Math.floor((Date.now() - lauf.start) / 1000);
   const status = lauf.schreibt || (lauf.runde > 1 && !lauf.schritte.length) ? "schreibt die Antwort"
-    : lauf.schritte.length ? "schlägt nach" : lauf.runde ? "denkt nach" : "nimmt den Auftrag entgegen";
+    : lauf.schritte.length ? (lauf.modus === "orga" ? "erledigt den Auftrag" : "schlägt nach") : lauf.runde ? "denkt nach" : "nimmt den Auftrag entgegen";
   const geaendert = nwSetzen(el, html`<article class="nw-msg ki nw-laeuft">
     <img class="nw-msg-avatar" src="assets/nigel.svg" alt="">
     <div class="nw-msg-inhalt">
@@ -968,6 +1011,7 @@ function nwLaufendZeichnen() {
         <span class="nw-status">${status} …</span><span class="nw-uhr">${Math.floor(sek / 60)}:${pad2(sek % 60)}</span>
         <button type="button" class="nw-abbrechen" data-action="nw-abbrechen">${new SafeHtml(NW_ICON.stopp)} Abbrechen</button></div>
       ${lauf.schritte.length ? html`<ol class="nw-schritte-live">${lauf.schritte.map((s) => nwSchrittZeile(s))}</ol>` : ""}
+      ${nwAktionenHtml(lauf.aktionen, true)}
       <div class="ki-tippt"><span></span><span></span><span></span></div>
     </div>
   </article>`);
@@ -990,7 +1034,7 @@ function nwLeisteZeichnen(chat) {
   if (senden) senden.disabled = !!(chat.id && ui.nigel.laeuft[chat.id]);
   const feld = nwFeld("nw-text");
   if (feld) {
-    const ph = { frage: "Ihre Rechtsfrage an Nigel …", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?" }[chat.modus];
+    const ph = { frage: "Ihre Rechtsfrage an Nigel …", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?", orga: "Was soll Nigel erledigen? (z. B. „Gib [Name] auf Discord Bescheid, dass ich mich zehn Minuten verspäte“)" }[chat.modus];
     if (feld.placeholder !== ph) feld.placeholder = ph;
   }
 }
@@ -1245,6 +1289,7 @@ function nwEinstellungenZeichnen() {
         ${state.isAdmin ? html`<dt>Max. Kosten pro Anfrage</dt><dd>${v.kosten_max ? nwDollar(v.kosten_max) : "kein Limit"}</dd>` : ""}
         <dt>Höchste Gründlichkeit</dt><dd>${stufen[v.reasoning_max]}</dd>
         <dt>Akten durchsuchen</dt><dd>${v.akten_werkzeuge ? "erlaubt" : "aus"}</dd>
+        <dt>Discord (Organisatorisch)</dt><dd>${v.modi.includes("orga") && v.discord ? `erlaubt · #${v.discord_kanal}` : "aus"}</dd>
         <dt>Hausregeln</dt><dd>${v.anweisungen ? truncate(v.anweisungen, 140) : "keine"}</dd>
       </dl>
     </section>` : ""}`);
@@ -1579,15 +1624,26 @@ Object.assign(ACTIONS, {
           options: [{ value: "low", label: "Schnell" }, { value: "medium", label: "Gründlich" }, { value: "high", label: "Sehr gründlich" }],
           help: "Begrenzt die Kosten: Mitglieder können nicht gründlicher einstellen." },
         { name: "akten_werkzeuge", label: "Nigel darf Akten der Kanzlei durchsuchen (nur mit Leserecht)", type: "checkbox", half: true },
+        { type: "section", label: "Organisatorisch & Discord" },
+        { name: "discord", label: "Nigel darf im Modus „Organisatorisch“ Discord-Nachrichten schreiben", type: "checkbox", half: true,
+          help: "Nur an aktive Mitglieder mit verknüpftem Discord, mit Hinweis, in wessen Auftrag. Braucht das Secret DISCORD_BOT_TOKEN in Supabase." },
+        { name: "discord_kanal", label: "Discord-Kanal für Nigels Nachrichten", half: true, placeholder: "kanzlei-chat",
+          help: "Name (ohne #) oder ID des Textkanals. Dort erwähnt Nigel die Empfänger mit @. Darf der Bot dort nicht schreiben, schickt er eine Direktnachricht." },
         { name: "anweisungen", label: "Hausregeln für Nigel", type: "textarea", rows: 6,
           placeholder: "z. B. „Schriftsätze immer mit ‚Sehr geehrte Damen und Herren‘ beginnen.“ oder „Bei Haftsachen immer auf die Frist für die Haftprüfung hinweisen.“",
           help: "Zusätzliche Anweisungen für alle Antworten (max. 4000 Zeichen). Sie ergänzen Nigels Regeln, heben sie aber nicht auf." },
       ],
-      values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen },
+      values: { modi: v.modi, reasoning_max: v.reasoning_max, kosten_max: v.kosten_max || "", akten_werkzeuge: v.akten_werkzeuge, anweisungen: v.anweisungen,
+        discord: v.discord, discord_kanal: v.discord_kanal },
       onSubmit: async (w) => {
         const kostenMax = !state.isAdmin ? v.kosten_max // unverändert lassen
           : Number(w.kosten_max) > 0 ? Math.min(100, Math.round(Number(w.kosten_max) * 10000) / 10000) : 0;
-        const nigel = { kosten_max: kostenMax, modi: w.modi, reasoning_max: w.reasoning_max, akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000) };
+        const modi = Array.isArray(w.modi) ? w.modi : [];
+        const nigel = {
+          kosten_max: kostenMax, modi: modi.filter((m) => m !== "orga"), orga: modi.includes("orga"), reasoning_max: w.reasoning_max,
+          akten_werkzeuge: w.akten_werkzeuge, anweisungen: String(w.anweisungen || "").slice(0, 4000),
+          discord: !!w.discord, discord_kanal: String(w.discord_kanal || "").trim().replace(/^#/, "").slice(0, 100) || "kanzlei-chat",
+        };
         await updateRow("einstellungen", 1, { daten: { ...((state.einstellungen[0] || {}).daten || {}), nigel } });
         toast("Vorgaben gespeichert");
       },
