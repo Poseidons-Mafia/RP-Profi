@@ -131,8 +131,8 @@ und Änderungen erscheinen bei allen sofort.
     der Ortszeit des Browsers um. Bei unklaren Namen, Akten oder Zeiten fragt er nach. Unter der Antwort steht, was erledigt
     wurde (mit Link). Alles, was Nigel anlegt, steht auf der Website unter **„Nigel · im Auftrag von …“** (mit seinem Bild) –
     im Akten-Verlauf, an der Pinnwand, bei Terminen, Aufgaben und Benachrichtigungen – und ist aus seiner Sicht geschrieben
-    („Im Auftrag von Mr. Miller darf ich mitteilen …“). Als Ersteller bleibt der Auftraggeber gespeichert (Rechte, Protokoll). Grenzen: höchstens 8 Aktionen und 3 Discord-Nachrichten pro Auftrag, Empfänger nur aktive Mitglieder mit
-    verknüpftem Discord, keine @everyone-/Rollen-Pings. Einrichtung siehe **Nigel schreibt auf Discord**.
+    („Im Auftrag von Mr. Miller darf ich mitteilen …“). Als Ersteller bleibt der Auftraggeber gespeichert (Rechte, Protokoll). Grenzen: höchstens 8 Aktionen und 3 Discord-Nachrichten pro Auftrag, Empfänger nur aktive Mitglieder
+    (ohne verknüpftes Discord findet Nigel sie über den Namen auf dem Server), keine @everyone-/Rollen-Pings. Einrichtung siehe **Nigel schreibt auf Discord**.
   - **Live-Arbeitsschritte:** Während Nigel arbeitet, sieht man, welche Paragraphen und Akten er gerade nachschlägt (mit Laufzeit
     und „Abbrechen“); unter jeder Antwort bleiben die Schritte aufklappbar.
   - **Kontext** (rechts): bis zu 5 Akten gleichzeitig, bis zu 20 angeheftete Paragraphen im Wortlaut und eigene Notizen zum Sachverhalt.
@@ -250,14 +250,21 @@ Damit Nigel Kollegen auf Discord Bescheid geben kann:
    Lesen/Schreiben in den geschlossenen Kategorien (u. a. 🏛️ Kanzlei). Alternativ von Hand in den Kanal-Einstellungen.
 4. Unter **Nigel → Einstellungen → Kanzlei-Vorgaben** lassen sich der Modus, Discord-Nachrichten und der Kanal (Standard
    `kanzlei-chat`) ein- und ausschalten bzw. ändern. Keine Datenbank-Änderung nötig.
+5. Für Mitglieder **ohne verknüpftes Discord-Konto**: im [Discord Developer Portal](https://discord.com/developers/applications)
+   → Anwendung → **Bot** → **Server Members Intent** einschalten. Dann darf der Bot die Mitgliederliste des Servers lesen und
+   findet z. B. „[WL] Niklas Palermo“ auch mit Präfix im Spitznamen.
 
 So läuft es: Nigel findet den Empfänger in der Mitgliederliste (Charaktername), sucht über Charakter → Person die Discord-ID
 (gespeichert beim Login mit Discord) und schreibt in den Kanal: `@Empfänger` und darunter eine **Karte** in Kanzlei-Gold mit
 Nigels Bild ([`assets/nigel.png`](assets/nigel.png), muss unter wiwang.de erreichbar sein), Betreff, einem kleinen Butler-Brief
 (Anrede, Mitteilung mit dem Wichtigsten fett, Schlussformel) und „Im Auftrag von …“.
 Erwähnt (gepingt) werden nur die genannten Empfänger. Darf der Bot im Kanal nicht schreiben, stellt er die Nachricht als
-Direktnachricht zu; auf Wunsch („schreib ihr privat“) schickt er gleich eine Direktnachricht. Wer sich noch nie mit Discord
-auf der Website angemeldet hat, kann nicht angeschrieben werden – Nigel sagt das und bietet z. B. eine Aufgabe an.
+Direktnachricht zu; auf Wunsch („schreib ihr privat“) schickt er gleich eine Direktnachricht.
+
+Hat jemand sein Discord-Konto **nicht verknüpft** (nie mit Discord auf der Website angemeldet), sucht Nigel die Person auf dem
+Discord-Server: zuerst über das Feld **„Discord“ im Profil** (Benutzername wie `niklas.palermo` oder direkt die Discord-ID),
+sonst über den Charakternamen im Server-Spitznamen, Anzeigenamen oder Benutzernamen. Angepingt wird nur bei **genau einem**
+Treffer. Passen mehrere oder keiner, sagt Nigel das und bittet, im Profil den Discord-Namen bzw. die ID einzutragen.
 
 ### Discord-Server einrichten lassen
 

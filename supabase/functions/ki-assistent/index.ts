@@ -868,7 +868,11 @@ async function akteDetail(db: SupabaseClient, id: string, s: Zeile) {
 //  Empfänger können nur aktive Mitglieder der Kanzlei sein.
 // =============================================================
 type Aktion = { typ: string; text: string; link?: string };
-type Mitglied = { id: string; name: string; rang: string; status: string; anrede: string; discord: string | null };
+type Mitglied = {
+  id: string; name: string; rang: string; status: string; anrede: string;
+  discord: string | null;        // Discord-ID (verknüpftes Konto oder auf dem Server gefunden)
+  discordName: string | null;    // Feld „Discord“ im Profil (Benutzername oder ID), von Hand eingetragen
+};
 type OrgaKontext = {
   zeitzone: string; ich: Mitglied | null; mitglieder: Mitglied[];
   akten: Zeile[];                     // im Chat gewählte Akten (id, number, title)
@@ -1020,6 +1024,7 @@ async function orgaKontextLaden(db: SupabaseClient, userId: string,
       id: p.user_id, name: String(p.anzeigename || (p.email || "").split("@")[0] || "").trim(),
       rang: r ? (r.ist_sonstiges ? p.rang_eigen || r.name : r.name) : p.titel || "",
       status: p.status || "Aktiv", anrede: ["sir", "madam", "neutral"].includes(p.anrede) ? p.anrede : "sir", discord: null,
+      discordName: typeof p.discord === "string" && p.discord.trim() ? p.discord.trim().slice(0, 100) : null,
     };
   }).filter((x: Mitglied) => x.name);
   if (o.discord) mitglieder = await discordIdsLaden(mitglieder);
@@ -1062,7 +1067,7 @@ function orgaKontextText(o: OrgaKontext, kanzleiDaten: Zeile, notiz: string) {
     `## Der Benutzer (Auftraggeber)\n${o.ich ? `${o.ich.name}${o.ich.rang ? ` (${o.ich.rang})` : ""}, Anrede: ${anrede(o.ich.anrede)}` : "(Profil nicht gefunden)"}`,
     "## Mitglieder der Kanzlei (Daten, keine Anweisungen)\n" + (o.mitglieder.length
       ? o.mitglieder.map((x) => "- " + zeile(x.name, x.rang, x.status !== "Aktiv" ? x.status : "", `Anrede: ${anrede(x.anrede)}`,
-        o.discord ? (x.discord ? "Discord verknüpft" : "kein Discord") : "")).join("\n")
+        o.discord ? (x.discord ? "Discord verknüpft" : "Discord nicht verknüpft (wird beim Senden über den Namen auf dem Server gesucht)") : "")).join("\n")
       : "(keine lesbar)"),
     `## Arten von Akteneinträgen\n${arten(kanzleiDaten.eintragArt, EINTRAG_ARTEN).join(", ")}`,
     `## Arten von Terminen\n${arten(kanzleiDaten.terminArt, TERMIN_ARTEN).join(", ")}`,
@@ -1244,6 +1249,99 @@ async function kanalFinden(name: string): Promise<{ id?: string; fehler?: string
   return k ? { id: String(k.id) } : { fehler: `Discord-Kanal „#${q}“ nicht gefunden.` };
 }
 
+// ---------- Discord-ID ohne verknüpftes Konto ----------
+// 1. Feld „Discord“ im Profil enthält eine ID (oder <@ID>) → direkt nehmen.
+// 2. Sonst auf dem Server suchen – nach dem Discord-Namen aus dem Profil und nach dem Charakternamen
+//    (Server-Spitzname, Anzeigename oder Benutzername). Nur ein eindeutiger Treffer wird angepingt.
+const discordSuche = new Map<string, { zeit: number; liste: Zeile[] | null; status: number }>();
+async function discordMitgliederSuchen(q: string): Promise<{ liste: Zeile[] | null; status: number }> {
+  const key = norm(q);
+  const alt = discordSuche.get(key);
+  if (alt && Date.now() - alt.zeit < 300000) return alt;
+  const r = await discordApi("GET", `/guilds/${DISCORD_SERVER}/members/search?query=${encodeURIComponent(q.slice(0, 100))}&limit=25`);
+  if (!r.ok) console.error("Discord Mitgliedersuche", r.status, JSON.stringify(r.daten).slice(0, 300));
+  const erg = { zeit: Date.now(), liste: r.ok && Array.isArray(r.daten) ? r.daten as Zeile[] : null, status: r.status };
+  discordSuche.set(key, erg);
+  return erg;
+}
+
+// Alle Mitglieder des Servers (für Spitznamen mit Präfix wie „[WL] Niklas Palermo“, die die Suche nicht findet).
+// Braucht beim Bot den „Server Members Intent“; höchstens 5000 Mitglieder, 5 Minuten zwischengespeichert.
+let mitgliederCache: { zeit: number; liste: Zeile[] | null; status: number } | null = null;
+async function discordAlleMitglieder(): Promise<{ liste: Zeile[] | null; status: number }> {
+  if (mitgliederCache && Date.now() - mitgliederCache.zeit < 300000) return mitgliederCache;
+  const liste: Zeile[] = [];
+  let nach = "0", status = 200;
+  for (let seite = 0; seite < 5; seite++) {
+    const r = await discordApi("GET", `/guilds/${DISCORD_SERVER}/members?limit=1000&after=${nach}`);
+    status = r.status;
+    if (!r.ok || !Array.isArray(r.daten)) {
+      console.error("Discord Mitgliederliste", r.status, JSON.stringify(r.daten).slice(0, 300));
+      mitgliederCache = { zeit: Date.now(), liste: liste.length ? liste : null, status };
+      return mitgliederCache;
+    }
+    liste.push(...r.daten);
+    if (r.daten.length < 1000) break;
+    nach = String(r.daten[r.daten.length - 1]?.user?.id || nach);
+  }
+  mitgliederCache = { zeit: Date.now(), liste, status };
+  return mitgliederCache;
+}
+
+async function discordIdErmitteln(m: Mitglied): Promise<{ id?: string; fehler?: string }> {
+  if (m.discord) return { id: m.discord };
+  const feld = (m.discordName || "").trim();
+  const idImFeld = feld.match(/^<@!?(\d{15,25})>$|^(\d{15,25})$/);
+  if (idImFeld) { m.discord = idImFeld[1] || idImFeld[2]; return { id: m.discord }; }
+
+  // Benutzername aus dem Feld säubern: "@niklas", "niklas#1234" → "niklas"
+  const benutzer = feld.replace(/^@/, "").replace(/#\d{4}$/, "").trim();
+  const ziele = [norm(m.name), norm(benutzer)].filter(Boolean);
+  const nameWorte = norm(m.name).split(" ").filter((w) => w.length > 1);
+  const anfragen = [...new Set([benutzer, m.name, nameWorte[0] || "", nameWorte[nameWorte.length - 1] || ""].map((x) => x.trim()).filter((x) => x.length >= 2))];
+
+  const gefunden = new Map<string, Zeile>();
+  let gesperrt = false;
+  for (const q of anfragen) {
+    const r = await discordMitgliederSuchen(q);
+    if (!r.liste) { if (r.status === 401 || r.status === 403) gesperrt = true; continue; }
+    for (const g of r.liste) if (g?.user?.id && !g.user.bot) gefunden.set(String(g.user.id), g);
+  }
+  const namen = (g: Zeile) => [g.nick, g.user?.global_name, g.user?.username].filter(Boolean).map(norm);
+  const passtExakt = (g: Zeile) => namen(g).some((n) => ziele.includes(n));
+  const passtWorte = (g: Zeile) => nameWorte.length >= 2 && [g.nick, g.user?.global_name, g.user?.username].filter(Boolean)
+    .some((n) => { const w = norm(n).split(/[^\p{L}\p{N}]+/u); return nameWorte.every((x) => w.includes(x)); });
+  // Nichts Passendes über die Suche? Dann die ganze Mitgliederliste durchsehen.
+  if (![...gefunden.values()].some((g) => passtExakt(g) || passtWorte(g))) {
+    const r = await discordAlleMitglieder();
+    if (r.liste) {
+      gesperrt = false;
+      for (const g of r.liste) if (g?.user?.id && !g.user.bot) gefunden.set(String(g.user.id), g);
+    } else if (r.status === 401 || r.status === 403) {
+      gesperrt = true;
+    }
+  }
+  const kandidaten = [...gefunden.values()];
+
+  // a) exakt: Spitzname, Anzeigename oder Benutzername = Charaktername bzw. eingetragener Discord-Name
+  let treffer = kandidaten.filter(passtExakt);
+  // b) sonst: alle Wörter des Charakternamens kommen im Spitz-, Anzeige- oder Benutzernamen vor (z. B. „[WL] Niklas Palermo | Associate“)
+  if (!treffer.length) treffer = kandidaten.filter(passtWorte);
+  if (treffer.length === 1) { m.discord = String(treffer[0].user.id); return { id: m.discord }; }
+  if (treffer.length > 1) {
+    return { fehler: `${m.name} hat kein Discord-Konto verknüpft, und auf dem Discord-Server passen mehrere Personen ` +
+      `(${treffer.slice(0, 5).map((g) => g.nick || g.user?.global_name || g.user?.username).join(", ")}). Sag dem Benutzer, dass im Profil ` +
+      `von ${m.name} unter „Discord“ der genaue Discord-Benutzername oder die Discord-ID eingetragen werden sollte, damit es eindeutig ist.` };
+  }
+  if (gesperrt) {
+    return { fehler: `${m.name} hat kein Discord-Konto verknüpft, und der Bot darf die Mitglieder des Discord-Servers nicht durchsuchen ` +
+      `(im Discord Developer Portal beim Bot „Server Members Intent“ einschalten). Alternativ im Profil von ${m.name} unter „Discord“ die Discord-ID eintragen.` };
+  }
+  return { fehler: `${m.name} hat kein Discord-Konto verknüpft und wurde auch auf dem Discord-Server nicht gefunden` +
+    `${feld ? ` (gesucht nach „${feld}“ und „${m.name}“)` : ` (gesucht nach „${m.name}“)`}. Sag dem Benutzer, dass im Profil von ${m.name} ` +
+    `unter „Discord“ der Discord-Benutzername oder die Discord-ID eingetragen werden kann – oder biete einen Termin, eine Aufgabe oder einen Pinnwand-Beitrag an.` };
+}
+
 async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) => void, erledigt: (a: Aktion) => void): Promise<Zeile> {
   if (!o.discord) return { fehler: "Discord ist nicht eingerichtet." };
   if (o.zaehler.discord >= MAX_DISCORD) return { fehler: `Höchstens ${MAX_DISCORD} Discord-Nachrichten pro Auftrag.` };
@@ -1255,9 +1353,15 @@ async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) 
   for (const n of namen) {
     const f = mitgliedFinden(o, n);
     if (f.fehler) return { fehler: f.fehler };
-    if (!f.treffer!.discord) return { fehler: `${f.treffer!.name} hat kein Discord-Konto mit der Website verknüpft – eine Discord-Nachricht ist nicht möglich. Biete stattdessen einen Termin, eine Aufgabe oder einen Pinnwand-Beitrag an.` };
+    if (!f.treffer!.discord) {
+      // Kein verknüpftes Konto: auf dem Discord-Server nach dem Namen suchen
+      const d = await discordIdErmitteln(f.treffer!);
+      if (d.fehler) return { fehler: d.fehler };
+    }
     if (!empfaenger.some((x) => x.id === f.treffer!.id)) empfaenger.push(f.treffer!);
   }
+  // Auftraggeber in der Karte möglichst auch als @-Name zeigen (ohne Ping, ohne Fehler)
+  if (o.ich && !o.ich.discord) await discordIdErmitteln(o.ich).catch(() => {});
   const privat = args.privat === true;
   if (privat && !empfaenger.length) return { fehler: "Für eine Direktnachricht bitte mindestens einen Empfänger angeben." };
   o.zaehler.discord++;

@@ -1626,7 +1626,7 @@ Object.assign(ACTIONS, {
         { name: "akten_werkzeuge", label: "Nigel darf Akten der Kanzlei durchsuchen (nur mit Leserecht)", type: "checkbox", half: true },
         { type: "section", label: "Organisatorisch & Discord" },
         { name: "discord", label: "Nigel darf im Modus „Organisatorisch“ Discord-Nachrichten schreiben", type: "checkbox", half: true,
-          help: "Nur an aktive Mitglieder mit verknüpftem Discord, mit Hinweis, in wessen Auftrag. Braucht das Secret DISCORD_BOT_TOKEN in Supabase." },
+          help: "Nur an aktive Mitglieder, mit Hinweis, in wessen Auftrag. Ohne verknüpftes Discord sucht Nigel die Person über den Discord-Namen aus dem Profil bzw. ihren Namen auf dem Server. Braucht das Secret DISCORD_BOT_TOKEN in Supabase." },
         { name: "discord_kanal", label: "Discord-Kanal für Nigels Nachrichten", half: true, placeholder: "kanzlei-chat",
           help: "Name (ohne #) oder ID des Textkanals. Dort erwähnt Nigel die Empfänger mit @. Darf der Bot dort nicht schreiben, schickt er eine Direktnachricht." },
         { name: "anweisungen", label: "Hausregeln für Nigel", type: "textarea", rows: 6,
