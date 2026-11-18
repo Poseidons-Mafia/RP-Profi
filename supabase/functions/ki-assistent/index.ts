@@ -964,7 +964,7 @@ const ORGA_WERKZEUGE = [
       properties: {
         empfaenger: { type: "array", items: { type: "string" }, description: "Namen der Mitglieder (Charakternamen wie in der Mitgliederliste). Leer = Nachricht ohne Erwähnung in den Kanal." },
         betreff: { type: "string", description: "Kurzer Betreff (max. 80 Zeichen), z. B. \"Kleine Verspätung\" oder \"Termin morgen, 15:00 Uhr\"." },
-        nachricht: { type: "string", description: "Der Text der Nachricht (max. 2500 Zeichen, Discord-Markdown) – im Butler-Ton: Anrede, Mitteilung, Schlussformel. OHNE @-Erwähnung und ohne Absenderzeile (setzt das System)." },
+        nachricht: { type: "string", description: "Der Text der Nachricht (max. 1700 Zeichen, Discord-Markdown) – im Butler-Ton: Anrede, Mitteilung, Schlussformel. Den Namen des Empfängers in der Anrede als Platzhalter {empfaenger} schreiben (das System setzt dort die @-Erwähnung ein). Ohne Absenderzeile (setzt das System)." },
         privat: { type: "boolean", description: "Optional: true = als Direktnachricht an jeden Empfänger statt in den Kanal." },
         kanal: { type: "string", description: "Optional: Name eines anderen Textkanals (ohne #). Standard ist der Kanal aus den Kanzlei-Vorgaben." },
       },
@@ -1345,7 +1345,7 @@ async function discordIdErmitteln(m: Mitglied): Promise<{ id?: string; fehler?: 
 async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) => void, erledigt: (a: Aktion) => void): Promise<Zeile> {
   if (!o.discord) return { fehler: "Discord ist nicht eingerichtet." };
   if (o.zaehler.discord >= MAX_DISCORD) return { fehler: `Höchstens ${MAX_DISCORD} Discord-Nachrichten pro Auftrag.` };
-  const text = String(args.nachricht ?? "").trim().slice(0, 2500);
+  const text = String(args.nachricht ?? "").trim().slice(0, 1700);
   const betreff = String(args.betreff ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
   if (!text) return { fehler: "Kein Nachrichtentext." };
   const namen: string[] = (Array.isArray(args.empfaenger) ? args.empfaenger : args.empfaenger ? [args.empfaenger] : []).map(String).slice(0, 10);
@@ -1366,21 +1366,23 @@ async function discordSenden(o: OrgaKontext, args: Zeile, schritt: (s: Schritt) 
   if (privat && !empfaenger.length) return { fehler: "Für eine Direktnachricht bitte mindestens einen Empfänger angeben." };
   o.zaehler.discord++;
 
-  // Keine Massen-Pings: Erwähnungen nur der Empfänger, @everyone/@here/Rollen werden nie ausgelöst
-  // Gestaltet als Karte (Embed): Nigel als Absender mit Bild, Betreff, Text, darunter in wessen Auftrag.
-  // Die @-Erwähnung steht über der Karte (nur dort pingt Discord).
+  // Keine Massen-Pings: Erwähnungen nur der Empfänger, @everyone/@here/Rollen werden nie ausgelöst.
+  // Normale Nachricht statt Karte: Discord benachrichtigt nur bei Erwähnungen im Nachrichtentext (nicht in Karten).
+  // Die Erwähnung ersetzt den Namen in der Anrede: Nigel schreibt „Sehr geehrter Mr. {empfaenger},“.
   const absender = o.ich ? o.ich.name : "einem Mitglied der Kanzlei";
-  const auftrag = o.ich?.discord ? `<@${o.ich.discord}>` : `**${absender}**`;
+  const auftrag = o.ich?.discord ? `<@${o.ich.discord}>` : `**${absender}**`; // nicht in allowed_mentions → zeigt den Namen, pingt nicht
+  const maskiert = (t: string) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const mitErwaehnung = (erwaehnt: Mitglied[]) => {
+    if (!erwaehnt.length) return text.replace(/\{empfaenger\}/gi, "").replace(/ +,/g, ",");
+    const nennung = erwaehnt.map((x) => `<@${x.discord}>`).join(erwaehnt.length > 2 ? ", " : " und ");
+    if (/\{empfaenger\}/i.test(text)) return text.replace(/\{empfaenger\}/gi, nennung);
+    // Kein Platzhalter: vollen Namen ersetzen, sonst die Erwähnung vor den Text setzen
+    let t = text;
+    for (const x of erwaehnt) t = t.replace(new RegExp(maskiert(x.name), "gi"), `<@${x.discord}>`);
+    return erwaehnt.some((x) => t.includes(`<@${x.discord}>`)) ? t : `${nennung}\n${t}`;
+  };
   const inhalt = (erwaehnt: Mitglied[]) => ({
-    content: erwaehnt.map((x) => `<@${x.discord}>`).join(" "),
-    embeds: [{
-      color: DISCORD_FARBE,
-      author: { name: `Nigel · Butler der ${o.kanzlei}`, icon_url: NIGEL_BILD, url: WEBSITE },
-      ...(betreff ? { title: betreff } : {}),
-      description: `${text}\n\n-# Im Auftrag von ${auftrag}`.slice(0, 4000),
-      footer: { text: `Übermittelt über das Aktensystem · ${absender}`, icon_url: NIGEL_BILD },
-      timestamp: new Date().toISOString(),
-    }],
+    content: `${betreff ? `### ${betreff}\n` : ""}${mitErwaehnung(erwaehnt)}\n\n-# Nigel · Butler der ${o.kanzlei} · Im Auftrag von ${auftrag}`.slice(0, 2000),
     allowed_mentions: { parse: [], users: erwaehnt.map((x) => x.discord) },
   });
   const wem = empfaenger.map((x) => x.name).join(", ");
@@ -1456,16 +1458,18 @@ So arbeitest du:
   Den Hinweis „im Auftrag von …“ setzt die Website selbst – im Titel nicht wiederholen.
 ${discord ? `- Discord: Nur wenn der Benutzer in seiner LETZTEN Nachricht ausdrücklich darum bittet (z. B. „gib X Bescheid“, „schreib X
   auf Discord“, „sag X, dass …“). Die Nachricht ist ein kleiner, formvollendeter Butler-Brief
-  an den Empfänger (Discord-Markdown, er erscheint als Karte mit Nigels Bild):
-    1. Anrede als eigene Zeile nach der Mitgliederliste: Herr → „Sehr geehrter Mr. Nachname,“, Frau → „Sehr geehrte
-       Miss Nachname,“ (verheiratet bekannt → Mrs.), ohne Anrede → „Guten Tag, Vorname Nachname,“.
+  an den Empfänger (Discord-Markdown, normale Nachricht mit Überschrift = Betreff):
+    1. Anrede als eigene Zeile nach der Mitgliederliste. Den Namen des Empfängers schreibst du IMMER als Platzhalter
+       {empfaenger} – das System ersetzt ihn durch die @-Erwähnung (so pingt die Anrede selbst, ohne Extrazeile).
+       Herr → „Sehr geehrter Mr. {empfaenger},“, Frau → „Sehr geehrte Miss {empfaenger},“ (verheiratet bekannt → Mrs.),
+       ohne Anrede → „Guten Tag, {empfaenger},“. Im restlichen Text den Empfänger nicht mit Namen nennen (höchstens „Sie“).
     2. Leerzeile, dann die Mitteilung in 2–4 vollständigen, eleganten Sätzen in der dritten Person über den Auftraggeber
        („Mr. Miller bat mich, Ihnen auszurichten, dass …“). Das Wichtigste (Uhrzeit, Ort, Dauer, Akte) **fett**. Gern ein
        freundlicher Satz zum Umgang damit („Er bittet um Ihr Verständnis und …“) – aber nichts inhaltlich Neues erfinden.
     3. Leerzeile, dann eine Schlussformel mit Butler-Charme, z. B. „Mit vorzüglicher Hochachtung,“ + neue Zeile „*Nigel*“,
        gern mit einer kleinen englischen Wendung („Very well.“, „At your service.“) – sparsam.
-  Dazu immer einen kurzen „betreff“ (z. B. „Kleine Verspätung“). Die @-Erwähnung und die Zeile „Im Auftrag von …“ setzt
-  das System selbst – nicht in den Text schreiben. Standard ist der Kanal mit Erwähnung; eine Direktnachricht (privat) nur, wenn der Benutzer das möchte oder
+  Dazu immer einen kurzen „betreff“ (z. B. „Kleine Verspätung“). Die Zeile „Im Auftrag von …“ setzt
+  das System selbst – nicht in den Text schreiben; selbst nie „@Name“ tippen. Standard ist der Kanal mit Erwähnung; eine Direktnachricht (privat) nur, wenn der Benutzer das möchte oder
   die Sache vertraulich ist. Nachrichten an viele Personen gleichzeitig oder an @everyone gibt es nicht.\n` : `- Discord-Nachrichten kannst du derzeit nicht schreiben (in der Kanzlei nicht eingerichtet). Bittet der Benutzer darum, sag das
   höflich und biete einen Pinnwand-Beitrag oder eine Aufgabe für die Person an.\n`}
 Was du NICHT tust:
