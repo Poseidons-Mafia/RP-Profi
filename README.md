@@ -161,7 +161,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-19.sql`](supabase-update-19.sql) (Sicherheits-Härtung: Datenbank-Funktionen nur noch für Angemeldete).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -170,7 +170,7 @@ Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch na
 1. Auf <https://supabase.com> ein kostenloses Projekt anlegen (Region Frankfurt).
 2. Im **SQL Editor** nacheinander ausführen:
    [`supabase.sql`](supabase.sql), [`supabase-nutzerverwaltung.sql`](supabase-nutzerverwaltung.sql),
-   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql), [`supabase-update-13.sql`](supabase-update-13.sql), [`supabase-update-14.sql`](supabase-update-14.sql), [`supabase-update-15.sql`](supabase-update-15.sql), [`supabase-update-16.sql`](supabase-update-16.sql), [`supabase-update-17.sql`](supabase-update-17.sql), [`supabase-update-18.sql`](supabase-update-18.sql).
+   [`supabase-update-2.sql`](supabase-update-2.sql), [`supabase-update-3.sql`](supabase-update-3.sql), [`supabase-update-4.sql`](supabase-update-4.sql), [`supabase-update-5.sql`](supabase-update-5.sql), [`supabase-update-6.sql`](supabase-update-6.sql), [`supabase-update-7.sql`](supabase-update-7.sql), [`supabase-update-8.sql`](supabase-update-8.sql), [`supabase-update-9.sql`](supabase-update-9.sql), [`supabase-update-10.sql`](supabase-update-10.sql), [`supabase-update-11.sql`](supabase-update-11.sql), [`supabase-update-12.sql`](supabase-update-12.sql), [`supabase-update-13.sql`](supabase-update-13.sql), [`supabase-update-14.sql`](supabase-update-14.sql), [`supabase-update-15.sql`](supabase-update-15.sql), [`supabase-update-16.sql`](supabase-update-16.sql), [`supabase-update-17.sql`](supabase-update-17.sql), [`supabase-update-18.sql`](supabase-update-18.sql), [`supabase-update-19.sql`](supabase-update-19.sql).
 3. Unter **Authentication → Sign In / Providers** den Schalter „Allow new users to sign up“ ausschalten
    (für den Discord-Login wird er später eingeschaltet – erst nachdem der Hook aus „Discord-Login einrichten“ aktiv ist).
 4. Unter **Authentication → Users → Add user** den ersten Account anlegen (Haken bei „Auto Confirm User“).
@@ -332,6 +332,27 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
   bei den `?v=` in `index.html` erhöhen.
 - Tastenkürzel: `/` Suche, `N` neue Akte, `B` Benachrichtigungen, `K` KI-Assistent (im Arbeitsbereich: ins Eingabefeld), `Esc` Dialog bzw. KI-Assistent schließen.
 - Ab wann eine Akte als „liegen geblieben“ gilt (Standard 7 Tage), steht unter **Personal → Kanzlei & Daten**.
+
+## Sicherheit
+
+- **Wer sieht was?** Ohne Anmeldung liefert die Datenbank nichts: Jede Tabelle hat Row Level Security,
+  alle Regeln gelten nur für Angemeldete mit dem passenden Recht ihres Rangs. Neue Discord-Konten sehen
+  erst nach der Freigabe etwas. Seit Update 19 sind auch die Datenbank-Funktionen ohne Login nicht aufrufbar.
+- Der Schlüssel in `config.js` ist der öffentliche „publishable“ Key – er darf im Code stehen.
+  Der `service_role`-/Secret-Key gehört **nie** ins Repository (nur in die Secrets der Edge Functions).
+- **Neue Funktionen in SQL-Updates** brauchen kein eigenes `revoke` mehr (Update 19 hat die Standardrechte
+  angepasst). Funktionen mit `security definer` müssen trotzdem selbst prüfen, wer angemeldet ist
+  (`auth.uid()`, `hat_recht(…)`, `is_admin()`), und `set search_path = ''` haben.
+- **Fremde Skripte** (supabase-js, Showdown, DOMPurify) werden in `index.html` mit Prüfsumme (`integrity`)
+  geladen. Beim Wechsel auf eine neue Version die Prüfsumme neu berechnen, sonst lädt die Seite nicht:
+  `curl -sL <URL> | openssl dgst -sha384 -binary | openssl base64 -A` und als `sha384-…` eintragen.
+- Empfohlene Einstellungen außerhalb des Codes:
+  - GitHub → **Settings → Branches**: Regel für `main` mit „Require a pull request before merging“
+    (ohne Pflicht-Reviews, sonst kann man allein nicht mergen).
+  - Supabase → **Authentication → Providers → Email**: Mindestlänge 8 Zeichen; „Prevent use of leaked
+    passwords“ einschalten, falls der Tarif es anbietet (nur in bezahlten Tarifen).
+  - Den Rang-Rechten `personal_schreiben` (Personal verwalten) nur vertrauten Rängen geben – wer es hat,
+    kann Konten anlegen und Passwörter von Nicht-Admins setzen.
 
 ## Dateien
 
