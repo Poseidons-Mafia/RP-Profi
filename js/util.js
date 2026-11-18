@@ -291,18 +291,37 @@ function kiBudgetStand(roh) {
   return { budget: z(roh.budget), genutzt: z(roh.genutzt), kanzlei_budget: z(roh.kanzlei_budget), kanzlei_genutzt: z(roh.kanzlei_genutzt) };
 }
 const kiProzent = (genutzt, max) => (max > 0 ? Math.min(100, Math.round((genutzt / max) * 100)) : 100);
-// Anzeige: eigenes Monatsbudget mit Balken, darunter der Stand der Kanzlei.
-// Dollarbeträge sieht nur der Admin – alle anderen sehen, wie viel Prozent schon verbraucht sind.
-function kiBudgetHtml(b, mitDollar = false) {
-  if (!b) return html`<div class="ki-nutzung"><span>${mitDollar ? "Budget diesen Monat" : "Kontingent diesen Monat"}</span><strong>–</strong></div><div class="ki-balken"><span style="width:0%"></span></div>`;
-  if (!mitDollar) {
-    return html`
-      <div class="ki-nutzung"><span>Mein Kontingent (Monat)</span><strong>${b.budget > 0 ? `${kiProzent(b.genutzt, b.budget)} % genutzt` : "keins"}</strong></div>
-      <div class="ki-balken"><span style="width:${kiProzent(b.genutzt, b.budget)}%"></span></div>
-      <div class="ki-nutzung"><span>Kanzlei gesamt</span><strong>${kiProzent(b.kanzlei_genutzt, b.kanzlei_budget)} % genutzt</strong></div>`;
-  }
+// Wie Kosten angezeigt werden: "prozent", "dollar" oder "beides" – getrennt für Antworten ("antwort")
+// und die Kontingent-Anzeige ("kontingent"). Wählbar in Nigels Einstellungen für alle mit „Nigel verwenden“
+// (Standard: Admin Dollar, sonst Prozent); wer Nigel nur sehen darf, sieht nie Dollar.
+const KI_ANZEIGEN = [["prozent", "Prozent"], ["dollar", "Dollar"], ["beides", "Prozent / Dollar"]];
+function kiAnzeige(art) {
+  if (!darf("ki_assistent")) return "prozent";
+  const w = ((typeof ui !== "undefined" && ui.nigel && ui.nigel.profil) || {})[`anzeige_${art}`];
+  return KI_ANZEIGEN.some(([k]) => k === w) ? w : state.isAdmin ? "dollar" : "prozent";
+}
+// Prozent mit zwei Nachkommastellen (damit auch 0,01 % sichtbar ist)
+function kiProzentText(genutzt, max) {
+  if (!(max > 0)) return "–";
+  const p = genutzt / max * 100;
+  if (p > 0 && p < 0.005) return "< 0,01 %"; // sonst stünde „0,00 %“ da, obwohl etwas verbraucht wurde
+  return p.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
+}
+// Betrag je nach Anzeige: "$0.012", "0,48 %" oder "0,48 % · $0.012"
+function kiBetragText(betrag, max, modus) {
+  if (modus === "dollar") return kiDollar(betrag);
+  if (modus === "beides") return `${kiProzentText(betrag, max)} · ${kiDollar(betrag)}`;
+  return kiProzentText(betrag, max);
+}
+// Anzeige: eigenes Monatsbudget mit Balken, darunter der Stand der Kanzlei
+function kiBudgetHtml(b, modus = "prozent") {
+  const dollar = modus !== "prozent";
+  if (!b) return html`<div class="ki-nutzung"><span>${dollar ? "Budget diesen Monat" : "Kontingent diesen Monat"}</span><strong>–</strong></div><div class="ki-balken"><span style="width:0%"></span></div>`;
+  const zeile = (genutzt, max) => modus === "dollar" ? `${kiDollar(genutzt)} / ${kiDollar(max)}`
+    : modus === "beides" ? `${kiProzentText(genutzt, max)} · ${kiDollar(genutzt)} / ${kiDollar(max)}`
+    : max > 0 ? `${kiProzentText(genutzt, max)} genutzt` : "keins";
   return html`
-    <div class="ki-nutzung"><span>Mein Budget (Monat)</span><strong>${kiDollar(b.genutzt)} / ${kiDollar(b.budget)}</strong></div>
+    <div class="ki-nutzung"><span>${dollar ? "Mein Budget (Monat)" : "Mein Kontingent (Monat)"}</span><strong>${zeile(b.genutzt, b.budget)}</strong></div>
     <div class="ki-balken"><span style="width:${kiProzent(b.genutzt, b.budget)}%"></span></div>
-    <div class="ki-nutzung"><span>Kanzlei gesamt</span><strong>${kiDollar(b.kanzlei_genutzt)} / ${kiDollar(b.kanzlei_budget)}</strong></div>`;
+    <div class="ki-nutzung"><span>Kanzlei gesamt</span><strong>${zeile(b.kanzlei_genutzt, b.kanzlei_budget)}</strong></div>`;
 }

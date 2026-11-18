@@ -182,6 +182,11 @@ async function kiInfoLaden(userId) {
     const { data, error } = await db.rpc("ki_budget_status");
     if (error || ui.assistent.userId !== userId) return;
     ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(data) };
+    // Kontingent-Anzeige (Prozent/Dollar) aus Nigels Einstellungen
+    if (!ui.nigel.geladen) {
+      const { data: profil } = await db.from("ki_profil").select("einstellungen").eq("user_id", userId).maybeSingle();
+      if (profil && profil.einstellungen && !ui.nigel.geladen) Object.assign(ui.nigel.profil, profil.einstellungen);
+    }
     kiAktualisieren();
   } catch (e) {
     console.warn(e);
@@ -394,7 +399,7 @@ function kiPanelZeichnen(akte, akten) {
       </div>
     </section>
     <div class="ki-panel-fuss">
-      ${kiBudgetHtml(s.info && s.info.budget, state.isAdmin)}
+      ${kiBudgetHtml(s.info && s.info.budget, kiAnzeige("kontingent"))}
       <p class="ki-leise">Antworten bitte stets prüfen.</p>
     </div>`);
 }
