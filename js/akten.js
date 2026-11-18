@@ -276,7 +276,7 @@ function renderAkteDetail(a, sub) {
             <button class="btn" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button>
             <button class="btn" data-action="dokument-waehlen" data-id="${a.id}">${icon("dokument")}<span>Dokument</span></button>
             ${mehrMenue(a)}
-            ${darf("ki_assistent") ? html`<button type="button" class="nigel-btn nur-schmal" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten, Sir</small>Nigel fragen</span></button>` : ""}
+            ${darf("ki_assistent") ? html`<button type="button" class="nigel-btn nur-schmal" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten${anredeKomma()}</small>Nigel fragen</span></button>` : ""}
           </div>
         </div>
         ${k.length ? html`

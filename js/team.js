@@ -69,6 +69,10 @@ function openProfilForm(userId) {
     { name: "telefon", label: "Telefon (ingame)", half: true, placeholder: "z. B. 555-0100" },
     { name: "discord", label: "Discord", half: true },
   ];
+  // Anrede (pro Charakter); erst verfügbar, wenn supabase-update-15.sql gelaufen ist
+  if (!profileOf(userId) || "anrede" in profileOf(userId)) {
+    fields.push({ name: "anrede", label: "Anrede", type: "select", half: true, options: ANREDEN, required: true });
+  }
   if (r && r.ist_sonstiges) {
     fields.push({ name: "rang_eigen", label: "Meine Rangbezeichnung", half: true, required: true,
       placeholder: "z. B. Ermittler, Senior Counsel", help: "Dein Rang ist „Sonstiges“ – den Namen legst du selbst fest." });
@@ -77,7 +81,7 @@ function openProfilForm(userId) {
     title: "Mein Profil",
     intro: "Dein Name und Rang erscheinen im Verlauf, auf Rechnungen und unter Dokumenten.",
     fields,
-    values: p,
+    values: { anrede: "sir", ...p },
     onSubmit: async (v) => {
       if (profileOf(userId)) await updateRow("profiles", userId, v);
       else await insertRow("profiles", { user_id: userId, ...v });

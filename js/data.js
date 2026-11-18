@@ -335,6 +335,16 @@ function darf(recht) {
   return hat(k) || (!!SCHLIESST_EIN[k] && hat(SCHLIESST_EIN[k])) || (k.endsWith("_lesen") && hat(k.replace(/_lesen$/, "_schreiben")));
 }
 
+// Anrede des aktiven Charakters (Mein Profil) – so spricht Nigel ihn an
+// Im Profil wählt man Herr / Frau / Keine Anrede – Nigel sagt dann „Sir“ / „Madam“ / nichts (Werte: sir, madam, neutral)
+const ANREDEN = [{ value: "sir", label: "Herr" }, { value: "madam", label: "Frau" }, { value: "neutral", label: "Keine Anrede" }];
+function meineAnrede() {
+  const a = (myProfile() || {}).anrede;
+  return a === "madam" ? "Madam" : a === "neutral" ? "" : "Sir";
+}
+// „, Sir“ / „, Madam“ / „“ – zum Anhängen: `Guten Tag${anredeKomma()}.`
+const anredeKomma = () => (meineAnrede() ? `, ${meineAnrede()}` : "");
+
 // Nigel nur ansehen (Sehen ohne Verwenden): Sperrbildschirm am Handy, zensierter Arbeitsbereich
 const nigelNurAnsehen = () => darf("ki_sehen") && !darf("ki_assistent");
 
