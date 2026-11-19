@@ -77,7 +77,7 @@
 
   /* Zone 1: Handlungs-Kennzahlen */
   .kpi-reihe {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-3);
     margin-bottom: var(--space-5);
   }
   .kpi-kachel {
@@ -417,4 +417,314 @@
     .fall-aktionen .btn.nigel span { overflow: hidden; text-overflow: ellipsis; }
     .timeline.verlauf li.typ-mandant { margin-left: var(--space-3); }
   }
+}
+
+/* =============================================================
+   Nigel – iFruit-Handy (Lasche) und Arbeitsbereich
+   ============================================================= */
+@layer views {
+  /* Zugeklappt: Gerät ist weg, nur eine schmale Dock-Lasche unten rechts */
+  .ki-phone:not(.offen) {
+    transform: translateY(calc(100% + 80px)) scale(0.92);
+    visibility: hidden; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.55, 0, 0.3, 1), visibility 0s linear 0.4s;
+  }
+  .ki-phone:not(.offen):hover { transform: translateY(calc(100% + 80px)) scale(0.92); }
+  .ki-phone.offen { visibility: visible; transition: transform 0.56s cubic-bezier(0.2, 0.95, 0.3, 1.12), visibility 0s; }
+
+  .ki-lasche {
+    position: fixed; z-index: 39;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 8px 0 4px;
+    border: 1px solid var(--nigel-accent); border-radius: var(--radius-pill);
+    background: var(--nigel-bg); color: var(--nigel-accent);
+    font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .ki-lasche:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .ki-lasche img { width: 32px; height: 32px; border-radius: 50%; background: #fff; }
+  .ki-lasche kbd { background: var(--nigel-surface); border-color: #4a443e; color: var(--nigel-accent); }
+  .ki-phone[hidden] + .ki-lasche, .ki-phone.offen + .ki-lasche,
+  body:not(.in-app) .ki-lasche, body.nw-seite .ki-lasche, body.nav-sheet-offen .ki-lasche { display: none; }
+  body.in-app.ki-da .page { padding-bottom: 72px; }
+  @media (max-width: 767px) {
+    .ki-lasche { bottom: calc(var(--unten) + 10px); height: 36px; padding-right: 6px; }
+    .ki-lasche img { width: 28px; height: 28px; }
+    .ki-lasche-text, .ki-lasche kbd { display: none; }
+    .ki-lasche { padding: 0 3px; }
+    body.in-app.ki-da .page { padding-bottom: calc(60px + var(--unten)); }
+  }
+  @media (hover: none) { .ki-lasche kbd { display: none; } }
+
+  /* Kontext-Leiste im Handy */
+  .ki-pill { font-family: var(--font-mono); font-size: 0.72rem; }
+  .ki-msg-aktionen { flex-wrap: wrap; }
+
+  /* ---------- Arbeitsbereich ---------- */
+  .nw, .nw.panel-auf { background: var(--bg-canvas); }
+  .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
+  .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  .nw-liste, .nw-panel, .nw-kopf, .nw-eingabe { background: var(--bg-surface); border-color: var(--border-subtle); }
+  .nw-marke strong, .nw-titel h1, .nw-msg-meta strong { font-family: var(--font-serif); font-weight: 600; }
+  .nw-verlauf-innen { max-width: 760px; }
+  .nw-eingabe-leiste { max-width: 760px; row-gap: 8px; }
+  .nw-eingabe-feld { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .nw-modi { flex-basis: 100%; flex-wrap: wrap; margin: 0; padding-bottom: 2px; overflow: visible; }
+  .nw-modus { padding: 4px 11px; font-size: 0.78rem; }
+  .nw-drawer-hintergrund { display: none; }
+
+  /* Platzhalter im Entwurf als anklickbare Pillen */
+  .nw-platzhalter, mark.nw-platzhalter {
+    padding: 0 6px; border-radius: var(--radius-pill);
+    background: #fde68a; color: #1c1917; box-shadow: inset 0 0 0 1px #f59e0b;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Modus „Organisatorisch“: sichtbare Sicherheits-Umrandung + Hinweis */
+  .nw.modus-orga .nw-eingabe-feld {
+    border-color: var(--status-warning);
+    box-shadow: 0 0 0 3px var(--status-warning-soft);
+  }
+  .nw-aktionsmodus {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px;
+    border-radius: var(--radius-pill); background: var(--status-warning-soft); color: var(--status-warning);
+    border: 1px solid color-mix(in srgb, var(--status-warning) 45%, transparent);
+    font-size: 0.74rem; font-weight: 700;
+  }
+  .nw-kontext-chip { background: var(--brand-primary-soft); color: var(--brand-primary); font-family: var(--font-mono); font-size: 0.72rem; }
+
+  /* Laptop/Tablet (< 1280px): Chat-Liste und Arbeitsfläche als Slide-over-Drawer */
+  @media (min-width: 901px) and (max-width: 1279px) {
+    .nw, .nw.panel-auf { position: relative; grid-template-columns: minmax(0, 1fr); }
+    .nw .nw-nur-mobil[data-ansicht="liste"] { display: grid; }
+    .nw-liste {
+      position: absolute; top: 0; left: 0; bottom: 0; z-index: 16; width: 280px;
+      transform: translateX(-102%); transition: transform 0.25s ease; box-shadow: var(--shadow-lg);
+    }
+    .nw[data-ansicht="liste"] .nw-liste { transform: none; }
+    .nw-panel {
+      position: absolute; top: 0; right: 0; bottom: 0; z-index: 16; width: min(400px, 90%);
+      box-shadow: var(--shadow-lg);
+    }
+    .nw-haupt { grid-column: 1; }
+    .nw[data-ansicht="liste"] .nw-drawer-hintergrund, .nw.panel-auf .nw-drawer-hintergrund {
+      display: block; position: absolute; inset: 0; z-index: 15; border: 0; padding: 0;
+      background: var(--backdrop); cursor: pointer;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) { .nw-liste { transition: none; } }
+
+  /* Nur ansehen: Milchglas (8px) mit klarer Hinweiskarte */
+  .nw-siegel { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+}
+
+/* =============================================================
+   Gesetze: Buchrücken-Karten, Lesebreite 70ch
+   ============================================================= */
+@layer views {
+  .gb-kacheln { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); }
+  .gb-kachel {
+    min-height: 150px; padding: 16px 16px 14px 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle); border-left: 6px solid var(--gb);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .gb-kachel:hover, .gb-kachel:focus-visible { border-color: var(--border-strong); border-left-color: var(--gb); box-shadow: var(--shadow-md); }
+  .gb-kachel.farbe-schwarz, .gb-kuerzel-gross.farbe-schwarz { --gb: var(--text-primary); }
+  .gb-kachel::after { opacity: 0.05; }
+  .gb-kuerzel { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 700; }
+  .gb-titel { font-weight: 600; }
+  .gb-fuss { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .gb-kachel-katalog { background: linear-gradient(160deg, var(--bg-surface), var(--brand-gold-soft)); }
+  .gb-kachel-neu { border-left-style: dashed; border-left-width: 1px; background: transparent; box-shadow: none; }
+  .gb-kuerzel-gross { font-family: var(--font-serif); border-radius: var(--radius-sm); }
+
+  .gb-layout { grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-5); }
+  .gb-inhalt { top: var(--oben); max-height: calc(100dvh - var(--oben) - 16px); }
+  .gb-inhalt li a:hover { background: var(--bg-subtle); }
+  .gb-inhalt li a.aktiv { background: var(--brand-primary-soft); color: var(--brand-primary); }
+  .gb-inhalt .nr, .gb-paragraph h3 .nr, .gb-zitat { font-family: var(--font-mono); font-size: 0.92em; color: var(--brand-primary); }
+  .gb-texte > .card, .gb-abschnitt { max-width: calc(70ch + 40px); }
+  .gb-paragraph { scroll-margin-top: var(--oben); }
+  .gb-paragraph h3 { font-size: var(--text-base); }
+  .gb-wortlaut { max-width: 70ch; font-family: var(--font-serif); font-size: 1.06rem; line-height: 1.65; }
+  .gb-abschnitt { font-family: var(--font-serif); font-size: var(--text-lg); margin: var(--space-6) 0 var(--space-2); }
+  .gb-paragraph.markiert { border-color: var(--brand-gold-accent); box-shadow: 0 0 0 3px var(--brand-gold-soft); }
+  /* Paragraphen-Aktionen dezent: erst bei Hover/Fokus (Touch: immer sichtbar) */
+  @media (hover: hover) {
+    .gb-tools { opacity: 0; transition: opacity 0.15s; }
+    .gb-paragraph:hover .gb-tools, .gb-paragraph:focus-within .gb-tools, .gb-paragraph.markiert .gb-tools { opacity: 1; }
+  }
+  @media (max-width: 980px) {
+    .gb-layout { grid-template-columns: minmax(0, 1fr); }
+    .gb-inhalt { position: static; max-height: 240px; }
+  }
+
+  /* =============================================================
+     Finanzen: Bereichswahl als Segment-Schalter, Tabellen, T-Konten, Storno
+     ============================================================= */
+  .finanz-bereiche {
+    display: inline-flex; gap: 2px; padding: 3px; margin-bottom: var(--space-4);
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+  }
+  .finanz-bereich {
+    padding: 7px 16px; gap: 8px; border: 0; border-radius: var(--radius-sm);
+    background: none; box-shadow: none; color: var(--text-secondary);
+  }
+  .finanz-bereich svg { width: 18px; height: 18px; }
+  .finanz-bereich small { display: none; }
+  .finanz-bereich strong { font-size: var(--text-sm); font-weight: 500; }
+  .finanz-bereich:hover { color: var(--text-primary); border-color: transparent; }
+  .finanz-bereich.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+  .finanz-bereich.active strong { font-weight: 600; }
+  .finanz-bereich.active svg { color: var(--brand-primary); }
+  .finanz-bereich .nav-badge { margin-left: 6px; }
+  .finanz-leiste { border-bottom-color: var(--border-subtle); }
+
+  .page:has(.finanz-leiste) .table td.num, .page:has(.finanz-leiste) .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .page:has(.finanz-leiste) .table tbody tr:nth-child(even) td { background: var(--bg-subtle); }
+  .page:has(.finanz-leiste) .table td.num { font-family: var(--font-mono); font-size: 0.86rem; }
+
+  /* Grundbuch: Storno-Buchungen */
+  .journal tr.storniert td { color: inherit; text-decoration: none; }
+  .journal tr.storniert { opacity: 0.7; }
+  .journal tr.storniert td.num { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+  .journal tr.storno td { background: var(--status-danger-soft); }
+  .badge.storno-badge {
+    background: transparent; color: var(--status-danger-text);
+    border: 1px solid currentColor; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.64rem;
+  }
+
+  /* T-Konten: exakt zwei Spalten (Soll | Haben) mit durchgehendem Kreuz */
+  .tk-grid { gap: var(--space-5); }
+  .tkonto { padding: var(--space-3); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-variant-numeric: tabular-nums; }
+  .tk-head { font-family: var(--font-serif); font-size: var(--text-base); }
+  .tk-head small { font-family: var(--font-sans); }
+  .tk-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-top: 2px solid var(--text-primary); }
+  .tk-side + .tk-side { border-left: 2px solid var(--text-primary); }
+  .tk-total { border-top-color: var(--text-primary); border-bottom-color: var(--text-primary); }
+  .tk-total > div + div { border-left: 2px solid var(--text-primary); }
+  .tk-betrag, .tk-total > div { font-family: var(--font-mono); font-size: 0.84rem; }
+  .tk-row.saldo { color: var(--brand-primary); }
+
+  /* Handy: Buchhaltungstabellen horizontal scrollbar, erste Spalte klebt */
+  @media (max-width: 767px) {
+    .finanz-bereiche { display: flex; }
+    .finanz-bereich { flex: 1; justify-content: center; }
+    .page:has(.finanz-leiste) .table th:first-child, .page:has(.finanz-leiste) .table td:first-child {
+      position: sticky; left: 0; z-index: 1; background: var(--bg-surface);
+      box-shadow: 1px 0 0 var(--border-subtle);
+    }
+    .page:has(.finanz-leiste) .table tbody tr:nth-child(even) td:first-child { background: var(--bg-subtle); }
+  }
+}
+
+/* =============================================================
+   Übrige Kennzahl-Kacheln (Finanzen, Mandantenportal) im neuen Stil
+   ============================================================= */
+@layer views {
+  .kpi {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--bg-surface); box-shadow: var(--shadow-sm);
+    padding-left: 18px;
+  }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--brand-gold-accent); }
+  .kpi.alert::before { background: var(--status-danger); }
+  .kpi.warn::before { background: var(--status-warning); }
+  .kpi.ruhig::before { background: var(--border-subtle); }
+  .kpi:hover { border-color: var(--border-strong); }
+  .kpi .value { font-family: var(--font-serif); font-weight: 600; }
+  .kpi.alert .value { color: var(--status-danger-text); }
+  .kpi .label { color: var(--text-secondary); font-weight: 600; }
+}
+
+/* =============================================================
+   Mandantenportal: mehr Luft, größere Schrift (Tokens über [data-portal="mandant"])
+   ============================================================= */
+@layer views {
+  [data-portal="mandant"] .page { max-width: 1120px; }
+  [data-portal="mandant"] .card { padding: var(--space-6); }
+  [data-portal="mandant"] .rows > li { padding: 12px 0; }
+  [data-portal="mandant"] .btn { font-size: var(--text-base); }
+  [data-portal="mandant"] .btn.small { font-size: var(--text-sm); }
+
+  /* Neu seit dem letzten Besuch */
+  .badge.neu { background: var(--brand-gold-accent); color: #1c1917; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.64rem; }
+
+  /* Notruf-Schnellknopf und Bestätigung */
+  .portal-schnell > .portal-notruf { background: var(--status-danger); border-color: var(--status-danger); color: #fff; box-shadow: 0 0 0 4px var(--status-danger-soft); }
+  .portal-schnell > .portal-notruf:hover, .portal-schnell > .portal-notruf:focus-visible { background: #b91c1c; border-color: #b91c1c; }
+  .portal-schnell > .portal-notruf small { color: rgba(255, 255, 255, 0.85); }
+  .notruf-bestaetigen { display: block; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--status-danger-soft); color: var(--text-primary); border-left: 4px solid var(--status-danger); }
+  .notruf-bestaetigen strong { display: block; color: var(--status-danger-text); font-size: var(--text-lg); }
+
+  /* 3-Schritte-Fortschritt */
+  .portal-fortschritt li::before { height: 4px; top: 14px; background: var(--border-subtle); border-radius: 2px; }
+  .portal-fortschritt li.fertig::before, .portal-fortschritt li.aktuell::before { background: var(--status-success); }
+  .portal-fortschritt .punkt { background: var(--bg-surface); border-color: var(--border-strong); font-variant-numeric: tabular-nums; }
+  .portal-fortschritt li.fertig .punkt { background: var(--status-success); border-color: var(--status-success); }
+  .portal-fortschritt li.aktuell .punkt { background: var(--brand-primary); border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-soft); }
+  .portal-fortschritt .text { font-size: var(--text-sm); }
+
+  /* Nachrichten im Messenger-Stil: Kanzlei links, Mandant rechts */
+  .portal-chat li {
+    max-width: min(78%, 560px); padding: 10px 14px;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 16px; box-shadow: var(--shadow-sm);
+  }
+  .portal-chat li.von-kanzlei { border-left: 1px solid var(--border-subtle); border-bottom-left-radius: 4px; }
+  .portal-chat li.vom-mandanten {
+    background: var(--brand-primary); border-color: var(--brand-primary); color: var(--text-inverse);
+    border-bottom-right-radius: 4px; border-top-right-radius: 16px;
+  }
+  .portal-chat li.vom-mandanten .head, .portal-chat li.vom-mandanten .head strong { color: rgba(255, 255, 255, 0.85); }
+  .portal-chat p { font-size: var(--text-base); line-height: 1.5; }
+
+  /* Rechnungen: Status und „Ich habe bezahlt“ deutlich */
+  [data-portal="mandant"] .btn.gold[data-action="portal-zahlung"] { background: var(--status-success); border-color: var(--status-success); color: #fff; }
+  [data-portal="mandant"] .badge.bezahlt, [data-portal="mandant"] .badge.offen, [data-portal="mandant"] .badge.ok { font-size: var(--text-xs); padding: 2px 10px; }
+  .portal-haft { background: var(--status-danger); border-radius: var(--radius-md); }
+  .portal-haft:hover { background: #b91c1c; }
+  .portal-haft strong { color: #fff; }
+}
+
+/* =============================================================
+   Feinschliff (beide Designs)
+   ============================================================= */
+@layer views {
+  .badge.gericht { background: var(--nigel-bg); color: var(--nigel-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nigel-accent) 45%, transparent); }
+  .badge.vip { background: var(--brand-gold-accent); color: #1c1917; }
+  .detail-card { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .list-pane { border-radius: var(--radius-md); }
+  .chip { border-color: var(--border-subtle); color: var(--text-secondary); }
+  .chip:hover { background: var(--bg-subtle); color: var(--text-primary); }
+  .chip.active { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-surface); }
+  .table th { color: var(--text-muted); font-weight: 600; border-bottom-color: var(--border-subtle); }
+  .table td { border-bottom-color: var(--border-subtle); }
+  .table tr.clickable:hover td { background: var(--bg-subtle); }
+  .day-group h3 { border-bottom-color: var(--brand-gold-accent); }
+  .day-group.today h3 { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+  .month-grid .dow { background: var(--bg-subtle); color: var(--text-secondary); }
+  .day-cell.other { background: var(--bg-subtle); }
+  .day-cell:hover { background: var(--brand-gold-soft); }
+  .cal-item.verhandlung, .cal-item.haftprufung { background: var(--nigel-bg); color: var(--nigel-accent); }
+  .box.dark { background: var(--nigel-bg); color: #f5f2eb; border: 1px solid var(--nigel-surface); }
+  .box.warning { color: var(--text-primary); }
+  .box.info { color: var(--text-primary); }
+  input:focus, select:focus, textarea:focus { outline-color: var(--brand-gold-accent); border-color: var(--brand-gold-accent); }
+  input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"],
+  input[type="tel"], input[type="date"], input[type="datetime-local"], input:not([type]), select, textarea {
+    border-color: var(--border-strong); border-radius: var(--radius-sm); background-color: var(--bg-surface); color: var(--text-primary);
+  }
+  ::placeholder { color: var(--text-muted); opacity: 1; }
+  .money span { background: var(--bg-subtle); border-color: var(--border-strong); color: var(--text-secondary); }
+  .section-title { letter-spacing: 0.1em; }
+  [data-theme="dark"] .avatar:not(.nigel):not(.mehr) { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+  [data-theme="dark"] body::before { opacity: 0.035; }
+  [data-theme="dark"] .login-brand { border-bottom-color: var(--brand-gold-accent); }
 }

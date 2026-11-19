@@ -8,8 +8,8 @@ function joinHtml(parts, sep = " · ") {
 }
 
 function terminArtClass(art) {
-  if (["Verhandlung", "Haftprüfung"].includes(art)) return "haft";
-  if (["Frist", "Wiedervorlage"].includes(art)) return "offen";
+  if (["Verhandlung", "Haftprüfung"].includes(art)) return "gericht";
+  if (["Frist", "Wiedervorlage"].includes(art)) return "hoch";
   if (art === "Mandantengespräch") return "blue";
   return "gold";
 }

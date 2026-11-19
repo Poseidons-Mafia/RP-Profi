@@ -332,7 +332,7 @@ function portalAkteKarte(a) {
 function portalTerminZeile(t, { akte = false } = {}) {
   return html`<li class="${t.erledigt ? "erledigt" : ""}">
     <div class="portal-termin-datum"><strong>${fmt.tag(t.beginn)}</strong><span>${fmt.zeit(t.beginn)}</span></div>
-    <div class="grow"><div class="title">${t.titel} ${istNeu(t.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+    <div class="grow"><div class="title">${t.titel} ${istNeu(t.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
       <div class="meta">${t.art}${t.ort ? ` · ${t.ort}` : ""}${akte && t.akte ? html` · <a href="#/akte/${t.akte.id}">${t.akte.number}</a>` : ""}</div></div>
     ${!t.erledigt && new Date(t.beginn) >= startOfDay() ? html`<button type="button" class="icon-btn" data-action="portal-ics" data-id="${t.id}"
       title="In meinen Kalender übernehmen (.ics)" aria-label="In meinen Kalender übernehmen">📅</button>` : ""}
@@ -453,7 +453,7 @@ function portalAkteNachrichten(a) {
     ${verlauf.length ? html`<ul class="portal-chat">${verlauf.map((e) => html`
       <li class="${e.vom_mandanten ? "vom-mandanten" : "von-kanzlei"} ${e.eigene ? "eigene" : ""}">
         <div class="head"><strong>${e.eigene ? "Sie" : e.von}</strong>${e.vom_mandanten || !e.art ? "" : html` · ${e.art}`} · ${fmt.datumZeit(e.created_at)}
-          ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+          ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
         <p>${multiline(e.text)}</p>
       </li>`)}</ul>` : html`<p class="empty">Noch keine Nachrichten – schreiben Sie uns gern.</p>`}
     <form class="portal-nachricht-form portal-chat-ende" data-submit="portal-nachricht" data-id="${a.id}">
@@ -476,7 +476,7 @@ function portalDokZeile(b) {
   const url = safeUrl(b.link);
   return html`<li><div class="grow">
     <div class="title">${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer">${b.titel} ↗</a>` : b.titel}
-      ${istNeu(b.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+      ${istNeu(b.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
     <div class="meta">${b.art} · ${fmt.datum(b.created_at)}</div>
     ${b.beschreibung ? html`<div class="small">${b.beschreibung}</div>` : ""}</div></li>`;
 }
@@ -788,7 +788,7 @@ Object.assign(ACTIONS, {
     const akten = portalAkteOptionen();
     const felder = {
       notruf: [
-        { name: "erreichbar", label: "Wo sind Sie gerade?", placeholder: "z. B. Mission Row PD, Sandy Shores Sheriff …", required: true },
+        { name: "erreichbar", label: "Wo sind Sie gerade? (optional)", placeholder: "z. B. Mission Row PD, Sandy Shores Sheriff …" },
         { name: "text", label: "Was ist passiert? (optional)", type: "textarea", rows: 3, placeholder: "z. B. Festnahme wegen …, Haftprüfung beantragt …" },
         ...(akten.length ? [{ name: "akte", label: "Gehört zu Akte (optional)", type: "select", options: akten, emptyLabel: "— keine / neue Sache —" }] : []),
       ],
@@ -807,12 +807,12 @@ Object.assign(ACTIONS, {
     openForm({
       title: PORTAL_ANLIEGEN[art].titel,
       intro: art === "notruf"
-        ? html`<strong>Alle Anwältinnen und Anwälte der Kanzlei werden sofort benachrichtigt.</strong> Bitte nur im Ernstfall nutzen.`
+        ? html`<span class="notruf-bestaetigen"><strong>Notruf wirklich auslösen?</strong> Alle Anwältinnen und Anwälte der Kanzlei werden sofort alarmiert. Bitte nur im Ernstfall – zum Abbrechen einfach „Abbrechen“ tippen.</span>`
         : art === "rueckruf" ? "Ihre Bitte geht an Ihren Ansprechpartner. Sie werden hier im Portal benachrichtigt, sobald sich jemand kümmert."
         : "Wir prüfen Ihre Anfrage und melden uns bei Ihnen. Sie sehen den Stand unter „Hilfe & Anliegen“.",
       fields: felder,
       values: { akte: d.akte || "" },
-      submitLabel: art === "notruf" ? "🚨 Notruf senden" : "Senden",
+      submitLabel: art === "notruf" ? "🚨 Ja, Notruf auslösen" : "Senden",
       onSubmit: async (v) => {
         const { error } = await db.rpc("portal_anliegen_senden", { p_art: art, p_text: v.text || "", p_akte: v.akte || null, p_erreichbar: v.erreichbar || null });
         if (error) throw error;
