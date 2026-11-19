@@ -1,0 +1,10 @@
+/* =============================================================
+   Wiwang Law – Reihenfolge der Cascade Layers
+   Später genannte Ebenen gewinnen – unabhängig von der Spezifität.
+
+   reset, tokens, base  → Grundlagen (Farben, Schriften, Elemente)
+   legacy               → die bisherige style.css (wird Schritt für Schritt abgelöst)
+   layout … utilities   → das neue Designsystem „Editorial Legal“;
+                          überschreibt die alte style.css ohne !important-Kämpfe
+   ============================================================= */
+@layer reset, tokens, base, legacy, layout, components, views, utilities;

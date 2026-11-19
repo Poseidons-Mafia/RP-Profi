@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Wiwang Law – Aktensystem</title>
-  <meta name="theme-color" content="#a30000">
+  <meta name="theme-color" content="#f7f5f0">
+  <!-- Hell/Dunkel vor dem ersten Zeichnen setzen (kein Aufblitzen). Gemerkt im Browser, sonst Systemeinstellung. -->
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("wiwang-theme"); } catch (e) {}
+      if (t !== "light" && t !== "dark") t = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
   <link rel="icon" type="image/png" href="assets/icon.png">
   <link rel="apple-touch-icon" href="assets/icon.png">
   <!-- Auf dem iPhone/iPad „Zum Home-Bildschirm“ hinzufügen: startet dann wie eine App (ohne Browserleisten) -->
@@ -18,7 +27,17 @@
   <!-- Verbindungen zu Datenbank und CDN schon aufbauen, während die Seite noch lädt -->
   <link rel="preconnect" href="https://btpgnraeumxortphkpgz.supabase.co" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <!-- Designsystem „Editorial Legal“: Cascade Layers (Reihenfolge in 00-layers.css).
+       style.css ist die bisherige Gestaltung (Layer legacy) und wird schrittweise abgelöst. -->
+  <link rel="preload" href="assets/fonts/public-sans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/00-layers.css?v=58">
+  <link rel="stylesheet" href="css/01-tokens.css?v=58">
+  <link rel="stylesheet" href="css/02-base.css?v=58">
   <link rel="stylesheet" href="style.css?v=58">
+  <link rel="stylesheet" href="css/03-layout.css?v=58">
+  <link rel="stylesheet" href="css/04-components.css?v=58">
+  <link rel="stylesheet" href="css/05-views.css?v=58">
 </head>
 <body>
   <header class="topbar">
@@ -34,11 +53,17 @@
         <span id="glocke-zahl" class="glocke-zahl" hidden></span>
       </button>
       <button class="btn primary" data-action="akte-neu" title="Neue Akte"><span>+ <span class="lang">Neue </span>Akte</span></button>
+      <button type="button" class="btn ghost icon-only theme-btn" data-action="theme-umschalten" aria-label="Design umschalten" title="Design umschalten">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <button id="btn-me" class="btn ghost" data-action="profil-bearbeiten" title="Mein Profil">Profil</button>
       <button class="btn ghost" data-action="logout">Abmelden</button>
     </div>
     <!-- Mandantenportal: nur Name und Abmelden -->
     <div id="portal-actions" class="topbar-actions" hidden>
+      <button type="button" class="btn ghost icon-only theme-btn" data-action="theme-umschalten" aria-label="Design umschalten" title="Design umschalten">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <a id="portal-name" class="btn ghost" href="#/daten" title="Meine Daten"></a>
       <button class="btn ghost" data-action="logout">Abmelden</button>
     </div>
@@ -145,6 +170,7 @@
   <script src="js/data.js?v=58"></script>
   <script src="js/forms.js?v=58"></script>
   <script src="js/app.js?v=58"></script>
+  <script src="js/theme.js?v=58"></script>
   <script src="js/konto.js?v=58"></script>
   <script src="js/dokumente.js?v=58"></script>
   <script src="js/akten.js?v=58"></script>
