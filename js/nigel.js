@@ -532,7 +532,7 @@ VIEWS.nigel.aktualisieren = (route) => {
     Object.assign(n, { userId: state.me.id, geladen: false, fehlt: false, chats: [], nachrichten: {}, neu: null, angezeigt: undefined, laeuft: {} });
   }
   if (!n.geladen && !n.laedt && !n.fehlt && !n.fehler) nwLaden();
-  nwHoehe();
+  nwHoheNeu();
 
   if (n.fehlt || n.fehler || !n.geladen) {
     wurzel.classList.add("nw-hinweis-modus");
@@ -686,7 +686,7 @@ function nwVorschauZeichnen(wurzel) {
   wurzel.dataset.ansicht = n.ansicht;
   wurzel.classList.toggle("panel-auf", n.panel);
   document.body.classList.add("nw-seite");
-  nwHoehe();
+  nwHoheNeu();
   const modus = n.vorschauModus;
   const rang = rangName(myProfile());
 
@@ -818,14 +818,34 @@ function nwVorschauPanel(tab) {
   return html`<div class="nw-vorschau-tab" data-tab="${tab}">${nwZensiert(inhalt[0], { titel: inhalt[1], text: inhalt[2], stempel: tab === "einstellungen" ? "Gesperrt" : "Vertraulich" })}</div>`;
 }
 
-// Seite füllt den Bildschirm unter Kopfzeile und Navigation
+// Seite füllt den Bildschirm unter Kopfzeile und Navigation.
+// Gemessen wird der echte sichtbare Bereich (visualViewport): Auf iPhone/iPad wechselt die
+// Safari-Leiste und die Bildschirmtastatur verkleinert nur den sichtbaren, nicht den Layout-Bereich –
+// mit festen CSS-Höhen (vh/dvh) wurden dadurch Eingabefeld und Kopf abgeschnitten.
+let nwHoeheTimer = 0;
 function nwHoehe() {
   const w = nwEl("wurzel");
-  if (!w) return;
-  const oben = Math.max(0, $("main").getBoundingClientRect().top + window.scrollY);
-  w.style.setProperty("--nw-oben", oben + "px");
+  if (!w || !$("main") || $("main").hidden) return;
+  const vv = window.visualViewport;
+  const sicht = Math.round(vv ? vv.height : window.innerHeight);
+  const kopfLage = w.getBoundingClientRect().top + window.scrollY; // Abstand zum Seitenanfang
+  const tab = $("tabbar");
+  const tastatur = vv && window.innerHeight - vv.height > 120;
+  const unten = tab && !tab.hidden && getComputedStyle(tab).display !== "none" && !tastatur ? tab.offsetHeight : 0;
+  w.style.setProperty("--nw-oben", kopfLage + "px");
+  w.style.height = Math.max(320, sicht - kopfLage - unten) + "px";
+  w.style.minHeight = "0";
 }
-window.addEventListener("resize", () => { if (parseRoute().page === "nigel") nwHoehe(); });
+function nwHoheNeu() {
+  if (parseRoute().page !== "nigel") return;
+  if (document.body.classList.contains("nw-seite") && window.scrollY) window.scrollTo(0, 0); // iOS schiebt die Seite sonst nach oben weg
+  nwHoehe();
+  clearTimeout(nwHoeheTimer);
+  nwHoeheTimer = setTimeout(nwHoehe, 350); // nach Schriftart-/Leistenwechsel nochmals messen
+}
+window.addEventListener("resize", nwHoheNeu);
+window.addEventListener("orientationchange", nwHoheNeu);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", nwHoheNeu);
 RENDER_HOOKS.push((route) => { if (route.page !== "nigel") document.body.classList.remove("nw-seite"); });
 
 // ---------- Linke Spalte: Chats ----------
