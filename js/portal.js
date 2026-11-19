@@ -544,27 +544,11 @@ function portalRechnungBadge(r) {
 }
 
 function portalRechnungDokument(r) {
-  return html`
-    ${briefkopf()}
-    <h1 class="doc-title">Rechnung</h1>
-    <p>${r.empfaenger}</p>
-    <p class="doc-small">Rechnungs-Nr. ${r.nummer} · Datum ${fmt.datum(r.datum)}${r.akte_number ? ` · Akte ${r.akte_number}` : ""}</p>
-    <p class="doc-subject">Rechnung – ${r.betreff || "Anwaltliche Leistungen"} ${fmt.datum(r.datum)}</p>
-    <p>Sehr geehrte/r ${r.empfaenger},</p>
-    <p>${state.settings.rechnung_einleitung}</p>
-    <table class="doc-table">
-      <thead><tr><th>Dienstleistung</th><th>Anzahl</th><th>Einzel</th><th>Gesamt</th></tr></thead>
-      <tbody>
-        ${(r.positionen || []).map((p) => html`<tr>
-          <td>${p.text}</td><td>${p.menge ?? 1}</td>
-          <td>${posMenge(p) === null ? "/" : fmt.geld(p.einzel)}</td>
-          <td>${fmt.geld(posGesamt(p))}</td></tr>`)}
-        <tr class="total"><td></td><td></td><td>Summe:</td><td>${fmt.geld(r.summe)}</td></tr>
-      </tbody>
-    </table>
-    <p>${state.settings.rechnung_hinweis}</p>
-    ${r.status === "Bezahlt" ? html`<p><strong>Bezahlt${r.bezahlt_am ? ` am ${fmt.datum(r.bezahlt_am)}` : ""}.</strong></p>` : ""}
-    ${unterschrift({ name: r.unterzeichner || state.settings.kanzlei, titel: r.unterzeichner_titel || "Rechtsanwalt" }, parseDate(r.datum))}`;
+  return rechnungInhalt(r, {
+    aktenNr: r.akte_number,
+    unterzeichner: { name: r.unterzeichner || state.settings.kanzlei, titel: r.unterzeichner_titel || "Rechtsanwalt" },
+    zusatz: r.status === "Bezahlt" ? html`<p><strong>Bezahlt${r.bezahlt_am ? ` am ${fmt.datum(r.bezahlt_am)}` : ""}.</strong></p>` : "",
+  });
 }
 
 // ---------- Meine Daten ----------
@@ -644,12 +628,10 @@ Object.assign(ACTIONS, {
       title: `Rechnung ${r.nummer}`,
       body: html`<div class="doc-toolbar"><span class="spacer"></span>
           <button class="btn primary" type="button" data-doc="print">Drucken / PDF</button></div>
-        <div class="doc-preview"><div class="doc-page">${portalRechnungDokument(r)}</div></div>`,
+        <div class="doc-preview"><div class="doc-page">${dokumentSeite(portalRechnungDokument(r), { autor: r.unterzeichner || state.settings.kanzlei, datum: parseDate(r.datum) })}</div></div>`,
     });
-    dlg.querySelector('[data-doc="print"]').addEventListener("click", () => {
-      $("print-area").innerHTML = `<div class="doc-page">${dlg.querySelector(".doc-page").innerHTML}</div>`;
-      setTimeout(() => window.print(), 60);
-    });
+    dlg.querySelectorAll("[contenteditable]").forEach((el) => el.removeAttribute("contenteditable"));
+    dlg.querySelector('[data-doc="print"]').addEventListener("click", () => dokumentDrucken(dlg.querySelector(".doc-page")));
   },
 });
 

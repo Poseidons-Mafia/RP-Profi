@@ -24,6 +24,7 @@ const GEGNER_ROLLEN = ["Gegenpartei", "Mitbeschuldigter", "Geschädigter"];
 const DEFAULT_SETTINGS = {
   kanzlei: "Wiwang Law",
   ort: "Los Santos",
+  adresse: "Decker Street 8083",
   telefon: "",
   waehrung: "$",
   haft_einheit: "HE",

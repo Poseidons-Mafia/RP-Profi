@@ -146,6 +146,7 @@ function einstellungFields() {
   return [
     { name: "kanzlei", label: "Name der Kanzlei", required: true, half: true },
     { name: "ort", label: "Ort (für Briefe)", required: true, half: true },
+    { name: "adresse", label: "Anschrift (Straße, Hausnummer)", half: true, help: "Erscheint im Mandatsvertrag und in der Absenderzeile der Briefe." },
     { name: "telefon", label: "Telefon der Kanzlei", half: true },
     { name: "waehrung", label: "Währungszeichen", required: true, third: true },
     { name: "haft_einheit", label: "Haft-Einheit", required: true, third: true, help: "z. B. HE, Monate, Minuten" },

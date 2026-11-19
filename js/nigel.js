@@ -1601,7 +1601,8 @@ Object.assign(ACTIONS, {
     const akte = chat.akte_ids.map((id) => byId("akten", id)).find(Boolean);
     openDocument({
       title: `Entwurf – ${chat.titel}`,
-      content: html`${briefkopf()}<div class="nw-druck">${new SafeHtml(nwPlatzhalter(kiFormat(chat.entwurf || "")))}</div>${unterschrift(anwaltVon(akte))}`,
+      content: html`<div class="nw-druck">${new SafeHtml(nwPlatzhalter(kiFormat(chat.entwurf || "")))}</div>${unterschrift(anwaltVon(akte))}`,
+      autor: anwaltVon(akte).name,
       verlaufAkte: akte ? akte.id : null,
       verlaufText: `Schriftsatz erstellt (mit Nigel): ${chat.titel}`,
     });
