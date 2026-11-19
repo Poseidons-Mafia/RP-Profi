@@ -286,9 +286,10 @@ Damit Nigel Kollegen auf Discord Bescheid geben kann:
    findet z. B. „[WL] Niklas Palermo“ auch mit Präfix im Spitznamen.
 
 So läuft es: Nigel findet den Empfänger in der Mitgliederliste (Charaktername), sucht über Charakter → Person die Discord-ID
-(gespeichert beim Login mit Discord) und schreibt in den Kanal: `@Empfänger` und darunter eine **Karte** in Kanzlei-Gold mit
-Nigels Bild ([`assets/nigel.png`](assets/nigel.png), muss unter wiwang.de erreichbar sein), Betreff, einem kleinen Butler-Brief
-(Anrede, Mitteilung mit dem Wichtigsten fett, Schlussformel) und „Im Auftrag von …“.
+(gespeichert beim Login mit Discord) und schreibt in den Kanal eine normale Nachricht: Überschrift (Betreff), ein kleiner Butler-Brief (Anrede, Mitteilung mit dem Wichtigsten
+fett, Schlussformel) und darunter klein „Nigel · Im Auftrag von …“. Die **@-Erwähnung ersetzt den Namen in der Anrede**
+(„Sehr geehrter Mr. @Niklas Palermo,“) – so pingt sie, ohne dass über der Nachricht eine Extrazeile steht. (Erwähnungen in Discord-Karten
+würden nicht benachrichtigen, deshalb gibt es keine Karte mehr.)
 Erwähnt (gepingt) werden nur die genannten Empfänger. Darf der Bot im Kanal nicht schreiben, stellt er die Nachricht als
 Direktnachricht zu; auf Wunsch („schreib ihr privat“) schickt er gleich eine Direktnachricht.
 
