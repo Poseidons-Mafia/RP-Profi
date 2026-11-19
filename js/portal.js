@@ -26,15 +26,17 @@ const portal = {
   entwurf: {},              // Nachrichten-Entwürfe je Akte
 };
 
+// „Meine Daten“ steht oben unter dem eigenen Namen und im „Mehr“-Menü (Handy)
 const PORTAL_NAV = [
-  { page: "", label: "Übersicht" },
-  { page: "akten", label: "Meine Akten" },
-  { page: "termine", label: "Termine" },
-  { page: "dokumente", label: "Dokumente" },
-  { page: "rechnungen", label: "Rechnungen" },
-  { page: "anliegen", label: "Anliegen" },
-  { page: "daten", label: "Meine Daten" },
+  { page: "", label: "Übersicht", icon: "uebersicht" },
+  { page: "akten", label: "Meine Akten", kurz: "Akten", icon: "akten" },
+  { page: "termine", label: "Termine", icon: "kalender" },
+  { page: "dokumente", label: "Dokumente", icon: "dokument" },
+  { page: "rechnungen", label: "Rechnungen", icon: "rechnung" },
+  { page: "anliegen", label: "Hilfe & Anliegen", kurz: "Hilfe", icon: "hilfe" },
 ];
+// Handy: diese Punkte stehen direkt in der unteren Leiste (Hilfe/Notruf immer mit einem Tipp erreichbar)
+const PORTAL_TABBAR = ["", "akten", "termine", "anliegen"];
 
 // ---------- Start / Laden ----------
 async function portalStarten() {
@@ -106,7 +108,7 @@ window.addEventListener("hashchange", () => {
 // ---------- Hilfen ----------
 function portalRoute() {
   const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
-  return { page: parts[0] || "", id: parts[1] || null };
+  return { page: parts[0] || "", id: parts[1] || null, sub: parts[2] || "" };
 }
 
 const portalAkten = () => (portal.daten && portal.daten.akten) || [];
@@ -144,12 +146,7 @@ function portalRechnungUeberfaellig(r) {
 function portalRender() {
   if (!portal.daten) return;
   const route = portalRoute();
-  const seite = route.page === "akte" ? "akten" : route.page;
-  const offen = portalRechnungen().filter((r) => r.status === "Offen" && !r.zahlung_gemeldet_am).length;
-  const termine = alleKommendenTermine().filter((t) => sameDay(t.beginn, new Date())).length;
-  const badges = { rechnungen: offen, termine };
-  $("portal-nav").innerHTML = String(html`${PORTAL_NAV.map((n) => html`
-    <a href="#/${n.page}" class="${seite === n.page ? "active" : ""}">${n.label}${badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : ""}</a>`)}`);
+  portalNavRender();
   $("portal-name").textContent = portal.daten.name || "";
   $("brand-wechsel").hidden = false; // Logo: Charakter wechseln
 
@@ -165,8 +162,46 @@ function portalRender() {
     main.innerHTML = String(html`<div class="page"><div class="card empty-state"><h2>Hier ist etwas schiefgelaufen</h2><p>${e.message}</p><a class="btn" href="#/">Zur Übersicht</a></div></div>`);
   }
   if (fokus && document.getElementById(fokus)) document.getElementById(fokus).focus({ preventScroll: true });
+  // Nachrichten: zum neuesten Eintrag und zum Eingabefeld scrollen
+  const chatEnde = main.querySelector(".portal-chat-ende");
+  if (chatEnde && !fokus) requestAnimationFrame(() => chatEnde.scrollIntoView({ block: "end" }));
   const k = state.settings;
   document.title = `Mandantenportal – ${k.kanzlei || "Wiwang Law"}`;
+}
+
+// Leiste oben (Computer, Tablet) bzw. unten + „Mehr“-Kachelmenü (Handy) – wie im Aktensystem
+function portalNavRender() {
+  if (!portal.daten) return;
+  const route = portalRoute();
+  const seite = route.page === "akte" ? "akten" : route.page;
+  const offen = portalRechnungen().filter((r) => r.status === "Offen" && !r.zahlung_gemeldet_am).length;
+  const termine = alleKommendenTermine().filter((t) => sameDay(t.beginn, new Date())).length;
+  const neu = portalAkten().reduce((t, a) => t + akteNeuigkeiten(a), 0);
+  const badges = { rechnungen: offen, termine, akten: neu };
+  const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
+  const link = (n, kurz) => html`<a href="#/${n.page}" title="${n.label}" class="${seite === n.page ? "active" : ""}"${seite === n.page ? html` aria-current="page"` : ""}>
+    ${navIcon(n.icon)}<span class="nav-label">${kurz && n.kurz ? n.kurz : n.label}</span>${badge(n)}</a>`;
+  $("portal-nav").innerHTML = String(html`<div class="nav-gruppe">${PORTAL_NAV.map((n) => link(n))}</div>`);
+
+  const direkt = PORTAL_TABBAR.map((p) => PORTAL_NAV.find((n) => n.page === p));
+  const rest = PORTAL_NAV.filter((n) => !direkt.includes(n));
+  const sheetOffen = document.body.classList.contains("nav-sheet-offen");
+  const restAktiv = sheetOffen || seite === "daten" || rest.some((n) => n.page === seite);
+  const restBadges = rest.reduce((t, n) => t + (badges[n.page] || 0), 0);
+  $("tabbar").innerHTML = String(html`${direkt.map((n) => link(n, true))}
+    <button type="button" class="${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${sheetOffen}">
+      ${navIcon("mehr")}<span class="nav-label">Mehr</span>${restBadges ? html`<span class="nav-badge">${restBadges}</span>` : ""}</button>`);
+
+  const kachel = (n) => html`<a href="#/${n.page}" class="nav-kachel ${seite === n.page ? "active" : ""}">${navIcon(n.icon)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
+  $("nav-sheet-inhalt").innerHTML = String(html`
+    <h3 class="nav-sheet-titel">Mandantenportal</h3>
+    <div class="nav-kacheln">${PORTAL_NAV.map(kachel)}</div>
+    <h3 class="nav-sheet-titel">Konto</h3>
+    <div class="nav-kacheln">
+      <a href="#/daten" class="nav-kachel ${seite === "daten" ? "active" : ""}">${navIcon("profil")}<span class="nav-label">Meine Daten</span></a>
+      <button type="button" class="nav-kachel" data-action="charakter-menue">${navIcon("wechseln")}<span class="nav-label">Charakter wechseln</span></button>
+      <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
+    </div>`);
 }
 
 function kanzleiKontakt() {
@@ -182,70 +217,101 @@ function keinMandant() {
 }
 
 // ---------- Übersicht ----------
+// Oben: Haft (falls), Schnellhilfe und vier Kennzahlen. Darunter links „Aktuelles“
+// (was zu tun ist, neue Mitteilungen, Stand der Anliegen), rechts Akten und Termine.
 function portalUebersicht() {
   const d = portal.daten;
   const akten = portalAkten();
   const aktiv = akten.filter((a) => a.status !== "Geschlossen");
-  const termine = alleKommendenTermine().slice(0, 5);
+  const kommend = alleKommendenTermine();
+  const naechster = kommend[0];
   const offen = portalRechnungen().filter((r) => r.status === "Offen");
+  const zuZahlen = offen.filter((r) => !r.zahlung_gemeldet_am);
+  const ueberfaellig = zuZahlen.some(portalRechnungUeberfaellig);
+  const summe = offen.reduce((s, r) => s + (Number(r.summe) || 0), 0);
   const hinweise = portal.hinweise.filter((h) => !h.gelesen).slice(0, 8);
   const haft = akten.filter((a) => a.in_haft);
   const laufendeAnliegen = portalAnliegenListe().filter((x) => x.status !== "erledigt");
-  const zuBewerten = akten.filter((a) => a.status === "Geschlossen" && !a.bewertung && portal.daten.mandant);
+  const zuBewerten = akten.filter((a) => a.status === "Geschlossen" && !a.bewertung && d.mandant);
+  const zuTun = zuZahlen.length + zuBewerten.length;
 
   return html`
     <div class="page portal-seite">
       <div class="portal-kopf">
         <div>
           <h1>Guten Tag, ${d.name}</h1>
-          <p class="muted">Willkommen im Mandantenportal. Hier sehen Sie den Stand Ihrer Angelegenheiten bei uns.</p>
+          <p class="muted">Hier sehen Sie den Stand Ihrer Angelegenheiten bei uns.</p>
         </div>
         ${kanzleiKontakt()}
       </div>
       ${d.mandant ? "" : keinMandant()}
-      <div class="portal-schnell">
-        <button type="button" class="portal-notruf" data-action="portal-anliegen" data-art="notruf">
-          <span class="icon" aria-hidden="true">🚨</span><span><strong>Notruf</strong><small>Ich wurde festgenommen</small></span></button>
-        <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="rueckruf">
-          <span class="icon" aria-hidden="true">📞</span><span><strong>Rückruf</strong><small>Gespräch mit der Kanzlei</small></span></button>
-        <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="mandat">
-          <span class="icon" aria-hidden="true">📂</span><span><strong>Neue Angelegenheit</strong><small>Mandat anfragen</small></span></button>
-      </div>
-      ${laufendeAnliegen.length ? html`<div class="box info"><strong>Ihre Anliegen:</strong>
-        <ul>${laufendeAnliegen.map((x) => html`<li>${PORTAL_ANLIEGEN[x.art]?.kurz || x.art} vom ${fmt.datumZeit(x.created_at)} –
-          ${x.status === "angenommen" ? html`<strong>${x.bearbeiter || "Die Kanzlei"} kümmert sich</strong>` : "eingegangen, noch nicht übernommen"}</li>`)}</ul>
-        <div class="actions-row"><a class="btn small" href="#/anliegen">Ansehen</a></div></div>` : ""}
-      ${zuBewerten.length ? html`<div class="box ok"><strong>Wie zufrieden waren Sie?</strong>
-        ${zuBewerten.length === 1 ? html` Ihre Akte ${zuBewerten[0].number} ist abgeschlossen.` : html` ${zuBewerten.length} Ihrer Akten sind abgeschlossen.`}
-        Ihre Bewertung hilft uns, noch besser zu werden.
-        <div class="actions-row">${zuBewerten.slice(0, 3).map((a) => html`<button type="button" class="btn small" data-action="portal-bewerten" data-id="${a.id}">${a.number} bewerten</button>`)}</div></div>` : ""}
-      ${haft.map((a) => html`<div class="box dark"><strong>In Haft</strong> (${a.number})${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}</div>`)}
+      ${haft.map((a) => html`<a class="box dark portal-haft" href="#/akte/${a.id}"><strong>In Haft</strong> · ${a.number}${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}</a>`)}
 
-      ${hinweise.length ? html`
-        <section class="card">
-          <div class="card-head"><h2>Neuigkeiten</h2>
-            <button type="button" class="link-btn" data-action="portal-hinweise-gelesen">Alle als gelesen markieren</button></div>
-          <ul class="rows">${hinweise.map((h) => html`<li class="portal-hinweis">
-            <a class="grow" href="${h.link || "#/"}" data-action="portal-hinweis" data-id="${h.id}">
-              <div class="title">${h.text}</div><div class="meta">${fmt.relativ(h.zeit)}</div></a></li>`)}</ul>
-        </section>` : ""}
+      ${portalSchnellhilfe()}
+
+      <div class="kpis">
+        <a class="kpi ${aktiv.length ? "" : "ruhig"}" href="#/akten"><span class="value">${aktiv.length}</span><span class="label">${aktiv.length === 1 ? "Laufende Akte" : "Laufende Akten"}</span></a>
+        <a class="kpi ${naechster ? (sameDay(naechster.beginn, new Date()) ? "alert" : "") : "ruhig"}" href="#/termine">
+          <span class="value">${naechster ? html`${fmt.tag(naechster.beginn)} <small>${fmt.zeit(naechster.beginn)}</small>` : "–"}</span>
+          <span class="label">${naechster ? `Nächster Termin: ${naechster.titel}` : "Keine Termine"}</span></a>
+        <a class="kpi ${ueberfaellig ? "alert" : offen.length ? "" : "ruhig"}" href="#/rechnungen"><span class="value">${fmt.geld(summe)}</span>
+          <span class="label">${offen.length ? `${offen.length === 1 ? "1 Rechnung" : `${offen.length} Rechnungen`} offen` : "Alles bezahlt"}</span></a>
+        <a class="kpi ${laufendeAnliegen.length ? "" : "ruhig"}" href="#/anliegen"><span class="value">${laufendeAnliegen.length}</span><span class="label">${laufendeAnliegen.length === 1 ? "Anliegen in Arbeit" : "Anliegen in Arbeit"}</span></a>
+      </div>
 
       <div class="grid-2">
         <section class="card">
-          <div class="card-head"><h2>Ihre Akten</h2><a class="btn small" href="#/akten">Alle</a></div>
-          ${aktiv.length ? html`<ul class="portal-akten">${aktiv.map(portalAkteKarte)}</ul>`
-            : html`<p class="empty">${akten.length ? "Keine laufenden Akten." : "Noch keine Akten."}</p>`}
+          <div class="card-head"><h2>Aktuelles</h2>
+            ${hinweise.length ? html`<button type="button" class="link-btn small" data-action="portal-hinweise-gelesen">Alle als gelesen markieren</button>` : ""}</div>
+          ${zuTun ? html`<div class="group-title">Für Sie zu erledigen</div>
+            <ul class="rows">
+              ${zuZahlen.map((r) => html`<li><div class="grow">
+                <div class="title">Rechnung ${r.nummer} über ${fmt.geld(r.summe)} ${portalRechnungUeberfaellig(r) ? html`<span class="badge alert">überfällig</span>` : ""}</div>
+                <div class="meta">vom ${fmt.datum(r.datum)}${r.akte_number ? ` · ${r.akte_number}` : ""}</div></div>
+                <div class="tools"><button type="button" class="btn small" data-action="portal-rechnung" data-id="${r.id}">Ansehen</button>
+                  <button type="button" class="btn small gold" data-action="portal-zahlung" data-id="${r.id}">Ich habe bezahlt</button></div></li>`)}
+              ${zuBewerten.map((a) => html`<li><div class="grow">
+                <div class="title">Akte ${a.number} ist abgeschlossen</div>
+                <div class="meta">Wie zufrieden waren Sie? Ihre Bewertung hilft uns.</div></div>
+                <div class="tools"><button type="button" class="btn small gold" data-action="portal-bewerten" data-id="${a.id}">★ Bewerten</button></div></li>`)}
+            </ul>` : ""}
+          ${hinweise.length ? html`<div class="group-title">Neu für Sie</div>
+            <ul class="rows">${hinweise.map((h) => html`<li class="portal-hinweis">
+              <a class="grow" href="${h.link || "#/"}" data-action="portal-hinweis" data-id="${h.id}">
+                <div class="title">${h.text}</div><div class="meta">${fmt.relativ(h.zeit)}</div></a></li>`)}</ul>` : ""}
+          ${laufendeAnliegen.length ? html`<div class="group-title">Ihre Anliegen</div>
+            <ul class="rows">${laufendeAnliegen.map((x) => html`<li><div class="grow">
+              <div class="title">${PORTAL_ANLIEGEN[x.art]?.kurz || x.art}</div>
+              <div class="meta">${fmt.datumZeit(x.created_at)} · ${x.status === "angenommen" ? html`<strong>${x.bearbeiter || "Die Kanzlei"} kümmert sich</strong>` : "eingegangen, noch nicht übernommen"}</div></div>
+              <div class="tools"><a class="btn small" href="#/anliegen">Ansehen</a></div></li>`)}</ul>` : ""}
+          ${zuTun || hinweise.length || laufendeAnliegen.length ? "" : html`<p class="empty">Alles erledigt – keine neuen Mitteilungen.</p>`}
         </section>
-        <section class="card">
-          <div class="card-head"><h2>Nächste Termine</h2></div>
-          ${termine.length ? html`<ul class="rows">${termine.map((t) => portalTerminZeile(t, { akte: true }))}</ul>`
-            : html`<p class="empty">Keine anstehenden Termine.</p>`}
-          ${offen.length ? html`<div class="box ${offen.some(portalRechnungUeberfaellig) ? "warning" : "info"}" style="margin-top:16px">
-            <strong>Offene Rechnungen: ${fmt.geld(offen.reduce((s, r) => s + (Number(r.summe) || 0), 0))}</strong>
-            <div class="actions-row"><a class="btn small" href="#/rechnungen">Ansehen</a></div></div>` : ""}
-        </section>
+        <div class="stack">
+          <section class="card">
+            <div class="card-head"><h2>Ihre Akten</h2><a class="btn small" href="#/akten">Alle${akten.length > aktiv.length ? ` (${akten.length})` : ""}</a></div>
+            ${aktiv.length ? html`<ul class="portal-akten">${aktiv.map(portalAkteKarte)}</ul>`
+              : html`<p class="empty">${akten.length ? "Keine laufenden Akten." : "Noch keine Akten."}</p>`}
+          </section>
+          <section class="card">
+            <div class="card-head"><h2>Nächste Termine</h2>${kommend.length ? html`<a class="btn small" href="#/termine">Alle</a>` : ""}</div>
+            ${kommend.length ? html`<ul class="rows">${kommend.slice(0, 4).map((t) => portalTerminZeile(t, { akte: true }))}</ul>`
+              : html`<p class="empty">Keine anstehenden Termine.</p>`}
+          </section>
+        </div>
       </div>
     </div>`;
+}
+
+// Notruf, Rückruf, neue Angelegenheit – auf Übersicht und „Hilfe & Anliegen“
+function portalSchnellhilfe({ gross = false } = {}) {
+  return html`<div class="portal-schnell ${gross ? "gross" : ""}">
+    <button type="button" class="portal-notruf" data-action="portal-anliegen" data-art="notruf">
+      <span class="icon" aria-hidden="true">🚨</span><span><strong>Notruf</strong><small>${gross ? "Ich wurde festgenommen oder brauche sofort einen Anwalt. Alle Anwälte werden alarmiert." : "Ich wurde festgenommen"}</small></span></button>
+    <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="rueckruf">
+      <span class="icon" aria-hidden="true">📞</span><span><strong>${gross ? "Rückruf / Gespräch" : "Rückruf"}</strong><small>${gross ? "Sie möchten mit Ihrem Ansprechpartner sprechen." : "Gespräch mit der Kanzlei"}</small></span></button>
+    <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="mandat">
+      <span class="icon" aria-hidden="true">📂</span><span><strong>Neue Angelegenheit</strong><small>${gross ? "Anzeige, Klage, Vertrag, Beratung – wir melden uns." : "Mandat anfragen"}</small></span></button>
+  </div>`;
 }
 
 function portalAkteKarte(a) {
@@ -285,15 +351,25 @@ function portalAktenListe() {
     </div>`;
 }
 
+// Akte in Reitern statt einer langen Seite: Überblick · Nachrichten · Termine · Dokumente
+// Adressen: #/akte/<id>[/nachrichten|/termine|/dokumente]
 function portalAkteDetail(route) {
   const a = portalAkte(route.id);
   if (!a) return html`<div class="page portal-seite"><div class="card empty-state"><h2>Akte nicht gefunden</h2>
     <p>Diese Akte ist für Sie nicht (mehr) sichtbar.</p><a class="btn" href="#/akten">Zu meinen Akten</a></div></div>`;
   const kommend = portalTermine(a);
-  const vergangen = portalTermine(a, { kommend: false }).reverse();
-  const verlauf = [...(a.verlauf || [])].reverse();
-  const summe = vorwurfSumme(a.vorwuerfe);
-  const textId = `portal-nachricht-${a.id}`;
+  const neu = {
+    nachrichten: (a.verlauf || []).filter((e) => !e.eigene && istNeu(e.created_at)).length,
+    termine: (a.termine || []).filter((t) => istNeu(t.created_at)).length,
+    dokumente: (a.beweise || []).filter((b) => istNeu(b.created_at)).length,
+  };
+  const reiter = [
+    { key: "", label: "Überblick", body: portalAkteUeberblick },
+    { key: "nachrichten", label: "Nachrichten", n: (a.verlauf || []).length, body: portalAkteNachrichten },
+    { key: "termine", label: "Termine", n: kommend.length, body: portalAkteTermine },
+    { key: "dokumente", label: "Dokumente", n: (a.beweise || []).length, body: portalAkteDokumente },
+  ];
+  const tab = reiter.find((r) => r.key === route.sub) || reiter[0];
 
   return html`
     <div class="page portal-seite">
@@ -304,76 +380,109 @@ function portalAkteDetail(route) {
           <span class="badges">${a.in_haft ? html`<span class="badge haft">In Haft</span>` : ""}${portalStatusBadge(a.status)}
             ${a.rolle !== "Mandant" ? html`<span class="badge gold">${a.rolle}</span>` : ""}</span>
           <h2>${a.title}</h2>
+          <p class="muted small" style="margin:2px 0 0">Ihr Ansprechpartner: <strong>${a.zustaendig || "–"}</strong>${a.zustaendig_telefon ? html` · <a href="tel:${a.zustaendig_telefon}">${a.zustaendig_telefon}</a>` : ""}</p>
+          <nav class="tabs" aria-label="Bereiche der Akte">
+            ${reiter.map((r) => html`<a href="#/akte/${a.id}${r.key ? "/" + r.key : ""}" class="${r === tab ? "active" : ""}"${r === tab ? html` aria-current="page"` : ""}>
+              ${r.label}${neu[r.key] ? html`<span class="nav-badge" title="Neu seit Ihrem letzten Besuch">${neu[r.key]}</span>` : r.n ? html`<span class="count">${r.n}</span>` : ""}</a>`)}
+          </nav>
         </div>
-        <div class="tab-body">
-          ${portalFortschritt(a)}
-          ${a.in_haft ? html`<div class="box dark"><strong>In Haft</strong>${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}</div>` : ""}
-          ${a.ergebnis ? html`<div class="box ${ERFOLGE.includes(a.ergebnis) ? "ok" : "info"}">
-            <strong>Ergebnis: ${a.ergebnis}</strong>${a.ergebnis_datum ? html` (${fmt.datum(a.ergebnis_datum)})` : ""}
-            ${a.ergebnis_details ? html`<div class="pre">${a.ergebnis_details}</div>` : ""}</div>` : ""}
-
-          <dl class="facts">
-            <div><dt>Mandant</dt><dd>${a.mandant || "–"}</dd></div>
-            ${a.opponent ? html`<div><dt>Gegenpartei</dt><dd>${a.opponent}</dd></div>` : ""}
-            <div><dt>Ihr Ansprechpartner</dt><dd>${a.zustaendig || "–"}${a.zustaendig_telefon ? html`<br><a class="small" href="tel:${a.zustaendig_telefon}">${a.zustaendig_telefon}</a>` : ""}</dd></div>
-            <div><dt>Rechtsgebiet</dt><dd>${a.area || "–"}</dd></div>
-            <div><dt>Mandatsart</dt><dd>${a.typ || "–"}</dd></div>
-            ${a.az_extern ? html`<div><dt>Az. Polizei / StA / Gericht</dt><dd>${a.az_extern}</dd></div>` : ""}
-            <div><dt>Angelegt</dt><dd>${fmt.datum(a.created_at)}</dd></div>
-          </dl>
-          <div class="actions-row">
-            ${a.status !== "Geschlossen" ? html`<button type="button" class="btn small" data-action="portal-anliegen" data-art="rueckruf" data-akte="${a.id}">📞 Rückruf zu dieser Akte</button>` : ""}
-            ${a.status === "Geschlossen" && portal.daten.mandant ? html`<button type="button" class="btn small ${a.bewertung ? "" : "gold"}" data-action="portal-bewerten" data-id="${a.id}">${a.bewertung ? "Bewertung ändern" : "★ Akte bewerten"}</button>` : ""}
-          </div>
-          ${a.bewertung ? html`<p class="small">Ihre Bewertung: ${portalSterne(a.bewertung.sterne)}${a.bewertung.text ? html` – „${a.bewertung.text}“` : ""}</p>` : ""}
-
-          ${(a.vorwuerfe || []).length ? html`
-            <h3 class="section-title" style="margin-top:20px">Tatvorwürfe & Strafrahmen</h3>
-            <div class="table-wrap"><table class="table">
-              <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th></tr></thead>
-              <tbody>${a.vorwuerfe.map((v) => html`<tr><td class="nowrap">${v.paragraph || "–"}</td><td>${v.titel}</td><td>${v.anzahl || 1}</td>
-                <td class="num">${v.geldstrafe ? fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1)) : "–"}</td>
-                <td class="num">${v.haft ? fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1)) : "–"}</td></tr>`)}</tbody>
-            </table></div>
-            <div class="sum-bar"><span>Strafrahmen gesamt:</span><span>Geldstrafe <strong>${fmt.geld(summe.geld)}</strong></span><span>Haft <strong>${fmt.haft(summe.haft)}</strong></span></div>
-            <p class="small muted">Höchstmaß laut Strafkatalog – das tatsächliche Ergebnis kann davon abweichen.</p>` : ""}
-
-          <div class="grid-2" style="margin-top:20px">
-            <div>
-              <h3 class="section-title">Termine</h3>
-              ${kommend.length ? html`<ul class="rows">${kommend.map((t) => portalTerminZeile(t))}</ul>` : html`<p class="empty">Keine anstehenden Termine.</p>`}
-              ${vergangen.length ? html`<details class="portal-vergangen"><summary class="small muted">${anzahl(vergangen.length, "früherer Termin", "frühere Termine")}</summary>
-                <ul class="rows">${vergangen.map((t) => portalTerminZeile(t))}</ul></details>` : ""}
-            </div>
-            <div>
-              <h3 class="section-title">Dokumente & Beweismittel</h3>
-              ${(a.beweise || []).length ? html`<ul class="rows">${a.beweise.map((b) => {
-                const url = safeUrl(b.link);
-                return html`<li><div class="grow">
-                  <div class="title">${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer">${b.titel} ↗</a>` : b.titel}
-                    ${istNeu(b.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
-                  <div class="meta">${b.art} · ${fmt.datum(b.created_at)}</div>
-                  ${b.beschreibung ? html`<div class="small">${b.beschreibung}</div>` : ""}</div></li>`;
-              })}</ul>` : html`<p class="empty">Noch keine Dokumente für Sie freigegeben.</p>`}
-            </div>
-          </div>
-
-          <h3 class="section-title" style="margin-top:24px">Nachrichten</h3>
-          <p class="small muted" style="margin-top:0">Mitteilungen der Kanzlei zu dieser Akte. Sie können uns hier auch schreiben – Ihre Nachricht geht direkt an ${a.zustaendig || "die Kanzlei"}.</p>
-          <form class="portal-nachricht-form" data-submit="portal-nachricht" data-id="${a.id}">
-            <textarea id="${textId}" name="text" rows="3" maxlength="2000" required data-input="portal-entwurf" data-id="${a.id}"
-              placeholder="Ihre Nachricht an die Kanzlei …">${portal.entwurf[a.id] || ""}</textarea>
-            <div class="actions-row"><span class="spacer"></span><button class="btn primary" type="submit">Senden</button></div>
-          </form>
-          ${verlauf.length ? html`<ul class="portal-chat">${verlauf.map((e) => html`
-            <li class="${e.vom_mandanten ? "vom-mandanten" : "von-kanzlei"} ${e.eigene ? "eigene" : ""}">
-              <div class="head"><strong>${e.eigene ? "Sie" : e.von}</strong>${e.vom_mandanten || !e.art ? "" : html` · ${e.art}`} · ${fmt.datumZeit(e.created_at)}
-                ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
-              <p>${multiline(e.text)}</p>
-            </li>`)}</ul>` : html`<p class="empty">Noch keine Nachrichten.</p>`}
-        </div>
+        <div class="tab-body">${tab.body(a, neu)}</div>
       </div>
     </div>`;
+}
+
+function portalAkteUeberblick(a, neu) {
+  const summe = vorwurfSumme(a.vorwuerfe);
+  const neuGesamt = neu.nachrichten + neu.termine + neu.dokumente;
+  const nt = portalTermine(a)[0];
+  const letzte = [...(a.verlauf || [])].reverse().find((e) => !e.eigene);
+  return html`
+    ${portalFortschritt(a)}
+    ${a.in_haft ? html`<div class="box dark"><strong>In Haft</strong>${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}</div>` : ""}
+    ${a.ergebnis ? html`<div class="box ${ERFOLGE.includes(a.ergebnis) ? "ok" : "info"}">
+      <strong>Ergebnis: ${a.ergebnis}</strong>${a.ergebnis_datum ? html` (${fmt.datum(a.ergebnis_datum)})` : ""}
+      ${a.ergebnis_details ? html`<div class="pre">${a.ergebnis_details}</div>` : ""}</div>` : ""}
+    ${neuGesamt ? html`<div class="box info"><strong>Neu seit Ihrem letzten Besuch:</strong>
+      ${joinHtml([
+        neu.nachrichten ? html`<a href="#/akte/${a.id}/nachrichten">${anzahl(neu.nachrichten, "Nachricht", "Nachrichten")}</a>` : null,
+        neu.termine ? html`<a href="#/akte/${a.id}/termine">${anzahl(neu.termine, "Termin", "Termine")}</a>` : null,
+        neu.dokumente ? html`<a href="#/akte/${a.id}/dokumente">${anzahl(neu.dokumente, "Dokument", "Dokumente")}</a>` : null,
+      ])}</div>` : ""}
+
+    <div class="portal-auf-einen-blick">
+      <a class="portal-blick" href="#/akte/${a.id}/termine"><span class="muted small">Nächster Termin</span>
+        <strong>${nt ? `${fmt.tag(nt.beginn)}, ${fmt.zeit(nt.beginn)}` : "–"}</strong><span class="small">${nt ? nt.titel : "Kein Termin angesetzt"}</span></a>
+      <a class="portal-blick" href="#/akte/${a.id}/nachrichten"><span class="muted small">Letzte Mitteilung der Kanzlei</span>
+        <strong>${letzte ? fmt.relativ(letzte.created_at) : "–"}</strong><span class="small">${letzte ? truncate(letzte.text, 80) : "Noch keine Mitteilung"}</span></a>
+    </div>
+
+    <dl class="facts">
+      <div><dt>Mandant</dt><dd>${a.mandant || "–"}</dd></div>
+      ${a.opponent ? html`<div><dt>Gegenpartei</dt><dd>${a.opponent}</dd></div>` : ""}
+      <div><dt>Rechtsgebiet</dt><dd>${a.area || "–"}</dd></div>
+      <div><dt>Mandatsart</dt><dd>${a.typ || "–"}</dd></div>
+      ${a.az_extern ? html`<div><dt>Az. Polizei / StA / Gericht</dt><dd>${a.az_extern}</dd></div>` : ""}
+      <div><dt>Angelegt</dt><dd>${fmt.datum(a.created_at)}</dd></div>
+    </dl>
+    <div class="actions-row">
+      <a class="btn small primary" href="#/akte/${a.id}/nachrichten">Nachricht schreiben</a>
+      ${a.status !== "Geschlossen" ? html`<button type="button" class="btn small" data-action="portal-anliegen" data-art="rueckruf" data-akte="${a.id}">📞 Rückruf zu dieser Akte</button>` : ""}
+      ${a.status === "Geschlossen" && portal.daten.mandant ? html`<button type="button" class="btn small ${a.bewertung ? "" : "gold"}" data-action="portal-bewerten" data-id="${a.id}">${a.bewertung ? "Bewertung ändern" : "★ Akte bewerten"}</button>` : ""}
+    </div>
+    ${a.bewertung ? html`<p class="small">Ihre Bewertung: ${portalSterne(a.bewertung.sterne)}${a.bewertung.text ? html` – „${a.bewertung.text}“` : ""}</p>` : ""}
+
+    ${(a.vorwuerfe || []).length ? html`
+      <h3 class="section-title" style="margin-top:20px">Tatvorwürfe & Strafrahmen</h3>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th></tr></thead>
+        <tbody>${a.vorwuerfe.map((v) => html`<tr><td class="nowrap">${v.paragraph || "–"}</td><td>${v.titel}</td><td>${v.anzahl || 1}</td>
+          <td class="num">${v.geldstrafe ? fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1)) : "–"}</td>
+          <td class="num">${v.haft ? fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1)) : "–"}</td></tr>`)}</tbody>
+      </table></div>
+      <div class="sum-bar"><span>Strafrahmen gesamt:</span><span>Geldstrafe <strong>${fmt.geld(summe.geld)}</strong></span><span>Haft <strong>${fmt.haft(summe.haft)}</strong></span></div>
+      <p class="small muted">Höchstmaß laut Strafkatalog – das tatsächliche Ergebnis kann davon abweichen.</p>` : ""}`;
+}
+
+// Nachrichten wie ein Chat: älteste oben, neueste unten, Eingabefeld darunter
+function portalAkteNachrichten(a) {
+  const verlauf = a.verlauf || [];
+  const textId = `portal-nachricht-${a.id}`;
+  return html`
+    <p class="small muted" style="margin-top:0">Mitteilungen der Kanzlei zu dieser Akte. Ihre Nachricht geht direkt an ${a.zustaendig || "die Kanzlei"}.</p>
+    ${verlauf.length ? html`<ul class="portal-chat">${verlauf.map((e) => html`
+      <li class="${e.vom_mandanten ? "vom-mandanten" : "von-kanzlei"} ${e.eigene ? "eigene" : ""}">
+        <div class="head"><strong>${e.eigene ? "Sie" : e.von}</strong>${e.vom_mandanten || !e.art ? "" : html` · ${e.art}`} · ${fmt.datumZeit(e.created_at)}
+          ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+        <p>${multiline(e.text)}</p>
+      </li>`)}</ul>` : html`<p class="empty">Noch keine Nachrichten – schreiben Sie uns gern.</p>`}
+    <form class="portal-nachricht-form portal-chat-ende" data-submit="portal-nachricht" data-id="${a.id}">
+      <textarea id="${textId}" name="text" rows="3" maxlength="2000" required data-input="portal-entwurf" data-id="${a.id}"
+        placeholder="Ihre Nachricht an die Kanzlei …">${portal.entwurf[a.id] || ""}</textarea>
+      <div class="actions-row"><span class="spacer"></span><button class="btn primary" type="submit">Senden</button></div>
+    </form>`;
+}
+
+function portalAkteTermine(a) {
+  const kommend = portalTermine(a);
+  const vergangen = portalTermine(a, { kommend: false }).reverse();
+  return html`
+    ${kommend.length ? html`<ul class="rows">${kommend.map((t) => portalTerminZeile(t))}</ul>` : html`<p class="empty">Keine anstehenden Termine.</p>`}
+    ${vergangen.length ? html`<details class="portal-vergangen"><summary class="small muted">${anzahl(vergangen.length, "früherer Termin", "frühere Termine")}</summary>
+      <ul class="rows">${vergangen.map((t) => portalTerminZeile(t))}</ul></details>` : ""}`;
+}
+
+function portalDokZeile(b) {
+  const url = safeUrl(b.link);
+  return html`<li><div class="grow">
+    <div class="title">${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer">${b.titel} ↗</a>` : b.titel}
+      ${istNeu(b.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+    <div class="meta">${b.art} · ${fmt.datum(b.created_at)}</div>
+    ${b.beschreibung ? html`<div class="small">${b.beschreibung}</div>` : ""}</div></li>`;
+}
+
+function portalAkteDokumente(a) {
+  return (a.beweise || []).length ? html`<ul class="rows">${a.beweise.map(portalDokZeile)}</ul>`
+    : html`<p class="empty">Noch keine Dokumente für Sie freigegeben.</p>`;
 }
 
 INPUTS["portal-entwurf"] = (el) => { portal.entwurf[el.dataset.id] = el.value; };
@@ -633,14 +742,7 @@ function portalDokumenteSeite() {
         ${gesamt > 4 ? html`<div class="search"><input type="search" id="portal-dok-q" data-input="portal-dok-q" value="${portal.dokQ}" placeholder="Dokumente durchsuchen …"></div>` : ""}</div>
       ${akten.length ? akten.map(({ a, docs }) => html`<section class="card">
           <div class="card-head"><h2><a href="#/akte/${a.id}">${a.number}</a> · ${a.title}</h2><span class="muted small">${anzahl(docs.length, "Dokument", "Dokumente")}</span></div>
-          <ul class="rows">${docs.map((b) => {
-            const url = safeUrl(b.link);
-            return html`<li><div class="grow">
-              <div class="title">${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer">${b.titel} ↗</a>` : b.titel}
-                ${istNeu(b.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
-              <div class="meta">${b.art} · ${fmt.datum(b.created_at)}</div>
-              ${b.beschreibung ? html`<div class="small">${b.beschreibung}</div>` : ""}</div></li>`;
-          })}</ul></section>`)
+          <ul class="rows">${docs.map(portalDokZeile)}</ul></section>`)
         : html`<div class="card empty-state"><p>${q ? "Keine Dokumente gefunden." : "Noch keine Dokumente für Sie freigegeben."}</p></div>`}
     </div>`;
 }
@@ -660,17 +762,10 @@ function portalAnliegenSeite() {
     : html`<span class="badge offen">eingegangen</span>`;
   return html`
     <div class="page portal-seite">
-      <div class="portal-kopf"><div><h1>Anliegen</h1>
+      <div class="portal-kopf"><div><h1>Hilfe & Anliegen</h1>
         <p class="muted">Schnell Hilfe holen, einen Rückruf anfordern oder eine neue Angelegenheit anfragen.</p></div>
         ${kanzleiKontakt()}</div>
-      <div class="portal-schnell gross">
-        <button type="button" class="portal-notruf" data-action="portal-anliegen" data-art="notruf">
-          <span class="icon" aria-hidden="true">🚨</span><span><strong>Notruf</strong><small>Ich wurde festgenommen oder brauche sofort einen Anwalt. Alle Anwälte werden alarmiert.</small></span></button>
-        <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="rueckruf">
-          <span class="icon" aria-hidden="true">📞</span><span><strong>Rückruf / Gespräch</strong><small>Sie möchten mit Ihrem Ansprechpartner sprechen.</small></span></button>
-        <button type="button" class="portal-kachel" data-action="portal-anliegen" data-art="mandat">
-          <span class="icon" aria-hidden="true">📂</span><span><strong>Neue Angelegenheit</strong><small>Anzeige, Klage, Vertrag, Beratung – wir melden uns.</small></span></button>
-      </div>
+      ${portalSchnellhilfe({ gross: true })}
 
       <details class="card portal-rechte">
         <summary><strong>Festgenommen? Das sollten Sie wissen</strong></summary>
@@ -731,7 +826,7 @@ Object.assign(ACTIONS, {
       intro: art === "notruf"
         ? html`<strong>Alle Anwältinnen und Anwälte der Kanzlei werden sofort benachrichtigt.</strong> Bitte nur im Ernstfall nutzen.`
         : art === "rueckruf" ? "Ihre Bitte geht an Ihren Ansprechpartner. Sie werden hier im Portal benachrichtigt, sobald sich jemand kümmert."
-        : "Wir prüfen Ihre Anfrage und melden uns bei Ihnen. Sie sehen den Stand unter „Anliegen“.",
+        : "Wir prüfen Ihre Anfrage und melden uns bei Ihnen. Sie sehen den Stand unter „Hilfe & Anliegen“.",
       fields: felder,
       values: { akte: d.akte || "" },
       submitLabel: art === "notruf" ? "🚨 Notruf senden" : "Senden",

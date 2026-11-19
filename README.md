@@ -32,7 +32,15 @@ und Änderungen erscheinen bei allen sofort.
   - **Dokumente** aller Akten auf einen Blick (durchsuchbar) und je Akte eine **Fortschrittsanzeige**
     (Eingegangen → In Bearbeitung → Abgeschlossen mit Ergebnis).
 
-  Neu in Update 20 – der Mandant kann selbst aktiv werden (Seite **Anliegen** und Schnellknöpfe auf der Übersicht):
+  **Aufbau des Portals:** Leiste mit Übersicht, Meine Akten, Termine, Dokumente, Rechnungen und Hilfe & Anliegen
+  (auf dem Handy unten: Übersicht, Akten, Termine, Hilfe und „Mehr“ mit allem Übrigen, Meine Daten, Charakter wechseln,
+  Abmelden). Die **Übersicht** zeigt oben Haft und Notruf/Rückruf/Neue Angelegenheit, dann vier Kennzahlen
+  (laufende Akten, nächster Termin, offener Betrag, Anliegen in Arbeit), links **Aktuelles** (zu erledigen: Rechnungen
+  bezahlen, Akten bewerten · neue Mitteilungen · Stand der Anliegen), rechts Akten und Termine. Eine **Akte** hat Reiter:
+  Überblick (Fortschritt, „auf einen Blick“, Daten, Tatvorwürfe), Nachrichten (wie ein Chat, neueste unten), Termine,
+  Dokumente – Neues seit dem letzten Besuch ist am Reiter markiert.
+
+  Neu in Update 20 – der Mandant kann selbst aktiv werden (Seite **Hilfe & Anliegen** und Schnellknöpfe auf der Übersicht):
   - **🚨 Notruf** („Ich wurde festgenommen“, mit Aufenthaltsort): alarmiert sofort alle, die Akten bearbeiten dürfen –
     Glocke plus roter Hinweis ganz oben auf der Übersicht, bis jemand den Notruf übernimmt. Dazu eine kurze Info
     „Festgenommen? Das sollten Sie wissen“.

@@ -57,6 +57,10 @@ const NAV_ICON_PFADE = {
   mehr: "M5 5h4v4H5zM15 5h4v4h-4zM5 15h4v4H5zM15 15h4v4h-4z",
   profil: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4.5 21a7.5 7.5 0 0 1 15 0",
   leitfaden: "M5 4.5A1.5 1.5 0 0 1 6.5 3H19v14H6.5A1.5 1.5 0 0 0 5 18.5zM5 18.5A1.5 1.5 0 0 0 6.5 20H19",
+  rechnung: "M6 3h9l4 4v14H6zM15 3v4h4M9 11h7M9 15h7M9 19h4",
+  dokument: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4",
+  hilfe: "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+  wechseln: "M4 8h14l-3-3M20 16H6l3 3",
   einklappen: "M14 6l-6 6 6 6M19 5v14",
   ausklappen: "M10 6l6 6-6 6M5 5v14",
   abmelden: "M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10",
@@ -285,7 +289,7 @@ function renderNav(route) {
     <h3 class="nav-sheet-titel">Konto</h3>
     <div class="nav-kacheln">
       <button type="button" class="nav-kachel" data-action="nav-profil">${navIcon("profil")}<span class="nav-label">${myName() || "Mein Profil"}</span></button>
-      <a class="nav-kachel" href="leitfaden/straftat.html?v=54">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
+      <a class="nav-kachel" href="leitfaden/straftat.html?v=55">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
       <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
     </div>`);
 
@@ -312,7 +316,9 @@ function navSheet(offen) {
   if (offen === undefined) offen = sheet.hidden;
   sheet.hidden = !offen;
   document.body.classList.toggle("nav-sheet-offen", offen);
-  if (state.loaded) renderNav(parseRoute()); // „Mehr“-Knopf markieren
+  // „Mehr“-Knopf markieren (Aktensystem bzw. Mandantenportal)
+  if (document.body.classList.contains("im-portal")) { if (typeof portalNavRender === "function") portalNavRender(); }
+  else if (state.loaded) renderNav(parseRoute());
   if (offen) { const erstes = sheet.querySelector(".nav-kachel"); if (erstes) erstes.focus({ preventScroll: true }); }
 }
 Object.assign(ACTIONS, {
@@ -321,7 +327,7 @@ Object.assign(ACTIONS, {
   "nav-profil": () => { navSheet(false); ACTIONS["profil-bearbeiten"]({}); },
 });
 // Link im Menü angetippt (auch die aktuelle Seite) → Menü schließen
-$("nav-sheet").addEventListener("click", (e) => { if (e.target.closest("a[href]")) navSheet(false); });
+$("nav-sheet").addEventListener("click", (e) => { if (e.target.closest("a[href], .nav-kachel")) navSheet(false); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("nav-sheet").hidden) navSheet(false); });
 // Wird das Fenster breiter (iPad drehen), gibt es kein „Mehr“ mehr
 window.matchMedia("(min-width: 701px)").addEventListener("change", (m) => { if (m.matches) navSheet(false); });
@@ -361,8 +367,8 @@ function showScreen(name) {
   const imPortal = name === "portal";
   $("main").hidden = !inApp;
   $("nav").hidden = !inApp;
-  $("tabbar").hidden = !inApp;
-  if (!inApp) navSheet(false);
+  $("tabbar").hidden = !inApp && !imPortal; // Handy: untere Leiste auch im Mandantenportal
+  navSheet(false);
   $("topbar-actions").hidden = !inApp;
   $("portal").hidden = !imPortal;
   $("portal-nav").hidden = !imPortal;

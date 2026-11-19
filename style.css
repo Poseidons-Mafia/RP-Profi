@@ -2728,15 +2728,15 @@ body.im-portal .ki-phone { display: none; }
     border-bottom: 0; border-right: 3px solid var(--gold);
     -webkit-mask-image: none; mask-image: none;
   }
-  .nav-gruppe { flex-direction: column; gap: 2px; }
-  .nav-gruppe + .nav-gruppe::before { display: none; }
-  .nav-titel { display: block; padding: 0 12px 6px 15px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.14em; color: #8f8466; }
-  .nav .nav-icon { display: block; opacity: 0.8; }
-  .nav a, .nav a.active { gap: 12px; padding: 9px 12px; margin: 0; border-bottom: 0; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; font-size: 0.92rem; }
-  .nav a:hover { background: rgba(255, 255, 255, 0.06); }
-  .nav a.active { background: rgba(204, 158, 0, 0.14); border-left-color: var(--gold); }
-  .nav a.active .nav-icon { opacity: 1; }
-  .nav a .nav-badge { margin-left: auto; }
+  body.in-app .nav-gruppe { flex-direction: column; gap: 2px; }
+  body.in-app .nav-gruppe + .nav-gruppe::before { display: none; }
+  body.in-app .nav-titel { display: block; padding: 0 12px 6px 15px; font-size: 0.68rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.14em; color: #8f8466; }
+  body.in-app .nav .nav-icon { display: block; opacity: 0.8; }
+  body.in-app .nav a, body.in-app .nav a.active { gap: 12px; padding: 9px 12px; margin: 0; border-bottom: 0; border-left: 3px solid transparent; border-radius: 0 8px 8px 0; font-size: 0.92rem; }
+  body.in-app .nav a:hover { background: rgba(255, 255, 255, 0.06); }
+  body.in-app .nav a.active { background: rgba(204, 158, 0, 0.14); border-left-color: var(--gold); }
+  body.in-app .nav a.active .nav-icon { opacity: 1; }
+  body.in-app .nav a .nav-badge { margin-left: auto; }
 }
 @supports (height: 100dvh) { @media (min-width: 1100px) { body.in-app .nav { height: 100dvh; } } }
 
@@ -2755,19 +2755,19 @@ body.im-portal .ki-phone { display: none; }
 
   /* Eingeklappt: schmale Leiste, nur Symbole; Name als Tooltip, Zähler als Punkt am Symbol */
   body.in-app.nav-eingeklappt { --seitenleiste: 68px; }
-  body.nav-eingeklappt .nav { padding-left: 8px; padding-right: 8px; }
-  body.nav-eingeklappt .nav-klappen { align-self: center; }
-  body.nav-eingeklappt .nav-gruppe { gap: 4px; }
-  body.nav-eingeklappt .nav-titel { font-size: 0; padding: 0; margin: 0 10px 8px; border-top: 1px solid rgba(255, 255, 255, 0.14); }
-  body.nav-eingeklappt .nav-gruppe:first-of-type .nav-titel { border-top-color: transparent; margin-bottom: 0; }
-  body.nav-eingeklappt .nav a, body.nav-eingeklappt .nav a.active {
+  body.in-app.nav-eingeklappt .nav { padding-left: 8px; padding-right: 8px; }
+  body.in-app.nav-eingeklappt .nav-klappen { align-self: center; }
+  body.in-app.nav-eingeklappt .nav-gruppe { gap: 4px; }
+  body.in-app.nav-eingeklappt .nav-titel { font-size: 0; padding: 0; margin: 0 10px 8px; border-top: 1px solid rgba(255, 255, 255, 0.14); }
+  body.in-app.nav-eingeklappt .nav-gruppe:first-of-type .nav-titel { border-top-color: transparent; margin-bottom: 0; }
+  body.in-app.nav-eingeklappt .nav a, body.in-app.nav-eingeklappt .nav a.active {
     position: relative; justify-content: center; padding: 10px 0;
     border-left: 0; border-radius: 8px;
   }
-  body.nav-eingeklappt .nav a .nav-label { display: none; }
-  body.nav-eingeklappt .nav a .nav-icon { width: 22px; height: 22px; }
-  body.nav-eingeklappt .nav a.active { box-shadow: inset 3px 0 0 var(--gold); }
-  body.nav-eingeklappt .nav a .nav-badge {
+  body.in-app.nav-eingeklappt .nav a .nav-label { display: none; }
+  body.in-app.nav-eingeklappt .nav a .nav-icon { width: 22px; height: 22px; }
+  body.in-app.nav-eingeklappt .nav a.active { box-shadow: inset 3px 0 0 var(--gold); }
+  body.in-app.nav-eingeklappt .nav a .nav-badge {
     position: absolute; top: 3px; right: 6px; margin: 0;
     min-width: 16px; padding: 0 4px; font-size: 0.65rem; line-height: 16px;
   }
@@ -2798,7 +2798,7 @@ body.im-portal .ki-phone { display: none; }
   color: var(--text); font-size: 0.8rem; text-align: center; text-decoration: none; cursor: pointer;
 }
 .nav-kachel .nav-icon { width: 24px; height: 24px; color: var(--red); }
-.nav-kachel .nav-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-kachel .nav-label { max-width: 100%; overflow: hidden; line-height: 1.2; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .nav-kachel.active { border-color: var(--gold); background: var(--gold-soft); font-weight: bold; }
 .nav-kachel .nav-badge { position: absolute; top: 6px; right: 6px; margin: 0; }
 body.nav-sheet-offen { overflow: hidden; }
@@ -2854,3 +2854,56 @@ body.nav-sheet-offen .ki-phone:not(.offen) { visibility: hidden; }
 /* Kennzahl ohne Befund (0) tritt zurück, damit Auffälliges heraussticht */
 .kpi.ruhig { border-left-color: var(--line); }
 .kpi.ruhig .value { color: var(--muted); }
+
+/* =============================================================
+   Mandantenportal: Navigation wie im Aktensystem
+   Computer/Tablet: Leiste oben mit Symbolen. Handy: Leiste unten
+   (Übersicht, Akten, Termine, Hilfe, Mehr) + „Mehr“-Kachelmenü.
+   ============================================================= */
+.portal-nav .nav-icon { display: block; width: 18px; height: 18px; opacity: 0.8; }
+.portal-nav a { gap: 8px; }
+.portal-nav a.active .nav-icon { opacity: 1; }
+@media (max-width: 700px) {
+  body.im-portal { --oben: 12px; --unten: calc(60px + env(safe-area-inset-bottom)); }
+  body.im-portal .portal-nav { display: none; }
+  body.im-portal .tabbar:not([hidden]) {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
+    padding: 0 max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left));
+    background: var(--black); border-top: 3px solid var(--gold);
+  }
+  body.im-portal .page { padding-bottom: calc(36px + var(--unten)); }
+  body.im-portal .guide-btn { display: none; }
+  body.im-portal #toasts { bottom: calc(var(--unten) + 10px); }
+  #portal-actions [data-action="logout"] { display: none; }
+}
+
+/* Übersicht */
+.portal-haft { display: block; color: #fff; text-decoration: none; }
+.portal-haft:hover { background: #000; }
+.portal-seite .kpi .value small { font-size: 0.6em; font-weight: normal; color: var(--muted); }
+.portal-seite .kpi .label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal-seite .rows .tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+@media (min-width: 701px) and (max-width: 1099px) {
+  .portal-seite .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .portal-seite .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-seite .kpi .label { white-space: normal; }
+  .portal-seite .rows li { flex-wrap: wrap; }
+  .portal-seite .rows .tools { width: 100%; justify-content: flex-start; }
+}
+
+/* Akte: Überblick „auf einen Blick“ */
+.portal-auf-einen-blick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.portal-blick {
+  display: grid; gap: 2px; padding: 10px 12px; min-width: 0;
+  border: 1px solid var(--line); border-radius: var(--radius); background: #fff;
+  color: var(--text); text-decoration: none;
+}
+.portal-blick:hover { border-color: var(--gold); }
+.portal-blick .small:last-child { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal-seite .tabs .nav-badge { margin-left: 6px; }
+.portal-chat + .portal-nachricht-form { margin-top: 16px; }
+.portal-nachricht-form { scroll-margin-bottom: calc(var(--unten) + 16px); }
+@media (max-width: 700px) { .portal-auf-einen-blick { grid-template-columns: minmax(0, 1fr); } }
