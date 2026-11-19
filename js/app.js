@@ -244,7 +244,8 @@ function renderNav(route) {
     + state.termine.filter(terminUeberfaellig).length;
   const offen = state.rechnungen.filter(rechnungUeberfaellig).length;
   const pinnwand = typeof pinnwandOffen === "function" ? pinnwandOffen().length : 0;
-  const antraege = typeof portalAntraege === "function" ? portalAntraege().length : 0;
+  const antraege = (typeof portalAntraege === "function" ? portalAntraege().length : 0)
+    + (typeof offeneAnliegen === "function" ? offeneAnliegen().filter((x) => x.status === "offen").length : 0);
   const badges = { kalender: heute, finanzen: offen, uebersicht: pinnwand, mandanten: antraege };
   const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));

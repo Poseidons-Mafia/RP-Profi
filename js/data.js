@@ -38,7 +38,7 @@ const TABLES = ["profiles", "mandanten", "akten", "eintraege", "beteiligte", "be
                 "aufgaben", "rechnungen", "gebuehren", "gesetze", "einstellungen", "konten", "buchungen",
                 "raenge", "personalakte", "personal_vermerke",
                 "benachrichtigungen", "pinnwand", "pinnwand_gelesen", "ablaeufe",
-                "gesetzbuecher", "paragraphen", "akten_mandanten"];
+                "gesetzbuecher", "paragraphen", "akten_mandanten", "portal_anliegen", "portal_bewertungen"];
 const PK = { profiles: "user_id", personalakte: "user_id" };
 const AKTE_KINDER = ["eintraege", "beteiligte", "beweise", "termine", "aufgaben"];
 const PROTOKOLL_LIMIT = 500;
@@ -49,6 +49,18 @@ const LADER = {
   // Mandantenportal (Update 12): fehlt die Tabelle noch, läuft der Rest trotzdem
   akten_mandanten: async () => {
     const { data, error } = await db.from("akten_mandanten").select("*");
+    if (error) { if (isMissingSchema(error)) return []; throw error; }
+    return data;
+  },
+  // Mandantenportal 2.0 (Update 20): Anliegen und Bewertungen aus dem Portal
+  portal_anliegen: async () => {
+    const { data, error } = await db.from("portal_anliegen").select("*")
+      .order("created_at", { ascending: false }).limit(300);
+    if (error) { if (isMissingSchema(error)) return []; throw error; }
+    return data;
+  },
+  portal_bewertungen: async () => {
+    const { data, error } = await db.from("portal_bewertungen").select("*").order("updated_at", { ascending: false });
     if (error) { if (isMissingSchema(error)) return []; throw error; }
     return data;
   },

@@ -26,7 +26,24 @@ und Änderungen erscheinen bei allen sofort.
   - **Termine** der Akte (ohne interne Fristen und Wiedervorlagen),
   - **Mitteilungen und Dokumente**, die die Kanzlei im Verlauf bzw. bei den Beweisen ausdrücklich
     **„für Mandant sichtbar“** macht (Häkchen beim Eintragen oder das Auge am Eintrag),
-  - **seine Rechnungen** (Ansicht im Briefkopf, Drucken/PDF) und seine Kontaktdaten (Telefon/Adresse selbst änderbar).
+  - **seine Rechnungen** (Ansicht im Briefkopf, Drucken/PDF) und seine Kontaktdaten (Telefon/Adresse selbst änderbar),
+  - **Termine** auf einer eigenen Seite, nach Tagen sortiert, mit **Kalender-Export** (📅 je Termin oder alle als `.ics`
+    – fürs Handy, Outlook, Google Kalender; 30 Minuten vorher Erinnerung),
+  - **Dokumente** aller Akten auf einen Blick (durchsuchbar) und je Akte eine **Fortschrittsanzeige**
+    (Eingegangen → In Bearbeitung → Abgeschlossen mit Ergebnis).
+
+  Neu in Update 20 – der Mandant kann selbst aktiv werden (Seite **Anliegen** und Schnellknöpfe auf der Übersicht):
+  - **🚨 Notruf** („Ich wurde festgenommen“, mit Aufenthaltsort): alarmiert sofort alle, die Akten bearbeiten dürfen –
+    Glocke plus roter Hinweis ganz oben auf der Übersicht, bis jemand den Notruf übernimmt. Dazu eine kurze Info
+    „Festgenommen? Das sollten Sie wissen“.
+  - **Rückruf / Gespräch** (optional zu einer Akte): geht an die/den Zuständige/n, sonst an die Mandantenpflege.
+  - **Neue Angelegenheit** (Mandat anfragen): geht an alle, die Mandanten bearbeiten dürfen; dort mit „Akte anlegen“.
+  - Die Kanzlei bearbeitet Anliegen unter **Mandanten → Mandantenportal** (Übernehmen, Antworten, Erledigt); der Mandant
+    sieht den Stand und die Antwort und wird benachrichtigt.
+  - **„Ich habe bezahlt“** an offenen Rechnungen: wer Rechnungen bearbeiten darf, wird benachrichtigt; in der Rechnungsliste
+    steht „Zahlung gemeldet“. Wird die Rechnung als bezahlt markiert, erfährt der Mandant das.
+  - **Bewertung** abgeschlossener Akten (1–5 Sterne + Kommentar). Die/der Zuständige wird benachrichtigt; alle
+    Bewertungen mit Durchschnitt stehen unter **Mandanten → Mandantenportal**.
 
   Interne Notizen, Sachverhalt, Aufgaben, Historie, Beteiligte und alles andere sieht er nie – ein Mandanten-Charakter hat
   kein Profil und keine Rechte; die Datenbank gibt ihm nur über `portal_daten()` genau diese Auswahl heraus. Er kann der
@@ -167,7 +184,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-19.sql`](supabase-update-19.sql) (Sicherheits-Härtung: Datenbank-Funktionen nur noch für Angemeldete).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-19.sql`](supabase-update-19.sql) (Sicherheits-Härtung: Datenbank-Funktionen nur noch für Angemeldete) und [`supabase-update-20.sql`](supabase-update-20.sql) (Mandantenportal 2.0: Notruf, Anliegen, Zahlung melden, Bewertungen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 
@@ -370,8 +387,8 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/forms.js` | Formulare und Dialoge |
 | `js/app.js` | Anmeldung, Seitenwechsel, Tastenkürzel |
 | `js/konto.js` | Discord-Anmeldung, Registrierung (Mitarbeiter oder Mandant), Charaktere beantragen/übernehmen, Charakter-Wechsel (Logo) |
-| `js/portal.js` | Mandantenportal (was ein angemeldeter Mandant sieht: Akten, Termine, Nachrichten, Rechnungen, Kontaktdaten) |
-| `js/portal-verwaltung.js` | Mandantenportal aus Sicht der Kanzlei: Zugänge freigeben/zuordnen/sperren, Mitmandanten je Akte, „für Mandant sichtbar“ |
+| `js/portal.js` | Mandantenportal (was ein angemeldeter Mandant sieht: Akten, Termine, Dokumente, Nachrichten, Rechnungen, Anliegen/Notruf, Bewertung, Kontaktdaten) |
+| `js/portal-verwaltung.js` | Mandantenportal aus Sicht der Kanzlei: Zugänge freigeben/zuordnen/sperren, Mitmandanten je Akte, „für Mandant sichtbar“, Anliegen/Notrufe bearbeiten, Bewertungen |
 | `js/akten.js`, `js/mandanten.js`, `js/kalender.js`, `js/rechnungen.js`, `js/gesetzbuch.js`, `js/team.js`, `js/uebersicht.js` | die einzelnen Seiten |
 | `js/gesetze.js` | Gesetze: Kachel-Übersicht, Gesetzbuch mit Paragraphen, Massenimport |
 | `js/buchhaltung.js` | Buchhaltung: Grundbuch, Hauptbuch, Bilanz, GuV |

@@ -2486,6 +2486,74 @@ body.im-portal .ki-phone { display: none; }
 .icon-btn svg { width: 16px; height: 16px; display: block; }
 .icon-btn.an { color: var(--blue); }
 .portal-einblick { border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px 12px; }
+/* ---------- Mandantenportal 2.0 ---------- */
+.portal-schnell { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.portal-schnell > button {
+  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; font: inherit;
+  padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); color: var(--text);
+  box-shadow: var(--shadow); transition: border-color .15s, background .15s, transform .1s;
+}
+.portal-schnell > button:hover, .portal-schnell > button:focus-visible { border-color: var(--red); background: var(--red-soft); outline: none; }
+.portal-schnell > button:active { transform: translateY(1px); }
+.portal-schnell .icon { font-size: 1.6rem; line-height: 1; }
+.portal-schnell strong { display: block; font-size: 1rem; }
+.portal-schnell small { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
+.portal-schnell > .portal-notruf { background: var(--red); border-color: var(--red-dark); color: #fff; }
+.portal-schnell > .portal-notruf small { color: #ffe1e1; }
+.portal-schnell > .portal-notruf:hover, .portal-schnell > .portal-notruf:focus-visible { background: var(--red-dark); border-color: var(--black); }
+.portal-schnell.gross > button { padding: 18px 16px; align-items: flex-start; }
+.portal-schnell.gross .icon { font-size: 2rem; }
+.portal-rechnung-karten { display: none; list-style: none; margin: 0; padding: 0; gap: 10px; }
+.portal-rechnung-karten li { margin: 0; display: grid; gap: 4px; }
+@media (max-width: 720px) {
+  .portal-schnell { grid-template-columns: 1fr 1fr; }
+  .portal-schnell > .portal-notruf { grid-column: 1 / -1; }
+  .portal-schnell > button { padding: 10px 12px; gap: 10px; }
+  .portal-schnell:not(.gross) .portal-kachel small { display: none; }
+  .portal-schnell.gross > .portal-kachel { flex-direction: column; gap: 6px; }
+  .portal-rechnung-tabelle { display: none; }
+  .portal-rechnung-karten { display: grid; }
+}
+
+.portal-fortschritt { list-style: none; margin: 0 0 18px; padding: 0; display: flex; gap: 0; }
+.portal-fortschritt li { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
+  font-size: 0.8rem; color: var(--muted); }
+.portal-fortschritt li::before { content: ""; position: absolute; top: 13px; left: -50%; width: 100%; height: 3px; background: var(--line); z-index: 0; }
+.portal-fortschritt li:first-child::before { display: none; }
+.portal-fortschritt li.fertig::before, .portal-fortschritt li.aktuell::before { background: var(--gold); }
+.portal-fortschritt .punkt { position: relative; z-index: 1; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--panel); border: 2px solid var(--line); font-weight: bold; color: var(--muted); }
+.portal-fortschritt li.fertig .punkt { background: var(--gold); border-color: var(--gold); color: #fff; }
+.portal-fortschritt li.aktuell .punkt { background: var(--red); border-color: var(--red); color: #fff; }
+.portal-fortschritt li.aktuell .text { color: var(--text); font-weight: bold; }
+
+.portal-tag { font-size: 1rem; margin: 0 0 6px; color: var(--red-dark); }
+.portal-antwort { margin-top: 6px; padding: 8px 10px; border-left: 3px solid var(--gold); background: var(--gold-soft); border-radius: 6px; font-size: 0.9rem; }
+.portal-rechte summary { cursor: pointer; }
+.portal-rechte ul { margin: 10px 0 6px; padding-left: 20px; display: grid; gap: 4px; }
+
+.sterne { color: var(--gold); letter-spacing: 1px; white-space: nowrap; }
+.sterne .leer { color: var(--line); }
+.sterne-wahl { display: inline-flex; flex-direction: row-reverse; gap: 2px; }
+.sterne-wahl input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.sterne-wahl label { font-size: 2rem; line-height: 1; cursor: pointer; color: var(--line); transition: color .1s; }
+.sterne-wahl label:hover, .sterne-wahl label:hover ~ label,
+.sterne-wahl input:checked ~ label { color: var(--gold); }
+.sterne-wahl input:focus-visible + label { outline: 2px solid var(--red); outline-offset: 2px; border-radius: 4px; }
+
+/* Kanzlei-Seite: Anliegen aus dem Portal */
+.anliegen-zeile.notruf { background: var(--red-soft); border-radius: 8px; padding-left: 8px; padding-right: 8px; }
+.anliegen-zeile .pre { margin: 4px 0; }
+.anliegen-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-self: flex-start; }
+.anliegen-antwort { margin-top: 4px; color: var(--muted); }
+.notruf-banner { background: var(--red); color: #fff; border: 1px solid var(--red-dark); }
+.notruf-banner strong { color: #fff; }
+.notruf-banner .btn.primary { background: #fff; color: var(--red); border-color: #fff; }
+@media (max-width: 720px) {
+  .anliegen-zeile { flex-wrap: wrap; }
+  .anliegen-tools { justify-content: flex-start; width: 100%; }
+}
+
 .portal-einblick .actions-row { margin-top: 6px; }
 .portal-link { display: inline-flex; align-items: center; gap: 6px; }
 

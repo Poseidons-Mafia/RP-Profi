@@ -160,6 +160,7 @@ VIEWS.uebersicht = () => {
         <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise …"></div>
       </div>
 
+      ${typeof notrufBanner === "function" ? notrufBanner() : ""}
       ${profil && !profil.anzeigename ? html`
         <div class="box info">Lege deinen <strong>Anzeigenamen</strong> fest – er erscheint im Verlauf, auf Rechnungen und in Dokumenten.
           <div class="actions-row"><button class="btn small gold" data-action="profil-bearbeiten">Profil ausfüllen</button></div></div>` : ""}
