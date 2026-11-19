@@ -20,7 +20,8 @@ function rechnungTabelle(list, { akte = true } = {}) {
           <td>${r.betreff || "–"}</td>
           ${akte ? html`<td class="nowrap">${a ? html`<a href="#/akten/${a.id}">${a.number}</a>` : "–"}</td>` : ""}
           <td class="num">${fmt.geld(r.summe)}</td>
-          <td>${rechnungStatusBadge(r)}${r.status === "Bezahlt" && r.bezahlt_am ? html`<div class="small muted">${fmt.datum(r.bezahlt_am)}</div>` : ""}</td>
+          <td>${rechnungStatusBadge(r)}${r.status === "Bezahlt" && r.bezahlt_am ? html`<div class="small muted">${fmt.datum(r.bezahlt_am)}</div>` : ""}
+            ${r.status === "Offen" && r.zahlung_gemeldet_am ? html`<div><span class="badge sichtbar" title="${r.zahlung_hinweis ? `Hinweis des Mandanten: ${r.zahlung_hinweis}` : "Der Mandant hat im Portal gemeldet, dass er bezahlt hat"}">Zahlung gemeldet ${fmt.datum(r.zahlung_gemeldet_am)}</span></div>` : ""}</td>
           <td class="row-actions">
             <button class="btn small" data-action="rechnung-drucken" data-id="${r.id}" title="Drucken / PDF">Drucken</button>
             ${r.status === "Offen" && darf("rechnungen") ? html`<button class="btn small gold" data-action="rechnung-bezahlt" data-id="${r.id}" title="Als bezahlt markieren">Bezahlt</button>` : ""}

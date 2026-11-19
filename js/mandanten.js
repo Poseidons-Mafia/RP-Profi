@@ -77,7 +77,7 @@ VIEWS.mandanten = (route) => {
     .filter((m) => matches(f.q, m.name, m.telefon, m.discord, m.adresse, m.notizen, m.markierungen))
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
   const m = route.id ? byId("mandanten", route.id) : null;
-  const antraege = portalAntraege().length;
+  const antraege = portalAntraege().length + offeneAnliegen().filter((x) => x.status === "offen").length;
   return html`
     <div class="page">
       <div class="split ${route.id ? "has-detail" : ""}">
@@ -88,7 +88,7 @@ VIEWS.mandanten = (route) => {
           </div>
           <div class="toolbar">
             <a class="btn small ${route.id === "portal" ? "primary" : ""} portal-link" href="#/mandanten/portal" title="Zugänge zum Mandantenportal">
-              Mandantenportal${antraege ? html`<span class="nav-badge" title="wartende Anträge">${antraege}</span>` : ""}</a>
+              Mandantenportal${antraege ? html`<span class="nav-badge" title="wartende Anträge und offene Anliegen">${antraege}</span>` : ""}</a>
           </div>
           <div class="toolbar">
             <select id="mandanten-mark" data-change="mandanten-mark">

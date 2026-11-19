@@ -71,6 +71,7 @@ function portalZugaengeSeite() {
   const mandant = (z) => z.mandant_id ? byId("mandanten", z.mandant_id) : null;
   return html`
     <a class="back-link" href="#/mandanten">← Alle Mandanten</a>
+    ${anliegenKarte()}
     <div class="card">
       <div class="card-head"><h2>Portal-Anträge</h2><button class="btn small" data-action="portal-zugaenge-laden">Aktualisieren</button></div>
       <p class="small muted" style="margin-top:0">Mandanten registrieren sich mit Discord („Ich bin Mandant“). Beim Freigeben ordnest du sie einem
@@ -102,7 +103,8 @@ function portalZugaengeSeite() {
           <td class="nowrap right">${zugangAktionen(z)}</td>
         </tr>`)}</tbody></table></div>`
       : html`<p class="empty">Noch keine freigegebenen Zugänge.</p>`}
-    </div>`;
+    </div>
+    ${bewertungenKarte()}`;
 }
 
 function zugangAktionen(z) {
@@ -275,3 +277,137 @@ Object.assign(ACTIONS, {
       e.fuer_mandant ? "Für den Mandanten wieder verborgen" : "Für den Mandanten sichtbar");
   },
 });
+
+// =============================================================
+//  Mandantenportal 2.0 (Update 20): Anliegen, Bewertungen
+//  • Anliegen aus dem Portal: Notruf, neues Mandat, Rückrufbitte –
+//    annehmen, erledigen, antworten (der Mandant wird benachrichtigt)
+//  • Bewertungen abgeschlossener Akten (1–5 Sterne)
+// =============================================================
+const ANLIEGEN_ART = {
+  notruf: { label: "🚨 Notruf", kurz: "Notruf" },
+  mandat: { label: "Neue Angelegenheit", kurz: "Neues Mandat" },
+  rueckruf: { label: "Rückrufbitte", kurz: "Rückruf" },
+};
+const ANLIEGEN_STATUS = { offen: "offen", angenommen: "in Bearbeitung", erledigt: "erledigt" };
+
+const portalAnliegen = () => state.portal_anliegen || [];
+const offeneAnliegen = () => portalAnliegen().filter((x) => x.status !== "erledigt");
+const offeneNotrufe = () => portalAnliegen().filter((x) => x.art === "notruf" && x.status === "offen");
+
+function anliegenVon(x) {
+  const m = x.mandant_id && byId("mandanten", x.mandant_id);
+  if (m) return html`<a href="#/mandanten/${m.id}">${m.name}</a>`;
+  const z = findeZugang(x.charakter_id);
+  return z ? z.name : "Mandant";
+}
+const anliegenVonText = (x) => (x.mandant_id && byId("mandanten", x.mandant_id)?.name) || findeZugang(x.charakter_id)?.name || "";
+
+function anliegenStatusBadge(x) {
+  const k = { offen: x.art === "notruf" ? "alert" : "offen", angenommen: "gold", erledigt: "ok" }[x.status] || "";
+  return html`<span class="badge ${k}">${ANLIEGEN_STATUS[x.status] || x.status}</span>`;
+}
+
+function anliegenZeile(x) {
+  const a = x.akte_id && byId("akten", x.akte_id);
+  const darfBearbeiten = darf("mandanten_schreiben") || darf("akten_schreiben");
+  return html`<li class="anliegen-zeile ${x.art === "notruf" && x.status !== "erledigt" ? "notruf" : ""}">
+    <div class="grow">
+      <div class="title"><span class="badge ${x.art === "notruf" ? "alert" : "gold"}">${ANLIEGEN_ART[x.art]?.kurz || x.art}</span>
+        ${anliegenVon(x)} ${anliegenStatusBadge(x)}</div>
+      <div class="pre">${x.text}</div>
+      <div class="meta">${joinHtml([fmt.relativ(x.created_at),
+        x.erreichbar ? html`erreichbar: <strong>${x.erreichbar}</strong>` : "",
+        a ? html`<a href="#/akten/${a.id}">${a.number}</a>` : "",
+        x.bearbeiter ? html`${x.status === "erledigt" ? "erledigt" : "übernommen"} von ${x.bearbeiter === state.me.id ? html`<strong>dir</strong>` : personName(x.bearbeiter)}` : ""].filter(Boolean))}</div>
+      ${x.antwort ? html`<div class="small anliegen-antwort"><strong>Antwort:</strong> ${x.antwort}</div>` : ""}
+    </div>
+    ${darfBearbeiten ? html`<div class="nowrap anliegen-tools">
+      ${x.status === "offen" ? html`<button class="btn small primary" data-action="anliegen-status" data-id="${x.id}" data-status="angenommen">Übernehmen</button>` : ""}
+      ${x.status !== "erledigt" ? html`<button class="btn small" data-action="anliegen-antworten" data-id="${x.id}" data-status="erledigt">Erledigt …</button>` : ""}
+      ${x.status !== "erledigt" ? html`<button class="btn small ghost" data-action="anliegen-antworten" data-id="${x.id}">Antworten</button>` : ""}
+      ${x.art === "mandat" && x.status !== "erledigt" && darf("akten_schreiben") ? html`<button class="btn small" data-action="akte-neu" data-mandant="${anliegenVonText(x)}">Akte anlegen</button>` : ""}
+      ${x.status === "erledigt" ? html`<button class="btn small ghost" data-action="anliegen-status" data-id="${x.id}" data-status="offen">Wieder öffnen</button>` : ""}
+    </div>` : ""}
+  </li>`;
+}
+
+function anliegenKarte() {
+  const offen = offeneAnliegen().sort((x, y) => (y.art === "notruf") - (x.art === "notruf") || new Date(y.created_at) - new Date(x.created_at));
+  const erledigt = portalAnliegen().filter((x) => x.status === "erledigt").slice(0, 20);
+  return html`<div class="card">
+    <div class="card-head"><h2>Anliegen aus dem Portal</h2><span class="muted small">${anzahl(offen.length, "offenes", "offene")}</span></div>
+    <p class="small muted" style="margin-top:0">Notrufe („Ich wurde festgenommen“), Anfragen für neue Angelegenheiten und Rückrufbitten.
+      Übernimm ein Anliegen, damit die anderen wissen, dass sich jemand kümmert – der Mandant sieht den Stand und deine Antwort im Portal.</p>
+    ${offen.length ? html`<ul class="rows">${offen.map(anliegenZeile)}</ul>` : html`<p class="empty">Keine offenen Anliegen.</p>`}
+    ${erledigt.length ? html`<details class="portal-vergangen"><summary class="small muted">${anzahl(erledigt.length, "erledigtes Anliegen", "erledigte Anliegen")}</summary>
+      <ul class="rows">${erledigt.map(anliegenZeile)}</ul></details>` : ""}
+  </div>`;
+}
+
+const sterne = (n) => html`<span class="sterne" title="${n} von 5 Sternen" aria-label="${n} von 5 Sternen">${"★".repeat(n)}<span class="leer">${"★".repeat(5 - n)}</span></span>`;
+
+function bewertungenKarte() {
+  const list = state.portal_bewertungen || [];
+  if (!list.length) return "";
+  const schnitt = list.reduce((s, b) => s + b.sterne, 0) / list.length;
+  return html`<div class="card">
+    <div class="card-head"><h2>Bewertungen</h2><span class="small">Ø <strong>${fmt.zahl(Math.round(schnitt * 10) / 10)}</strong> ${sterne(Math.round(schnitt))} · ${anzahl(list.length, "Bewertung", "Bewertungen")}</span></div>
+    <ul class="rows">${list.slice(0, 15).map((b) => {
+      const a = byId("akten", b.akte_id);
+      const m = byId("mandanten", b.mandant_id);
+      return html`<li><div class="grow">
+        <div class="title">${sterne(b.sterne)} ${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : ""}</div>
+        ${b.text ? html`<div class="pre">„${b.text}“</div>` : ""}
+        <div class="meta">${joinHtml([a ? html`<a href="#/akten/${a.id}">${a.number}</a>` : "", a ? html`Zuständig: ${personName(a.zustaendig_id, "–")}` : "", fmt.relativ(b.updated_at)].filter(Boolean))}</div>
+      </div></li>`;
+    })}</ul>
+  </div>`;
+}
+
+// Notruf-Alarm ganz oben auf der Übersicht
+function notrufBanner() {
+  const n = offeneNotrufe();
+  if (!n.length) return "";
+  return html`<div class="box notruf-banner">
+    <strong>🚨 ${n.length === 1 ? "Offener Notruf" : `${n.length} offene Notrufe`} aus dem Mandantenportal</strong>
+    <ul>${n.map((x) => html`<li><strong>${anliegenVonText(x) || "Mandant"}</strong>${x.erreichbar ? html` – ${x.erreichbar}` : ""} · ${fmt.relativ(x.created_at)}: ${truncate(x.text, 120)}</li>`)}</ul>
+    <div class="actions-row"><a class="btn small primary" href="#/mandanten/portal">Ansehen und übernehmen</a></div>
+  </div>`;
+}
+
+async function anliegenRpc(id, status, antwort, ok) {
+  const { error } = await db.rpc("portal_anliegen_bearbeiten", { p_id: id, p_status: status, p_antwort: antwort || null });
+  if (error) throw error;
+  toast(ok);
+  await neuLaden(["portal_anliegen"]);
+}
+
+Object.assign(ACTIONS, {
+  "anliegen-status": (d) => attempt(() => anliegenRpc(d.id, d.status, null,
+    d.status === "angenommen" ? "Übernommen – der Mandant weiß Bescheid" : d.status === "offen" ? "Wieder offen" : "Erledigt")),
+  "anliegen-antworten": (d) => {
+    const x = portalAnliegen().find((r) => r.id === d.id);
+    if (!x) return;
+    const erledigen = d.status === "erledigt";
+    openForm({
+      title: erledigen ? "Anliegen erledigen" : "Dem Mandanten antworten",
+      intro: html`<strong>${ANLIEGEN_ART[x.art]?.label || x.art}</strong> von ${anliegenVonText(x) || "Mandant"}: „${truncate(x.text, 200)}“`,
+      fields: [{ name: "antwort", label: erledigen ? "Antwort an den Mandanten (optional)" : "Antwort an den Mandanten", type: "textarea", rows: 4,
+        required: !erledigen, placeholder: "Erscheint im Portal, der Mandant wird benachrichtigt." }],
+      values: { antwort: "" },
+      submitLabel: erledigen ? "Erledigt" : "Antwort senden",
+      onSubmit: (v) => anliegenRpc(x.id, erledigen ? "erledigt" : x.status === "offen" ? "angenommen" : x.status, v.antwort,
+        erledigen ? "Anliegen erledigt" : "Antwort gesendet"),
+    });
+  },
+});
+
+// Neues Anliegen (Benachrichtigung) → sofort neu laden, auch wenn die Live-Verbindung hakt
+{
+  const vorher = LIVE_HOOKS.benachrichtigungen;
+  LIVE_HOOKS.benachrichtigungen = (p) => {
+    if (vorher) vorher(p);
+    if (p.eventType === "INSERT" && p.new && state.me && p.new.user_id === state.me.id && p.new.art === "mandant") neuLaden(["portal_anliegen", "portal_bewertungen"]);
+  };
+}
