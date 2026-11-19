@@ -151,7 +151,7 @@ function tabGrundbuch() {
           <td class="nowrap">${b.nummer}</td>
           <td class="nowrap">${fmt.datum(b.datum)}</td>
           <td class="nowrap small">${b.beleg || "–"}</td>
-          <td>${b.text}${storniert.has(b.id) ? html` <span class="badge geschlossen">storniert</span>` : ""}${b.storno_von ? html` <span class="badge offen">Storno</span>` : ""}
+          <td>${b.text}${storniert.has(b.id) ? html` <span class="badge storno-badge" title="Diese Buchung wurde storniert">Storniert</span>` : ""}${b.storno_von ? html` <span class="badge storno-badge">Storno</span>` : ""}
             <div class="small muted">${personName(b.created_by)}</div></td>
           <td class="nowrap small">${kontoText(byId("konten", b.soll))}</td>
           <td class="nowrap small">${kontoText(byId("konten", b.haben))}</td>

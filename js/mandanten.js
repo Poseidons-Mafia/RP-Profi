@@ -7,7 +7,7 @@ function mandantAkten(m) {
 }
 
 function markierungBadges(m) {
-  return (m.markierungen || []).map((x) => html`<span class="badge ${["Zahlt schlecht", "Vorsicht"].includes(x) ? "offen" : x === "VIP" ? "haft" : "gold"}">${x}</span>`);
+  return (m.markierungen || []).map((x) => html`<span class="badge ${["Zahlt schlecht", "Vorsicht"].includes(x) ? "alert" : x === "VIP" ? "vip" : "gold"}">${x}</span>`);
 }
 
 // Wo taucht die Person sonst auf? (Gegenpartei, Zeuge, …)

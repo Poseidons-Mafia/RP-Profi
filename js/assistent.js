@@ -129,6 +129,15 @@ kiChatBlock.innerHTML = `
   </div>`;
 
 document.body.append(kiPhone);
+// Zugeklappt: schmale Dock-Lasche unten rechts statt des ganzen Geräts (verdeckt keine Tabellenaktionen)
+const kiLasche = document.createElement("button");
+kiLasche.type = "button";
+kiLasche.className = "ki-lasche";
+kiLasche.setAttribute("aria-label", "Nigel öffnen (Taste K)");
+kiLasche.title = "Nigel öffnen (K)";
+kiLasche.innerHTML = `<img src="assets/nigel.svg" alt=""><span class="ki-lasche-text">Nigel</span><kbd>K</kbd>`;
+kiPhone.after(kiLasche);
+kiLasche.addEventListener("click", () => kiOeffnen());
 const kiEl = (name) => kiPhone.querySelector(`[data-ki="${name}"]`);
 const kiSlot = (name) => kiPhone.querySelector(`[data-slot="${name}"]`);
 const kiTextarea = kiChatBlock.querySelector("textarea");
@@ -323,7 +332,8 @@ function kiAktualisieren() {
   const status = kiEl("status");
   status.textContent = s.laedt ? "schlägt nach …" : "zu Diensten";
   status.classList.toggle("tippt", s.laedt);
-  kiEl("pill").textContent = akte ? `${akte.number} · ${akte.title || ""}` : "Allgemein – keine Akte";
+  kiEl("pill").textContent = akte ? `Kontext: ${akte.number}` : "Kontext: keine Akte";
+  kiEl("pill").closest(".ki-pill").title = akte ? `Kontext: ${akte.number} · ${akte.title || ""} – andere Akte wählen` : "Akte als Kontext wählen";
   kiEl("lock-text").textContent = s.verlauf.length
     ? truncate(s.verlauf[s.verlauf.length - 1].text.replace(/[*#`]/g, "").replace(/\s+/g, " ").trim(), 70)
     : akte ? `Rechtsfragen zu ${akte.number}${anredeKomma()}? Tippen Sie, und ich bin zur Stelle.` : `Sie haben geläutet${anredeKomma()}? Tippen Sie, und ich bin zur Stelle.`;
@@ -434,8 +444,9 @@ function kiChatZeichnen() {
             <span>Nachgeschlagen:</span>${n.quellen.map((q) => html`<button type="button" class="ki-quelle" data-action="ki-quelle" data-q="${q}">${q}</button>`)}</div>` : ""}
           <div class="ki-msg-aktionen">
             <time>${kiZeit(n.zeit)}</time>
+            ${darfVerlauf ? html`<button type="button" data-action="ki-in-verlauf" data-i="${i}" title="Als Eintrag in den Verlauf der Akte übernehmen">${new SafeHtml(KI_ICON.akte)}In Verlauf übernehmen</button>` : ""}
             <button type="button" data-action="ki-kopieren" data-i="${i}" title="Kopieren">${new SafeHtml(KI_ICON.kopieren)}Kopieren</button>
-            ${darfVerlauf ? html`<button type="button" data-action="ki-in-verlauf" data-i="${i}" title="In den Verlauf der Akte">${new SafeHtml(KI_ICON.akte)}In Akte</button>` : ""}
+            <button type="button" data-action="ki-arbeitsbereich" title="Im Nigel-Arbeitsbereich weiterarbeiten">Im Arbeitsbereich öffnen ↗</button>
           </div>
         </div>`)}
     ${s.laedt ? html`<div class="ki-msg ki neu"><div class="ki-bubble ki-tippt"><span></span><span></span><span></span></div></div>` : ""}`;

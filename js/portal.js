@@ -148,7 +148,6 @@ function portalRender() {
   const route = portalRoute();
   portalNavRender();
   $("portal-name").textContent = portal.daten.name || "";
-  $("brand-wechsel").hidden = false; // Logo: Charakter wechseln
 
   const views = { "": portalUebersicht, akten: portalAktenListe, akte: portalAkteDetail, termine: portalTermineSeite,
     dokumente: portalDokumenteSeite, rechnungen: portalRechnungenSeite, anliegen: portalAnliegenSeite, daten: portalDatenSeite };
@@ -179,9 +178,9 @@ function portalNavRender() {
   const neu = portalAkten().reduce((t, a) => t + akteNeuigkeiten(a), 0);
   const badges = { rechnungen: offen, termine, akten: neu };
   const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
-  const link = (n, kurz) => html`<a href="#/${n.page}" title="${n.label}" class="${seite === n.page ? "active" : ""}"${seite === n.page ? html` aria-current="page"` : ""}>
+  const link = (n, kurz) => html`<a href="#/${n.page}" title="${n.label}" class="nav-item ${seite === n.page ? "active" : ""}"${seite === n.page ? html` aria-current="page"` : ""}>
     ${navIcon(n.icon)}<span class="nav-label">${kurz && n.kurz ? n.kurz : n.label}</span>${badge(n)}</a>`;
-  $("portal-nav").innerHTML = String(html`<div class="nav-gruppe">${PORTAL_NAV.map((n) => link(n))}</div>`);
+  $("portal-nav").innerHTML = String(html`<div class="nav-group">${PORTAL_NAV.map((n) => link(n))}</div>`);
 
   const direkt = PORTAL_TABBAR.map((p) => PORTAL_NAV.find((n) => n.page === p));
   const rest = PORTAL_NAV.filter((n) => !direkt.includes(n));
@@ -189,19 +188,21 @@ function portalNavRender() {
   const restAktiv = sheetOffen || seite === "daten" || rest.some((n) => n.page === seite);
   const restBadges = rest.reduce((t, n) => t + (badges[n.page] || 0), 0);
   $("tabbar").innerHTML = String(html`${direkt.map((n) => link(n, true))}
-    <button type="button" class="${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${sheetOffen}">
+    <button type="button" class="nav-item ${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${sheetOffen}">
       ${navIcon("mehr")}<span class="nav-label">Mehr</span>${restBadges ? html`<span class="nav-badge">${restBadges}</span>` : ""}</button>`);
 
   const kachel = (n) => html`<a href="#/${n.page}" class="nav-kachel ${seite === n.page ? "active" : ""}">${navIcon(n.icon)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
   $("nav-sheet-inhalt").innerHTML = String(html`
     <h3 class="nav-sheet-titel">Mandantenportal</h3>
     <div class="nav-kacheln">${PORTAL_NAV.map(kachel)}</div>
-    <h3 class="nav-sheet-titel">Konto</h3>
-    <div class="nav-kacheln">
-      <a href="#/daten" class="nav-kachel ${seite === "daten" ? "active" : ""}">${navIcon("profil")}<span class="nav-label">Meine Daten</span></a>
-      <button type="button" class="nav-kachel" data-action="charakter-menue">${navIcon("wechseln")}<span class="nav-label">Charakter wechseln</span></button>
-      <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
+    <h3 class="nav-sheet-titel">Konto & Darstellung</h3>
+    <div class="sheet-liste">
+      <a href="#/daten" class="sheet-zeile ${seite === "daten" ? "active" : ""}">${navIcon("profil")}<span>Meine Daten</span></a>
+      <button type="button" class="sheet-zeile" data-action="charakter-menue">${navIcon("wechseln")}<span>Charakter wechseln</span></button>
+      <button type="button" class="sheet-zeile" data-action="theme-umschalten">${themeIcon()}<span class="theme-label">Design umschalten</span></button>
+      <button type="button" class="sheet-zeile danger" data-action="logout">${navIcon("abmelden")}<span>Abmelden</span></button>
     </div>`);
+  if (typeof themeKnoepfe === "function") themeKnoepfe();
 }
 
 function kanzleiKontakt() {
@@ -331,7 +332,7 @@ function portalAkteKarte(a) {
 function portalTerminZeile(t, { akte = false } = {}) {
   return html`<li class="${t.erledigt ? "erledigt" : ""}">
     <div class="portal-termin-datum"><strong>${fmt.tag(t.beginn)}</strong><span>${fmt.zeit(t.beginn)}</span></div>
-    <div class="grow"><div class="title">${t.titel} ${istNeu(t.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+    <div class="grow"><div class="title">${t.titel} ${istNeu(t.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
       <div class="meta">${t.art}${t.ort ? ` · ${t.ort}` : ""}${akte && t.akte ? html` · <a href="#/akte/${t.akte.id}">${t.akte.number}</a>` : ""}</div></div>
     ${!t.erledigt && new Date(t.beginn) >= startOfDay() ? html`<button type="button" class="icon-btn" data-action="portal-ics" data-id="${t.id}"
       title="In meinen Kalender übernehmen (.ics)" aria-label="In meinen Kalender übernehmen">📅</button>` : ""}
@@ -452,7 +453,7 @@ function portalAkteNachrichten(a) {
     ${verlauf.length ? html`<ul class="portal-chat">${verlauf.map((e) => html`
       <li class="${e.vom_mandanten ? "vom-mandanten" : "von-kanzlei"} ${e.eigene ? "eigene" : ""}">
         <div class="head"><strong>${e.eigene ? "Sie" : e.von}</strong>${e.vom_mandanten || !e.art ? "" : html` · ${e.art}`} · ${fmt.datumZeit(e.created_at)}
-          ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+          ${!e.eigene && istNeu(e.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
         <p>${multiline(e.text)}</p>
       </li>`)}</ul>` : html`<p class="empty">Noch keine Nachrichten – schreiben Sie uns gern.</p>`}
     <form class="portal-nachricht-form portal-chat-ende" data-submit="portal-nachricht" data-id="${a.id}">
@@ -475,7 +476,7 @@ function portalDokZeile(b) {
   const url = safeUrl(b.link);
   return html`<li><div class="grow">
     <div class="title">${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer">${b.titel} ↗</a>` : b.titel}
-      ${istNeu(b.created_at) ? html`<span class="badge alert">neu</span>` : ""}</div>
+      ${istNeu(b.created_at) ? html`<span class="badge neu" title="Neu seit Ihrem letzten Besuch">Neu</span>` : ""}</div>
     <div class="meta">${b.art} · ${fmt.datum(b.created_at)}</div>
     ${b.beschreibung ? html`<div class="small">${b.beschreibung}</div>` : ""}</div></li>`;
 }
@@ -787,7 +788,7 @@ Object.assign(ACTIONS, {
     const akten = portalAkteOptionen();
     const felder = {
       notruf: [
-        { name: "erreichbar", label: "Wo sind Sie gerade?", placeholder: "z. B. Mission Row PD, Sandy Shores Sheriff …", required: true },
+        { name: "erreichbar", label: "Wo sind Sie gerade? (optional)", placeholder: "z. B. Mission Row PD, Sandy Shores Sheriff …" },
         { name: "text", label: "Was ist passiert? (optional)", type: "textarea", rows: 3, placeholder: "z. B. Festnahme wegen …, Haftprüfung beantragt …" },
         ...(akten.length ? [{ name: "akte", label: "Gehört zu Akte (optional)", type: "select", options: akten, emptyLabel: "— keine / neue Sache —" }] : []),
       ],
@@ -806,12 +807,12 @@ Object.assign(ACTIONS, {
     openForm({
       title: PORTAL_ANLIEGEN[art].titel,
       intro: art === "notruf"
-        ? html`<strong>Alle Anwältinnen und Anwälte der Kanzlei werden sofort benachrichtigt.</strong> Bitte nur im Ernstfall nutzen.`
+        ? html`<span class="notruf-bestaetigen"><strong>Notruf wirklich auslösen?</strong> Alle Anwältinnen und Anwälte der Kanzlei werden sofort alarmiert. Bitte nur im Ernstfall – zum Abbrechen einfach „Abbrechen“ tippen.</span>`
         : art === "rueckruf" ? "Ihre Bitte geht an Ihren Ansprechpartner. Sie werden hier im Portal benachrichtigt, sobald sich jemand kümmert."
         : "Wir prüfen Ihre Anfrage und melden uns bei Ihnen. Sie sehen den Stand unter „Hilfe & Anliegen“.",
       fields: felder,
       values: { akte: d.akte || "" },
-      submitLabel: art === "notruf" ? "🚨 Notruf senden" : "Senden",
+      submitLabel: art === "notruf" ? "🚨 Ja, Notruf auslösen" : "Senden",
       onSubmit: async (v) => {
         const { error } = await db.rpc("portal_anliegen_senden", { p_art: art, p_text: v.text || "", p_akte: v.akte || null, p_erreichbar: v.erreichbar || null });
         if (error) throw error;

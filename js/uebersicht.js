@@ -104,8 +104,7 @@ function statistik() {
     umsatzMonate.push({ label: MONATE[d.getMonth()].slice(0, 3) + " " + String(d.getFullYear()).slice(2), n, text: fmt.geld(n) });
   }
   return html`
-    <h2 style="margin:28px 0 12px">Statistik</h2>
-    <div class="grid-2">
+    <div class="statistik-raster">
       ${A ? html`<div class="card">
         <h3 class="section-title">Ergebnisse${mitErgebnis.length ? ` – Erfolgsquote ${Math.round((erfolge / mitErgebnis.length) * 100)} %` : ""}</h3>
         ${ergebnisRows.length ? balken(ergebnisRows) : html`<p class="empty">Noch keine abgeschlossenen Fälle mit Ergebnis.</p>`}
@@ -126,108 +125,196 @@ function statistik() {
 }
 
 // ---------- Seite ----------
-VIEWS.uebersicht = () => {
+// Zwei Reiter: „Mein Arbeitstag“ (Standard) und „Kanzlei-Aktivität & Statistik“.
+// Mein Arbeitstag in drei Zonen: Notruf (nur wenn aktiv) · Handlungs-Kennzahlen · Fokus + Kanzlei-Puls.
+const DASH_KEY = "wiwang-dash-reiter";
+ui.dash = {
+  reiter: (() => { try { return localStorage.getItem(DASH_KEY) === "kanzlei" ? "kanzlei" : "arbeitstag"; } catch { return "arbeitstag"; } })(),
+  fokus: "aufgaben",
+};
+
+function dashDaten() {
   const now = new Date();
   const today = startOfDay();
   const offeneAkten = state.akten.filter((a) => a.status !== "Geschlossen");
-  const termineHeute = state.termine.filter((t) => !t.erledigt && sameDay(t.beginn, now));
-  const ueberfaellig = state.termine.filter(terminUeberfaellig);
-  const naechste = state.termine.filter((t) => !t.erledigt && new Date(t.beginn) >= today && new Date(t.beginn) < addDays(today, 8))
-    .sort((a, b) => new Date(a.beginn) - new Date(b.beginn));
-  const offeneRechnungen = state.rechnungen.filter((r) => r.status === "Offen");
-  const inHaft = state.akten.filter((a) => a.in_haft && a.status !== "Geschlossen")
-    .sort((a, b) => new Date(a.haft_bis || "9999") - new Date(b.haft_bis || "9999"));
-  const meineAufgaben = state.aufgaben.filter((t) => !t.erledigt && (t.zustaendig === state.me.id || (!t.zustaendig && isMe(t.created_by)))).sort(sortAufgaben);
-  const dringend = offeneAkten.filter((a) => a.prioritaet === "Dringend" || a.prioritaet === "Hoch")
-    .sort((a, b) => (a.prioritaet === "Dringend" ? -1 : 1) - (b.prioritaet === "Dringend" ? -1 : 1));
-  const meineAkten = offeneAkten.filter((a) => a.zustaendig_id === state.me.id).sort((a, b) => zuletztAktiv(b) - zuletztAktiv(a));
-  const liegen = offeneAkten.filter(liegenGeblieben)
-    .sort((a, b) => (b.zustaendig_id === state.me.id) - (a.zustaendig_id === state.me.id) || zuletztAktiv(a) - zuletztAktiv(b));
+  return {
+    now,
+    offeneAkten,
+    ueberfaellig: state.termine.filter(terminUeberfaellig).sort((a, b) => new Date(a.beginn) - new Date(b.beginn)),
+    naechste: state.termine.filter((t) => !t.erledigt && new Date(t.beginn) >= today && new Date(t.beginn) < addDays(today, 8))
+      .sort((a, b) => new Date(a.beginn) - new Date(b.beginn)),
+    inHaft: state.akten.filter((a) => a.in_haft && a.status !== "Geschlossen")
+      .sort((a, b) => new Date(a.haft_bis || "9999") - new Date(b.haft_bis || "9999")),
+    meineAufgaben: state.aufgaben.filter((t) => !t.erledigt && (t.zustaendig === state.me.id || (!t.zustaendig && isMe(t.created_by)))).sort(sortAufgaben),
+    dringend: offeneAkten.filter((a) => a.prioritaet === "Dringend" || a.prioritaet === "Hoch")
+      .sort((a, b) => (a.prioritaet === "Dringend" ? -1 : 1) - (b.prioritaet === "Dringend" ? -1 : 1)),
+    liegen: offeneAkten.filter(liegenGeblieben)
+      .sort((a, b) => (b.zustaendig_id === state.me.id) - (a.zustaendig_id === state.me.id) || zuletztAktiv(a) - zuletztAktiv(b)),
+  };
+}
+
+// Zone 0: aktiver Mandanten-Notruf („festgenommen“) – volle Breite, signalrot
+function notrufSlot() {
+  const liste = typeof offeneNotrufe === "function" ? offeneNotrufe() : [];
+  if (!liste.length) return "";
+  const darfUebernehmen = darf("akten_schreiben") || darf("mandanten_schreiben");
+  return html`<section class="notruf-slot" role="alert" aria-label="Offener Notruf">
+    <div class="notruf-symbol" aria-hidden="true">🚨</div>
+    <div class="notruf-inhalt">
+      <div class="notruf-titel">${liste.length === 1 ? "Mandanten-Notruf: festgenommen" : `${liste.length} Mandanten-Notrufe: festgenommen`}</div>
+      <ul class="notruf-liste">${liste.map((x) => html`<li>
+        <div class="grow">
+          <strong>${anliegenVonText(x) || "Mandant"}</strong>${x.erreichbar ? html` · ${x.erreichbar}` : ""}
+          <span class="notruf-zeit">${fmt.bis(x.created_at).replace(/^seit /, "seit ")}</span>
+          ${x.text ? html`<div class="notruf-text">${truncate(x.text, 160)}</div>` : ""}
+        </div>
+        <div class="notruf-aktionen">
+          ${darfUebernehmen ? html`<button type="button" class="btn notruf-btn" data-action="anliegen-status" data-id="${x.id}" data-status="angenommen">Notruf übernehmen</button>` : ""}
+          <a class="btn ghost notruf-link" href="#/mandanten/portal">Details</a>
+        </div>
+      </li>`)}</ul>
+    </div>
+  </section>`;
+}
+
+// Zone 1: Handlungs-Kennzahlen – 0 = ruhig mit Häkchen, > 0 = farbiger Akzentstreifen + Direktfilter
+function kpiKachel({ label, n, ton, href, aktion, hinweis, ruhigText = "Alles im Griff" }) {
+  const aktiv = n > 0;
+  return html`<a class="kpi-kachel ${aktiv ? `aktiv ${ton}` : "ruhig"}" href="${href}" ${aktion ? new SafeHtml(aktion) : ""}>
+    <span class="kpi-label">${label}</span>
+    <span class="kpi-wert">${n}</span>
+    <span class="kpi-hinweis">${aktiv ? hinweis : html`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>${ruhigText}`}</span>
+  </a>`;
+}
+
+function dashKennzahlen(d, A, T) {
+  const kacheln = [
+    A && kpiKachel({ label: "Mandanten in Haft", n: d.inHaft.length, ton: "danger", href: "#/akten",
+      aktion: 'data-action="akten-zeigen" data-status="haft"', hinweis: d.inHaft[0] && d.inHaft[0].haft_bis ? `nächstes Haftende ${fmt.bis(d.inHaft[0].haft_bis)}` : "Haftende im Blick behalten" }),
+    T && kpiKachel({ label: "Überfällige Fristen", n: d.ueberfaellig.length, ton: "danger", href: "#/",
+      aktion: 'data-action="fokus-tab" data-tab="aufgaben"', hinweis: "Fristen & Wiedervorlagen", ruhigText: "Keine überfällig" }),
+    A && kpiKachel({ label: "Liegen gebliebene Akten", n: d.liegen.length, ton: "warning", href: "#/akten",
+      aktion: 'data-action="akten-zeigen" data-status="liegen"', hinweis: `seit ${state.settings.liegezeit_tage}+ Tagen ohne Bewegung` }),
+    T && kpiKachel({ label: "Meine offenen Aufgaben", n: d.meineAufgaben.length, ton: d.meineAufgaben.some(aufgabeUeberfaellig) ? "danger" : "warning", href: "#/",
+      aktion: 'data-action="fokus-tab" data-tab="aufgaben"', hinweis: d.meineAufgaben.some(aufgabeUeberfaellig) ? `${d.meineAufgaben.filter(aufgabeUeberfaellig).length} davon überfällig` : "zum Abarbeiten", ruhigText: "Nichts offen" }),
+  ].filter(Boolean);
+  return kacheln.length ? html`<div class="kpi-reihe" role="list">${kacheln.map((k) => html`<div role="listitem">${k}</div>`)}</div>` : "";
+}
+
+// Zone 2 links: „Mein Fokus“ – eine Karte mit Reitern
+function fokusKarte(d, A, T) {
+  const reiter = [
+    T && { key: "aufgaben", label: "Aufgaben & Fristen", n: d.meineAufgaben.length + d.ueberfaellig.length, rot: d.ueberfaellig.length > 0 },
+    A && { key: "dringend", label: "Dringend & Liegen geblieben", n: d.dringend.length + d.liegen.length + d.inHaft.length, rot: d.inHaft.length > 0 },
+    T && { key: "termine", label: "Termine (7 Tage)", n: d.naechste.length },
+  ].filter(Boolean);
+  if (!reiter.length) return "";
+  const aktiv = reiter.some((r) => r.key === ui.dash.fokus) ? ui.dash.fokus : reiter[0].key;
+  const inhalt = {
+    aufgaben: () => html`
+      ${aufgabeSchnellForm(null)}
+      ${d.ueberfaellig.length ? html`<div class="group-title danger-text">Überfällige Fristen</div><ul class="rows">${d.ueberfaellig.map((t) => terminRow(t))}</ul>` : ""}
+      <div class="group-title">Meine Aufgaben</div>
+      ${d.meineAufgaben.length ? html`<ul class="rows">${d.meineAufgaben.slice(0, 15).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}`,
+    dringend: () => html`
+      ${d.inHaft.length ? html`<div class="group-title danger-text">Mandanten in Haft</div>
+        <ul class="rows">${d.inHaft.map((a) => html`<li>
+          <div class="grow"><div class="title"><a href="#/akten/${a.id}">${mandantName(a)}</a> <span class="badge haft">In Haft</span></div>
+          <div class="meta"><span class="mono">${a.number}</span> · ${truncate(a.title, 50)}</div></div>
+          <div class="when right">${a.haft_bis ? html`<strong>${fmt.bis(a.haft_bis)}</strong>${fmt.datumZeit(a.haft_bis)}` : "Ende offen"}</div>
+        </li>`)}</ul>` : ""}
+      ${d.dringend.length ? html`<div class="group-title">Dringend & hohe Priorität</div>
+        <ul class="item-list">${d.dringend.slice(0, 8).map((a) => html`<li>${akteListItem(a)}</li>`)}</ul>` : ""}
+      ${d.liegen.length ? html`<div class="group-title">Liegen geblieben <span class="muted small">(seit ${state.settings.liegezeit_tage}+ Tagen nichts passiert, kein Termin)</span></div>
+        <ul class="rows">${d.liegen.slice(0, 8).map((a) => html`<li>
+          <div class="when"><strong class="danger-text">${liegtSeitTagen(a)} Tage</strong>still</div>
+          <div class="grow">
+            <div class="title"><a href="#/akten/${a.id}"><span class="mono">${a.number}</span> · ${truncate(a.title, 50)}</a></div>
+            <div class="meta">${joinHtml([mandantName(a), html`Zuständig: ${a.zustaendig_id === state.me.id ? html`<strong>du</strong>` : personName(a.zustaendig_id, "niemand")}`])}</div>
+          </div>
+          <div class="tools"><button class="btn small" data-action="wiedervorlage" data-id="${a.id}" title="Wiedervorlage-Termin anlegen">Wiedervorlage</button></div>
+        </li>`)}</ul>
+        ${d.liegen.length > 8 ? html`<a class="btn small ghost" href="#/akten" data-action="akten-zeigen" data-status="liegen">Alle ${d.liegen.length} anzeigen</a>` : ""}` : ""}
+      ${!d.inHaft.length && !d.dringend.length && !d.liegen.length ? html`<p class="empty">Nichts Dringendes – alle Akten sind in Bewegung.</p>` : ""}`,
+    termine: () => html`
+      ${d.naechste.length ? html`<ul class="rows">${d.naechste.map((t) => terminRow(t))}</ul>` : html`<p class="empty">Keine Termine in den nächsten 7 Tagen.</p>`}
+      <div class="actions-row" style="margin-top:10px"><a class="btn small ghost" href="#/kalender">Zum Kalender →</a></div>`,
+  }[aktiv];
+  return html`<section class="card fokus-karte" id="fokus" aria-label="Mein Fokus">
+    <div class="card-head">
+      <h2>Mein Fokus</h2>
+      <div class="seg-tabs" role="tablist" aria-label="Fokus">
+        ${reiter.map((r) => html`<button type="button" role="tab" class="seg-tab ${r.key === aktiv ? "active" : ""}" aria-selected="${r.key === aktiv}"
+          data-action="fokus-tab" data-tab="${r.key}">${r.label}${r.n ? html`<span class="seg-n ${r.rot ? "rot" : ""}">${r.n}</span>` : ""}</button>`)}
+      </div>
+    </div>
+    <div class="fokus-inhalt" role="tabpanel">${inhalt()}</div>
+  </section>`;
+}
+
+VIEWS.uebersicht = () => {
+  const d = dashDaten();
   // Was der Rang nicht lesen darf, erscheint auch nicht auf der Übersicht
-  const A = darf("akten_lesen"), T = darf("termine_lesen"), R = darf("rechnungen_lesen");
+  const A = darf("akten_lesen"), T = darf("termine_lesen");
   const profil = myProfile();
-  const stunde = now.getHours();
+  const stunde = d.now.getHours();
   const gruss = stunde < 11 ? "Guten Morgen" : stunde < 18 ? "Guten Tag" : "Guten Abend";
-  const q = ui.globalQ.trim();
+  // Sprungmarken (#/pinnwand, #/team-heute) liegen im ersten Reiter
+  if (ui.anker === "pinnwand" || ui.anker === "team-heute") ui.dash.reiter = "arbeitstag";
+  const reiter = ui.dash.reiter;
 
   return html`
-    <div class="page">
+    <div class="page dashboard">
       <div class="page-head">
         <div>
           <h1>${gruss}${profil && profil.anzeigename ? `, ${firstName(profil.anzeigename)}` : ""}</h1>
-          <p class="muted">${fmt.tagLang(now)} · ${state.settings.kanzlei}</p>
+          <p class="muted">${fmt.tagLang(d.now)} · ${state.settings.kanzlei}</p>
         </div>
-        <div class="search global-search"><input type="search" id="global-q" data-search data-input="global-q" value="${ui.globalQ}" placeholder="Alles durchsuchen: Akten, Mandanten, Verlauf, Beweise …"></div>
+        <div class="seg-tabs gross" role="tablist" aria-label="Übersicht">
+          <button type="button" role="tab" class="seg-tab ${reiter === "arbeitstag" ? "active" : ""}" aria-selected="${reiter === "arbeitstag"}" data-action="dash-tab" data-tab="arbeitstag">Mein Arbeitstag</button>
+          <button type="button" role="tab" class="seg-tab ${reiter === "kanzlei" ? "active" : ""}" aria-selected="${reiter === "kanzlei"}" data-action="dash-tab" data-tab="kanzlei">Kanzlei-Aktivität & Statistik</button>
+        </div>
       </div>
 
-      ${typeof notrufBanner === "function" ? notrufBanner() : ""}
       ${profil && !profil.anzeigename ? html`
         <div class="box info">Lege deinen <strong>Anzeigenamen</strong> fest – er erscheint im Verlauf, auf Rechnungen und in Dokumenten.
           <div class="actions-row"><button class="btn small gold" data-action="profil-bearbeiten">Profil ausfüllen</button></div></div>` : ""}
 
-      ${q ? sucheErgebnisse(q) : html`
-        <div class="kpis">
-          ${A ? html`<a class="kpi ${offeneAkten.length ? "" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="aktiv"><span class="value">${offeneAkten.length}</span><span class="label">Aktive Akten</span></a>` : ""}
-          ${T ? html`<a class="kpi ${termineHeute.length ? "alert" : "ruhig"}" href="#/kalender"><span class="value">${termineHeute.length}</span><span class="label">Termine heute</span></a>
-          <a class="kpi ${ueberfaellig.length ? "alert" : "ruhig"}" href="#/kalender"><span class="value">${ueberfaellig.length}</span><span class="label">Fristen überfällig</span></a>` : ""}
-          ${A ? html`<a class="kpi ${inHaft.length ? "" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="haft"><span class="value">${inHaft.length}</span><span class="label">Mandanten in Haft</span></a>` : ""}
-          ${R ? html`<a class="kpi ${offeneRechnungen.length ? "" : "ruhig"}" href="#/finanzen/rechnungen" data-action="rechnungen-filter" data-status="Offen"><span class="value">${fmt.geld(offeneRechnungSumme(offeneRechnungen))}</span><span class="label">${offeneRechnungen.length === 1 ? "1 Rechnung" : `${offeneRechnungen.length} Rechnungen`} offen</span></a>` : ""}
-          ${A ? html`<a class="kpi ${liegen.length ? "warn" : "ruhig"}" href="#/akten" data-action="akten-zeigen" data-status="liegen" title="Offene Akten ohne Bewegung seit ${state.settings.liegezeit_tage} Tagen und ohne anstehenden Termin"><span class="value">${liegen.length}</span><span class="label">Liegen geblieben</span></a>` : ""}
-        </div>
-
-        <div class="grid-2">
-          <div class="stack">
+      ${reiter === "arbeitstag" ? html`
+        ${notrufSlot()}
+        ${dashKennzahlen(d, A, T)}
+        <div class="dash-grid">
+          <div class="dash-haupt">${fokusKarte(d, A, T)}</div>
+          <aside class="dash-puls" aria-label="Kanzlei-Puls">
             ${pinnwandKarte()}
-            ${T ? html`<div class="card">
-              <div class="card-head"><h2>Die nächsten 7 Tage</h2><a class="btn small" href="#/kalender">Kalender</a></div>
-              ${ueberfaellig.length ? html`<div class="group-title danger-text">Überfällig</div><ul class="rows">${ueberfaellig.map((t) => terminRow(t))}</ul>` : ""}
-              ${naechste.length ? html`<ul class="rows">${naechste.map((t) => terminRow(t))}</ul>` : html`<p class="empty">Keine Termine in den nächsten 7 Tagen.</p>`}
-            </div>
-            <div class="card">
-              <div class="card-head"><h2>Meine Aufgaben</h2><span class="muted small">${meineAufgaben.length} offen</span></div>
-              ${aufgabeSchnellForm(null)}
-              ${meineAufgaben.length ? html`<ul class="rows">${meineAufgaben.slice(0, 12).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
-            </div>` : ""}
-            ${liegen.length ? html`<div class="card">
-              <div class="card-head"><h2>Liegen geblieben</h2>
-                <a class="btn small" href="#/akten" data-action="akten-zeigen" data-status="liegen">Alle ${liegen.length}</a></div>
-              <p class="muted small" style="margin:-4px 0 6px">Offene Akten, in denen seit ${state.settings.liegezeit_tage}+ Tagen nichts passiert ist und kein Termin ansteht.</p>
-              <ul class="rows">${liegen.slice(0, 6).map((a) => html`<li>
-                <div class="when"><strong class="danger-text">${liegtSeitTagen(a)} Tage</strong>still</div>
-                <div class="grow">
-                  <div class="title"><a href="#/akten/${a.id}">${a.number} · ${truncate(a.title, 50)}</a></div>
-                  <div class="meta">${joinHtml([mandantName(a), html`Zuständig: ${a.zustaendig_id === state.me.id ? html`<strong>du</strong>` : personName(a.zustaendig_id, "niemand")}`])}</div>
-                </div>
-                <div class="tools"><button class="btn small" data-action="wiedervorlage" data-id="${a.id}" title="Wiedervorlage-Termin anlegen">Wiedervorlage</button></div>
-              </li>`)}</ul>
-            </div>` : ""}
-          </div>
-          <div class="stack">
             ${teamHeute()}
-            ${inHaft.length ? html`<div class="card">
-              <div class="card-head"><h2>Mandanten in Haft</h2></div>
-              <ul class="rows">${inHaft.map((a) => html`<li>
-                <div class="grow"><div class="title"><a href="#/akten/${a.id}">${mandantName(a)}</a></div>
-                <div class="meta">${a.number} · ${a.title}</div></div>
-                <div class="when" style="text-align:right">${a.haft_bis ? html`<strong>${fmt.bis(a.haft_bis)}</strong>${fmt.datumZeit(a.haft_bis)}` : "Ende offen"}</div>
-              </li>`)}</ul></div>` : ""}
-            ${dringend.length ? html`<div class="card">
-              <div class="card-head"><h2>Dringende Akten</h2></div>
-              <ul class="item-list">${dringend.slice(0, 8).map((a) => html`<li>${akteListItem(a)}</li>`)}</ul></div>` : ""}
-            ${A ? html`<div class="card">
-              <div class="card-head"><h2>Meine Akten</h2><a class="btn small" href="#/akten" data-action="akten-zeigen" data-status="aktiv" data-meine="1">Alle</a></div>
-              ${meineAkten.length ? html`<ul class="item-list">${meineAkten.slice(0, 6).map((a) => html`<li>${akteListItem(a)}</li>`)}</ul>` : html`<p class="empty">Dir sind keine aktiven Akten zugewiesen.</p>`}
-            </div>` : ""}
-            <div class="card">
-              <div class="card-head"><h2>Letzte Aktivitäten</h2><span class="muted small">live</span></div>
-              ${state.protokoll.length ? html`<ul class="rows">${state.protokoll.slice(0, window.innerWidth < 700 ? 8 : 15).map((p) => protokollZeile(p))}</ul>` : html`<p class="empty">Noch keine Aktivitäten.</p>`}
-            </div>
-          </div>
-        </div>
-
-        ${statistik()}`}
+          </aside>
+        </div>` : html`
+        <div class="dash-grid kanzlei">
+          <section class="card">
+            <div class="card-head"><h2>Letzte Aktivitäten im Team</h2><span class="live-hinweis"><span class="live-punkt"></span>live</span></div>
+            ${state.protokoll.length ? html`<ul class="rows">${state.protokoll.slice(0, 30).map((p) => protokollZeile(p))}</ul>` : html`<p class="empty">Noch keine Aktivitäten.</p>`}
+          </section>
+          <div>${statistik()}</div>
+        </div>`}
     </div>`;
 };
+
+Object.assign(ACTIONS, {
+  "dash-tab": (d) => {
+    ui.dash.reiter = d.tab === "kanzlei" ? "kanzlei" : "arbeitstag";
+    try { localStorage.setItem(DASH_KEY, ui.dash.reiter); } catch {}
+    if (parseRoute().page !== "uebersicht") go(""); else render();
+  },
+  "fokus-tab": (d) => {
+    ui.dash.fokus = d.tab;
+    ui.dash.reiter = "arbeitstag";
+    if (parseRoute().page !== "uebersicht") { go(""); return; }
+    render();
+    const el = $("fokus");
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  },
+});
 
 function sucheErgebnisse(q) {
   const gruppen = globaleSuche(q);

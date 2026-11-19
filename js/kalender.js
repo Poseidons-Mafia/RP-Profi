@@ -8,8 +8,8 @@ function joinHtml(parts, sep = " · ") {
 }
 
 function terminArtClass(art) {
-  if (["Verhandlung", "Haftprüfung"].includes(art)) return "haft";
-  if (["Frist", "Wiedervorlage"].includes(art)) return "offen";
+  if (["Verhandlung", "Haftprüfung"].includes(art)) return "gericht";
+  if (["Frist", "Wiedervorlage"].includes(art)) return "hoch";
   if (art === "Mandantengespräch") return "blue";
   return "gold";
 }
@@ -25,7 +25,7 @@ function terminRow(t, { akte = true, datum = true } = {}) {
   const a = byId("akten", t.akte_id);
   const overdue = terminUeberfaellig(t);
   return html`
-    <li class="${overdue ? "overdue" : ""}">
+    <li class="${overdue ? "overdue" : ""}" data-live="termine:${t.id}">
       <input type="checkbox" title="Erledigt" data-change="termin-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}>
       <div class="when">${datum ? html`<strong>${fmt.tag(t.beginn)}</strong>` : ""}${fmt.zeit(t.beginn)} Uhr</div>
       <div class="grow">
@@ -58,7 +58,7 @@ function aufgabeRow(t, { akte = true } = {}) {
   const a = byId("akten", t.akte_id);
   const overdue = aufgabeUeberfaellig(t);
   return html`
-    <li class="${overdue ? "overdue" : ""}">
+    <li class="${overdue ? "overdue" : ""}" data-live="aufgaben:${t.id}">
       <input type="checkbox" title="Erledigt" data-change="aufgabe-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}>
       <div class="grow">
         <div class="${t.erledigt ? "strike" : ""}">${t.text}</div>

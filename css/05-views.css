@@ -1,0 +1,730 @@
+/* =============================================================
+   Wiwang Law – Ansichten (Übersicht, Akte, Nigel, Gesetze, Finanzen, Portal)
+   Liegt über der alten style.css – Regeln hier gewinnen immer.
+   ============================================================= */
+@layer views {
+
+  /* ---------- Gemeinsam: Seitenkopf, Reiter als Segmente ---------- */
+  .page { max-width: 1440px; }
+  .page-head h1 { font-size: var(--text-2xl); line-height: 1.15; }
+  .page-head p { font-size: var(--text-sm); }
+
+  .seg-tabs {
+    display: inline-flex; flex-wrap: nowrap; gap: 2px; max-width: 100%;
+    padding: 3px; border-radius: var(--radius-md);
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .seg-tabs::-webkit-scrollbar { display: none; }
+  .seg-tab {
+    display: inline-flex; align-items: center; gap: 6px; flex: none;
+    padding: 6px 12px; border: 0; border-radius: var(--radius-sm);
+    background: none; color: var(--text-secondary);
+    font: inherit; font-size: var(--text-sm); font-weight: 500; white-space: nowrap; cursor: pointer; text-decoration: none;
+  }
+  .seg-tab:hover { color: var(--text-primary); }
+  .seg-tab.active { background: var(--bg-surface); color: var(--text-primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+  .seg-tabs.gross .seg-tab { padding: 8px 16px; }
+  .seg-n {
+    min-width: 20px; padding: 0 6px; border-radius: var(--radius-pill);
+    background: var(--bg-subtle); color: var(--text-secondary);
+    font-size: 0.7rem; font-weight: 600; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums;
+  }
+  .seg-tab.active .seg-n { background: var(--bg-subtle); }
+  .seg-n.rot { background: var(--status-danger); color: #fff; }
+
+  .card { border-color: var(--border-subtle); }
+  .card-head h2 { font-size: var(--text-lg); }
+  .group-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-muted); }
+  .section-title { color: var(--brand-primary); font-weight: 600; }
+  .mono { font-family: var(--font-mono); font-size: 0.92em; }
+  .live-punkt {
+    display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%;
+    background: var(--status-success); box-shadow: 0 0 0 3px var(--status-success-soft); vertical-align: 1px;
+  }
+  .live-hinweis { display: inline-flex; align-items: center; font-size: var(--text-xs); color: var(--text-secondary); }
+
+  /* =============================================================
+     Übersicht
+     ============================================================= */
+  .dashboard .page-head { align-items: center; }
+
+  /* Zone 0: Notruf */
+  .notruf-slot {
+    display: flex; gap: var(--space-4); align-items: flex-start;
+    margin-bottom: var(--space-4); padding: var(--space-4) var(--space-5);
+    background: var(--status-danger); color: #fff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 4px var(--status-danger-soft);
+    animation: notruf-puls 2.4s ease-in-out infinite;
+  }
+  @keyframes notruf-puls { 50% { box-shadow: 0 0 0 8px var(--status-danger-soft); } }
+  @media (prefers-reduced-motion: reduce) { .notruf-slot { animation: none; } }
+  .notruf-symbol { font-size: 1.6rem; line-height: 1; }
+  .notruf-inhalt { flex: 1; min-width: 0; }
+  .notruf-titel { font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.9; }
+  .notruf-liste { list-style: none; margin: 6px 0 0; padding: 0; }
+  .notruf-liste li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 6px 0; }
+  .notruf-liste li + li { border-top: 1px solid rgba(255, 255, 255, 0.25); }
+  .notruf-liste strong { font-size: var(--text-lg); }
+  .notruf-zeit { margin-left: 8px; padding: 1px 8px; border-radius: var(--radius-pill); background: rgba(0, 0, 0, 0.18); font-size: var(--text-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .notruf-text { margin-top: 2px; font-size: var(--text-sm); opacity: 0.92; }
+  .notruf-aktionen { display: flex; gap: 8px; align-items: center; }
+  .btn.notruf-btn { background: #fff; border-color: #fff; color: #b91c1c; font-weight: 700; }
+  .btn.notruf-btn:hover { background: #fef2f2; }
+  .btn.notruf-link { color: #fff; }
+  .btn.notruf-link:hover { background: rgba(255, 255, 255, 0.15); color: #fff; }
+
+  /* Zone 1: Handlungs-Kennzahlen */
+  .kpi-reihe {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .kpi-kachel {
+    position: relative; display: flex; flex-direction: column; gap: 2px; height: 100%;
+    padding: 14px 16px 14px 18px; overflow: hidden;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    color: var(--text-primary); text-decoration: none;
+    transition: border-color 0.15s, transform 0.15s;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-kachel:hover { border-color: var(--border-strong); }
+  .kpi-label { font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+  .kpi-wert { font-family: var(--font-serif); font-size: 2rem; font-weight: 600; line-height: 1.1; }
+  .kpi-hinweis { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); color: var(--text-secondary); }
+  .kpi-hinweis svg { width: 14px; height: 14px; flex: none; color: var(--status-success); }
+  .kpi-kachel.ruhig .kpi-wert { color: var(--text-muted); }
+  .kpi-kachel.aktiv::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+  .kpi-kachel.aktiv.danger::before { background: var(--status-danger); }
+  .kpi-kachel.aktiv.danger .kpi-wert { color: var(--status-danger-text); }
+  .kpi-kachel.aktiv.warning::before { background: var(--status-warning); }
+  .kpi-kachel.aktiv.warning .kpi-wert { color: var(--status-warning); }
+  .kpi-kachel.aktiv { cursor: pointer; }
+  .kpi-kachel.aktiv:hover { transform: translateY(-1px); }
+  .kpi-reihe > [role="listitem"] { min-width: 0; }
+
+  /* Zone 2: Fokus + Kanzlei-Puls */
+  .dash-grid {
+    display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(300px, 1fr);
+    gap: var(--space-5); align-items: start;
+  }
+  .dash-grid.kanzlei { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .dash-puls { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .dash-puls > .card + .card { margin-top: 0; }
+  .fokus-karte { container-type: inline-size; }
+  .fokus-karte .card-head { align-items: center; margin-bottom: var(--space-3); }
+  .fokus-inhalt .group-title:first-child { margin-top: 2px; }
+  .fokus-inhalt .quick-add { margin-bottom: var(--space-2); }
+
+  /* Pinnwand (kompakt im Kanzlei-Puls) */
+  .pinnwand-karte .card-head { align-items: flex-start; }
+  .pinnwand-offen { margin: 2px 0 0; color: var(--brand-gold-text); font-weight: 600; }
+  .beitrag-liste { display: flex; flex-direction: column; gap: var(--space-2); }
+  .pinnwand-karte .beitrag {
+    padding: 12px 14px; box-shadow: none;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-left-width: 3px;
+    border-left-color: var(--border-strong); border-top: 1px solid var(--border-subtle);
+  }
+  .pinnwand-karte .beitrag.angeheftet { border-left-color: var(--brand-gold-accent); }
+  .pinnwand-karte .beitrag.wichtig { border-left-color: var(--status-danger); background: var(--bg-surface); }
+  .pinnwand-karte .beitrag.offen { background: var(--brand-gold-soft); }
+  .pinnwand-karte .beitrag-kopf h3 { font-size: var(--text-base); }
+  .pinnwand-karte .beitrag-text {
+    margin-top: 6px; font-size: var(--text-sm); color: var(--text-secondary);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden;
+  }
+  .badge.angeheftet { background: var(--brand-gold-soft); color: var(--brand-gold-text); }
+  .beitrag-fuss { gap: 8px 12px; border-top: 1px dashed var(--border-subtle); }
+  .btn.bestaetigen { background: var(--brand-gold-accent); border-color: var(--brand-gold-accent); color: #1c1917; font-weight: 600; }
+  .btn.bestaetigen:hover { background: #b38a00; border-color: #b38a00; }
+  .lese-stand { display: inline-flex; align-items: center; gap: 8px; }
+  .fehlt-noch { flex-basis: 100%; }
+  .pinnwand-fuss { display: flex; align-items: center; gap: 12px; margin-top: var(--space-3); font-size: var(--text-sm); }
+  .pinnwand-fuss:not(:has(button)) { display: none; }
+  .link-btn { color: var(--brand-primary); text-decoration: none; font-weight: 500; }
+  .link-btn:hover { text-decoration: underline; }
+
+  /* Team heute (kompakt) */
+  .team-liste { list-style: none; margin: 0; padding: 0; }
+  .team-liste li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-subtle); }
+  .team-liste li:last-child { border-bottom: 0; }
+  .team-liste li.abwesend { opacity: 0.75; }
+  .team-liste .grow { flex: 1; min-width: 0; }
+  .team-name { font-size: var(--text-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .team-name a { color: inherit; text-decoration: none; }
+  .team-name a:hover { color: var(--brand-primary); }
+  .team-meta { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .team-meta a { color: inherit; }
+  .status-punkt { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; vertical-align: 0; }
+  .status-punkt.urlaub { background: var(--status-info); }
+  .team-zaehler { display: inline-flex; gap: 4px; flex: none; }
+  .zaehler {
+    display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px;
+    border-radius: var(--radius-pill); background: var(--bg-subtle); color: var(--text-secondary);
+    font-size: 0.72rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .zaehler .nav-icon { width: 13px; height: 13px; }
+  .zaehler.rot { background: var(--status-danger-soft); color: var(--status-danger-text); }
+  .team-hinweis { margin: var(--space-3) 0 0; }
+
+  /* Statistik im zweiten Reiter */
+  .statistik-raster { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+  .statistik-raster > .card + .card { margin-top: 0; }
+  .bar-row .bar span { background: var(--brand-gold-accent); }
+  .bar-row .bar span.red { background: var(--brand-primary); }
+  .bar-row .bar span.green { background: var(--status-success); }
+
+  @media (max-width: 1100px) {
+    .dash-grid, .dash-grid.kanzlei { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 767px) {
+    .dashboard .page-head { flex-direction: column; align-items: stretch; }
+    .dashboard .seg-tabs.gross { display: flex; }
+    .dashboard .seg-tabs.gross .seg-tab { flex: 1; justify-content: center; padding: 8px 6px; white-space: normal; text-align: center; line-height: 1.2; }
+    .kpi-reihe { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+    .kpi-kachel { padding: 10px 12px 10px 14px; }
+    .kpi-wert { font-size: 1.6rem; }
+    .kpi-label { font-size: 0.66rem; letter-spacing: 0.03em; }
+    .notruf-slot { padding: var(--space-3) var(--space-4); }
+    .notruf-aktionen { width: 100%; }
+    .notruf-aktionen .notruf-btn { flex: 1; justify-content: center; }
+    .fokus-karte .card-head { flex-direction: column; align-items: stretch; }
+  }
+}
+
+/* =============================================================
+   Akten: Liste + Detail (klebender Aktenkopf, Inhalt | Aktendaten)
+   ============================================================= */
+@layer views {
+  @media (min-width: 981px) {
+    .split { grid-template-columns: 300px minmax(0, 1fr); gap: var(--space-4); }
+    .split.liste-zu { grid-template-columns: minmax(0, 1fr); }
+  }
+  .item .meta { flex-wrap: wrap; }
+  .list-pane { border-top: 1px solid var(--border-subtle); padding: 12px; }
+  .item-list a.item { border-left-width: 3px; border-radius: var(--radius-sm); }
+  .item-list a.item:hover { background: var(--bg-subtle); }
+  .item-list a.item.active { background: var(--brand-primary-soft); border-left-color: var(--brand-primary); }
+  .item .num { color: var(--brand-primary); font-weight: 500; }
+  .dot { background: var(--border-strong); }
+  .dot.hoch { background: var(--status-warning); }
+  .dot.dringend { background: var(--status-danger); }
+
+  .detail-card.akte-detail {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    container: akte / inline-size;
+  }
+
+  /* Klebender Aktenkopf */
+  .fall-kopf {
+    display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-3) var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+  }
+  @media (min-width: 768px) {
+    .fall-kopf { position: sticky; top: var(--kopf); z-index: 15; }
+  }
+  .fall-kopf .liste-umschalten { flex: none; margin-top: 2px; color: var(--text-muted); }
+  .fall-kopf .liste-umschalten[aria-pressed="true"] { color: var(--brand-primary); }
+  .fall-titel { flex: 1 1 280px; min-width: 0; }
+  .fall-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .aktenzeichen {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 8px 2px 0; border: 0; border-radius: var(--radius-sm); background: none;
+    font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600; color: var(--brand-primary);
+    cursor: copy;
+  }
+  .aktenzeichen svg { width: 14px; height: 14px; opacity: 0; transition: opacity 0.15s; }
+  .aktenzeichen:hover svg, .aktenzeichen:focus-visible svg { opacity: 0.8; }
+  .fall-kopf h2 { margin: 4px 0 2px; font-family: var(--font-serif); font-size: var(--text-xl); line-height: 1.2; overflow-wrap: anywhere; }
+  .fall-mandant { font-size: var(--text-sm); color: var(--text-secondary); }
+  .fall-mandant a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+  .fall-mandant a:hover { color: var(--brand-primary); text-decoration: underline; }
+  .fall-aktionen { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .fall-aktionen .avatars.praesenz { margin-right: 4px; }
+  .fall-aktionen .avatars.praesenz .avatar { width: 30px; height: 30px; box-shadow: 0 0 0 2px var(--bg-surface); }
+  .fall-aktionen .avatars.praesenz .avatar + .avatar { margin-left: -8px; }
+  .btn-nigel-bild { width: 20px; height: 20px; border-radius: 50%; background: #fff; flex: none; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 1px 9px;
+    border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: 600; line-height: 1.6;
+  }
+  .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .status-pill.info { background: var(--status-info-soft); color: var(--status-info); }
+  .status-pill.gold { background: var(--brand-gold-soft); color: var(--brand-gold-text); }
+  .status-pill.neutral { background: var(--bg-subtle); color: var(--text-secondary); }
+
+  /* Menü ⋯ */
+  .mehr-menue { background: var(--bg-elevated); border-color: var(--border-subtle); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); }
+  .mehr-menue hr { border-top-color: var(--border-subtle); }
+  .menue-punkt:hover, .menue-punkt:focus-visible { background: var(--bg-subtle); }
+  .menue-punkt.danger, .menue-punkt.danger svg { color: var(--status-danger-text); }
+  .menue-punkt.danger:hover { background: var(--status-danger-soft); }
+  .menue-titel { padding: 6px 10px 2px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+  .menue-punkt.aktiv { font-weight: 600; }
+  .menue-haken { margin-left: auto; color: var(--brand-primary); }
+  .status-punkt-menue { width: 8px; height: 8px; border-radius: 50%; margin: 0 4px; flex: none; background: var(--text-muted); }
+  .status-punkt-menue.offen { background: var(--status-info); }
+  .status-punkt-menue.in-bearbeitung { background: var(--brand-gold-accent); }
+
+  /* Interessenkonflikt */
+  .konflikt-banner {
+    margin: var(--space-3) var(--space-5) 0; padding: 10px 14px;
+    background: var(--status-warning-soft); border: 1px solid var(--status-warning); border-left-width: 4px;
+    border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--text-sm);
+  }
+  .konflikt-banner strong { color: var(--status-warning); }
+  .konflikt-banner ul { margin: 4px 0 0; padding-left: 18px; }
+  .konflikt-banner a { color: inherit; font-weight: 600; }
+
+  /* Rumpf: Inhalt | Aktendaten */
+  .akte-rumpf { display: block; }
+  .akte-haupt { min-width: 0; }
+  .aktenspiegel { display: none; }
+  .meta-zusammenfassung { margin: var(--space-3) var(--space-5) 0; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--bg-subtle); }
+  .meta-zusammenfassung > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; padding: 10px 12px; cursor: pointer; list-style: none; }
+  .meta-zusammenfassung > summary::-webkit-details-marker { display: none; }
+  .meta-zusammenfassung > summary::before { content: "▸"; color: var(--text-muted); transition: transform 0.15s; }
+  .meta-zusammenfassung[open] > summary::before { transform: rotate(90deg); }
+  .meta-titel { font-weight: 600; }
+  .meta-zusammenfassung[open] { padding-bottom: 12px; }
+  .meta-zusammenfassung > :not(summary) { margin-left: 12px; margin-right: 12px; }
+
+  .fall-tabs { margin-top: var(--space-2); padding: 0 var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+  .tabs a { color: var(--text-secondary); font-weight: 500; }
+  .tabs a.active { color: var(--brand-primary); border-bottom-color: var(--brand-primary); font-weight: 600; }
+  .tabs .count { background: var(--bg-subtle); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .tab-kurz { display: none; }
+  .tab-body { padding: var(--space-5); }
+
+  @container akte (min-width: 820px) {
+    .akte-rumpf { display: grid; grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+    .meta-zusammenfassung { display: none; }
+    .aktenspiegel {
+      display: block;
+      position: sticky; top: calc(var(--kopf) + var(--fall-kopf-h, 96px));
+      max-height: calc(100dvh - var(--kopf) - var(--fall-kopf-h, 96px) - 8px); overflow-y: auto;
+      padding: var(--space-5); border-left: 1px solid var(--border-subtle); scrollbar-width: thin;
+    }
+  }
+  @container akte (max-width: 700px) {
+    .tab-lang { display: none; }
+    .tab-kurz { display: inline; }
+    .fall-kopf { padding: var(--space-3) var(--space-4); }
+    .tab-body { padding: var(--space-4); }
+    .meta-zusammenfassung { margin-left: var(--space-4); margin-right: var(--space-4); }
+    .konflikt-banner { margin-left: var(--space-4); margin-right: var(--space-4); }
+  }
+  .spiegel-kopf { display: flex; align-items: baseline; justify-content: space-between; }
+  .spiegel-titel { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+  .spiegel-daten > div { grid-template-columns: 104px minmax(0, 1fr); border-bottom-color: var(--border-subtle); font-size: var(--text-sm); }
+  .spiegel-daten dt { color: var(--text-secondary); font-size: var(--text-xs); padding-top: 2px; }
+  .spiegel-daten .btn.small { margin-top: 6px; }
+  .spiegel-fortschritt { text-decoration: none; color: inherit; }
+  .spiegel-sachverhalt { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); max-height: 14em; overflow: auto; }
+  .fortschritt { background: var(--bg-subtle); }
+  .fortschritt > span { background: var(--brand-gold-accent); }
+  .fortschritt.fertig > span { background: var(--status-success); }
+
+  /* Tatvorwürfe: klar abgesetzte Summenzeile */
+  .sum-bar.strafrahmen {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 28px;
+    margin-top: var(--space-3); padding: 12px 16px;
+    background: var(--nigel-bg); color: #f5f2eb; border-radius: var(--radius-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .sum-label { flex: 1; font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+  .sum-wert { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+  .sum-wert small { font-size: 0.68rem; opacity: 0.75; }
+  .sum-wert strong { font-size: var(--text-lg); color: var(--nigel-accent); font-family: var(--font-mono); }
+
+  /* Termine & Aufgaben */
+  .aufgaben-titel { display: flex; align-items: center; gap: 10px; }
+  .aufgaben-titel .fortschritt-zeile { margin: 0; text-transform: none; letter-spacing: 0; }
+  .erledigt-block { margin-top: var(--space-4); }
+  .erledigt-block > summary { cursor: pointer; }
+
+  /* ---------- Verlauf: Einträge nach Art ---------- */
+  .entry-form { padding: var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--bg-subtle); transition: border-color 0.15s, background-color 0.15s; }
+  .entry-form textarea { background: var(--bg-surface); }
+  .entry-leiste { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+  .entry-optionen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  .entry-optionen select { width: auto; }
+  .entry-form.fuer-mandant { border-color: var(--status-info); background: var(--status-info-soft); box-shadow: inset 3px 0 0 var(--status-info); }
+  .entry-hinweis { display: flex; align-items: center; gap: 6px; margin: 0; font-size: var(--text-sm); font-weight: 600; color: var(--status-info); }
+  .entry-hinweis svg { width: 16px; height: 16px; }
+  .sichtbar-schalter {
+    display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 6px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--bg-surface);
+    font-size: var(--text-sm); font-weight: 500; cursor: pointer; user-select: none;
+  }
+  .sichtbar-schalter input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .sichtbar-schalter svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .schalter { position: relative; width: 30px; height: 18px; border-radius: 9px; background: var(--border-strong); transition: background-color 0.15s; flex: none; }
+  .schalter::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); transition: transform 0.15s; }
+  .sichtbar-schalter:has(input:checked) { border-color: var(--status-info); background: var(--status-info-soft); color: var(--status-info); font-weight: 600; }
+  .sichtbar-schalter:has(input:checked) svg { color: var(--status-info); }
+  .sichtbar-schalter input:checked + .schalter { background: var(--status-info); }
+  .sichtbar-schalter input:checked + .schalter::after { transform: translateX(12px); }
+  .sichtbar-schalter:has(input:focus-visible) { outline: 2px solid var(--brand-gold-accent); outline-offset: 2px; }
+
+  .timeline.verlauf { margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .timeline.verlauf li.eintrag {
+    margin: 0; padding: 10px 14px;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle); border-left: 3px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+  .timeline .head { gap: 6px 8px; color: var(--text-secondary); padding-right: 96px; }
+  .timeline .head .zeit { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .timeline .tools { top: 6px; right: 6px; }
+  .typ-zeichen { display: inline-grid; place-items: center; width: 20px; height: 20px; color: var(--text-muted); }
+  .typ-zeichen svg { width: 15px; height: 15px; }
+  .typ-zeichen .avatar.nigel { width: 20px; height: 20px; margin: 0; }
+  .badge.art { background: var(--bg-subtle); color: var(--text-secondary); }
+  .badge.sichtbar { display: inline-flex; align-items: center; gap: 4px; background: var(--status-info-soft); color: var(--status-info); font-weight: 600; }
+  .badge.sichtbar svg { width: 13px; height: 13px; }
+  .badge.mandant { background: color-mix(in srgb, #7c3aed 14%, transparent); color: color-mix(in srgb, #7c3aed 80%, var(--text-primary)); }
+  /* Für Mandant sichtbar: blauer Rand */
+  .timeline.verlauf li.typ-sichtbar { border-left-color: var(--status-info); }
+  .timeline.verlauf li.typ-sichtbar .typ-zeichen { color: var(--status-info); }
+  /* Mandantennachricht: Chat-Karte, leicht eingerückt */
+  .timeline.verlauf li.typ-mandant {
+    margin-left: var(--space-6); border-left-color: color-mix(in srgb, #7c3aed 60%, transparent);
+    background: color-mix(in srgb, #7c3aed 6%, var(--bg-surface));
+    border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
+  }
+  /* Nigel: goldener Rand */
+  .timeline.verlauf li.typ-nigel { border-left-color: var(--brand-gold-accent); background: color-mix(in srgb, var(--brand-gold-accent) 5%, var(--bg-surface)); }
+  .timeline.verlauf li.typ-nigel .head strong { color: var(--brand-gold-text); }
+  .timeline.verlauf li.wichtig { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--status-danger) 35%, transparent); }
+  .icon-btn { color: var(--text-muted); border-radius: var(--radius-sm); }
+  .icon-btn:hover { color: var(--text-primary); background: var(--bg-subtle); }
+  .icon-btn.an { color: var(--status-info); }
+  .icon-btn svg { width: 16px; height: 16px; display: block; }
+
+  /* Beweise: Vorschaubilder */
+  .mini-card { background: var(--bg-surface); border-color: var(--border-subtle); border-radius: var(--radius-sm); }
+
+  @media (max-width: 767px) {
+    .fall-aktionen { width: 100%; }
+    .fall-aktionen .btn.primary, .fall-aktionen .btn.nigel { flex: 1; justify-content: center; }
+    .fall-aktionen .btn.nigel span { overflow: hidden; text-overflow: ellipsis; }
+    .timeline.verlauf li.typ-mandant { margin-left: var(--space-3); }
+  }
+}
+
+/* =============================================================
+   Nigel – iFruit-Handy (Lasche) und Arbeitsbereich
+   ============================================================= */
+@layer views {
+  /* Zugeklappt: Gerät ist weg, nur eine schmale Dock-Lasche unten rechts */
+  .ki-phone:not(.offen) {
+    transform: translateY(calc(100% + 80px)) scale(0.92);
+    visibility: hidden; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.55, 0, 0.3, 1), visibility 0s linear 0.4s;
+  }
+  .ki-phone:not(.offen):hover { transform: translateY(calc(100% + 80px)) scale(0.92); }
+  .ki-phone.offen { visibility: visible; transition: transform 0.56s cubic-bezier(0.2, 0.95, 0.3, 1.12), visibility 0s; }
+
+  .ki-lasche {
+    position: fixed; z-index: 39;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 8px 0 4px;
+    border: 1px solid var(--nigel-accent); border-radius: var(--radius-pill);
+    background: var(--nigel-bg); color: var(--nigel-accent);
+    font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .ki-lasche:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .ki-lasche img { width: 32px; height: 32px; border-radius: 50%; background: #fff; }
+  .ki-lasche kbd { background: var(--nigel-surface); border-color: #4a443e; color: var(--nigel-accent); }
+  .ki-phone[hidden] + .ki-lasche, .ki-phone.offen + .ki-lasche,
+  body:not(.in-app) .ki-lasche, body.nw-seite .ki-lasche, body.nav-sheet-offen .ki-lasche { display: none; }
+  body.in-app.ki-da .page { padding-bottom: 72px; }
+  @media (max-width: 767px) {
+    .ki-lasche { bottom: calc(var(--unten) + 10px); height: 36px; padding-right: 6px; }
+    .ki-lasche img { width: 28px; height: 28px; }
+    .ki-lasche-text, .ki-lasche kbd { display: none; }
+    .ki-lasche { padding: 0 3px; }
+    body.in-app.ki-da .page { padding-bottom: calc(60px + var(--unten)); }
+  }
+  @media (hover: none) { .ki-lasche kbd { display: none; } }
+
+  /* Kontext-Leiste im Handy */
+  .ki-pill { font-family: var(--font-mono); font-size: 0.72rem; }
+  .ki-msg-aktionen { flex-wrap: wrap; }
+
+  /* ---------- Arbeitsbereich ---------- */
+  .nw, .nw.panel-auf { background: var(--bg-canvas); }
+  .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
+  .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  .nw-liste, .nw-panel, .nw-kopf, .nw-eingabe { background: var(--bg-surface); border-color: var(--border-subtle); }
+  .nw-marke strong, .nw-titel h1, .nw-msg-meta strong { font-family: var(--font-serif); font-weight: 600; }
+  .nw-verlauf-innen { max-width: 760px; }
+  .nw-eingabe-leiste { max-width: 760px; row-gap: 8px; }
+  .nw-eingabe-feld { max-width: 760px; margin-left: auto; margin-right: auto; }
+  .nw-modi { flex-basis: 100%; flex-wrap: wrap; margin: 0; padding-bottom: 2px; overflow: visible; }
+  .nw-modus { padding: 4px 11px; font-size: 0.78rem; }
+  .nw-drawer-hintergrund { display: none; }
+
+  /* Platzhalter im Entwurf als anklickbare Pillen */
+  .nw-platzhalter, mark.nw-platzhalter {
+    padding: 0 6px; border-radius: var(--radius-pill);
+    background: #fde68a; color: #1c1917; box-shadow: inset 0 0 0 1px #f59e0b;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  /* Modus „Organisatorisch“: sichtbare Sicherheits-Umrandung + Hinweis */
+  .nw.modus-orga .nw-eingabe-feld {
+    border-color: var(--status-warning);
+    box-shadow: 0 0 0 3px var(--status-warning-soft);
+  }
+  .nw-aktionsmodus {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px;
+    border-radius: var(--radius-pill); background: var(--status-warning-soft); color: var(--status-warning);
+    border: 1px solid color-mix(in srgb, var(--status-warning) 45%, transparent);
+    font-size: 0.74rem; font-weight: 700;
+  }
+  .nw-kontext-chip { background: var(--brand-primary-soft); color: var(--brand-primary); font-family: var(--font-mono); font-size: 0.72rem; }
+
+  /* Laptop/Tablet (< 1280px): Chat-Liste und Arbeitsfläche als Slide-over-Drawer */
+  @media (min-width: 901px) and (max-width: 1279px) {
+    .nw, .nw.panel-auf { position: relative; grid-template-columns: minmax(0, 1fr); }
+    .nw .nw-nur-mobil[data-ansicht="liste"] { display: grid; }
+    .nw-liste {
+      position: absolute; top: 0; left: 0; bottom: 0; z-index: 16; width: 280px;
+      transform: translateX(-102%); transition: transform 0.25s ease; box-shadow: var(--shadow-lg);
+    }
+    .nw[data-ansicht="liste"] .nw-liste { transform: none; }
+    .nw-panel {
+      position: absolute; top: 0; right: 0; bottom: 0; z-index: 16; width: min(400px, 90%);
+      box-shadow: var(--shadow-lg);
+    }
+    .nw-haupt { grid-column: 1; }
+    .nw[data-ansicht="liste"] .nw-drawer-hintergrund, .nw.panel-auf .nw-drawer-hintergrund {
+      display: block; position: absolute; inset: 0; z-index: 15; border: 0; padding: 0;
+      background: var(--backdrop); cursor: pointer;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) { .nw-liste { transition: none; } }
+
+  /* Nur ansehen: Milchglas (8px) mit klarer Hinweiskarte */
+  .nw-siegel { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+}
+
+/* =============================================================
+   Gesetze: Buchrücken-Karten, Lesebreite 70ch
+   ============================================================= */
+@layer views {
+  .gb-kacheln { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); }
+  .gb-kachel {
+    min-height: 150px; padding: 16px 16px 14px 20px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle); border-left: 6px solid var(--gb);
+    border-radius: var(--radius-sm) var(--radius-md) var(--radius-md) var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+  }
+  .gb-kachel:hover, .gb-kachel:focus-visible { border-color: var(--border-strong); border-left-color: var(--gb); box-shadow: var(--shadow-md); }
+  .gb-kachel.farbe-schwarz, .gb-kuerzel-gross.farbe-schwarz { --gb: var(--text-primary); }
+  .gb-kachel::after { opacity: 0.05; }
+  .gb-kuerzel { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 700; }
+  .gb-titel { font-weight: 600; }
+  .gb-fuss { font-size: 0.7rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .gb-kachel-katalog { background: linear-gradient(160deg, var(--bg-surface), var(--brand-gold-soft)); }
+  .gb-kachel-neu { border-left-style: dashed; border-left-width: 1px; background: transparent; box-shadow: none; }
+  .gb-kuerzel-gross { font-family: var(--font-serif); border-radius: var(--radius-sm); }
+
+  .gb-layout { grid-template-columns: 260px minmax(0, 1fr); gap: var(--space-5); }
+  .gb-inhalt { top: var(--oben); max-height: calc(100dvh - var(--oben) - 16px); }
+  .gb-inhalt li a:hover { background: var(--bg-subtle); }
+  .gb-inhalt li a.aktiv { background: var(--brand-primary-soft); color: var(--brand-primary); }
+  .gb-inhalt .nr, .gb-paragraph h3 .nr, .gb-zitat { font-family: var(--font-mono); font-size: 0.92em; color: var(--brand-primary); }
+  .gb-texte > .card, .gb-abschnitt { max-width: calc(70ch + 40px); }
+  .gb-paragraph { scroll-margin-top: var(--oben); }
+  .gb-paragraph h3 { font-size: var(--text-base); }
+  .gb-wortlaut { max-width: 70ch; font-family: var(--font-serif); font-size: 1.06rem; line-height: 1.65; }
+  .gb-abschnitt { font-family: var(--font-serif); font-size: var(--text-lg); margin: var(--space-6) 0 var(--space-2); }
+  .gb-paragraph.markiert { border-color: var(--brand-gold-accent); box-shadow: 0 0 0 3px var(--brand-gold-soft); }
+  /* Paragraphen-Aktionen dezent: erst bei Hover/Fokus (Touch: immer sichtbar) */
+  @media (hover: hover) {
+    .gb-tools { opacity: 0; transition: opacity 0.15s; }
+    .gb-paragraph:hover .gb-tools, .gb-paragraph:focus-within .gb-tools, .gb-paragraph.markiert .gb-tools { opacity: 1; }
+  }
+  @media (max-width: 980px) {
+    .gb-layout { grid-template-columns: minmax(0, 1fr); }
+    .gb-inhalt { position: static; max-height: 240px; }
+  }
+
+  /* =============================================================
+     Finanzen: Bereichswahl als Segment-Schalter, Tabellen, T-Konten, Storno
+     ============================================================= */
+  .finanz-bereiche {
+    display: inline-flex; gap: 2px; padding: 3px; margin-bottom: var(--space-4);
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+  }
+  .finanz-bereich {
+    padding: 7px 16px; gap: 8px; border: 0; border-radius: var(--radius-sm);
+    background: none; box-shadow: none; color: var(--text-secondary);
+  }
+  .finanz-bereich svg { width: 18px; height: 18px; }
+  .finanz-bereich small { display: none; }
+  .finanz-bereich strong { font-size: var(--text-sm); font-weight: 500; }
+  .finanz-bereich:hover { color: var(--text-primary); border-color: transparent; }
+  .finanz-bereich.active { background: var(--bg-surface); color: var(--text-primary); box-shadow: var(--shadow-sm); }
+  .finanz-bereich.active strong { font-weight: 600; }
+  .finanz-bereich.active svg { color: var(--brand-primary); }
+  .finanz-bereich .nav-badge { margin-left: 6px; }
+  .finanz-leiste { border-bottom-color: var(--border-subtle); }
+
+  .page:has(.finanz-leiste) .table td.num, .page:has(.finanz-leiste) .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .page:has(.finanz-leiste) .table tbody tr:nth-child(even) td { background: var(--bg-subtle); }
+  .page:has(.finanz-leiste) .table td.num { font-family: var(--font-mono); font-size: 0.86rem; }
+
+  /* Grundbuch: Storno-Buchungen */
+  .journal tr.storniert td { color: inherit; text-decoration: none; }
+  .journal tr.storniert { opacity: 0.7; }
+  .journal tr.storniert td.num { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+  .journal tr.storno td { background: var(--status-danger-soft); }
+  .badge.storno-badge {
+    background: transparent; color: var(--status-danger-text);
+    border: 1px solid currentColor; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.64rem;
+  }
+
+  /* T-Konten: exakt zwei Spalten (Soll | Haben) mit durchgehendem Kreuz */
+  .tk-grid { gap: var(--space-5); }
+  .tkonto { padding: var(--space-3); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-variant-numeric: tabular-nums; }
+  .tk-head { font-family: var(--font-serif); font-size: var(--text-base); }
+  .tk-head small { font-family: var(--font-sans); }
+  .tk-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-top: 2px solid var(--text-primary); }
+  .tk-side + .tk-side { border-left: 2px solid var(--text-primary); }
+  .tk-total { border-top-color: var(--text-primary); border-bottom-color: var(--text-primary); }
+  .tk-total > div + div { border-left: 2px solid var(--text-primary); }
+  .tk-betrag, .tk-total > div { font-family: var(--font-mono); font-size: 0.84rem; }
+  .tk-row.saldo { color: var(--brand-primary); }
+
+  /* Handy: Buchhaltungstabellen horizontal scrollbar, erste Spalte klebt */
+  @media (max-width: 767px) {
+    .finanz-bereiche { display: flex; }
+    .finanz-bereich { flex: 1; justify-content: center; }
+    .page:has(.finanz-leiste) .table th:first-child, .page:has(.finanz-leiste) .table td:first-child {
+      position: sticky; left: 0; z-index: 1; background: var(--bg-surface);
+      box-shadow: 1px 0 0 var(--border-subtle);
+    }
+    .page:has(.finanz-leiste) .table tbody tr:nth-child(even) td:first-child { background: var(--bg-subtle); }
+  }
+}
+
+/* =============================================================
+   Übrige Kennzahl-Kacheln (Finanzen, Mandantenportal) im neuen Stil
+   ============================================================= */
+@layer views {
+  .kpi {
+    position: relative; overflow: hidden;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--bg-surface); box-shadow: var(--shadow-sm);
+    padding-left: 18px;
+  }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--brand-gold-accent); }
+  .kpi.alert::before { background: var(--status-danger); }
+  .kpi.warn::before { background: var(--status-warning); }
+  .kpi.ruhig::before { background: var(--border-subtle); }
+  .kpi:hover { border-color: var(--border-strong); }
+  .kpi .value { font-family: var(--font-serif); font-weight: 600; }
+  .kpi.alert .value { color: var(--status-danger-text); }
+  .kpi .label { color: var(--text-secondary); font-weight: 600; }
+}
+
+/* =============================================================
+   Mandantenportal: mehr Luft, größere Schrift (Tokens über [data-portal="mandant"])
+   ============================================================= */
+@layer views {
+  [data-portal="mandant"] .page { max-width: 1120px; }
+  [data-portal="mandant"] .card { padding: var(--space-6); }
+  [data-portal="mandant"] .rows > li { padding: 12px 0; }
+  [data-portal="mandant"] .btn { font-size: var(--text-base); }
+  [data-portal="mandant"] .btn.small { font-size: var(--text-sm); }
+
+  /* Neu seit dem letzten Besuch */
+  .badge.neu { background: var(--brand-gold-accent); color: #1c1917; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.64rem; }
+
+  /* Notruf-Schnellknopf und Bestätigung */
+  .portal-schnell > .portal-notruf { background: var(--status-danger); border-color: var(--status-danger); color: #fff; box-shadow: 0 0 0 4px var(--status-danger-soft); }
+  .portal-schnell > .portal-notruf:hover, .portal-schnell > .portal-notruf:focus-visible { background: #b91c1c; border-color: #b91c1c; }
+  .portal-schnell > .portal-notruf small { color: rgba(255, 255, 255, 0.85); }
+  .notruf-bestaetigen { display: block; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--status-danger-soft); color: var(--text-primary); border-left: 4px solid var(--status-danger); }
+  .notruf-bestaetigen strong { display: block; color: var(--status-danger-text); font-size: var(--text-lg); }
+
+  /* 3-Schritte-Fortschritt */
+  .portal-fortschritt li::before { height: 4px; top: 14px; background: var(--border-subtle); border-radius: 2px; }
+  .portal-fortschritt li.fertig::before, .portal-fortschritt li.aktuell::before { background: var(--status-success); }
+  .portal-fortschritt .punkt { background: var(--bg-surface); border-color: var(--border-strong); font-variant-numeric: tabular-nums; }
+  .portal-fortschritt li.fertig .punkt { background: var(--status-success); border-color: var(--status-success); }
+  .portal-fortschritt li.aktuell .punkt { background: var(--brand-primary); border-color: var(--brand-primary); box-shadow: 0 0 0 4px var(--brand-primary-soft); }
+  .portal-fortschritt .text { font-size: var(--text-sm); }
+
+  /* Nachrichten im Messenger-Stil: Kanzlei links, Mandant rechts */
+  .portal-chat li {
+    max-width: min(78%, 560px); padding: 10px 14px;
+    background: var(--bg-surface); border: 1px solid var(--border-subtle);
+    border-radius: 16px; box-shadow: var(--shadow-sm);
+  }
+  .portal-chat li.von-kanzlei { border-left: 1px solid var(--border-subtle); border-bottom-left-radius: 4px; }
+  .portal-chat li.vom-mandanten {
+    background: var(--brand-primary); border-color: var(--brand-primary); color: var(--text-inverse);
+    border-bottom-right-radius: 4px; border-top-right-radius: 16px;
+  }
+  .portal-chat li.vom-mandanten .head, .portal-chat li.vom-mandanten .head strong { color: rgba(255, 255, 255, 0.85); }
+  .portal-chat p { font-size: var(--text-base); line-height: 1.5; }
+
+  /* Rechnungen: Status und „Ich habe bezahlt“ deutlich */
+  [data-portal="mandant"] .btn.gold[data-action="portal-zahlung"] { background: var(--status-success); border-color: var(--status-success); color: #fff; }
+  [data-portal="mandant"] .badge.bezahlt, [data-portal="mandant"] .badge.offen, [data-portal="mandant"] .badge.ok { font-size: var(--text-xs); padding: 2px 10px; }
+  .portal-haft { background: var(--status-danger); border-radius: var(--radius-md); }
+  .portal-haft:hover { background: #b91c1c; }
+  .portal-haft strong { color: #fff; }
+}
+
+/* =============================================================
+   Feinschliff (beide Designs)
+   ============================================================= */
+@layer views {
+  .badge.gericht { background: var(--nigel-bg); color: var(--nigel-accent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nigel-accent) 45%, transparent); }
+  .badge.vip { background: var(--brand-gold-accent); color: #1c1917; }
+  .detail-card { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .list-pane { border-radius: var(--radius-md); }
+  .chip { border-color: var(--border-subtle); color: var(--text-secondary); }
+  .chip:hover { background: var(--bg-subtle); color: var(--text-primary); }
+  .chip.active { background: var(--text-primary); border-color: var(--text-primary); color: var(--bg-surface); }
+  .table th { color: var(--text-muted); font-weight: 600; border-bottom-color: var(--border-subtle); }
+  .table td { border-bottom-color: var(--border-subtle); }
+  .table tr.clickable:hover td { background: var(--bg-subtle); }
+  .day-group h3 { border-bottom-color: var(--brand-gold-accent); }
+  .day-group.today h3 { color: var(--brand-primary); border-bottom-color: var(--brand-primary); }
+  .month-grid .dow { background: var(--bg-subtle); color: var(--text-secondary); }
+  .day-cell.other { background: var(--bg-subtle); }
+  .day-cell:hover { background: var(--brand-gold-soft); }
+  .cal-item.verhandlung, .cal-item.haftprufung { background: var(--nigel-bg); color: var(--nigel-accent); }
+  .box.dark { background: var(--nigel-bg); color: #f5f2eb; border: 1px solid var(--nigel-surface); }
+  .box.warning { color: var(--text-primary); }
+  .box.info { color: var(--text-primary); }
+  input:focus, select:focus, textarea:focus { outline-color: var(--brand-gold-accent); border-color: var(--brand-gold-accent); }
+  input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"],
+  input[type="tel"], input[type="date"], input[type="datetime-local"], input:not([type]), select, textarea {
+    border-color: var(--border-strong); border-radius: var(--radius-sm); background-color: var(--bg-surface); color: var(--text-primary);
+  }
+  ::placeholder { color: var(--text-muted); opacity: 1; }
+  .money span { background: var(--bg-subtle); border-color: var(--border-strong); color: var(--text-secondary); }
+  .section-title { letter-spacing: 0.1em; }
+  [data-theme="dark"] .avatar:not(.nigel):not(.mehr) { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14); }
+  [data-theme="dark"] body::before { opacity: 0.035; }
+  [data-theme="dark"] .login-brand { border-bottom-color: var(--brand-gold-accent); }
+}

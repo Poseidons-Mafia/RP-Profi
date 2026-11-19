@@ -182,7 +182,32 @@ function applyChange(table, payload) {
     state.rechteSig = sig;
   }
   if (LIVE_HOOKS[table]) LIVE_HOOKS[table](payload);
+  if (payload.eventType !== "DELETE" && payload.new && payload.new[key] != null) liveMarkieren(table, payload.new[key]);
   scheduleRender();
+}
+
+// ---------- Live-Sync sichtbar machen ----------
+// Frisch eingetroffene oder geänderte Zeilen leuchten nach dem Neuzeichnen kurz golden auf
+// (Klasse .is-live-updated an Elementen mit data-live="tabelle:id").
+const LIVE_DAUER = 1400;
+const liveFrisch = new Map(); // "tabelle:id" → Zeitpunkt
+function liveMarkieren(table, id) {
+  liveFrisch.set(`${table}:${id}`, Date.now());
+}
+function liveHervorheben() {
+  if (!liveFrisch.size) return;
+  const jetzt = Date.now();
+  for (const [k, t] of liveFrisch) {
+    const alter = jetzt - t;
+    if (alter >= LIVE_DAUER) { liveFrisch.delete(k); continue; }
+    document.querySelectorAll(`[data-live="${CSS.escape(k)}"]`).forEach((el) => {
+      if (el.classList.contains("is-live-updated")) return;
+      // Beim Neuzeichnen läuft die Animation dort weiter, wo sie war
+      el.style.animationDelay = `-${alter}ms`;
+      el.classList.add("is-live-updated");
+      el.addEventListener("animationend", () => { el.classList.remove("is-live-updated"); el.style.animationDelay = ""; }, { once: true });
+    });
+  }
 }
 
 function upsertLocal(table, row) {
