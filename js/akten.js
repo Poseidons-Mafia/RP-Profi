@@ -3,21 +3,23 @@
 //  Liste mit Filtern + Detailansicht mit Tabs
 // =============================================================
 
+// Reiterleiste der Akte. Ältere Adressen (#/akten/:id, …/aufgaben) führen auf den passenden Reiter.
 const AKTE_TABS = [
-  { key: "", label: "Überblick" },
   { key: "verlauf", label: "Verlauf", count: (id) => kinder("eintraege", id).length },
+  { key: "vorwuerfe", label: "Tatvorwürfe & Strafrechner", kurz: "Tatvorwürfe", count: (id) => ((byId("akten", id) || {}).vorwuerfe || []).length },
   { key: "beteiligte", label: "Beteiligte", count: (id) => kinder("beteiligte", id).length },
   { key: "beweise", label: "Beweise", count: (id) => kinder("beweise", id).length },
-  { key: "termine", label: "Termine", count: (id) => kinder("termine", id).filter((t) => !t.erledigt).length },
-  { key: "aufgaben", label: "Aufgaben", count: (id) => kinder("aufgaben", id).filter((t) => !t.erledigt).length },
+  { key: "termine", label: "Termine & Aufgaben", kurz: "Termine", count: (id) => kinder("termine", id).filter((t) => !t.erledigt).length + kinder("aufgaben", id).filter((t) => !t.erledigt).length },
   { key: "rechnungen", label: "Rechnungen", count: (id) => state.rechnungen.filter((r) => r.akte_id === id).length },
   { key: "historie", label: "Historie" },
 ];
+const AKTE_TAB_ALIAS = { "": "verlauf", ueberblick: "verlauf", aufgaben: "termine" };
 
 const statusClass = (s) => norm(s).replace(/\s+/g, "-");
 const statusBadge = (s) => html`<span class="badge ${statusClass(s)}">${s}</span>`;
 const prioBadge = (p) => (p === "Hoch" || p === "Dringend" ? html`<span class="badge ${statusClass(p)}">${p}</span>` : "");
 const haftBadge = (a) => (a.in_haft ? html`<span class="badge haft">In Haft</span>` : "");
+const AKTE_STATUS_TON = { Offen: "info", "In Bearbeitung": "gold", Geschlossen: "neutral" };
 
 // ---------- Liste ----------
 function gefilterteAkten() {
@@ -62,7 +64,7 @@ function akteListItem(a, activeId) {
   const nt = naechsterTermin(a.id);
   const wer = typeof betrachter === "function" ? betrachter(a.id) : [];
   return html`
-    <a class="item ${a.id === activeId ? "active" : ""}" href="#/akten/${a.id}">
+    <a class="item ${a.id === activeId ? "active" : ""}" href="#/akten/${a.id}" data-live="akten:${a.id}">
       <span class="num"><span class="dot ${statusClass(a.prioritaet)}"></span>${a.number}
         ${wer.length ? html`<span class="avatars mini" title="Gerade geöffnet von ${wer.map((id) => personName(id)).join(", ")}">${wer.map((id) => avatar(id, { punkt: false }))}</span>` : ""}</span>
       <span class="title">${a.title}</span>
@@ -129,6 +131,14 @@ VIEWS.akten = (route) => {
     </div>`;
 };
 
+// Höhe des klebenden Aktenkopfs merken: Die Aktendaten-Spalte klebt darunter
+function fallKopfMessen() {
+  const k = document.querySelector(".fall-kopf");
+  if (k) k.closest(".akte-detail").style.setProperty("--fall-kopf-h", `${k.offsetHeight}px`);
+}
+RENDER_HOOKS.push(fallKopfMessen);
+window.addEventListener("resize", fallKopfMessen);
+
 ACTIONS["akten-liste-umschalten"] = () => { setListeZu(!ui.akten.listeZu); render(); };
 
 // Tastenkürzel auf der Aktenseite: [ blendet die Liste aus/ein, / holt sie für die Suche zurück
@@ -166,6 +176,11 @@ const AKTE_ICON = {
   link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3.5-3.5a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3.5 3.5a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   arbeitsbereich: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
   auge: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  bearbeiten: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  checkliste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  schloss: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  kopieren: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   loeschen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const icon = (name) => new SafeHtml(AKTE_ICON[name]);
@@ -176,14 +191,20 @@ function menuePunkt(action, id, iconName, label, extra = "") {
 }
 
 function mehrMenue(a) {
+  const statusPunkt = (st) => html`<button type="button" role="menuitemradio" aria-checked="${a.status === st}" class="menue-punkt ${a.status === st ? "aktiv" : ""}"
+      data-action="akte-status-setzen" data-id="${a.id}" data-status="${st}"><span class="status-punkt-menue ${statusClass(st)}"></span><span>${st}</span>${a.status === st ? html`<span class="menue-haken">✓</span>` : ""}</button>`;
   return html`
     <details class="mehr">
       <summary class="btn icon-only" aria-label="Weitere Aktionen" title="Weitere Aktionen">${icon("mehr")}</summary>
       <div class="mehr-menue" role="menu">
+        ${menuePunkt("akte-bearbeiten", a.id, "bearbeiten", "Akte bearbeiten")}
+        ${menuePunkt("ablauf-starten", a.id, "checkliste", "Checklisten-Vorlage starten")}
         ${menuePunkt("wiedervorlage", a.id, "wiedervorlage", "Wiedervorlage anlegen")}
+        ${darf("akten_schreiben") ? html`<hr><div class="menue-titel">Status ändern</div>${OPTIONEN.status.map(statusPunkt)}` : ""}
+        <hr>
         ${menuePunkt("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
         ${menuePunkt("akte-link", a.id, "link", "Link kopieren")}
-        ${darf("ki_assistent") ? menuePunkt("nw-mit-akte", a.id, "arbeitsbereich", "Im Nigel-Arbeitsbereich öffnen", "nur-schmal") : ""}
+        ${darf("ki_assistent") ? menuePunkt("nw-mit-akte", a.id, "arbeitsbereich", "Im Nigel-Arbeitsbereich öffnen") : ""}
         ${darf("akten_loeschen") ? html`<hr>${menuePunkt("akte-loeschen", a.id, "loeschen", "Akte löschen", "danger")}` : ""}
       </div>
     </details>`;
@@ -200,154 +221,116 @@ document.addEventListener("keydown", (e) => {
   document.querySelectorAll("details.mehr[open]").forEach((d) => { d.open = false; d.querySelector("summary").focus(); });
 });
 
-// ---------- Eckdaten (Überblick auf schmalen Bildschirmen, Aktenspiegel auf breiten) ----------
+// ---------- Aktendaten (rechte Spalte; auf Tablet/Handy aufklappbar über den Reitern) ----------
 function eckdaten(a) {
   const m = byId("mandanten", a.mandant_id);
+  const st = aufgabenStand(a.id);
   return [
     ["Mandant", m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>${m.telefon ? html`<br><span class="small muted">${m.telefon}</span>` : ""}` : a.client || html`<span class="muted">ohne Mandant</span>`],
     ["Gegenpartei", a.opponent || "–"],
+    ["Mandatsart", [a.typ, a.area].filter(Boolean).join(" · ") || "–"],
+    ["Priorität", a.prioritaet === "Dringend" || a.prioritaet === "Hoch" ? prioBadge(a.prioritaet) : a.prioritaet || "Normal"],
     ["Zuständig", personName(a.zustaendig_id, a.lawyer || "–")],
-    ["Rechtsgebiet", a.area || "–"],
-    ["Mandatsart", a.typ || "–"],
-    ["Priorität", a.prioritaet || "Normal"],
-    ["Az. extern", a.az_extern ? html`<span title="Az. Polizei / StA / Gericht">${a.az_extern}</span>` : "–"],
-    ["Angelegt", html`${fmt.datum(a.created_at)} von ${personName(a.created_by)}`],
+    ["Az. Polizei / StA / Gericht", a.az_extern ? html`<span class="mono">${a.az_extern}</span>` : "–"],
+    ...(a.in_haft ? [["Haft", html`<span class="danger-text"><strong>In Haft</strong>${a.haft_bis ? html` bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}</span>
+      <div><button class="btn small" data-action="haft-ende" data-id="${a.id}">Ist entlassen</button></div>`]] : []),
+    ["Checkliste", st.gesamt ? html`<a class="spiegel-fortschritt" href="#/akten/${a.id}/termine">${fortschrittBalken(a.id)}</a>`
+      : html`<span class="muted">keine Aufgaben</span>`],
+    ["Ergebnis", a.ergebnis ? html`<span class="${ERFOLGE.includes(a.ergebnis) ? "ok-text" : ""}"><strong>${a.ergebnis}</strong></span>${a.ergebnis_datum ? html` <span class="small muted">${fmt.datum(a.ergebnis_datum)}</span>` : ""}
+      ${a.ergebnis_details ? html`<div class="small pre">${a.ergebnis_details}</div>` : ""}<button class="link-btn small" data-action="akte-abschluss" data-id="${a.id}">ändern</button>`
+      : a.status === "Geschlossen" ? html`<button class="btn small gold" data-action="akte-abschluss" data-id="${a.id}">Ergebnis eintragen</button>` : html`<span class="muted">offen</span>`],
     ["Zuletzt aktiv", html`${fmt.relativ(zuletztAktiv(a))}${liegenGeblieben(a) ? html`<br><span class="small danger-text">liegt seit ${liegtSeitTagen(a)} Tagen</span>` : ""}`],
-    ...(aufgabenStand(a.id).gesamt ? [["Aufgaben", fortschrittBalken(a.id)]] : []),
+    ["Angelegt", html`${fmt.datum(a.created_at)} · ${personName(a.created_by)}`],
   ];
 }
 
-// Rechte Spalte: Nigel und die Eckdaten – bleibt beim Wechsel der Bereiche stehen
+function metadatenListe(a) {
+  return html`<dl class="spiegel-daten">${eckdaten(a).map(([dt, dd]) => html`<div><dt>${dt}</dt><dd>${dd}</dd></div>`)}</dl>`;
+}
+
+// Rechte Spalte: dauerhaft sichtbar, klebt beim Scrollen
 function aktenspiegel(a) {
   return html`
-    <aside class="aktenspiegel" aria-label="Aktenspiegel">
-      ${darf("ki_assistent") ? html`
-        <section class="nigel-karte" aria-label="Nigel">
-          <div class="nigel-karte-kopf">
-            <span class="nigel-karte-bild"><img src="assets/nigel.svg" alt=""></span>
-            <div><strong>Nigel</strong><small>Kennt diese Akte und steht zu Diensten.</small></div>
-          </div>
-          <div class="nigel-karte-aktionen">
-            <button type="button" class="btn small" data-action="ki-oeffnen" data-id="${a.id}">Frage stellen</button>
-            <button type="button" class="btn small ruhig" data-action="nw-mit-akte" data-id="${a.id}" title="Gutachten, Schriftsatz oder Fallanalyse im Arbeitsbereich">Ausarbeiten lassen</button>
-          </div>
-        </section>` : ""}
-      <section class="spiegel-block">
-        <h3 class="spiegel-titel">Eckdaten</h3>
-        <dl class="spiegel-daten">${eckdaten(a).map(([dt, dd]) => html`<div><dt>${dt}</dt><dd>${dd}</dd></div>`)}</dl>
-      </section>
+    <aside class="aktenspiegel" aria-label="Aktendaten">
+      <div class="spiegel-kopf"><h3 class="spiegel-titel">Aktendaten</h3>
+        <button class="link-btn small" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button></div>
+      ${metadatenListe(a)}
+      <h3 class="spiegel-titel" style="margin-top:18px">Sachverhalt</h3>
+      <p class="spiegel-sachverhalt pre">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt – über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
     </aside>`;
 }
 
-// ---------- Detail ----------
+// ---------- Detail: klebender Aktenkopf + Inhalt | Aktendaten ----------
 function renderAkteDetail(a, sub) {
-  const tab = AKTE_TABS.some((t) => t.key === (sub || "")) ? sub || "" : "";
+  const gewuenscht = AKTE_TAB_ALIAS[sub || ""] || sub;
+  const tab = AKTE_TABS.some((t) => t.key === gewuenscht) ? gewuenscht : "verlauf";
   const k = konflikte(a);
   const m = byId("mandanten", a.mandant_id);
   const zu = ui.akten.listeZu;
+  const wer = typeof betrachter === "function" ? betrachter(a.id) : [];
   const body = {
-    "": tabUeberblick, verlauf: tabVerlauf, beteiligte: tabBeteiligte, beweise: tabBeweise,
-    termine: tabTermine, aufgaben: tabAufgaben, rechnungen: tabRechnungen, historie: tabHistorie,
+    verlauf: tabVerlauf, vorwuerfe: tabVorwuerfe, beteiligte: tabBeteiligte, beweise: tabBeweise,
+    termine: tabTermineAufgaben, rechnungen: tabRechnungen, historie: tabHistorie,
   }[tab];
 
   return html`
     <a class="back-link" href="#/akten">← Alle Akten</a>
-    <div class="detail-card">
-      <div class="detail-head">
-        <div class="top">
-          <button type="button" class="btn icon-only liste-umschalten" data-action="akten-liste-umschalten"
-            aria-pressed="${zu ? "true" : "false"}" aria-label="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden"}"
-            title="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden – mehr Platz für die Akte"}">${icon("liste")}</button>
-          <div class="kopf-titel">
-            <span class="case-number">${a.number}</span>
-            <span class="badges">${prioBadge(a.prioritaet)} ${haftBadge(a)}</span>
-            <h2>${a.title}</h2>
-            <div class="head-sub nur-schmal">
-              ${m ? html`Mandant: <a href="#/mandanten/${m.id}">${m.name}</a>` : a.client ? `Mandant: ${a.client}` : "Ohne Mandant"}
-              ${a.opponent ? html` · Gegen: ${a.opponent}` : ""}
-              · Zuständig: ${personName(a.zustaendig_id, a.lawyer || "niemand")}
-            </div>
-            ${typeof betrachterHinweis === "function" ? betrachterHinweis(a.id) : ""}
+    <div class="detail-card akte-detail">
+      <header class="fall-kopf">
+        <button type="button" class="btn ghost icon-only liste-umschalten" data-action="akten-liste-umschalten"
+          aria-pressed="${zu ? "true" : "false"}" aria-label="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden"}"
+          title="${zu ? "Aktenliste einblenden ([)" : "Aktenliste ausblenden – mehr Platz für die Akte ([)"}">${icon("liste")}</button>
+        <div class="fall-titel">
+          <div class="fall-zeile">
+            <button type="button" class="aktenzeichen" data-action="az-kopieren" data-az="${a.number}" title="Aktenzeichen kopieren" aria-label="Aktenzeichen ${a.number} kopieren">${a.number}${icon("kopieren")}</button>
+            <span class="status-pill ${AKTE_STATUS_TON[a.status] || "neutral"}">${a.status}</span>
+            ${a.in_haft ? html`<span class="badge haft">In Haft</span>` : ""}
+            ${prioBadge(a.prioritaet)}
           </div>
-          <div class="kopf-aktionen">
-            <select class="status-select" id="status-${a.id}" data-change="akte-status" data-id="${a.id}" title="Status ändern" aria-label="Status">
-              ${OPTIONEN.status.map((s) => html`<option ${a.status === s ? "selected" : ""}>${s}</option>`)}
-            </select>
-            <button class="btn" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button>
-            <button class="btn" data-action="dokument-waehlen" data-id="${a.id}">${icon("dokument")}<span>Dokument</span></button>
-            ${mehrMenue(a)}
-            ${darf("ki_assistent") ? html`<button type="button" class="nigel-btn nur-schmal" data-action="ki-oeffnen" data-id="${a.id}" aria-label="Nigel zu dieser Akte befragen"><span class="nigel-btn-bild"><img src="assets/nigel.svg" alt=""></span><span class="nigel-btn-text" aria-hidden="true"><small>Zu Diensten${anredeKomma()}</small>Nigel fragen</span></button>` : ""}
-          </div>
+          <h2>${a.title}</h2>
+          <div class="fall-mandant">${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : a.client || "Ohne Mandant"}${a.opponent ? html`<span class="muted"> gegen ${a.opponent}</span>` : ""}</div>
         </div>
-        ${k.length ? html`
-          <div class="box warning" style="margin:12px 0 0">
-            <strong>Möglicher Interessenkonflikt:</strong>
-            <ul>${k.map((c) => html`<li><a href="#/akten/${c.akte.id}">${c.akte.number} · ${c.akte.title}</a> – ${c.grund} (${c.akte.status})</li>`)}</ul>
-          </div>` : ""}
-        <nav class="tabs" aria-label="Bereiche der Akte">
-          ${AKTE_TABS.map((t) => {
-            const n = t.count ? t.count(a.id) : 0;
-            return html`<a href="#/akten/${a.id}${t.key ? "/" + t.key : ""}" class="${t.key === tab ? "active" : ""}"${t.key === tab ? html` aria-current="page"` : ""}>${t.label}${n ? html`<span class="count">${n}</span>` : ""}</a>`;
-          })}
-        </nav>
-      </div>
+        <div class="fall-aktionen">
+          ${wer.length ? html`<span class="avatars praesenz" title="Gerade auch geöffnet von ${wer.map((id) => personName(id)).join(", ")} – kurz absprechen, damit nichts überschrieben wird">${wer.slice(0, 3).map((id) => avatar(id))}${wer.length > 3 ? html`<span class="avatar mehr">+${wer.length - 3}</span>` : ""}</span>` : ""}
+          <button class="btn primary" data-action="dokument-waehlen" data-id="${a.id}">${icon("dokument")}<span>Dokument erzeugen</span></button>
+          <button class="btn nigel" data-action="ki-oeffnen" data-id="${a.id}" title="Nigel kennt diese Akte (K)"><img class="btn-nigel-bild" src="assets/nigel.svg" alt=""><span>Mit Nigel bearbeiten</span></button>
+          ${mehrMenue(a)}
+        </div>
+      </header>
+      ${k.length ? html`
+        <div class="konflikt-banner" role="alert">
+          <strong>⚠ Möglicher Interessenkonflikt</strong>
+          <ul>${k.map((c) => html`<li><a href="#/akten/${c.akte.id}"><span class="mono">${c.akte.number}</span> · ${c.akte.title}</a> – ${c.grund} (${c.akte.status})</li>`)}</ul>
+        </div>` : ""}
       <div class="akte-rumpf">
-        <div class="tab-body">${body(a)}</div>
+        <div class="akte-haupt">
+          <details class="meta-zusammenfassung">
+            <summary><span class="meta-titel">Aktendaten</span><span class="muted small">${[mandantName(a), personName(a.zustaendig_id, ""), a.az_extern].filter(Boolean).join(" · ")}</span></summary>
+            ${metadatenListe(a)}
+            ${a.summary ? html`<h3 class="spiegel-titel" style="margin-top:14px">Sachverhalt</h3><p class="pre" style="margin:0">${a.summary}</p>` : ""}
+            <button class="btn small" data-action="akte-bearbeiten" data-id="${a.id}" style="margin-top:10px">Akte bearbeiten</button>
+          </details>
+          <nav class="tabs fall-tabs" aria-label="Bereiche der Akte">
+            ${AKTE_TABS.map((t) => {
+              const n = t.count ? t.count(a.id) : 0;
+              return html`<a href="#/akten/${a.id}/${t.key}" class="${t.key === tab ? "active" : ""}"${t.key === tab ? html` aria-current="page"` : ""}><span class="tab-lang">${t.label}</span><span class="tab-kurz">${t.kurz || t.label}</span>${n ? html`<span class="count">${n}</span>` : ""}</a>`;
+            })}
+          </nav>
+          <div class="tab-body">${body(a)}</div>
+        </div>
         ${aktenspiegel(a)}
       </div>
     </div>`;
 }
 
-// ---------- Tab: Überblick ----------
-function tabUeberblick(a) {
-  const termine = kinder("termine", a.id).filter((t) => !t.erledigt).sort((x, y) => new Date(x.beginn) - new Date(y.beginn)).slice(0, 4);
-  const aufgaben = kinder("aufgaben", a.id).filter((t) => !t.erledigt).slice(0, 5);
-  const wichtige = kinder("eintraege", a.id).filter((e) => e.wichtig).sort((x, y) => new Date(y.created_at) - new Date(x.created_at)).slice(0, 3);
-
+// ---------- Reiter: Tatvorwürfe & Strafrechner ----------
+function tabVorwuerfe(a) {
   return html`
-    ${a.in_haft ? html`
-      <div class="box dark">
-        <strong>Mandant in Haft</strong>
-        ${a.haft_bis ? html` – voraussichtlich bis ${fmt.datumZeit(a.haft_bis)} (${fmt.bis(a.haft_bis)})` : ""}
-        <div class="actions-row"><button class="btn small gold" data-action="haft-ende" data-id="${a.id}">Ist entlassen</button></div>
-      </div>` : ""}
-    ${a.ergebnis ? html`
-      <div class="box ${ERFOLGE.includes(a.ergebnis) ? "ok" : "info"}">
-        <strong>Ergebnis: ${a.ergebnis}</strong>${a.ergebnis_datum ? html` (${fmt.datum(a.ergebnis_datum)})` : ""}
-        ${a.ergebnis_details ? html`<div class="pre">${a.ergebnis_details}</div>` : ""}
-        <div class="actions-row"><button class="link-btn" data-action="akte-abschluss" data-id="${a.id}">Ergebnis ändern</button></div>
-      </div>` : a.status === "Geschlossen" ? html`
-      <div class="box info">Die Akte ist geschlossen, aber das Ergebnis fehlt noch.
-        <div class="actions-row"><button class="btn small gold" data-action="akte-abschluss" data-id="${a.id}">Ergebnis eintragen</button></div>
-      </div>` : ""}
-
-    <dl class="facts nur-schmal">${eckdaten(a).map(([dt, dd]) => html`<div><dt>${dt}</dt><dd>${dd}</dd></div>`)}</dl>
-
-    <h3 class="section-title">Sachverhalt</h3>
-    <p class="pre" style="margin-top:0">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt. Über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
-
-    ${wichtige.length ? html`
-      <h3 class="section-title" style="margin-top:20px">Wichtige Einträge</h3>
-      <ul class="timeline">${wichtige.map((e) => html`<li class="wichtig"><div class="head"><strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}</div><p>${mitErwaehnungen(e.text)}</p></li>`)}</ul>` : ""}
-
-    <div class="card-head" style="margin-top:20px">
-      <h3 class="section-title" style="margin:0">Tatvorwürfe & Strafrahmen</h3>
-      <button class="btn small" data-action="vorwurf-hinzufuegen" data-id="${a.id}">+ Vorwurf</button>
+    <div class="card-head">
+      <p class="muted small" style="margin:0">Aus dem Strafkatalog – Geldstrafe und Haft werden automatisch zusammengerechnet.</p>
+      <button class="btn small primary" data-action="vorwurf-hinzufuegen" data-id="${a.id}">+ Vorwurf</button>
     </div>
-    ${vorwurfTabelle(a)}
-
-    <div class="grid-2" style="margin-top:20px">
-      <div>
-        <div class="card-head"><h3 class="section-title" style="margin:0">Nächste Termine</h3>
-          <button class="btn small" data-action="termin-neu" data-akte="${a.id}">+ Termin</button></div>
-        ${termine.length ? html`<ul class="rows">${termine.map((t) => terminRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Termine.</p>`}
-      </div>
-      <div>
-        <div class="card-head"><h3 class="section-title" style="margin:0">Offene Aufgaben</h3>
-          <a class="btn small" href="#/akten/${a.id}/aufgaben">Alle</a></div>
-        ${aufgaben.length ? html`<ul class="rows">${aufgaben.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
-      </div>
-    </div>`;
+    ${vorwurfTabelle(a)}`;
 }
 
 function vorwurfTabelle(a) {
@@ -372,50 +355,82 @@ function vorwurfTabelle(a) {
         </tr>`)}
       </tbody>
     </table></div>
-    <div class="sum-bar">
-      <span>Strafrahmen gesamt:</span>
-      <span>Geldstrafe <strong>${fmt.geld(sum.geld)}</strong></span>
-      <span>Haft <strong>${fmt.haft(sum.haft)}</strong></span>
+    <div class="sum-bar strafrahmen">
+      <span class="sum-label">Strafrahmen gesamt</span>
+      <span class="sum-wert"><small>Geldstrafe</small><strong>${fmt.geld(sum.geld)}</strong></span>
+      <span class="sum-wert"><small>Haft</small><strong>${fmt.haft(sum.haft)}</strong></span>
     </div>`;
 }
 
 // ---------- Tab: Verlauf ----------
+// Art eines Verlaufseintrags: intern · für den Mandanten sichtbar · Nachricht vom Mandanten · von Nigel
+function verlaufTyp(e) {
+  if (e.mandant_id) return "mandant";
+  if (e.von_nigel) return "nigel";
+  if (e.fuer_mandant) return "sichtbar";
+  return "intern";
+}
+const VERLAUF_TYP_TEXT = {
+  intern: "Intern – nur für die Kanzlei", sichtbar: "Für den Mandanten sichtbar",
+  mandant: "Nachricht vom Mandanten", nigel: "Von Nigel angelegt",
+};
+
 function tabVerlauf(a) {
   const textId = `draft-${a.id}`, artId = `art-${a.id}`, wichtigId = `wichtig-${a.id}`, mandantId = `fuer-mandant-${a.id}`;
   const entries = kinder("eintraege", a.id).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
+  const sichtbar = !!ui.drafts[mandantId];
   return html`
-    <form class="entry-form" data-submit="eintrag" data-id="${a.id}">
+    <form class="entry-form ${sichtbar ? "fuer-mandant" : ""}" data-submit="eintrag" data-id="${a.id}">
       <textarea id="${textId}" name="text" rows="3" data-input="draft" data-mention required
         placeholder="Neuer Eintrag … z. B. Gespräch mit Mandant, Anruf bei der StA. Mit @Name holst du Kollegen dazu.">${ui.drafts[textId] || ""}</textarea>
-      <div class="actions-row">
-        <div class="actions-row">
-          <select id="${artId}" name="art" data-input="draft">
+      <div class="entry-leiste">
+        <div class="entry-optionen">
+          <select id="${artId}" name="art" data-input="draft" aria-label="Art des Eintrags">
             ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || "Notiz") === o ? "selected" : ""}>${o}</option>`)}
           </select>
           <label class="check"><input type="checkbox" id="${wichtigId}" name="wichtig" data-input="draft" ${ui.drafts[wichtigId] ? "checked" : ""}> Wichtig</label>
-          <label class="check" title="Im Mandantenportal sichtbar – der Mandant wird benachrichtigt"><input type="checkbox" id="${mandantId}" name="fuer_mandant" data-input="draft" ${ui.drafts[mandantId] ? "checked" : ""}> Für Mandant sichtbar</label>
+          <label class="sichtbar-schalter" title="Im Mandantenportal sichtbar – der Mandant wird benachrichtigt">
+            <input type="checkbox" role="switch" id="${mandantId}" name="fuer_mandant" data-change="sichtbar-schalter" ${sichtbar ? "checked" : ""}>
+            <span class="schalter" aria-hidden="true"></span>
+            ${icon("auge")}<span>Für Mandant sichtbar</span>
+          </label>
           <span class="muted small erw-tipp">Tipp: <strong>@</strong> erwähnt Kollegen</span>
         </div>
-        <button class="btn primary" type="submit">Eintragen</button>
+        <button class="btn primary" type="submit">${sichtbar ? "An Mandanten freigeben" : "Eintragen"}</button>
       </div>
+      <p class="entry-hinweis" ${sichtbar ? "" : "hidden"}>${icon("auge")} Dieser Eintrag erscheint im Mandantenportal – der Mandant wird benachrichtigt.</p>
     </form>
-    ${entries.length ? html`<ul class="timeline">${entries.map((e) => html`
-      <li class="${e.wichtig ? "wichtig" : ""} ${e.mandant_id ? "vom-mandanten" : ""}">
+    ${entries.length ? html`<ul class="timeline verlauf">${entries.map((e) => {
+      const typ = verlaufTyp(e);
+      return html`
+      <li class="eintrag typ-${typ} ${e.wichtig ? "wichtig" : ""}" data-live="eintraege:${e.id}">
         <div class="head">
-          <span class="badge ${e.mandant_id ? "mandant" : "gold"}">${e.mandant_id ? "Nachricht vom Mandanten" : e.art || "Notiz"}</span>
+          <span class="typ-zeichen" title="${VERLAUF_TYP_TEXT[typ]}" aria-label="${VERLAUF_TYP_TEXT[typ]}">${typ === "intern" ? icon("schloss") : typ === "sichtbar" ? icon("auge") : typ === "mandant" ? icon("chat") : nigelAvatar()}</span>
+          ${typ === "mandant" ? html`<span class="badge mandant">Nachricht vom Mandanten</span>` : html`<span class="badge art">${e.art || "Notiz"}</span>`}
+          ${typ === "sichtbar" ? html`<span class="badge sichtbar">${icon("auge")}Mandant sichtbar</span>` : ""}
           ${e.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
-          ${e.fuer_mandant && !e.mandant_id ? html`<span class="badge sichtbar" title="Im Mandantenportal sichtbar">für Mandant sichtbar</span>` : ""}
-          ${e.von_nigel ? nigelAvatar() : ""}<strong>${eintragAutor(e)}</strong> · ${fmt.datumZeit(e.created_at)}
+          <strong>${typ === "nigel" ? `Nigel · im Auftrag von ${personName(e.author)}` : eintragAutor(e)}</strong>
+          <span class="zeit">${fmt.datumZeit(e.created_at)}</span>
           ${(e.erwaehnt || []).length ? html`<span class="erw-an" title="Erwähnt und benachrichtigt">→ ${e.erwaehnt.map((id) => personName(id)).join(", ")}</span>` : ""}
         </div>
         <p>${mitErwaehnungen(e.text)}</p>
         <div class="tools">
-          ${e.mandant_id ? "" : html`<button class="icon-btn ${e.fuer_mandant ? "an" : ""}" title="${e.fuer_mandant ? "Für den Mandanten wieder verbergen" : "Für den Mandanten sichtbar machen"}" data-action="eintrag-fuer-mandant" data-id="${e.id}">${icon("auge")}</button>
-          <button class="icon-btn" title="Bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>`}
-          <button class="icon-btn" title="Löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
+          ${e.mandant_id ? "" : html`<button class="icon-btn ${e.fuer_mandant ? "an" : ""}" title="${e.fuer_mandant ? "Für den Mandanten wieder verbergen" : "Für den Mandanten sichtbar machen"}" aria-label="${e.fuer_mandant ? "Für den Mandanten verbergen" : "Für den Mandanten sichtbar machen"}" data-action="eintrag-fuer-mandant" data-id="${e.id}">${icon("auge")}</button>
+          <button class="icon-btn" title="Bearbeiten" aria-label="Eintrag bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>`}
+          <button class="icon-btn" title="Löschen" aria-label="Eintrag löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
         </div>
-      </li>`)}</ul>` : html`<p class="empty">Noch keine Einträge. Halte hier alles fest, was im Fall passiert.</p>`}`;
+      </li>`;
+    })}</ul>` : html`<p class="empty">Noch keine Einträge. Halte hier alles fest, was im Fall passiert.</p>`}`;
 }
+
+// „Für Mandant sichtbar“: Formular sofort deutlich markieren (ohne Neuzeichnen, damit der Text bleibt)
+CHANGES["sichtbar-schalter"] = (el) => {
+  ui.drafts[el.id] = el.checked;
+  const form = el.closest("form");
+  form.classList.toggle("fuer-mandant", el.checked);
+  form.querySelector(".entry-hinweis").hidden = !el.checked;
+  form.querySelector('[type="submit"]').textContent = el.checked ? "An Mandanten freigeben" : "Eintragen";
+};
 
 INPUTS.draft = (el) => { ui.drafts[el.id] = el.type === "checkbox" ? el.checked : el.value; };
 
@@ -524,31 +539,37 @@ function beweisFields() {
 }
 
 // ---------- Tab: Termine / Aufgaben / Rechnungen ----------
-function tabTermine(a) {
-  const list = kinder("termine", a.id).sort((x, y) => new Date(x.beginn) - new Date(y.beginn));
-  const offen = list.filter((t) => !t.erledigt);
-  const erledigt = list.filter((t) => t.erledigt).reverse();
+// Termine & Aufgaben in einem Reiter, mit Filter (Alle · Termine · Aufgaben)
+function tabTermineAufgaben(a) {
+  const filter = ui.akten.taFilter || "alle";
+  const termine = kinder("termine", a.id).sort((x, y) => new Date(x.beginn) - new Date(y.beginn));
+  const tOffen = termine.filter((t) => !t.erledigt);
+  const tErledigt = termine.filter((t) => t.erledigt).reverse();
+  const aufgaben = kinder("aufgaben", a.id);
+  const aOffen = aufgaben.filter((t) => !t.erledigt).sort(sortAufgaben);
+  const aErledigt = aufgaben.filter((t) => t.erledigt).sort((x, y) => new Date(y.erledigt_am || 0) - new Date(x.erledigt_am || 0));
+  const chip = (k, l, n) => html`<button type="button" class="seg-tab ${filter === k ? "active" : ""}" aria-pressed="${filter === k}" data-action="ta-filter" data-f="${k}">${l}${n ? html`<span class="seg-n">${n}</span>` : ""}</button>`;
+  const zeigeT = filter !== "aufgaben", zeigeA = filter !== "termine";
+  const nErledigt = (zeigeT ? tErledigt.length : 0) + (zeigeA ? aErledigt.length : 0);
   return html`
     <div class="card-head">
-      <p class="muted small" style="margin:0">Verhandlungen, Haftprüfungen, Fristen und Wiedervorlagen zu dieser Akte.</p>
-      <button class="btn small primary" data-action="termin-neu" data-akte="${a.id}">+ Termin</button>
+      <div class="seg-tabs" role="group" aria-label="Filter">${chip("alle", "Alle", tOffen.length + aOffen.length)}${chip("termine", "Termine", tOffen.length)}${chip("aufgaben", "Aufgaben", aOffen.length)}</div>
+      <div class="actions-row">
+        <button class="btn small" data-action="ablauf-starten" data-id="${a.id}">Checkliste starten</button>
+        <button class="btn small primary" data-action="termin-neu" data-akte="${a.id}">+ Termin</button>
+      </div>
     </div>
-    ${offen.length ? html`<ul class="rows">${offen.map((t) => terminRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Termine.</p>`}
-    ${erledigt.length ? html`<div class="group-title">Erledigt</div><ul class="rows">${erledigt.map((t) => terminRow(t, { akte: false }))}</ul>` : ""}`;
-}
-
-function tabAufgaben(a) {
-  const list = kinder("aufgaben", a.id);
-  const offen = list.filter((t) => !t.erledigt).sort(sortAufgaben);
-  const erledigt = list.filter((t) => t.erledigt).sort((x, y) => new Date(y.erledigt_am || 0) - new Date(x.erledigt_am || 0));
-  return html`
-    <div class="card-head">
-      <div class="muted small">${list.length ? fortschrittBalken(a.id) : "Noch keine Aufgaben – lege sie einzeln an oder starte einen Ablauf (Checkliste)."}</div>
-      <button class="btn small" data-action="ablauf-starten" data-id="${a.id}">Ablauf starten</button>
-    </div>
-    ${aufgabeSchnellForm(a.id)}
-    ${offen.length ? html`<ul class="rows">${offen.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}
-    ${erledigt.length ? html`<div class="group-title">Erledigt</div><ul class="rows">${erledigt.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : ""}`;
+    ${zeigeT ? html`
+      <h3 class="group-title">Termine, Fristen & Wiedervorlagen</h3>
+      ${tOffen.length ? html`<ul class="rows">${tOffen.map((t) => terminRow(t, { akte: false }))}</ul>` : html`<p class="empty">Keine offenen Termine.</p>`}` : ""}
+    ${zeigeA ? html`
+      <h3 class="group-title aufgaben-titel">Aufgaben ${aufgaben.length ? fortschrittBalken(a.id) : ""}</h3>
+      ${aufgabeSchnellForm(a.id)}
+      ${aOffen.length ? html`<ul class="rows">${aOffen.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : html`<p class="empty">${aufgaben.length ? "Alle Aufgaben erledigt." : "Noch keine Aufgaben – einzeln anlegen oder eine Checkliste starten."}</p>`}` : ""}
+    ${nErledigt ? html`<details class="erledigt-block"><summary class="group-title">Erledigt (${nErledigt})</summary>
+      ${zeigeT && tErledigt.length ? html`<ul class="rows">${tErledigt.map((t) => terminRow(t, { akte: false }))}</ul>` : ""}
+      ${zeigeA && aErledigt.length ? html`<ul class="rows">${aErledigt.map((t) => aufgabeRow(t, { akte: false }))}</ul>` : ""}
+    </details>` : ""}`;
 }
 
 function tabRechnungen(a) {
@@ -773,6 +794,9 @@ Object.assign(ACTIONS, {
     if (ok !== undefined) go("akten");
   },
   "haft-ende": (d) => attempt(() => updateRow("akten", d.id, { in_haft: false }), "Haft beendet"),
+  "az-kopieren": async (d) => { toast((await copyText(d.az)) ? `Aktenzeichen ${d.az} kopiert` : d.az); },
+  "ta-filter": (d) => { ui.akten.taFilter = d.f; render(); },
+  "akte-status-setzen": (d) => akteStatusSetzen(byId("akten", d.id), d.status),
   "vorwurf-hinzufuegen": (d) => openVorwurfPicker(d.id),
   "vorwurf-anzahl": (d) => {
     const a = byId("akten", d.id);
@@ -857,9 +881,9 @@ Object.assign(ACTIONS, {
   },
 });
 
-CHANGES["akte-status"] = async (el) => {
-  const a = byId("akten", el.dataset.id);
-  const status = el.value;
+async function akteStatusSetzen(a, status) {
+  if (!a || a.status === status) return;
   const ok = await attempt(() => updateRow("akten", a.id, { status }), `Status: ${status}`);
   if (ok !== undefined && status === "Geschlossen" && !a.ergebnis) openAbschlussForm(byId("akten", a.id));
-};
+}
+CHANGES["akte-status"] = (el) => akteStatusSetzen(byId("akten", el.dataset.id), el.value);

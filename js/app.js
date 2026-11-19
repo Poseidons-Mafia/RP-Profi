@@ -235,6 +235,7 @@ function render() {
   rechteAnwenden(main);
   if (typeof kiAktualisieren === "function") kiAktualisieren();
   document.title = `${(NAV.find((n) => n.page === route.page) || NAV[0]).label} – Wiwang Law`;
+  liveHervorheben();
   for (const hook of RENDER_HOOKS) {
     try { hook(route); } catch (e) { console.error(e); }
   }

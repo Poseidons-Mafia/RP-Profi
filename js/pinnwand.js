@@ -22,7 +22,9 @@ function pinnwandOffen() {
 }
 
 function pinnwandSortiert(list) {
-  return [...list].sort((a, b) => (b.angeheftet ? 1 : 0) - (a.angeheftet ? 1 : 0) || new Date(b.created_at) - new Date(a.created_at));
+  // Angeheftet zuerst, dann „Wichtig“, dann das Neueste
+  return [...list].sort((a, b) => (b.angeheftet ? 1 : 0) - (a.angeheftet ? 1 : 0) || (b.wichtig ? 1 : 0) - (a.wichtig ? 1 : 0)
+    || new Date(b.created_at) - new Date(a.created_at));
 }
 
 function darfBeitragAendern(b) {
@@ -48,30 +50,33 @@ function beitragKarte(b) {
   const ichSoll = st && b.created_by !== state.me.id && st.soll.some((p) => p.user_id === state.me.id);
   const ichHab = hatBestaetigt(b.id, state.me.id);
   const zeigeFehlt = st && st.fehlt.length && (isMe(b.created_by) || darf("einstellungen_schreiben"));
+  const pct = st && st.soll.length ? Math.round((st.ja.length / st.soll.length) * 100) : 0;
   return html`
-    <article class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""}">
+    <article data-live="pinnwand:${b.id}" class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""} ${ichSoll && !ichHab ? "offen" : ""}">
       <div class="beitrag-kopf">
         ${b.von_nigel ? nigelAvatar({ gross: true }) : avatar(b.created_by)}
         <div class="grow">
           <div class="badges">
-            ${b.angeheftet ? html`<span class="badge haft">Angeheftet</span>` : ""}
+            ${b.angeheftet ? html`<span class="badge angeheftet" title="Oben angeheftet">📌 Angeheftet</span>` : ""}
             ${b.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
-            ${ichSoll && !ichHab ? html`<span class="badge offen">Bitte bestätigen</span>` : ""}
+            ${ichSoll && !ichHab ? html`<span class="badge gold">Bitte bestätigen</span>` : ""}
           </div>
           <h3>${b.titel}</h3>
           <div class="meta">${b.von_nigel ? `Nigel · im Auftrag von ${personName(b.created_by)}` : personName(b.created_by)} · ${fmt.relativ(b.created_at)}${b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? " · bearbeitet" : ""}${b.bis ? ` · bis ${fmt.datum(b.bis)}` : ""}</div>
         </div>
-        ${darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
+        ${darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" aria-label="Beitrag bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
       </div>
       ${b.text ? html`<div class="beitrag-text">${textMitLinks(b.text)}</div>` : ""}
       ${st ? html`
         <div class="beitrag-fuss">
           ${ichSoll ? ichHab
             ? html`<span class="ok-text small">✓ Von dir bestätigt</span>`
-            : html`<button class="btn small gold" data-action="pinnwand-bestaetigen" data-id="${b.id}">Gelesen & verstanden</button>` : ""}
-          <span class="small muted">${st.ja.length} von ${st.soll.length} bestätigt</span>
-          ${st.ja.length ? html`<span class="avatars" title="Bestätigt: ${st.ja.map((p) => personName(p.user_id)).join(", ")}">${st.ja.slice(0, 8).map((p) => avatar(p.user_id, { punkt: false }))}</span>` : ""}
-          ${zeigeFehlt ? html`<span class="small muted">Fehlt noch: ${st.fehlt.map((p) => personName(p.user_id)).join(", ")}</span>` : ""}
+            : html`<button class="btn small bestaetigen" data-action="pinnwand-bestaetigen" data-id="${b.id}">✓ Gelesen & verstanden</button>` : ""}
+          <span class="lese-stand" title="${st.ja.length ? `Bestätigt: ${st.ja.map((p) => personName(p.user_id)).join(", ")}` : "Noch niemand hat bestätigt"}">
+            <span class="fortschritt ${pct === 100 ? "fertig" : ""}"><span style="width:${pct}%"></span></span>
+            <span class="small muted tabular-nums">${st.ja.length} von ${st.soll.length} bestätigt</span>
+          </span>
+          ${zeigeFehlt ? html`<span class="small muted fehlt-noch">Fehlt noch: ${st.fehlt.map((p) => personName(p.user_id)).join(", ")}</span>` : ""}
         </div>` : ""}
     </article>`;
 }
@@ -87,9 +92,9 @@ function teamHeute() {
   const online = mitglieder.filter((p) => onlineStatus(p.user_id)).length;
   const akten = darf("akten_lesen"), termine = darf("termine_lesen");
   return html`
-    <div class="card" id="team-heute">
-      <div class="card-head"><h2>Team heute</h2><span class="muted small">${online} online</span></div>
-      <ul class="rows team-rows">${mitglieder.map((p) => {
+    <section class="card team-karte" id="team-heute">
+      <div class="card-head"><h2>Team heute</h2><span class="muted small"><span class="live-punkt"></span>${online} online</span></div>
+      <ul class="team-liste">${mitglieder.map((p) => {
         const id = p.user_id;
         const o = state.online.get(id);
         const wo = o ? [...o.akten].map((x) => byId("akten", x)).filter(Boolean)[0] : null;
@@ -97,27 +102,24 @@ function teamHeute() {
         const aufg = state.aufgaben.filter((t) => !t.erledigt && t.zustaendig === id);
         const ueber = aufg.filter(aufgabeUeberfaellig).length;
         const nHeute = state.termine.filter((t) => !t.erledigt && t.verantwortlich === id && sameDay(t.beginn, heute)).length;
-        return html`<li>
-          ${avatar(id, { gross: true })}
+        const abwesend = p.status && p.status !== "Aktiv";
+        return html`<li class="${o ? "ist-online" : ""} ${abwesend ? "abwesend" : ""}">
+          ${avatar(id)}
           <div class="grow">
-            <div class="title"><a href="#/team/${id}">${personName(id)}</a>
-              ${id === state.me.id ? html`<span class="badge gold">Du</span>` : ""}
-              ${p.status && p.status !== "Aktiv" ? statusBadgeP(p.status) : ""}</div>
-            <div class="meta">${joinHtml([
-              rangName(p) || null,
-              o ? (o.weg ? "online (im Hintergrund)" : wo ? html`<span class="ok-text">online</span> · in <a href="#/akten/${wo.id}">${wo.number}</a>` : html`<span class="ok-text">online</span>`) : null,
+            <div class="team-name"><a href="#/team/${id}">${personName(id)}</a>${id === state.me.id ? html` <span class="badge gold">Du</span>` : ""}</div>
+            <div class="team-meta">${joinHtml([
+              abwesend ? html`<span class="status-punkt urlaub"></span>${p.status}` : o ? (o.weg ? "im Hintergrund" : wo ? html`in <a href="#/akten/${wo.id}" class="mono">${wo.number}</a>` : "online") : rangName(p) || null,
             ])}</div>
-            ${akten || termine ? html`<div class="meta">${joinHtml([
-              akten ? `${nAkten} ${nAkten === 1 ? "Akte" : "Akten"}` : null,
-              termine ? `${aufg.length} ${aufg.length === 1 ? "Aufgabe" : "Aufgaben"}` : null,
-              termine && ueber ? html`<span class="danger-text">${ueber} überfällig</span>` : null,
-              termine && nHeute ? `${nHeute} ${nHeute === 1 ? "Termin" : "Termine"} heute` : null,
-            ])}</div>` : ""}
           </div>
+          <span class="team-zaehler">
+            ${akten && nAkten ? html`<span class="zaehler" title="${nAkten} aktive ${nAkten === 1 ? "Akte" : "Akten"}">${navIcon("akten")}${nAkten}</span>` : ""}
+            ${termine && nHeute ? html`<span class="zaehler" title="${nHeute} ${nHeute === 1 ? "Termin" : "Termine"} heute">${navIcon("kalender")}${nHeute}</span>` : ""}
+            ${termine && ueber ? html`<span class="zaehler rot" title="${ueber} überfällige ${ueber === 1 ? "Aufgabe" : "Aufgaben"}">!${ueber}</span>` : ""}
+          </span>
         </li>`;
       })}</ul>
-      <p class="small muted" style="margin:10px 0 0">Bei Urlaub oder Krankheit: In der Personalakte „Arbeit übergeben“ – Akten, Aufgaben und Termine gehen dann in einem Schritt an eine Vertretung.</p>
-    </div>`;
+      <p class="small muted team-hinweis">Urlaub oder krank? In der Personalakte „Arbeit übergeben“ – Akten, Aufgaben und Termine gehen in einem Schritt an eine Vertretung.</p>
+    </section>`;
 }
 
 // ---------- Pinnwand-Karte auf der Übersicht ----------
@@ -137,20 +139,19 @@ function pinnwandKarte() {
   return html`
     <div class="card pinnwand-karte" id="pinnwand">
       <div class="card-head">
-        <div><h2>Pinnwand</h2>
-          <p class="muted small" style="margin:0">Ankündigungen und Dienstanweisungen für alle${offenIds.size ? html` · <strong class="danger-text">${offenIds.size} ${offenIds.size === 1 ? "wartet" : "warten"} auf deine Bestätigung</strong>` : ""}</p></div>
-        <div class="actions-row">
-          ${imArchiv || archiv ? html`<div class="chips">
-            <button class="chip ${archiv ? "" : "active"}" data-action="pinnwand-archiv" data-archiv="0">Aktuell</button>
-            <button class="chip ${archiv ? "active" : ""}" data-action="pinnwand-archiv" data-archiv="1">Archiv${imArchiv ? ` (${imArchiv})` : ""}</button>
-          </div>` : ""}
-          <button class="btn small primary" data-action="pinnwand-neu">+ Beitrag</button>
-        </div>
+        <div><h2>${archiv ? "Pinnwand – Archiv" : "Pinnwand"}</h2>
+          ${offenIds.size ? html`<p class="small pinnwand-offen">${offenIds.size} ${offenIds.size === 1 ? "wartet" : "warten"} auf deine Bestätigung</p>` : ""}</div>
+        <button class="btn small" data-action="pinnwand-neu" title="Neuer Beitrag an der Pinnwand">+ Beitrag</button>
       </div>
-      ${zeigen.length ? html`<div class="stack">${zeigen.map((b) => beitragKarte(b))}</div>`
+      ${zeigen.length ? html`<div class="beitrag-liste">${zeigen.map((b) => beitragKarte(b))}</div>`
         : html`<p class="empty">${archiv ? "Hier landen Beiträge, deren „Sichtbar bis“-Datum vorbei ist." : "Noch nichts angepinnt – neue Dienstzeiten, Regeln, Erfolge, Termine fürs ganze Team: alles, was alle wissen sollen."}</p>`}
-      ${mehr > 0 ? html`<div class="actions-row" style="margin-top:10px"><button class="btn small" data-action="pinnwand-alle" data-alle="1">${mehr === 1 ? "1 weiteren Beitrag" : `${mehr} weitere Beiträge`} anzeigen</button></div>`
-        : ui.pinnwand.alle && !archiv && list.length > kurz.length ? html`<div class="actions-row" style="margin-top:10px"><button class="btn small" data-action="pinnwand-alle" data-alle="0">Weniger anzeigen</button></div>` : ""}
+      <div class="pinnwand-fuss">
+        ${mehr > 0 ? html`<button class="link-btn" data-action="pinnwand-alle" data-alle="1">${mehr === 1 ? "1 weiteren Beitrag" : `${mehr} weitere Beiträge`} anzeigen</button>`
+          : ui.pinnwand.alle && !archiv && list.length > kurz.length ? html`<button class="link-btn" data-action="pinnwand-alle" data-alle="0">Weniger anzeigen</button>` : ""}
+        <span class="spacer"></span>
+        ${archiv ? html`<button class="link-btn" data-action="pinnwand-archiv" data-archiv="0">← Zurück zu aktuell</button>`
+          : imArchiv ? html`<button class="link-btn" data-action="pinnwand-archiv" data-archiv="1">Archiv (${imArchiv}) →</button>` : ""}
+      </div>
     </div>`;
 }
 
