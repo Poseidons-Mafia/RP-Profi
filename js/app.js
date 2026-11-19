@@ -284,7 +284,7 @@ function renderNav(route) {
     <h3 class="nav-sheet-titel">Konto</h3>
     <div class="nav-kacheln">
       <button type="button" class="nav-kachel" data-action="nav-profil">${navIcon("profil")}<span class="nav-label">${myName() || "Mein Profil"}</span></button>
-      <a class="nav-kachel" href="leitfaden/straftat.html?v=53">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
+      <a class="nav-kachel" href="leitfaden/straftat.html?v=54">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
       <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
     </div>`);
 
