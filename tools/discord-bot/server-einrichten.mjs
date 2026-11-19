@@ -65,6 +65,7 @@ const KATEGORIEN = [
       ["willkommen", "Willkommen bei Wiwang Law – hier findest du den Einstieg."],
       ["regeln", "Die Regeln unseres Servers."],
       ["ankuendigungen", "Neuigkeiten der Kanzlei."],
+      ["gesetzesaenderungen", "Änderungen an Gesetzen und Verordnungen."],
     ],
   },
   {
