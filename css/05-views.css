@@ -465,14 +465,28 @@
 
   /* ---------- Arbeitsbereich ---------- */
   .nw, .nw.panel-auf { background: var(--bg-canvas); }
-  .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
-  .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  /* Spalten nur auf großen Bildschirmen; darunter gilt Drawer (901–1279) bzw. Einzelansicht (≤ 900) */
+  @media (min-width: 1280px) {
+    .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
+    .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .nw, .nw.panel-auf { grid-template-columns: minmax(0, 1fr); }
+    .nw-haupt { grid-column: 1; min-width: 0; }
+    /* Modi als eine scrollbare Zeile statt vier Zeilen Platz zu verbrauchen */
+    .nw-modi { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .nw-modi::-webkit-scrollbar { display: none; }
+    .nw-eingabe { padding: 8px 10px calc(10px + env(safe-area-inset-bottom)); }
+    .nw-eingabe-leiste { margin-bottom: 6px; }
+    .nw-kontext-chip, .nw-aktionsmodus { flex: none; }
+  }
   .nw-liste, .nw-panel, .nw-kopf, .nw-eingabe { background: var(--bg-surface); border-color: var(--border-subtle); }
   .nw-marke strong, .nw-titel h1, .nw-msg-meta strong { font-family: var(--font-serif); font-weight: 600; }
   .nw-verlauf-innen { max-width: 760px; }
   .nw-eingabe-leiste { max-width: 760px; row-gap: 8px; }
   .nw-eingabe-feld { max-width: 760px; margin-left: auto; margin-right: auto; }
-  .nw-modi { flex-basis: 100%; flex-wrap: wrap; margin: 0; padding-bottom: 2px; overflow: visible; }
+  .nw-modi { flex-basis: 100%; margin: 0; padding-bottom: 2px; }
+  @media (min-width: 901px) { .nw-modi { flex-wrap: wrap; overflow: visible; } }
   .nw-modus { padding: 4px 11px; font-size: 0.78rem; }
   .nw-drawer-hintergrund { display: none; }
 
