@@ -110,20 +110,29 @@ document.addEventListener("visibilitychange", praesenzMelden);
 function onlineZeichnen() {
   const el = $("online");
   if (!el || !state.me) return;
-  const andere = [...state.online.keys()].filter((id) => id !== state.me.id && profileOf(id))
-    .sort((a, b) => (onlineStatus(a) === "weg") - (onlineStatus(b) === "weg") || personName(a).localeCompare(personName(b), "de"));
+  const andere = typeof onlineAndere === "function" ? onlineAndere() : [];
   el.hidden = !andere.length;
   el.title = andere.length ? `Gerade online: ${andere.map((id) => personName(id)).join(", ")}` : "";
-  el.setAttribute("aria-label", el.title);
-  el.innerHTML = String(html`${andere.slice(0, 4).map((id) => avatar(id))}${andere.length > 4 ? html`<span class="avatar mehr">+${andere.length - 4}</span>` : ""}`);
+  el.setAttribute("aria-label", andere.length ? `${andere.length} Kolleg:innen online – Liste anzeigen` : "");
+  // Höchstens drei Avatare, der Rest als „+N“
+  el.innerHTML = String(html`<span class="avatars">${andere.slice(0, 3).map((id) => avatar(id))}${andere.length > 3 ? html`<span class="avatar mehr">+${andere.length - 3}</span>` : ""}</span>`);
 }
 
 // ---------- Benachrichtigungen ----------
 const glockePanel = document.createElement("aside");
-glockePanel.className = "glocke-panel";
-glockePanel.hidden = true;
+glockePanel.className = "glocke-panel pop";
+glockePanel.id = "glocke-panel";
 glockePanel.setAttribute("aria-label", "Benachrichtigungen");
+// Native Popover-API: Klick daneben und Esc schließen von selbst
+const GLOCKE_POPOVER = "showPopover" in glockePanel;
+if (GLOCKE_POPOVER) glockePanel.popover = "auto"; else glockePanel.hidden = true;
 document.body.append(glockePanel);
+const glockeOffen = () => (GLOCKE_POPOVER ? glockePanel.matches(":popover-open") : !glockePanel.hidden);
+let glockeWarOffen = false; // Klick auf die Glocke bei offenem Panel: nur schließen (nicht gleich wieder öffnen)
+glockePanel.addEventListener("toggle", (e) => {
+  const btn = $("btn-glocke");
+  if (btn) btn.setAttribute("aria-expanded", e.newState === "open" ? "true" : "false");
+});
 
 function meineBenachrichtigungen() {
   if (!state.me) return [];
@@ -165,19 +174,20 @@ function glockeZeichnen() {
 
 function glockeOeffnen() {
   const btn = $("btn-glocke");
+  glockeZeichnen();
+  if (GLOCKE_POPOVER) glockePanel.showPopover(); else glockePanel.hidden = false;
   const r = btn.getBoundingClientRect();
   glockePanel.style.top = `${Math.round(r.bottom + 8)}px`;
-  glockeZeichnen();
-  glockePanel.hidden = false;
   btn.setAttribute("aria-expanded", "true");
 }
 
 function glockeSchliessen() {
-  if (glockePanel.hidden) return;
-  glockePanel.hidden = true;
+  if (!glockeOffen()) return;
+  if (GLOCKE_POPOVER) glockePanel.hidePopover(); else glockePanel.hidden = true;
   const btn = $("btn-glocke");
   if (btn) btn.setAttribute("aria-expanded", "false");
 }
+document.addEventListener("pointerdown", (e) => { if (e.target.closest("#btn-glocke")) glockeWarOffen = glockeOffen(); }, true);
 
 async function benachrichtigungOeffnen(id) {
   const b = state.benachrichtigungen.find((x) => x.id === id);
@@ -190,7 +200,7 @@ async function benachrichtigungOeffnen(id) {
 }
 
 document.addEventListener("click", (e) => {
-  if (glockePanel.hidden) return;
+  if (GLOCKE_POPOVER || glockePanel.hidden) return;
   if (glockePanel.contains(e.target) || e.target.closest("#btn-glocke")) return;
   glockeSchliessen();
 });
@@ -199,11 +209,11 @@ window.addEventListener("resize", glockeSchliessen);
 
 document.addEventListener("keydown", (e) => {
   if (!state.loaded || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.key === "Escape" && !glockePanel.hidden) {
+  if (e.key === "Escape" && glockeOffen()) {
     glockeSchliessen();
   } else if (e.key === "b" && !e.target.closest("input, textarea, select, [contenteditable]") && !document.querySelector("dialog[open]")) {
     e.preventDefault();
-    if (glockePanel.hidden) glockeOeffnen(); else glockeSchliessen();
+    if (glockeOffen()) glockeSchliessen(); else glockeOeffnen();
   }
 });
 
@@ -227,7 +237,10 @@ LIVE_HOOKS.benachrichtigungen = (p) => {
 };
 
 Object.assign(ACTIONS, {
-  glocke: () => (glockePanel.hidden ? glockeOeffnen() : glockeSchliessen()),
+  glocke: () => {
+    if (glockeWarOffen) { glockeWarOffen = false; return glockeSchliessen(); }
+    return glockeOffen() ? glockeSchliessen() : glockeOeffnen();
+  },
   "benachrichtigung-oeffnen": (d) => benachrichtigungOeffnen(d.id),
   "glocke-alle-gelesen": async () => {
     const ids = ungelesen().map((b) => b.id);
@@ -392,7 +405,7 @@ RENDER_HOOKS.push(() => {
   $("btn-glocke").title = n ? `${n} neue Benachrichtigung${n === 1 ? "" : "en"}` : "Benachrichtigungen";
   if (n) document.title = `(${n}) ${document.title}`;
   onlineZeichnen();
-  if (!glockePanel.hidden) glockeZeichnen();
+  if (glockeOffen()) glockeZeichnen();
   // Das Textfeld wurde ggf. neu gezeichnet – Vorschläge am neuen Feld weiterführen
   if (!erwBox.hidden) {
     const a = document.activeElement;

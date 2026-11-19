@@ -40,45 +40,62 @@
   <link rel="stylesheet" href="css/05-views.css?v=58">
 </head>
 <body>
-  <header class="topbar">
-    <a class="brand" href="#/" data-action="charakter-menue" title="Charakter wechseln">
-      <img class="brand-logo" src="assets/logo.png?v=58" alt="Wiwang Law">
-      <span id="brand-wechsel" class="brand-wechsel" hidden aria-hidden="true">⇄</span>
-      <span id="brand-sub" class="brand-sub">Aktensystem</span>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+  <!-- Kopfzeile: links Kontext (Handy: Logo), Mitte Such-/Befehlsleiste, rechts Online, Neue Akte, Glocke, Hell/Dunkel -->
+  <header id="topbar" class="topbar">
+    <a class="brand" href="#/" aria-label="Wiwang Law – zur Übersicht">
+      <img class="brand-mark" src="assets/icon.png?v=58" alt="" width="32" height="32">
+      <span class="brand-text"><span class="brand-name">Wiwang Law</span><span id="brand-sub" class="brand-sub">Aktensystem</span></span>
     </a>
+    <nav id="kopf-kontext" class="kopf-kontext" aria-label="Brotkrumen" hidden></nav>
+    <button type="button" id="cmd-btn" class="cmd-bar" data-action="cmd-oeffnen" hidden aria-haspopup="dialog" aria-keyshortcuts="/ Control+K"
+      title="Suchen und Schnellaktionen (/ oder Strg+K)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20.5 20.5 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span class="cmd-text">Suchen oder Befehl …</span>
+      <kbd>/</kbd>
+    </button>
     <div id="topbar-actions" class="topbar-actions" hidden>
-      <a id="online" class="online" href="#/team-heute" hidden></a>
-      <button id="btn-glocke" class="btn ghost glocke" data-action="glocke" title="Benachrichtigungen" aria-label="Benachrichtigungen" aria-expanded="false">
+      <button type="button" id="online" class="online" popovertarget="online-pop" aria-haspopup="true" aria-expanded="false" hidden></button>
+      <button class="btn primary neu-akte" data-action="akte-neu" title="Neue Akte anlegen (N)" aria-keyshortcuts="N">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="lang">Neue Akte</span>
+      </button>
+      <button type="button" id="btn-glocke" class="btn ghost icon-only glocke" data-action="glocke" title="Benachrichtigungen (B)" aria-label="Benachrichtigungen" aria-keyshortcuts="B" aria-expanded="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span id="glocke-zahl" class="glocke-zahl" hidden></span>
       </button>
-      <button class="btn primary" data-action="akte-neu" title="Neue Akte"><span>+ <span class="lang">Neue </span>Akte</span></button>
       <button type="button" class="btn ghost icon-only theme-btn" data-action="theme-umschalten" aria-label="Design umschalten" title="Design umschalten">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
-      <button id="btn-me" class="btn ghost" data-action="profil-bearbeiten" title="Mein Profil">Profil</button>
-      <button class="btn ghost" data-action="logout">Abmelden</button>
     </div>
-    <!-- Mandantenportal: nur Name und Abmelden -->
+    <!-- Mandantenportal: Hell/Dunkel, Name (Meine Daten), Abmelden -->
     <div id="portal-actions" class="topbar-actions" hidden>
       <button type="button" class="btn ghost icon-only theme-btn" data-action="theme-umschalten" aria-label="Design umschalten" title="Design umschalten">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
+      <button type="button" class="btn ghost icon-only portal-wechseln" data-action="charakter-menue" aria-label="Charakter wechseln" title="Charakter wechseln">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
       <a id="portal-name" class="btn ghost" href="#/daten" title="Meine Daten"></a>
-      <button class="btn ghost" data-action="logout">Abmelden</button>
+      <button class="btn ghost portal-abmelden" data-action="logout">Abmelden</button>
     </div>
   </header>
-  <nav id="nav" class="nav" hidden aria-label="Hauptmenü"></nav>
-  <!-- Handy: feste Leiste unten + Kachelmenü „Mehr“ mit allen Bereichen -->
+  <!-- Seitenleiste: Charakter-Switcher, Bereiche nach Gruppen, Leitfaden, Einklappen -->
+  <nav id="nav" class="nav sidebar" hidden aria-label="Hauptmenü"></nav>
+  <!-- Handy: feste Leiste unten + Bottom Sheet „Mehr“ mit allen Bereichen -->
   <nav id="tabbar" class="tabbar" hidden aria-label="Hauptmenü"></nav>
   <div id="nav-sheet" class="nav-sheet" hidden>
     <div class="nav-sheet-hintergrund" data-action="nav-sheet-zu"></div>
-    <div class="nav-sheet-flaeche" role="dialog" aria-modal="true" aria-label="Alle Bereiche">
-      <div class="nav-sheet-kopf"><strong>Alle Bereiche</strong>
+    <div class="nav-sheet-flaeche" role="dialog" aria-modal="true" aria-labelledby="nav-sheet-titel">
+      <div class="sheet-griff" aria-hidden="true"></div>
+      <div class="nav-sheet-kopf"><strong id="nav-sheet-titel">Mehr</strong>
         <button type="button" class="btn ghost small" data-action="nav-sheet-zu" aria-label="Schließen">Schließen</button></div>
       <div id="nav-sheet-inhalt"></div>
     </div>
   </div>
+  <!-- Aufklappmenüs (native Popover): Charakter-Switcher, Online-Liste -->
+  <div id="char-pop" class="pop char-pop" popover role="menu" aria-label="Charakter und Konto"></div>
+  <div id="online-pop" class="pop online-pop" popover aria-label="Gerade online"></div>
   <nav id="portal-nav" class="nav portal-nav" hidden aria-label="Mandantenportal"></nav>
 
   <!-- Hinweis, falls config.js noch nicht ausgefüllt ist -->
@@ -132,6 +149,7 @@
       </label>
       <p id="login-error" class="error" hidden></p>
       <button class="btn primary full" type="submit">Anmelden</button>
+      <a class="login-leitfaden" href="leitfaden/straftat.html?v=58">Leitfaden „Abhandlung einer Straftat“ (öffentlich) →</a>
     </form>
   </section>
 
@@ -147,12 +165,9 @@
   <!-- Mandantenportal (angemeldet als Mandanten-Charakter) -->
   <main id="portal" hidden></main>
 
-  <a class="guide-btn" href="leitfaden/straftat.html?v=58" title="Leitfaden: Abhandlung einer Straftat (öffentlich)" aria-label="Leitfaden: Abhandlung einer Straftat">
-    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7a2 2 0 0 1 2 2v9h-7a2 2 0 0 1-2-2zM3.5 11.5a2 2 0 0 1 2-2h7M6.5 5.5h3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>Leitfaden</span>
-  </a>
 
   <!-- Dialoge und Druckbereich -->
+  <dialog id="cmd-dialog" class="app-modal cmd-dialog" aria-label="Suchen und Schnellaktionen"></dialog>
   <dialog id="form-dialog"></dialog>
   <dialog id="doc-dialog"></dialog>
   <div id="print-area"></div>
@@ -171,6 +186,7 @@
   <script src="js/forms.js?v=58"></script>
   <script src="js/app.js?v=58"></script>
   <script src="js/theme.js?v=58"></script>
+  <script src="js/shell.js?v=58"></script>
   <script src="js/konto.js?v=58"></script>
   <script src="js/dokumente.js?v=58"></script>
   <script src="js/akten.js?v=58"></script>

@@ -91,7 +91,7 @@ function readForm(form, fields) {
 // ---------- Allgemeiner Dialog ----------
 function openDialog({ title, body, wide = false, id = "form-dialog", footer = "" }) {
   const dlg = $(id);
-  dlg.className = wide ? "wide" : "";
+  dlg.className = wide ? "app-modal wide" : "app-modal";
   dlg.innerHTML = String(html`
     <div class="dialog-head">
       <h2>${title}</h2>
@@ -110,7 +110,7 @@ function openDialog({ title, body, wide = false, id = "form-dialog", footer = ""
 function openForm({ title, fields, values = {}, submitLabel = "Speichern", onSubmit, onDelete,
                     deleteLabel = "Löschen", wide = false, intro, onChange, onMount }) {
   const dlg = $("form-dialog");
-  dlg.className = wide ? "wide" : "";
+  dlg.className = wide ? "app-modal wide" : "app-modal";
   dlg.innerHTML = String(html`
     <form class="form">
       <div class="dialog-head">

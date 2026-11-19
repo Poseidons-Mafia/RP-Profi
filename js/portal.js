@@ -148,7 +148,6 @@ function portalRender() {
   const route = portalRoute();
   portalNavRender();
   $("portal-name").textContent = portal.daten.name || "";
-  $("brand-wechsel").hidden = false; // Logo: Charakter wechseln
 
   const views = { "": portalUebersicht, akten: portalAktenListe, akte: portalAkteDetail, termine: portalTermineSeite,
     dokumente: portalDokumenteSeite, rechnungen: portalRechnungenSeite, anliegen: portalAnliegenSeite, daten: portalDatenSeite };
@@ -179,9 +178,9 @@ function portalNavRender() {
   const neu = portalAkten().reduce((t, a) => t + akteNeuigkeiten(a), 0);
   const badges = { rechnungen: offen, termine, akten: neu };
   const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
-  const link = (n, kurz) => html`<a href="#/${n.page}" title="${n.label}" class="${seite === n.page ? "active" : ""}"${seite === n.page ? html` aria-current="page"` : ""}>
+  const link = (n, kurz) => html`<a href="#/${n.page}" title="${n.label}" class="nav-item ${seite === n.page ? "active" : ""}"${seite === n.page ? html` aria-current="page"` : ""}>
     ${navIcon(n.icon)}<span class="nav-label">${kurz && n.kurz ? n.kurz : n.label}</span>${badge(n)}</a>`;
-  $("portal-nav").innerHTML = String(html`<div class="nav-gruppe">${PORTAL_NAV.map((n) => link(n))}</div>`);
+  $("portal-nav").innerHTML = String(html`<div class="nav-group">${PORTAL_NAV.map((n) => link(n))}</div>`);
 
   const direkt = PORTAL_TABBAR.map((p) => PORTAL_NAV.find((n) => n.page === p));
   const rest = PORTAL_NAV.filter((n) => !direkt.includes(n));
@@ -189,19 +188,21 @@ function portalNavRender() {
   const restAktiv = sheetOffen || seite === "daten" || rest.some((n) => n.page === seite);
   const restBadges = rest.reduce((t, n) => t + (badges[n.page] || 0), 0);
   $("tabbar").innerHTML = String(html`${direkt.map((n) => link(n, true))}
-    <button type="button" class="${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${sheetOffen}">
+    <button type="button" class="nav-item ${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${sheetOffen}">
       ${navIcon("mehr")}<span class="nav-label">Mehr</span>${restBadges ? html`<span class="nav-badge">${restBadges}</span>` : ""}</button>`);
 
   const kachel = (n) => html`<a href="#/${n.page}" class="nav-kachel ${seite === n.page ? "active" : ""}">${navIcon(n.icon)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
   $("nav-sheet-inhalt").innerHTML = String(html`
     <h3 class="nav-sheet-titel">Mandantenportal</h3>
     <div class="nav-kacheln">${PORTAL_NAV.map(kachel)}</div>
-    <h3 class="nav-sheet-titel">Konto</h3>
-    <div class="nav-kacheln">
-      <a href="#/daten" class="nav-kachel ${seite === "daten" ? "active" : ""}">${navIcon("profil")}<span class="nav-label">Meine Daten</span></a>
-      <button type="button" class="nav-kachel" data-action="charakter-menue">${navIcon("wechseln")}<span class="nav-label">Charakter wechseln</span></button>
-      <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
+    <h3 class="nav-sheet-titel">Konto & Darstellung</h3>
+    <div class="sheet-liste">
+      <a href="#/daten" class="sheet-zeile ${seite === "daten" ? "active" : ""}">${navIcon("profil")}<span>Meine Daten</span></a>
+      <button type="button" class="sheet-zeile" data-action="charakter-menue">${navIcon("wechseln")}<span>Charakter wechseln</span></button>
+      <button type="button" class="sheet-zeile" data-action="theme-umschalten">${themeIcon()}<span class="theme-label">Design umschalten</span></button>
+      <button type="button" class="sheet-zeile danger" data-action="logout">${navIcon("abmelden")}<span>Abmelden</span></button>
     </div>`);
+  if (typeof themeKnoepfe === "function") themeKnoepfe();
 }
 
 function kanzleiKontakt() {

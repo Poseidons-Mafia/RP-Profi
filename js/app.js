@@ -224,6 +224,7 @@ function render() {
     }
   }
   renderNav(route);
+  $("main").querySelectorAll(".tabs").forEach(aktivInsBild);
   // Sprungmarke (z. B. #/pinnwand → Pinnwand auf der Übersicht) erst nach dem Hochscrollen anfahren
   if (ui.anker) {
     const anker = ui.anker;
@@ -251,52 +252,62 @@ function renderNav(route) {
   const antraege = (typeof portalAntraege === "function" ? portalAntraege().length : 0)
     + (typeof offeneAnliegen === "function" ? offeneAnliegen().filter((x) => x.status === "offen").length : 0);
   const badges = { kalender: heute, finanzen: offen, uebersicht: pinnwand, mandanten: antraege };
-  const badge = (n) => (badges[n.page] ? html`<span class="nav-badge">${badges[n.page]}</span>` : "");
+  // Rot nur, wo etwas überfällig ist (Fristen, Rechnungen); sonst ein ruhiger Zähler
+  const dringend = { kalender: state.termine.some(terminUeberfaellig), finanzen: offen > 0 };
+  const badge = (n) => (badges[n.page]
+    ? html`<span class="nav-badge ${dringend[n.page] ? "dringend" : ""}" aria-label="${badges[n.page]} offen">${badges[n.page]}</span>` : "");
   const sichtbar = NAV.filter((n) => erlaubt(SEITEN_RECHTE[n.page]));
   const gruppen = [...new Set(sichtbar.map((n) => n.gruppe))].map((g) => ({ name: g, items: sichtbar.filter((n) => n.gruppe === g) }));
-  const link = (n) => html`<a href="${n.href}" title="${n.label}" class="${navAktiv(n, route) ? "active" : ""}"${navAktiv(n, route) ? html` aria-current="page"` : ""}>
+  const link = (n) => html`<a href="${n.href}" title="${n.label}" class="nav-item ${navAktiv(n, route) ? "active" : ""}"${navAktiv(n, route) ? html` aria-current="page"` : ""}>
       ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
 
-  // Seitenleiste (Desktop) bzw. Leiste oben (Tablet): alle Bereiche, nach Gruppen getrennt
+  // Seitenleiste (Desktop; Tablet als schmale Symbolleiste): Charakter, Bereiche nach Gruppen, Leitfaden, Einklappen
   const zu = navEingeklappt();
   $("nav").innerHTML = String(html`
-    <button type="button" class="nav-klappen" data-action="nav-klappen" aria-expanded="${!zu}"
-      title="${zu ? "Menü ausklappen" : "Menü einklappen (nur Symbole)"}" aria-label="${zu ? "Menü ausklappen" : "Menü einklappen"}">
-      ${navIcon(zu ? "ausklappen" : "einklappen")}<span class="nav-label">Einklappen</span></button>
-    ${gruppen.map((g) => html`
-    <div class="nav-gruppe" role="group" aria-label="${g.name}">
-      <span class="nav-titel">${g.name}</span>
-      ${g.items.map(link)}
-    </div>`)}`);
-  navAusrichten(route.page);
+    <div class="sb-kopf">${charakterSwitcher()}</div>
+    <div class="sb-gruppen">
+      ${gruppen.map((g) => html`
+      <div class="nav-group" role="group" aria-label="${g.name}">
+        <span class="nav-titel" aria-hidden="true">${g.name}</span>
+        ${g.items.map(link)}
+      </div>`)}
+    </div>
+    <div class="sb-fuss">
+      <a class="nav-item sb-leitfaden" href="leitfaden/straftat.html?v=58" title="Leitfaden „Abhandlung einer Straftat“">
+        ${navIcon("leitfaden")}<span class="nav-label">Leitfaden <small>Abhandlung einer Straftat</small></span></a>
+      <button type="button" class="nav-item nav-klappen" data-action="nav-klappen" aria-expanded="${!zu}"
+        title="${zu ? "Menü ausklappen" : "Menü einklappen (nur Symbole)"}" aria-label="${zu ? "Menü ausklappen" : "Menü einklappen"}">
+        ${navIcon(zu ? "ausklappen" : "einklappen")}<span class="nav-label">Einklappen</span></button>
+    </div>`);
 
-  // Handy: die wichtigsten Bereiche unten, alles andere im „Mehr“-Menü (immer da: dort stehen auch Profil und Abmelden)
+  // Handy: die wichtigsten Bereiche unten, alles andere im „Mehr“-Menü (immer da: dort stehen auch Charakter, Profil und Abmelden)
   const direkt = [...TABBAR.map((p) => sichtbar.find((n) => n.page === p)).filter(Boolean),
     ...sichtbar.filter((n) => !TABBAR.includes(n.page))].slice(0, TABBAR_PLAETZE);
   const rest = sichtbar.filter((n) => !direkt.includes(n));
   const restAktiv = rest.some((n) => navAktiv(n, route)) || document.body.classList.contains("nav-sheet-offen");
   const restBadges = rest.reduce((t, n) => t + (badges[n.page] || 0), 0);
   $("tabbar").innerHTML = String(html`${direkt.map(link)}
-    ${html`<button type="button" class="${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${document.body.classList.contains("nav-sheet-offen")}">
+    ${html`<button type="button" class="nav-item ${restAktiv ? "active" : ""}" data-action="nav-sheet" aria-haspopup="dialog" aria-expanded="${document.body.classList.contains("nav-sheet-offen")}">
       ${navIcon("mehr")}<span class="nav-label">Mehr</span>${restBadges ? html`<span class="nav-badge">${restBadges}</span>` : ""}</button>`}`);
 
-  // Kachelmenü „Mehr“ (nur Handy): alle Bereiche nach Gruppen + Profil, Leitfaden, Abmelden
+  // Bottom Sheet „Mehr“ (nur Handy): Charakter, übrige Bereiche, Darstellung, Leitfaden, Profil, Abmelden
+  const kachel = (n) => html`<a href="${n.href}" class="nav-kachel ${navAktiv(n, route) ? "active" : ""}">
+        ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`;
+  const restGruppen = gruppen.map((g) => ({ ...g, items: g.items.filter((n) => rest.includes(n)) })).filter((g) => g.items.length);
   $("nav-sheet-inhalt").innerHTML = String(html`
-    ${gruppen.map((g) => html`
+    <div class="sheet-charakter">${charakterSwitcher({ imSheet: true })}</div>
+    ${restGruppen.map((g) => html`
       <h3 class="nav-sheet-titel">${g.name}</h3>
-      <div class="nav-kacheln">${g.items.map((n) => html`<a href="${n.href}" class="nav-kachel ${navAktiv(n, route) ? "active" : ""}">
-        ${navIcon(n.page)}<span class="nav-label">${n.label}</span>${badge(n)}</a>`)}</div>`)}
-    <h3 class="nav-sheet-titel">Konto</h3>
-    <div class="nav-kacheln">
-      <button type="button" class="nav-kachel" data-action="nav-profil">${navIcon("profil")}<span class="nav-label">${myName() || "Mein Profil"}</span></button>
-      <a class="nav-kachel" href="leitfaden/straftat.html?v=55">${navIcon("leitfaden")}<span class="nav-label">Leitfaden</span></a>
-      <button type="button" class="nav-kachel" data-action="logout">${navIcon("abmelden")}<span class="nav-label">Abmelden</span></button>
+      <div class="nav-kacheln">${g.items.map(kachel)}</div>`)}
+    <h3 class="nav-sheet-titel">Konto & Darstellung</h3>
+    <div class="sheet-liste">
+      <button type="button" class="sheet-zeile" data-action="nav-profil">${navIcon("profil")}<span>Mein Profil</span></button>
+      <button type="button" class="sheet-zeile" data-action="theme-umschalten">${themeIcon()}<span class="theme-label">Design umschalten</span></button>
+      <a class="sheet-zeile" href="leitfaden/straftat.html?v=58">${navIcon("leitfaden")}<span>Leitfaden „Abhandlung einer Straftat“</span></a>
+      <button type="button" class="sheet-zeile danger" data-action="logout">${navIcon("abmelden")}<span>Abmelden</span></button>
     </div>`);
 
-  // Auf dem Handy nur der Vorname, damit die Kopfzeile nicht umbricht
-  $("btn-me").textContent = (window.innerWidth < 700 ? firstName(myName()) : myName()) || "Profil";
-  // Logo zeigt an, dass man hier den Charakter wechselt (Discord-Konten)
-  $("brand-wechsel").hidden = !(state.konto && state.konto.art === "charakter");
+  kopfKontext(route);
 }
 
 // ---------- Seitenleiste einklappen (nur Symbole) – merkt sich der Browser ----------
@@ -330,20 +341,9 @@ Object.assign(ACTIONS, {
 $("nav-sheet").addEventListener("click", (e) => { if (e.target.closest("a[href], .nav-kachel")) navSheet(false); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("nav-sheet").hidden) navSheet(false); });
 // Wird das Fenster breiter (iPad drehen), gibt es kein „Mehr“ mehr
-window.matchMedia("(min-width: 701px)").addEventListener("change", (m) => { if (m.matches) navSheet(false); });
+window.matchMedia("(min-width: 768px)").addEventListener("change", (m) => { if (m.matches) navSheet(false); });
 
-// Schmale Bildschirme (Handy, iPad hochkant): Navigation lässt sich seitlich wischen.
-// Beim Seitenwechsel den aktiven Punkt ins Bild holen und Ränder andeuten, wo es weitergeht.
-let navSeite = null;
-function navAusrichten(page) {
-  if (page !== navSeite) {
-    navSeite = page;
-    aktivInsBild($("nav"));
-  }
-  navRaender();
-  // Reiter (Akte, Buchhaltung, Personal) werden neu gezeichnet – aktiven Reiter sichtbar halten
-  $("main").querySelectorAll(".tabs").forEach(aktivInsBild);
-}
+// Reiter (Akte, Buchhaltung, Personal) werden neu gezeichnet – aktiven Reiter sichtbar halten
 function aktivInsBild(leiste) {
   const aktiv = leiste.querySelector("a.active");
   if (!aktiv || leiste.scrollWidth <= leiste.clientWidth) return;
@@ -352,13 +352,6 @@ function aktivInsBild(leiste) {
     leiste.scrollLeft = start - (leiste.clientWidth - aktiv.offsetWidth) / 2; // mittig
   }
 }
-function navRaender() {
-  const nav = $("nav");
-  nav.classList.toggle("mehr-links", nav.scrollLeft > 4);
-  nav.classList.toggle("mehr-rechts", nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 4);
-}
-$("nav").addEventListener("scroll", navRaender, { passive: true });
-window.addEventListener("resize", () => { if (!$("nav").hidden) navRaender(); });
 
 // ---------- Bildschirme ----------
 function showScreen(name) {
@@ -370,11 +363,14 @@ function showScreen(name) {
   $("tabbar").hidden = !inApp && !imPortal; // Handy: untere Leiste auch im Mandantenportal
   navSheet(false);
   $("topbar-actions").hidden = !inApp;
+  $("cmd-btn").hidden = !inApp;
+  $("kopf-kontext").hidden = !inApp;
   $("portal").hidden = !imPortal;
   $("portal-nav").hidden = !imPortal;
   $("portal-actions").hidden = !imPortal;
   document.body.classList.toggle("in-app", inApp);
   document.body.classList.toggle("im-portal", imPortal);
+  if (imPortal) document.body.setAttribute("data-portal", "mandant"); else document.body.removeAttribute("data-portal");
   $("brand-sub").textContent = imPortal ? "Mandantenportal" : "Aktensystem";
 }
 
@@ -511,8 +507,11 @@ document.addEventListener("keydown", (e) => {
   if (!state.loaded || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.closest("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
   if (e.key === "/") {
+    // Suchfeld der Seite (Akten, Mandanten, Gesetze …) – gibt es keins, die Such- & Befehlsleiste
+    e.preventDefault();
     const search = document.querySelector("#main [data-search]");
-    if (search) { e.preventDefault(); search.focus(); search.select(); }
+    if (search && search.offsetParent !== null) { search.focus(); search.select(); }
+    else if (typeof cmdOeffnen === "function") cmdOeffnen();
   } else if (e.key === "n") {
     e.preventDefault();
     if (erlaubt(AKTIONS_RECHTE["akte-neu"])) ACTIONS["akte-neu"]({});
