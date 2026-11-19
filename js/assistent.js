@@ -187,6 +187,7 @@ async function kiInfoLaden(userId) {
       const { data: profil } = await db.from("ki_profil").select("einstellungen").eq("user_id", userId).maybeSingle();
       if (profil && profil.einstellungen && !ui.nigel.geladen) Object.assign(ui.nigel.profil, profil.einstellungen);
     }
+    if (typeof nigelCrazyAnwenden === "function") nigelCrazyAnwenden();
     kiAktualisieren();
   } catch (e) {
     console.warn(e);

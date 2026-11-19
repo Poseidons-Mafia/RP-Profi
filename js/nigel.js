@@ -29,7 +29,7 @@ const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 1
 // Modi, die die Kanzlei an- und abschalten kann („orga“ hat einen eigenen Schalter, damit er auch bei gespeicherten Vorgaben an ist)
 const NW_MODI_SCHALTBAR = ["gutachten", "schriftsatz", "strategie"];
 
-const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
+const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter", perspektive: "verteidigung" };
 
 const NW_VORLAGEN_STANDARD = [
   { titel: "Rechtslage der Akte", modus: "frage", akte: true, text: "Wie ist die Rechtslage in dieser Akte? Welche Paragraphen sind einschlägig, und welche rechtlichen Einwände gibt es?" },
@@ -72,6 +72,10 @@ ui.nigel = {
   entwurfAnsicht: "bearbeiten", entwurfVorher: {}, mitEntwurf: {},
   laeuft: {}, profil: { ...NW_STANDARD }, vorlagen: [], nutzungAlle: null,
 };
+// Crazy-Modus: Nigels Bild überall auf der Website tauschen (siehe body.nigel-crazy in style.css)
+function nigelCrazyAnwenden() {
+  document.body.classList.toggle("nigel-crazy", ui.nigel.profil.crazy === true);
+}
 const nwFormat = new Map();   // formatiertes Markdown je Nachricht
 const nwGesetzt = new WeakMap();
 
@@ -131,6 +135,7 @@ async function nwLaden() {
     n.profil = { ...NW_STANDARD, ...((profil.data && profil.data.einstellungen) || {}) };
     n.vorlagen = vorlagen.data;
     n.geladen = true;
+    nigelCrazyAnwenden();
     n.fehlt = false;
   } catch (e) {
     console.error(e);
@@ -1259,6 +1264,12 @@ function nwEinstellungenZeichnen() {
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
+      <h3>Sicht von Nigel</h3>
+      ${auswahl("perspektive", [["verteidigung", "Verteidigung"], ["staatsanwaltschaft", "Staatsanwaltschaft"]], p.perspektive === "staatsanwaltschaft" ? "staatsanwaltschaft" : "verteidigung")}
+      <p class="nw-hilfe">Verteidigung: Nigel hilft aus Sicht der Kanzlei und ihrer Mandanten. Staatsanwaltschaft: Er sagt Ihnen, was Sie als Staatsanwalt tun können, sollten und müssen. Gilt auch für das iFruit-Handy.</p>
+      <h3>Crazy-Modus</h3>
+      ${auswahl("crazy", [["false", "Aus"], ["true", "An"]], String(p.crazy === true))}
+      <p class="nw-hilfe">Nigel ohne Butler-Benimm und ohne Themen-Beschränkung: Er redet über alles und mit jedem Ton. Seine Aufgaben (Recht und Organisatorisches) erledigt er trotzdem. Die Grundregeln des KI-Anbieters gelten weiterhin.</p>
       <h3>Antwortlänge</h3>
       ${auswahl("laenge", [["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]])}
       <h3>Gründlichkeit</h3>
@@ -1654,8 +1665,10 @@ Object.assign(ACTIONS, {
 
 async function nwEinstellungSetzen(key, wert) {
   const p = ui.nigel.profil;
+  if (key === "crazy") wert = wert === true || wert === "true";
   if (String(p[key]) === String(wert)) return;
   p[key] = wert;
+  nigelCrazyAnwenden();
   if (key === "modus") {
     const chat = nwAktiverChat();
     if (chat && !chat.id && !nwVerlauf(chat).length) chat.modus = wert;

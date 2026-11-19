@@ -2970,3 +2970,18 @@ body.nav-sheet-offen .ki-phone:not(.offen) { visibility: hidden; }
 .portal-chat + .portal-nachricht-form { margin-top: 16px; }
 .portal-nachricht-form { scroll-margin-bottom: calc(var(--unten) + 16px); }
 @media (max-width: 700px) { .portal-auf-einen-blick { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Nigel im Crazy-Modus: überall das irre Profilbild (Klasse setzt js/nigel.js) ---------- */
+body.nigel-crazy img[src$="assets/nigel.svg"] {
+  content: url("assets/nigel-crazy.svg");
+  animation: nigel-crazy-wackeln 2.4s ease-in-out infinite;
+}
+@keyframes nigel-crazy-wackeln {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-6deg); }
+  40% { transform: rotate(5deg); }
+  60% { transform: rotate(-3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.nigel-crazy img[src$="assets/nigel.svg"] { animation: none; }
+}
