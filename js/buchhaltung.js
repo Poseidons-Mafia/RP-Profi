@@ -326,7 +326,6 @@ function bilanzDokument() {
   if (d.jahresergebnis > 0) aufwand.push({ text: "Gewinn", betrag: d.jahresergebnis });
   if (d.jahresergebnis < 0) ertrag.push({ text: "Verlust", betrag: -d.jahresergebnis });
   return html`
-    ${briefkopf()}
     <h1 class="doc-title">Jahresabschluss ${ui.buch.jahr}</h1>
     ${seite(`Bilanz zum ${fmt.datum(d.bis)}`, "Aktiva", d.aktiva.map((x) => ({ text: kontoText(x.k), betrag: x.betrag })), "Passiva", passiva)}
     ${seite(`Gewinn- und Verlustrechnung ${fmt.datum(d.von)} – ${fmt.datum(d.bis)}`, "Aufwendungen", aufwand, "Erträge", ertrag)}
