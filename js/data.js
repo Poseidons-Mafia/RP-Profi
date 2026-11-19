@@ -102,12 +102,16 @@ async function fetchAll(table) {
 }
 
 async function loadAll() {
-  const results = await Promise.all(TABLES.map((t) => (LADER[t] || fetchAll)(t)));
+  // Alle Tabellen und das Protokoll gleichzeitig laden (nicht nacheinander)
+  const protokoll = db.from("protokoll").select("*")
+    .order("id", { ascending: false }).limit(PROTOKOLL_LIMIT);
+  const [results, { data, error }] = await Promise.all([
+    Promise.all(TABLES.map((t) => (LADER[t] || fetchAll)(t))),
+    protokoll,
+  ]);
+  if (error) throw error;
   TABLES.forEach((t, i) => (state[t] = results[i]));
   aktivCache = null;
-  const { data, error } = await db.from("protokoll").select("*")
-    .order("id", { ascending: false }).limit(PROTOKOLL_LIMIT);
-  if (error) throw error;
   state.protokoll = data;
   applySettings();
   state.loaded = true;
@@ -183,6 +187,7 @@ function applyChange(table, payload) {
 
 function upsertLocal(table, row) {
   aktivCache = null;
+  indexVergessen(table);
   const key = PK[table] || "id";
   const list = state[table];
   const i = list.findIndex((r) => r[key] === row[key]);
@@ -248,15 +253,51 @@ async function deleteRow(table, id) {
 }
 
 // ---------- Nachschlagen ----------
-const byId = (table, id) => (id ? state[table].find((r) => r.id === id) : undefined);
+// Nachschlage-Verzeichnisse (Map) je Tabelle und Spalte – statt bei jedem Aufruf die ganze
+// Liste zu durchsuchen. Sie werden beim ersten Bedarf gebaut und verfallen automatisch,
+// sobald die Tabelle ersetzt (state[t] = …) oder per upsertLocal geändert wird.
+const INDEX = {};
+function indexVergessen(table) {
+  for (const k of Object.keys(INDEX)) if (k.startsWith(table + ".")) delete INDEX[k];
+}
+// Eindeutige Spalte → Zeile (bei Doppelten gewinnt die erste, wie bei Array.find)
+function index(table, feld, wert = (r) => r[feld]) {
+  const k = `${table}.${feld}`;
+  const list = state[table];
+  let c = INDEX[k];
+  if (!c || c.list !== list || c.len !== list.length) {
+    const map = new Map();
+    for (const r of list) { const v = wert(r); if (v != null && !map.has(v)) map.set(v, r); }
+    c = INDEX[k] = { list, len: list.length, map };
+  }
+  return c.map;
+}
+// Spalte → alle passenden Zeilen
+function gruppen(table, feld) {
+  const k = `${table}.${feld}[]`;
+  const list = state[table];
+  let c = INDEX[k];
+  if (!c || c.list !== list || c.len !== list.length) {
+    const map = new Map();
+    for (const r of list) {
+      const v = r[feld];
+      if (v == null) continue;
+      const g = map.get(v);
+      if (g) g.push(r); else map.set(v, [r]);
+    }
+    c = INDEX[k] = { list, len: list.length, map };
+  }
+  return c.map;
+}
+
+const byId = (table, id) => (id ? index(table, "id").get(id) : undefined);
 
 function profileOf(idOrEmail) {
   if (!idOrEmail) return undefined;
   if (String(idOrEmail).includes("@")) {
-    const e = String(idOrEmail).toLowerCase();
-    return state.profiles.find((p) => (p.email || "").toLowerCase() === e);
+    return index("profiles", "email~", (p) => (p.email || "").toLowerCase()).get(String(idOrEmail).toLowerCase());
   }
-  return state.profiles.find((p) => p.user_id === idOrEmail);
+  return index("profiles", "user_id").get(idOrEmail);
 }
 
 // Anzeigename einer Person (über User-ID oder E-Mail)
@@ -394,7 +435,8 @@ function akteOptions() {
 }
 
 function kinder(table, akteId) {
-  return state[table].filter((r) => r.akte_id === akteId);
+  // Kopie zurückgeben – Aufrufer sortieren das Ergebnis teils direkt
+  return (gruppen(table, "akte_id").get(akteId) || []).slice();
 }
 
 // Letzte Aktivität je Akte (neuester Eintrag, Termin, Aufgabe … ) – einmal für alle
@@ -434,8 +476,8 @@ function liegenGeblieben(akte) {
 
 function naechsterTermin(akteId) {
   const now = startOfDay();
-  return state.termine
-    .filter((t) => t.akte_id === akteId && !t.erledigt && new Date(t.beginn) >= now)
+  return kinder("termine", akteId)
+    .filter((t) => !t.erledigt && new Date(t.beginn) >= now)
     .sort((a, b) => new Date(a.beginn) - new Date(b.beginn))[0];
 }
 

@@ -9,7 +9,7 @@
 // =============================================================
 
 const s = () => state.settings;
-const DOC_LOGO = "assets/logo-dokument.png?v=1"; // freigestelltes Logo aus den alten Kanzlei-Dokumenten
+const DOC_LOGO = "assets/logo-dokument.png?v=2"; // freigestelltes Logo aus den alten Kanzlei-Dokumenten
 
 // ---------- Seitenrahmen ----------
 // Kopf (thead) und unterer Rand (tfoot) wiederholen sich beim Drucken
