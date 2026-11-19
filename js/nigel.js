@@ -29,7 +29,7 @@ const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 1
 // Modi, die die Kanzlei an- und abschalten kann („orga“ hat einen eigenen Schalter, damit er auch bei gespeicherten Vorgaben an ist)
 const NW_MODI_SCHALTBAR = ["gutachten", "schriftsatz", "strategie"];
 
-const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter" };
+const NW_STANDARD = { laenge: "normal", gruendlichkeit: "", wortlaut: true, modus: "frage", senden: "enter", perspektive: "verteidigung" };
 
 const NW_VORLAGEN_STANDARD = [
   { titel: "Rechtslage der Akte", modus: "frage", akte: true, text: "Wie ist die Rechtslage in dieser Akte? Welche Paragraphen sind einschlägig, und welche rechtlichen Einwände gibt es?" },
@@ -1259,6 +1259,9 @@ function nwEinstellungenZeichnen() {
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
+      <h3>Sicht von Nigel</h3>
+      ${auswahl("perspektive", [["verteidigung", "Verteidigung"], ["staatsanwaltschaft", "Staatsanwaltschaft"]], p.perspektive === "staatsanwaltschaft" ? "staatsanwaltschaft" : "verteidigung")}
+      <p class="nw-hilfe">Verteidigung: Nigel hilft aus Sicht der Kanzlei und ihrer Mandanten. Staatsanwaltschaft: Er sagt Ihnen, was Sie als Staatsanwalt tun können, sollten und müssen. Gilt auch für das iFruit-Handy.</p>
       <h3>Antwortlänge</h3>
       ${auswahl("laenge", [["knapp", "Knapp"], ["normal", "Normal"], ["ausfuehrlich", "Ausführlich"]])}
       <h3>Gründlichkeit</h3>
