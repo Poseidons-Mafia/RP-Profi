@@ -465,8 +465,11 @@
 
   /* ---------- Arbeitsbereich ---------- */
   .nw, .nw.panel-auf { background: var(--bg-canvas); }
-  .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
-  .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  /* Drei bzw. zwei Spalten nur auf dem Laptop (≥ 1280px); darunter gelten Drawer bzw. eine Spalte */
+  @media (min-width: 1280px) {
+    .nw.panel-auf { grid-template-columns: 240px minmax(0, 1fr) 380px; }
+    .nw:not(.panel-auf) { grid-template-columns: 240px minmax(0, 1fr); }
+  }
   .nw-liste, .nw-panel, .nw-kopf, .nw-eingabe { background: var(--bg-surface); border-color: var(--border-subtle); }
   .nw-marke strong, .nw-titel h1, .nw-msg-meta strong { font-family: var(--font-serif); font-weight: 600; }
   .nw-verlauf-innen { max-width: 760px; }
@@ -498,7 +501,7 @@
 
   /* Laptop/Tablet (< 1280px): Chat-Liste und Arbeitsfläche als Slide-over-Drawer */
   @media (min-width: 901px) and (max-width: 1279px) {
-    .nw, .nw.panel-auf { position: relative; grid-template-columns: minmax(0, 1fr); }
+    .nw, .nw.panel-auf, .nw:not(.panel-auf) { position: relative; overflow: hidden; grid-template-columns: minmax(0, 1fr); }
     .nw .nw-nur-mobil[data-ansicht="liste"] { display: grid; }
     .nw-liste {
       position: absolute; top: 0; left: 0; bottom: 0; z-index: 16; width: 280px;
