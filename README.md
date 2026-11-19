@@ -68,9 +68,9 @@ und Änderungen erscheinen bei allen sofort.
 - **Mandantenkartei:** Kontaktdaten, Markierungen (Stammkunde, VIP, zahlt schlecht …), alle Akten,
   frühere Ergebnisse, offene Rechnungen.
 - **Kalender & Aufgaben:** Liste und Monatsansicht, Fristen-Warnung, Export in den Handy-Kalender (`.ics`).
-- **Finanzen** (ein Menüpunkt für Rechnungen und Buchhaltung): oben die wichtigsten Zahlen (offene und überfällige
-  Rechnungen, Zahlungseingang im Monat, Bank & Kasse, Gewinn), darunter Reiter in zwei Gruppen – jede nur mit dem
-  passenden Leserecht:
+- **Finanzen** (ein Menüpunkt für Rechnungen und Buchhaltung): oben die Wahl des Bereichs (**Rechnungen** | **Buchhaltung**),
+  darunter nur dessen Kennzahlen (offene/überfällige Rechnungen und Zahlungseingang bzw. Bank & Kasse, Gewinn und
+  Buchungen im Jahr), Reiter und „+“-Knopf – jeder Bereich nur mit dem passenden Leserecht:
   - **Rechnungen** im Stil der Kanzlei-Vorlage mit Zahlungsstatus und Zahlungserinnerung, dazu der **Gebührenkatalog**
     (lesen mit „Rechnungen lesen“, pflegen mit „Kanzlei-Einstellungen bearbeiten“).
   - **Buchhaltung** (doppelte Buchführung): Bilanz und GuV, Grundbuch mit unveränderbaren Buchungen
