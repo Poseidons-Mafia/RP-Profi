@@ -829,3 +829,255 @@
   [data-theme="dark"] body::before { opacity: 0.035; }
   [data-theme="dark"] .login-brand { border-bottom-color: var(--brand-gold-accent); }
 }
+
+/* =============================================================
+   Mandanten (CRM-Kartei & Dossier) vs. Akten (Vorgangs-Arbeitsraum)
+   Mandanten = Personen: Avatare, Visitenkarte, ruhige Tabelle.
+   Akten = Vorgänge: Status-Akzentstreifen, Aktenzeichen, Fortschritt.
+   ============================================================= */
+@layer views {
+  /* ---------- Gemeinsam ---------- */
+  .zurueck-link {
+    display: inline-flex; align-items: center; gap: 4px; min-height: 32px;
+    font-size: var(--text-sm); font-weight: 500; color: var(--text-secondary); text-decoration: none;
+  }
+  .zurueck-link:hover { color: var(--brand-text); }
+  /* Scroll-Reserve: der schwebende Nigel unten rechts verdeckt keine Zeilen-Aktionen */
+  body.in-app .page.mandanten-seite, body.in-app .page.akten-verzeichnis { padding-bottom: max(84px, calc(60px + var(--unten, 0px))); }
+  .filter-chip { min-height: 30px; }
+
+  /* ---------- Mandanten: Kopf mit Umschalter ---------- */
+  .mandanten-kopf { align-items: center; }
+  .mandanten-kopf-rechts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .mandanten-kopf .seg-tab .seg-n { margin-left: 2px; }
+
+  /* Horizontale Filterleiste */
+  .crm-filterleiste, .akten-filterleiste {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: var(--space-3);
+  }
+  .crm-filterleiste .search, .akten-filterleiste .search { flex: 1 1 260px; max-width: 420px; }
+  .crm-filterleiste .filter-chips { margin-left: 0; flex-wrap: wrap; }
+  .crm-filterleiste .list-count { margin: 0 0 0 auto; }
+  .akten-filterleiste select { width: auto; min-width: 0; }
+
+  /* Avatare (Discord-Bild oder Monogramm) */
+  .m-avatar {
+    --gr: 32px;
+    display: inline-grid; place-items: center; flex: none;
+    width: var(--gr); height: var(--gr); border-radius: 50%; object-fit: cover;
+    font-size: calc(var(--gr) * 0.36); font-weight: 700; letter-spacing: 0.02em; line-height: 1;
+    background: var(--bg-subtle); color: var(--text-secondary);
+    box-shadow: 0 0 0 1px var(--border-subtle);
+  }
+
+  /* CRM-Tabelle */
+  .card.crm-karte { padding: 0; overflow: hidden; }
+  .crm-tabelle { margin: 0; }
+  .crm-tabelle th { padding: 10px 14px; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); background: var(--bg-subtle); }
+  .crm-tabelle td { padding: 10px 14px; vertical-align: middle; border-bottom-color: var(--border-subtle); }
+  .crm-tabelle tr.clickable:hover td { background: var(--bg-subtle); }
+  .crm-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .crm-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+  .crm-name a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+  .crm-name a:hover { color: var(--brand-text); }
+  .crm-name .badges { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  .crm-kontakt { font-size: var(--text-sm); }
+  .kontakt-zeile { display: block; line-height: 1.4; }
+  .portal-status {
+    display: inline-flex; align-items: center; gap: 5px; padding: 1px 9px; white-space: nowrap;
+    border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: 600; line-height: 1.7;
+  }
+  .portal-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .portal-status.aktiv { background: var(--status-success-soft); color: var(--status-success); }
+  .portal-status.wartet { background: var(--brand-gold-soft); color: var(--brand-gold-text); }
+  .portal-status.kein { color: var(--text-muted); padding-left: 0; }
+  .portal-status.kein::before { background: var(--border-strong); }
+  .offen-betrag { color: var(--status-warning); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Mobil: Kartenliste statt Tabelle */
+  .crm-karten { display: none; list-style: none; margin: 0; padding: 0; }
+  @media (max-width: 767px) {
+    .crm-tabelle { display: none; }
+    .crm-karten { display: block; }
+    .crm-karten li + li { border-top: 1px solid var(--border-subtle); }
+    .crm-kachel { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; min-height: 44px; color: var(--text-primary); text-decoration: none; }
+    .crm-kachel:active { background: var(--bg-subtle); }
+    .crm-kachel-inhalt { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+    .crm-kachel-fuss { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--text-secondary); }
+    .crm-filterleiste .list-count { margin-left: 0; }
+    .mandanten-kopf { flex-direction: column; align-items: stretch; }
+    .mandanten-kopf-rechts { justify-content: space-between; }
+  }
+
+  /* ---------- Mandanten-Dossier ---------- */
+  .dossier-kopf { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-3) var(--space-4); margin-top: var(--space-2); }
+  .dossier-titel { flex: 1 1 320px; min-width: 0; }
+  .dossier-name-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .dossier-name-zeile h1 { margin: 0; font-family: var(--font-serif); font-size: var(--text-2xl); font-weight: 600; line-height: 1.15; overflow-wrap: anywhere; }
+  .dossier-name-zeile .badges { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  .kontakt-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .kontakt-pill {
+    display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-height: 28px; padding: 2px 10px;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); background: var(--bg-subtle);
+    color: var(--text-primary); font: inherit; font-size: var(--text-xs); cursor: copy;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  button.kontakt-pill:hover { border-color: var(--border-strong); }
+  .kontakt-pill.statisch { cursor: default; }
+  .kontakt-ergaenzen { text-decoration: none; }
+  .dossier-aktionen { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dossier-hinweis { margin-top: var(--space-3); }
+
+  .dossier-raster { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); margin-top: var(--space-4); align-items: start; }
+  .dossier-spalte { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+  .dossier-spalte > .card { margin: 0; }
+  @media (min-width: 960px) {
+    .dossier-raster { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); }
+  }
+  .dossier-notiz { margin: 0; font-size: var(--text-sm); }
+  .dossier-rechnungen > li { align-items: center; }
+  .dossier-betrag { flex: none; font-weight: 600; white-space: nowrap; }
+  .dossier-rechnungen .tools { display: flex; align-items: center; gap: 2px; }
+  .zugang-liste .zugang-stand { flex-direction: row; align-items: center; gap: 8px; }
+  .rows .termin-icon { display: inline-grid; place-items: center; flex: none; width: 18px; height: 18px; margin-top: 2px; color: var(--text-muted); }
+  .rows .termin-icon svg { width: 16px; height: 16px; }
+
+  /* Portal-Block: kompakte Status-Zeile, Erklärung hinter ⓘ */
+  .portal-block .card-head { justify-content: flex-start; gap: 6px; }
+  .portal-block .card-head h2 { margin: 0; }
+  .portal-block-zusatz { font-weight: 400; font-size: var(--text-sm); }
+  .info-tipp {
+    display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%;
+    background: none; color: var(--text-muted); font-size: 15px; cursor: help;
+  }
+  .info-tipp:hover, .info-tipp:focus-visible { color: var(--text-primary); background: var(--bg-subtle); }
+  .info-popover {
+    position: fixed; inset: auto; margin: auto; max-width: min(360px, calc(100vw - 32px)); padding: 12px 14px;
+    border: 1px solid var(--border-subtle); border-radius: var(--radius-md);
+    background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-lg);
+    font-size: var(--text-sm); line-height: 1.5;
+  }
+  .info-popover:popover-open { inset: 0; height: fit-content; }
+  .info-popover::backdrop { background: transparent; }
+  .zugang-liste { list-style: none; margin: 0; padding: 0; }
+  .zugang-liste li {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .zugang-liste li:first-child { border-top: 0; padding-top: 2px; }
+  .zugang-wer { flex: 1 1 160px; min-width: 0; }
+  .zugang-stand { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+  .zugang-aktionen { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+  .btn.small.sperren { color: var(--status-danger-text); }
+  .btn.small.sperren:hover { border-color: var(--status-danger); background: var(--status-danger-soft); }
+  .portal-kein { margin: 0; }
+
+  @media (pointer: coarse) {
+    .kontakt-pill, .info-tipp, .filter-chip { min-height: 44px; }
+    .info-tipp { min-width: 44px; }
+  }
+
+  /* ---------- Akten: vollbreites Verzeichnis ---------- */
+  .akten-verzeichnis-liste { list-style: none; margin: 0; padding: 0 !important; overflow: hidden; }
+  .akten-verzeichnis-liste li + li { border-top: 1px solid var(--border-subtle); }
+  .akten-zeile {
+    display: grid; align-items: center; gap: 4px 16px;
+    grid-template-columns: 130px minmax(0, 2.2fr) minmax(120px, auto) minmax(0, 1.3fr) 150px minmax(0, 0.9fr);
+    padding: 11px 16px 11px 14px; border-left: 3px solid var(--ton, var(--status-info));
+    color: var(--text-primary); text-decoration: none;
+  }
+  .akten-zeile:hover { background: var(--bg-subtle); }
+  .akten-zeile .az-spalte { display: inline-flex; align-items: center; gap: 6px; color: var(--brand-text); font-weight: 600; font-size: var(--text-sm); }
+  .akten-zeile .titel-spalte { display: flex; flex-direction: column; min-width: 0; }
+  .akten-zeile .title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .akten-zeile .sub { font-size: var(--text-xs); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .akten-zeile .status-spalte { display: flex; flex-wrap: wrap; gap: 4px; }
+  .akten-zeile .termin-spalte { min-width: 0; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .akten-zeile .termin-spalte strong { color: var(--text-primary); }
+  .akten-zeile .fortschritt-zeile { margin: 0; white-space: nowrap; }
+  .akten-zeile .wer-spalte { display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; text-align: right; }
+  .akten-zeile .wer-spalte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .akten-zeile .termin-spalte:empty, .akten-zeile .fortschritt-spalte:empty, .akten-zeile .wer-spalte:empty { visibility: hidden; }
+  .ton-haft { --ton: var(--status-danger); }
+  .ton-offen { --ton: var(--status-info); }
+  .ton-bearbeitung { --ton: var(--brand-gold-accent); }
+  .ton-abgeschlossen { --ton: var(--status-success); }
+  @media (max-width: 1199px) {
+    .akten-zeile { grid-template-columns: 120px minmax(0, 2fr) minmax(110px, auto) minmax(0, 1.2fr) 120px; }
+    .akten-zeile .wer-spalte { display: none; }
+  }
+  @media (max-width: 899px) {
+    .akten-zeile { grid-template-columns: minmax(0, 1fr) auto; }
+    .akten-zeile .titel-spalte { grid-column: 1 / -1; grid-row: 2; }
+    .akten-zeile .status-spalte { grid-column: 2; grid-row: 1; justify-content: flex-end; }
+    .akten-zeile .termin-spalte { grid-column: 1 / -1; }
+    .akten-zeile .termin-spalte:empty, .akten-zeile .fortschritt-spalte:empty { display: none; }
+    .akten-zeile .fortschritt-spalte { grid-column: 1 / -1; }
+  }
+  @media (max-width: 767px) {
+    .akten-filterleiste .search { flex-basis: 100%; max-width: none; }
+    .akten-filterleiste select { flex: 1 1 140px; }
+  }
+
+  /* ---------- Akten: geöffnete Akte (vollbreit) ---------- */
+  .akte-navi { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: var(--space-3); }
+  .akten-switcher {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-pill); background: var(--bg-surface);
+    color: var(--text-primary); font: inherit; font-size: var(--text-sm); font-weight: 600; cursor: pointer;
+  }
+  .akten-switcher svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .akten-switcher:hover, .akten-switcher[aria-expanded="true"] { background: var(--bg-subtle); }
+  @media (pointer: coarse) { .akten-switcher, .zurueck-link { min-height: 44px; } }
+
+  /* Aktendeckel: 3px-Statusstreifen am klebenden Kopf */
+  .akte-detail .fall-kopf { box-shadow: inset 0 3px 0 var(--ton, var(--status-info)); padding-top: calc(var(--space-4) + 3px); }
+  .status-pill.gold { background: var(--brand-gold-soft); }
+  .kopf-fortschritt { display: inline-flex; margin-left: 4px; text-decoration: none; color: inherit; }
+  .kopf-fortschritt .fortschritt-zeile, .meta-zusammenfassung .fortschritt-zeile { margin: 0; }
+  .kopf-fortschritt .fortschritt, .meta-zusammenfassung .fortschritt { height: 4px; width: 56px; }
+  .meta-zusammenfassung > summary .fortschritt-zeile { margin-left: auto; }
+
+  /* Reiterleiste: weicher Verlauf rechts, solange weitere Reiter folgen */
+  .reiter-fade { position: relative; }
+  .reiter-fade::after {
+    content: ""; position: absolute; top: 0; right: 0; bottom: 1px; width: 40px; pointer-events: none;
+    background: linear-gradient(to right, transparent, var(--bg-surface));
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .reiter-fade.mehr-rechts::after { opacity: 1; }
+  .akte-detail .tab-body { padding-bottom: 84px; }
+  @container akte (min-width: 820px) {
+    .akte-detail .aktenspiegel { padding-bottom: 84px; }
+  }
+  /* Reiter: Kurzlabels, sobald die Akte nicht genug Breite für die langen hat – so wird nichts abgeschnitten */
+  .fall-tabs a { padding-left: 11px; padding-right: 11px; }
+  @container akte (max-width: 1240px) {
+    .fall-tabs .tab-lang { display: none; }
+    .fall-tabs .tab-kurz { display: inline; }
+  }
+
+  /* Akten-Switcher: Slide-over von links */
+  .akten-drawer {
+    position: fixed; inset: 0 auto 0 0; margin: 0;
+    width: min(360px, 90vw); max-width: none; height: 100dvh; max-height: none;
+    padding: var(--space-4); border: 0; border-right: 1px solid var(--border-subtle); border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-lg);
+    flex-direction: column; overflow: hidden;
+  }
+  .akten-drawer[open] { display: flex; animation: drawer-rein 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
+  .akten-drawer::backdrop { background: var(--backdrop); animation: drawer-blende 0.22s ease; }
+  @keyframes drawer-rein { from { transform: translateX(-100%); } }
+  @keyframes drawer-blende { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .akten-drawer[open], .akten-drawer::backdrop { animation: none; } }
+  .drawer-kopf { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+  .drawer-kopf h2 { margin: 0; font-size: var(--text-lg); }
+  .drawer-filter { margin-bottom: 6px; }
+  .drawer-filter .search { flex-basis: 100%; }
+  .drawer-filter .search input { width: 100%; }
+  .drawer-filter select { flex: 1 1 140px; width: auto; min-width: 0; }
+  .drawer-liste { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -6px; padding: 0 6px; }
+  @media (max-width: 767px) {
+    .akten-drawer { width: 100vw; border-radius: 0; padding-bottom: max(var(--space-4), env(safe-area-inset-bottom)); }
+  }
+}

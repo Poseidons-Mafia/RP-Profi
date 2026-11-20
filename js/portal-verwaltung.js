@@ -70,7 +70,6 @@ function portalZugaengeSeite() {
   const rest = portalZugaenge().filter((z) => !offen.includes(z));
   const mandant = (z) => z.mandant_id ? byId("mandanten", z.mandant_id) : null;
   return html`
-    <a class="back-link" href="#/mandanten">← Alle Mandanten</a>
     ${anliegenKarte()}
     <div class="card">
       <div class="card-head"><h2>Portal-Anträge</h2><button class="btn small" data-action="portal-zugaenge-laden">Aktualisieren</button></div>
@@ -124,39 +123,42 @@ function mandantPortalBlock(m) {
   const zugaenge = [...portalZugaengeVon(m.id),
     ...portalAntraege().filter((z) => !z.mandant_id && z.vorschlag === m.id)];
   const einblick = einblickAkten(m.id);
-  const zuletzt = (z) => z.zuletzt_aktiv ? `zuletzt im Portal ${fmt.relativ(z.zuletzt_aktiv)}` : "war noch nie im Portal";
+  const infoId = `portal-info-${m.id}`;
   return html`
-    <h3 class="section-title" style="margin-top:20px">Online-Zugang (Mandantenportal)</h3>
-    <div class="portal-einblick">
-      ${zugaenge.length ? html`
-        <p class="small muted" style="margin-top:0">Mit diesem Discord-Konto meldet sich <strong>${m.name}</strong> im Mandantenportal an
-          und sieht dort die eigenen Akten, Termine, Rechnungen und alles, was ihr „für Mandant sichtbar“ macht.</p>
-        <ul class="rows">${zugaenge.map((z) => html`<li>
-          <div class="grow">
-            <div class="title">${discordZeile(z)}</div>
-            <div class="meta">${zugangStatusBadge(z)} · ${z.status === "wartet" ? html`neuer Antrag als „${z.name}“ – wartet auf Freigabe` : zuletzt(z)}</div>
+    <section class="card portal-block">
+      <div class="card-head">
+        <h2>Online-Zugang <span class="muted portal-block-zusatz">(Mandantenportal)</span></h2>
+        <button type="button" class="info-tipp" popovertarget="${infoId}" aria-label="Was ist der Online-Zugang?" title="Was ist der Online-Zugang?">ⓘ</button>
+        <div popover id="${infoId}" class="info-popover">
+          ${zugaenge.length ? html`Mit diesem Discord-Konto meldet sich <strong>${m.name}</strong> im Mandantenportal an
+            und sieht dort die eigenen Akten, Termine, Rechnungen und alles, was ihr „für Mandant sichtbar“ macht.`
+          : html`So geht's: Der Mandant registriert sich auf der Startseite mit Discord („Ich bin Mandant“).
+            Der Antrag erscheint dann unter <a href="#/mandanten/portal">Mandantenportal → Anträge</a> und hier – einmal auf „Freigeben“ klicken, fertig.`}
+        </div>
+      </div>
+      ${zugaenge.length ? html`<ul class="zugang-liste">${zugaenge.map((z) => html`<li>
+          <div class="zugang-wer">${discordZeile(z)}</div>
+          <div class="zugang-stand">${zugangStatusBadge(z)}<span class="small muted">${z.status === "wartet" ? `Antrag als „${z.name}“` : z.zuletzt_aktiv ? `zuletzt ${fmt.relativ(z.zuletzt_aktiv)}` : "noch nie im Portal"}</span></div>
+          <div class="zugang-aktionen">
+            ${z.status === "frei" && z.person_status !== "gesperrt" ? html`<button class="btn small" data-action="zugang-verknuepfen" data-id="${z.id}" title="Einem anderen Mandanten zuordnen">Neu zuordnen</button>` : ""}
+            ${mandantZugangAktionen(z)}
           </div>
-          <div class="nowrap">${mandantZugangAktionen(z)}</div>
-        </li>`)}</ul>
-        ${zugaenge.some((z) => z.status === "frei" && z.person_status !== "gesperrt") ? html`<p class="small muted" style="margin-bottom:0">
-          Falsches Discord-Konto? <button class="link-btn" data-action="zugang-verknuepfen" data-id="${zugaenge.find((z) => z.status === "frei").id}">Einem anderen Mandanten zuordnen</button></p>` : ""}`
-      : html`<p class="small" style="margin-top:0"><strong>${m.name}</strong> hat noch keinen Online-Zugang.</p>
-        <p class="small muted" style="margin-bottom:0">So geht's: Der Mandant registriert sich auf der Startseite mit Discord („Ich bin Mandant“).
-          Der Antrag erscheint dann unter <a href="#/mandanten/portal">Mandantenportal → Anträge</a> und hier – einmal auf „Freigeben“ klicken, fertig.</p>`}
+        </li>`)}</ul>`
+      : html`<p class="small muted portal-kein">Noch kein Online-Zugang.</p>`}
       ${einblick.length ? html`<div class="group-title" style="margin-top:12px">Sieht im Portal außerdem</div>
         <ul class="rows">${einblick.map((x) => {
           const a = byId("akten", x.akte_id);
           return a ? html`<li><div class="grow"><div class="title"><a href="#/akten/${a.id}/beteiligte">${a.number} · ${a.title}</a></div>
             <div class="meta">als ${x.rolle} · Mandant der Akte: ${mandantName(a)}</div></div></li>` : "";
         })}</ul>` : ""}
-    </div>`;
+    </section>`;
 }
 
 function mandantZugangAktionen(z) {
   if (z.person_status === "gesperrt") return "";
   if (z.status === "wartet") return html`<button class="btn small primary" data-action="zugang-freigeben" data-id="${z.id}">Freigeben</button>
     <button class="btn small danger" data-action="zugang-aktion" data-aktion="ablehnen" data-id="${z.id}">Ablehnen</button>`;
-  if (z.status === "frei") return html`<button class="btn small danger" data-action="zugang-aktion" data-aktion="sperren" data-id="${z.id}">Zugang sperren</button>`;
+  if (z.status === "frei") return html`<button class="btn small sperren" data-action="zugang-aktion" data-aktion="sperren" data-id="${z.id}">Zugang sperren</button>`;
   if (z.status === "gesperrt") return html`<button class="btn small" data-action="zugang-aktion" data-aktion="entsperren" data-id="${z.id}">Entsperren</button>`;
   return "";
 }

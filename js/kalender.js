@@ -21,12 +21,16 @@ function istMeinTermin(t) {
 }
 
 // ---------- Bausteine (auch in Akten & Übersicht genutzt) ----------
-function terminRow(t, { akte = true, datum = true } = {}) {
+// mandant: false → Akten-Chip ohne Mandantennamen (z. B. im Mandanten-Dossier)
+// checkNurFrist: Häkchen nur bei abhakbaren Fristen/Wiedervorlagen, sonst Kalender-Icon
+function terminRow(t, { akte = true, datum = true, mandant = true, checkNurFrist = false } = {}) {
   const a = byId("akten", t.akte_id);
   const overdue = terminUeberfaellig(t);
+  const abhakbar = !checkNurFrist || ["Frist", "Wiedervorlage"].includes(t.art);
   return html`
     <li class="${overdue ? "overdue" : ""}" data-live="termine:${t.id}">
-      <label class="check-hit"><input type="checkbox" title="Erledigt" data-change="termin-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}></label>
+      ${abhakbar ? html`<label class="check-hit"><input type="checkbox" title="Erledigt" data-change="termin-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}></label>`
+        : html`<span class="termin-icon" title="Termin" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>`}
       <div class="when">${datum ? html`<strong>${fmt.tag(t.beginn)}</strong>` : ""}${fmt.zeit(t.beginn)} Uhr</div>
       <div class="grow">
         <div class="title ${t.erledigt ? "strike" : ""}">${t.titel}
@@ -35,7 +39,7 @@ function terminRow(t, { akte = true, datum = true } = {}) {
         </div>
         <div class="meta">${joinHtml([
           t.ort,
-          akte && a ? akteChip(a, mandantName(a)) : null,
+          akte && a ? akteChip(a, mandant ? mandantName(a) : "") : null,
           t.verantwortlich && t.verantwortlich !== state.me.id ? personName(t.verantwortlich) : null,
           vonNigel(t),
         ])}</div>

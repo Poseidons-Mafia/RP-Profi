@@ -70,57 +70,123 @@ function openMandantForm(m) {
   });
 }
 
-VIEWS.mandanten = (route) => {
+// ---------- Bausteine der CRM-Kartei ----------
+// Freigegebener Portal-Zugang (oder wartender Antrag) eines Mandanten
+function mandantZugang(m) {
+  const z = portalZugaengeVon(m.id);
+  return z.find((x) => x.status === "frei" && x.person_status !== "gesperrt") || z.find((x) => x.status === "wartet") || null;
+}
+
+// Runder Avatar: Discord-Bild (falls Portal-Zugang verknüpft), sonst Monogramm
+function mandantAvatar(m, gr = 32) {
+  const z = portalZugaengeVon(m.id).find((x) => x.avatar_url);
+  if (z) return html`<img class="m-avatar" style="--gr:${gr}px" src="${z.avatar_url}" alt="" loading="lazy">`;
+  let h = 0;
+  for (const c of String(m.id || m.name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  const [bg, fg] = AVATAR_FARBEN[h % AVATAR_FARBEN.length];
+  return html`<span class="m-avatar" style="--gr:${gr}px;background:${bg};color:${fg}" aria-hidden="true">${initialen(m.name)}</span>`;
+}
+
+function mandantPortalBadge(m) {
+  const z = mandantZugang(m);
+  if (!z) return html`<span class="portal-status kein">Kein Zugang</span>`;
+  if (z.status === "wartet") return html`<span class="portal-status wartet">Antrag wartet</span>`;
+  return html`<span class="portal-status aktiv" title="${z.zuletzt_aktiv ? `zuletzt im Portal ${fmt.datumZeit(z.zuletzt_aktiv)}` : "war noch nie im Portal"}">Aktiv${z.zuletzt_aktiv ? ` · ${fmt.relativ(z.zuletzt_aktiv)}` : ""}</span>`;
+}
+
+const MANDANT_FILTER = [["alle", "Alle"], ["rechnung", "Offene Rechnungen"], ["portal", "Portal aktiv"], ["markiert", "VIP / Markiert"]];
+
+function mandantenZaehler() {
+  return portalAntraege().length + offeneAnliegen().filter((x) => x.status === "offen").length
+    + (typeof offeneNotrufe === "function" ? offeneNotrufe().length : 0);
+}
+
+// Kopf mit Umschalter „Mandantenkartei | Mandantenportal“
+function mandantenKopf(reiter) {
+  const n = mandantenZaehler();
+  return html`<div class="page-head mandanten-kopf">
+    <div><h1>Mandanten</h1><p class="muted">${reiter === "portal" ? "Portal-Zugänge, Anträge und Anliegen" : "Kartei aller Personen, die wir vertreten"}</p></div>
+    <div class="mandanten-kopf-rechts">
+      <nav class="seg-tabs gross" aria-label="Mandanten">
+        <a class="seg-tab ${reiter === "kartei" ? "active" : ""}" href="#/mandanten" ${reiter === "kartei" ? new SafeHtml('aria-current="page"') : ""}>Mandantenkartei</a>
+        <a class="seg-tab ${reiter === "portal" ? "active" : ""}" href="#/mandanten/portal" ${reiter === "portal" ? new SafeHtml('aria-current="page"') : ""}>Mandantenportal${n ? html`<span class="seg-n rot" title="wartende Anträge, offene Anliegen und Notrufe">${n}</span>` : ""}</a>
+      </nav>
+      ${reiter === "kartei" ? html`<button class="btn" data-action="mandant-neu">+ Neuer Mandant</button>` : ""}
+    </div>
+  </div>`;
+}
+
+function mandantenListe() {
   const f = ui.mandanten;
+  const filter = f.filter || "alle";
+  const offenVon = (m) => offeneRechnungSumme(state.rechnungen.filter((r) => r.mandant_id === m.id));
   const list = state.mandanten
-    .filter((m) => !f.markierung || (m.markierungen || []).includes(f.markierung))
+    .filter((m) => filter !== "rechnung" || offenVon(m) > 0)
+    .filter((m) => filter !== "portal" || portalZugaengeVon(m.id).some((z) => z.status === "frei" && z.person_status !== "gesperrt"))
+    .filter((m) => filter !== "markiert" || (m.markierungen || []).length > 0)
     .filter((m) => matches(f.q, m.name, m.telefon, m.discord, m.adresse, m.notizen, m.markierungen))
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
-  const m = route.id ? byId("mandanten", route.id) : null;
-  const antraege = portalAntraege().length + offeneAnliegen().filter((x) => x.status === "offen").length;
+  const zeilen = list.map((m) => {
+    const akten = mandantAkten(m);
+    const aktiv = akten.filter((a) => a.status !== "Geschlossen").length;
+    return { m, akten, aktiv, offen: offenVon(m), haft: akten.some((a) => a.in_haft && a.status !== "Geschlossen") };
+  });
+  const kontakt = (m) => [
+    m.telefon ? html`<span class="kontakt-zeile">${m.telefon}</span>` : "",
+    m.discord ? html`<span class="kontakt-zeile muted">@${String(m.discord).replace(/^@/, "")}</span>` : "",
+  ];
+  const aktenText = (x) => x.akten.length ? html`<span class="tabular-nums">${x.aktiv} aktiv / ${x.akten.length} gesamt</span>` : html`<span class="muted">keine Akten</span>`;
   return html`
-    <div class="page">
-      <div class="split ${route.id ? "has-detail" : ""}">
-        <aside class="list-pane">
-          <div class="toolbar">
-            <div class="search"><input type="search" id="mandanten-q" data-search data-input="mandanten-q" value="${f.q}" placeholder="Name, Telefon, Discord …"></div>
-            <button class="btn small primary" data-action="mandant-neu">+ Neu</button>
-          </div>
-          <div class="toolbar">
-            <a class="btn small ${route.id === "portal" ? "primary" : ""} portal-link" href="#/mandanten/portal" title="Zugänge zum Mandantenportal">
-              Mandantenportal${antraege ? html`<span class="nav-badge" title="wartende Anträge und offene Anliegen">${antraege}</span>` : ""}</a>
-          </div>
-          <div class="toolbar">
-            <select id="mandanten-mark" data-change="mandanten-mark">
-              <option value="">Alle Mandanten</option>
-              ${OPTIONEN.markierung.map((x) => html`<option ${f.markierung === x ? "selected" : ""}>${x}</option>`)}
-            </select>
-          </div>
-          <div class="list-count">${list.length} Mandanten</div>
-          <div class="list-scroll" data-scroll="mandanten-list">
-            <ul class="item-list">${list.map((x) => {
-              const akten = mandantAkten(x);
-              const aktiv = akten.filter((a) => a.status !== "Geschlossen").length;
-              const offen = offeneRechnungSumme(state.rechnungen.filter((r) => r.mandant_id === x.id));
-              return html`<li><a class="item ${x.id === route.id ? "active" : ""}" href="#/mandanten/${x.id}">
-                <span class="title">${x.name}</span>
-                <span class="meta"><span>${x.telefon || "—"}</span><span class="badges">${markierungBadges(x)}</span></span>
-                <span class="sub">${akten.length} ${akten.length === 1 ? "Akte" : "Akten"}${aktiv ? `, ${aktiv} aktiv` : ""}${offen ? ` · offen ${fmt.geld(offen)}` : ""}${akten.some((a) => a.in_haft) ? " · in Haft" : ""}</span>
-              </a></li>`;
-            })}</ul>
-            ${list.length ? "" : html`<p class="empty center">Keine Mandanten gefunden.</p>`}
-          </div>
-        </aside>
-        <section class="detail-pane">
-          ${route.id === "portal" ? portalZugaengeSeite() : route.id
-            ? m ? mandantDetail(m) : html`<div class="card empty-state"><h2>Mandant nicht gefunden</h2><a class="btn" href="#/mandanten">Zur Liste</a></div>`
-            : html`<div class="card empty-state"><h2>Mandantenkartei</h2>
-                <p>Alle Mandanten mit Kontaktdaten, Akten, Ergebnissen und offenen Rechnungen. Neue Mandanten entstehen auch automatisch beim Anlegen einer Akte.</p>
-                <button class="btn primary" data-action="mandant-neu">+ Neuer Mandant</button></div>`}
-        </section>
+    ${mandantenKopf("kartei")}
+    <div class="crm-filterleiste">
+      <div class="search"><input type="search" id="mandanten-q" data-search data-input="mandanten-q" value="${f.q}" placeholder="Name, Telefon, Discord …" aria-label="Mandanten durchsuchen"></div>
+      <div class="filter-chips" role="group" aria-label="Schnellfilter">
+        ${MANDANT_FILTER.map(([k, l]) => html`<button type="button" class="filter-chip ${filter === k ? "active" : ""}" aria-pressed="${filter === k}" data-action="mandanten-filter" data-filter="${k}">${l}</button>`)}
       </div>
+      <span class="list-count">${list.length} ${list.length === 1 ? "Mandant" : "Mandanten"}</span>
+    </div>
+    ${list.length ? html`
+      <div class="card crm-karte">
+        <table class="table crm-tabelle">
+          <thead><tr><th>Mandant</th><th>Kontakt</th><th>Mandantenportal</th><th>Akten</th><th class="right">Offene Rechnungen</th></tr></thead>
+          <tbody>${zeilen.map((x) => html`<tr class="clickable" data-action="goto" data-to="mandanten/${x.m.id}" data-live="mandanten:${x.m.id}">
+            <td><div class="crm-person">${mandantAvatar(x.m)}<div class="crm-name"><a href="#/mandanten/${x.m.id}">${x.m.name}</a>
+              <span class="badges">${markierungBadges(x.m)}${x.haft ? html`<span class="badge haft">In Haft</span>` : ""}</span></div></div></td>
+            <td class="crm-kontakt">${kontakt(x.m)}</td>
+            <td>${mandantPortalBadge(x.m)}</td>
+            <td class="nowrap">${aktenText(x)}</td>
+            <td class="right tabular-nums">${x.offen > 0 ? html`<span class="offen-betrag">${fmt.geld(x.offen)} offen</span>` : ""}</td>
+          </tr>`)}</tbody>
+        </table>
+        <ul class="crm-karten">${zeilen.map((x) => html`<li><a class="crm-kachel" href="#/mandanten/${x.m.id}">
+          ${mandantAvatar(x.m, 40)}
+          <span class="crm-kachel-inhalt">
+            <span class="crm-name"><strong>${x.m.name}</strong><span class="badges">${markierungBadges(x.m)}${x.haft ? html`<span class="badge haft">In Haft</span>` : ""}</span></span>
+            ${x.m.telefon || x.m.discord ? html`<span class="crm-kontakt">${kontakt(x.m)}</span>` : ""}
+            <span class="crm-kachel-fuss">${mandantPortalBadge(x.m)}<span class="small">${aktenText(x)}</span>${x.offen > 0 ? html`<span class="offen-betrag">${fmt.geld(x.offen)} offen</span>` : ""}</span>
+          </span>
+        </a></li>`)}</ul>
+      </div>`
+      : html`<div class="card empty-state"><h2>Keine Mandanten gefunden</h2>
+        <p>${state.mandanten.length ? "Suche oder Filter ändern." : "Neue Mandanten entstehen auch automatisch beim Anlegen einer Akte."}</p></div>`}`;
+}
+
+VIEWS.mandanten = (route) => {
+  if (ui.portalZugaenge === null) ladePortalZugaenge();
+  const m = route.id && route.id !== "portal" ? byId("mandanten", route.id) : null;
+  return html`
+    <div class="page mandanten-seite">
+      ${route.id === "portal" ? html`${mandantenKopf("portal")}${portalZugaengeSeite()}`
+        : route.id ? m ? mandantDetail(m)
+          : html`<a class="zurueck-link" href="#/mandanten">← Alle Mandanten</a><div class="card empty-state"><h2>Mandant nicht gefunden</h2><a class="btn" href="#/mandanten">Zur Kartei</a></div>`
+        : mandantenListe()}
     </div>`;
 };
+
+// Pill mit Klick-zum-Kopieren
+function kopierPill(label, wert, anzeige = wert) {
+  return html`<button type="button" class="kontakt-pill" data-action="wert-kopieren" data-wert="${wert}" title="${label} kopieren"><span class="muted">${label}:</span> ${anzeige}</button>`;
+}
 
 function mandantDetail(m) {
   const akten = mandantAkten(m).sort((a, b) => (b.number || "").localeCompare(a.number || ""));
@@ -131,67 +197,92 @@ function mandantDetail(m) {
   const ergebnisse = akten.filter((a) => a.ergebnis);
   const auftr = auftritte(m);
   const erste = akten.length ? akten.reduce((x, a) => (new Date(a.created_at) < new Date(x.created_at) ? a : x)) : null;
+  const seit = erste ? erste.created_at : m.created_at;
+  const fehlt = !m.telefon || !m.discord || !m.geburtsdatum || !m.adresse;
 
   return html`
-    <a class="back-link" href="#/mandanten">← Alle Mandanten</a>
-    <div class="detail-card">
-      <div class="detail-head" style="padding-bottom:4px">
-        <div class="top">
-          <div>
-            <h2>${m.name}</h2>
-            <div class="badges">${markierungBadges(m)}</div>
-          </div>
-          <div class="actions-row" style="align-items:flex-start">
-            <button class="btn primary" data-action="akte-neu" data-mandant="${m.name}">+ Neue Akte</button>
-            ${darf("rechnungen") ? html`<button class="btn" data-action="rechnung-neu" data-mandant="${m.id}">+ Rechnung</button>` : ""}
-            <button class="btn" data-action="mandant-bearbeiten" data-id="${m.id}">Bearbeiten</button>
-          </div>
+    <a class="zurueck-link" href="#/mandanten">← Alle Mandanten</a>
+    <header class="card dossier-kopf" data-live="mandanten:${m.id}">
+      ${mandantAvatar(m, 48)}
+      <div class="dossier-titel">
+        <div class="dossier-name-zeile"><h1>${m.name}</h1><span class="badges">${markierungBadges(m)}</span></div>
+        <div class="kontakt-leiste">
+          ${m.discord ? kopierPill("Discord", String(m.discord).replace(/^@/, "")) : ""}
+          ${m.telefon ? kopierPill("Telefon", m.telefon) : ""}
+          ${m.geburtsdatum ? kopierPill("Geboren", m.geburtsdatum) : ""}
+          ${m.adresse ? kopierPill("Adresse", m.adresse) : ""}
+          ${seit ? html`<span class="kontakt-pill statisch"><span class="muted">Mandant seit</span> ${fmt.datum(seit)}</span>` : ""}
+          ${fehlt ? html`<button type="button" class="link-btn small kontakt-ergaenzen" data-action="mandant-bearbeiten" data-id="${m.id}">+ Kontaktdaten ergänzen</button>` : ""}
         </div>
       </div>
-      <div class="tab-body">
-        ${offen ? html`<div class="box warning"><strong>Offene Rechnungen: ${fmt.geld(offen)}</strong></div>` : ""}
-        ${auftr.length ? html`<div class="box warning"><strong>Achtung – taucht auch in anderen Akten auf:</strong>
-          <ul>${auftr.map((x) => html`<li>${x.rolle} in <a href="#/akten/${x.akte.id}">${x.akte.number} · ${x.akte.title}</a> (Mandant: ${mandantName(x.akte)})</li>`)}</ul></div>` : ""}
-        <dl class="facts">
-          <div><dt>Telefon</dt><dd>${m.telefon || "–"}</dd></div>
-          <div><dt>Discord</dt><dd>${m.discord || "–"}</dd></div>
-          <div><dt>Geburtsdatum</dt><dd>${m.geburtsdatum || "–"}</dd></div>
-          <div><dt>Adresse</dt><dd>${m.adresse || "–"}</dd></div>
-          <div><dt>Mandant seit</dt><dd>${fmt.datum(erste ? erste.created_at : m.created_at)}</dd></div>
-          <div><dt>Akten</dt><dd>${akten.length} (${akten.filter((a) => a.status !== "Geschlossen").length} aktiv)</dd></div>
-        </dl>
-        ${m.notizen ? html`<h3 class="section-title">Notizen</h3><p class="pre" style="margin-top:0">${m.notizen}</p>` : ""}
-        ${mandantPortalBlock(m)}
+      <div class="dossier-aktionen">
+        <button class="btn" data-action="akte-neu" data-mandant="${m.name}">+ Neue Akte</button>
+        ${darf("rechnungen") ? html`<button class="btn" data-action="rechnung-neu" data-mandant="${m.id}">+ Rechnung</button>` : ""}
+        <button class="btn" data-action="mandant-bearbeiten" data-id="${m.id}">Bearbeiten</button>
+      </div>
+    </header>
+    ${offen ? html`<div class="box warning dossier-hinweis"><strong>Offene Rechnungen: ${fmt.geld(offen)}</strong></div>` : ""}
+    ${auftr.length ? html`<div class="box warning dossier-hinweis"><strong>Achtung – taucht auch in anderen Akten auf:</strong>
+      <ul>${auftr.map((x) => html`<li>${x.rolle} in <a href="#/akten/${x.akte.id}">${x.akte.number} · ${x.akte.title}</a> (Mandant: ${mandantName(x.akte)})</li>`)}</ul></div>` : ""}
 
-        <h3 class="section-title" style="margin-top:20px">Akten</h3>
-        ${akten.length ? html`<div class="table-wrap"><table class="table">
-          <thead><tr><th>Az.</th><th>Betreff</th><th>Status</th><th>Ergebnis</th><th>Zuständig</th></tr></thead>
-          <tbody>${akten.map((a) => html`<tr class="clickable" data-action="goto" data-to="akten/${a.id}">
-            <td class="nowrap"><a href="#/akten/${a.id}">${a.number}</a></td>
-            <td>${a.title} ${haftBadge(a)}</td>
-            <td>${statusBadge(a.status)}</td>
-            <td>${a.ergebnis || "–"}</td>
-            <td>${personName(a.zustaendig_id, a.lawyer || "–")}</td></tr>`)}</tbody></table></div>`
-          : html`<p class="empty">Noch keine Akten.</p>`}
-
-        ${ergebnisse.length ? html`<h3 class="section-title" style="margin-top:20px">Frühere Ergebnisse</h3>
+    <div class="dossier-raster">
+      <div class="dossier-spalte">
+        <section class="card">
+          <div class="card-head"><h2>Akten</h2><span class="muted small">${akten.length} gesamt · ${akten.filter((a) => a.status !== "Geschlossen").length} aktiv</span></div>
+          ${akten.length ? html`<div class="table-wrap"><table class="table">
+            <thead><tr><th>Az.</th><th>Betreff</th><th>Status</th><th>Ergebnis</th><th>Zuständig</th></tr></thead>
+            <tbody>${akten.map((a) => html`<tr class="clickable" data-action="goto" data-to="akten/${a.id}">
+              <td class="nowrap"><a class="mono" href="#/akten/${a.id}">${a.number}</a></td>
+              <td>${a.title} ${haftBadge(a)}</td>
+              <td>${statusBadge(a.status)}</td>
+              <td>${a.ergebnis || ""}</td>
+              <td>${personName(a.zustaendig_id, a.lawyer || "")}</td></tr>`)}</tbody></table></div>`
+            : html`<p class="empty">Noch keine Akten.</p>`}
+        </section>
+        ${termine.length ? html`<section class="card">
+          <div class="card-head"><h2>Anstehende Termine</h2></div>
+          <ul class="rows">${termine.map((t) => terminRow(t, { mandant: false, checkNurFrist: true }))}</ul>
+        </section>` : ""}
+        ${ergebnisse.length ? html`<section class="card">
+          <div class="card-head"><h2>Frühere Ergebnisse</h2></div>
           <ul class="rows">${ergebnisse.map((a) => html`<li><div class="grow"><div class="title">${a.ergebnis}${a.ergebnis_datum ? html` <span class="muted small">(${fmt.datum(a.ergebnis_datum)})</span>` : ""}</div>
-            <div class="meta"><a href="#/akten/${a.id}">${a.number} · ${a.title}</a>${a.ergebnis_details ? ` – ${a.ergebnis_details}` : ""}</div></div></li>`)}</ul>` : ""}
-
-        ${termine.length ? html`<h3 class="section-title" style="margin-top:20px">Anstehende Termine</h3>
-          <ul class="rows">${termine.map((t) => terminRow(t))}</ul>` : ""}
-
-        <h3 class="section-title" style="margin-top:20px">Rechnungen</h3>
-        ${rechnungen.length ? rechnungTabelle(rechnungen) : html`<p class="empty">Noch keine Rechnungen.</p>`}
+            <div class="meta">${akteChip(a, a.title)}${a.ergebnis_details ? ` – ${a.ergebnis_details}` : ""}</div></div></li>`)}</ul>
+        </section>` : ""}
+      </div>
+      <div class="dossier-spalte">
+        ${mandantPortalBlock(m)}
+        <section class="card">
+          <div class="card-head"><h2>Rechnungen</h2>${offen ? html`<span class="offen-betrag small">${fmt.geld(offen)} offen</span>` : ""}</div>
+          ${rechnungen.length ? html`<ul class="rows dossier-rechnungen">${rechnungen.map((r) => {
+            const a = byId("akten", r.akte_id);
+            return html`<li data-live="rechnungen:${r.id}">
+              <div class="grow">
+                <div class="title"><span class="mono">${r.nummer}</span>${r.betreff ? html` · ${truncate(r.betreff, 40)}` : ""}</div>
+                <div class="meta">${joinHtml([fmt.datum(r.datum), a ? akteChip(a, "") : null, rechnungStatusBadge(r)])}</div>
+              </div>
+              <div class="dossier-betrag tabular-nums ${r.status === "Offen" ? "offen-betrag" : ""}">${fmt.geld(r.summe)}</div>
+              <div class="tools">
+                <button class="icon-btn" data-action="rechnung-drucken" data-id="${r.id}" title="Drucken / PDF" aria-label="Rechnung drucken">⎙</button>
+                ${r.status === "Offen" && darf("rechnungen") ? html`<button class="btn small gold" data-action="rechnung-bezahlt" data-id="${r.id}" title="Als bezahlt markieren">Bezahlt</button>` : ""}
+                ${darf("rechnungen") ? html`<button class="icon-btn" data-action="rechnung-bearbeiten" data-id="${r.id}" title="Bearbeiten" aria-label="Rechnung bearbeiten">✎</button>` : ""}
+              </div>
+            </li>`;
+          })}</ul>` : html`<p class="empty">Noch keine Rechnungen.</p>`}
+        </section>
+        ${m.notizen ? html`<section class="card">
+          <div class="card-head"><h2>Notizen</h2><button class="link-btn small" data-action="mandant-bearbeiten" data-id="${m.id}">ändern</button></div>
+          <p class="pre dossier-notiz">${m.notizen}</p>
+        </section>` : ""}
       </div>
     </div>`;
 }
 
 INPUTS["mandanten-q"] = (el) => { ui.mandanten.q = el.value; scheduleRender(); };
-CHANGES["mandanten-mark"] = (el) => { ui.mandanten.markierung = el.value; render(); };
 
 Object.assign(ACTIONS, {
   "mandant-neu": () => openMandantForm(null),
   "mandant-bearbeiten": (d) => openMandantForm(byId("mandanten", d.id)),
   goto: (d) => go(d.to),
+  "mandanten-filter": (d) => { ui.mandanten.filter = d.filter; render(); },
+  "wert-kopieren": async (d) => { toast((await copyText(d.wert)) ? `„${d.wert}“ kopiert` : d.wert); },
 });
