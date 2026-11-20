@@ -131,6 +131,7 @@ const DASH_KEY = "wiwang-dash-reiter";
 ui.dash = {
   reiter: (() => { try { return localStorage.getItem(DASH_KEY) === "kanzlei" ? "kanzlei" : "arbeitstag"; } catch { return "arbeitstag"; } })(),
   fokus: "aufgaben",
+  filter: "alle", // Aufgaben-Filter im Fokus: "alle" | "ueberfaellig"
 };
 
 function dashDaten() {
@@ -191,12 +192,12 @@ function dashKennzahlen(d, A, T) {
   const kacheln = [
     A && kpiKachel({ label: "Mandanten in Haft", n: d.inHaft.length, ton: "danger", href: "#/akten",
       aktion: 'data-action="akten-zeigen" data-status="haft"', hinweis: d.inHaft[0] && d.inHaft[0].haft_bis ? `nächstes Haftende ${fmt.bis(d.inHaft[0].haft_bis)}` : "Haftende im Blick behalten" }),
-    T && kpiKachel({ label: "Überfällige Fristen", n: d.ueberfaellig.length, ton: "danger", href: "#/",
-      aktion: 'data-action="fokus-tab" data-tab="aufgaben"', hinweis: "Fristen & Wiedervorlagen", ruhigText: "Keine überfällig" }),
+    T && kpiKachel({ label: "Überfällige Terminfristen", n: d.ueberfaellig.length, ton: "danger", href: "#/",
+      aktion: 'data-action="fokus-tab" data-tab="aufgaben" data-filter="alle"', hinweis: "Termin- & Gerichtsfristen, Wiedervorlagen", ruhigText: "Keine Terminfrist überfällig" }),
     A && kpiKachel({ label: "Liegen gebliebene Akten", n: d.liegen.length, ton: "warning", href: "#/akten",
-      aktion: 'data-action="akten-zeigen" data-status="liegen"', hinweis: `seit ${state.settings.liegezeit_tage}+ Tagen ohne Bewegung` }),
+      aktion: 'data-action="akten-zeigen" data-status="liegen"', hinweis: `ohne Bewegung > ${state.settings.liegezeit_tage} Tage`, ruhigText: `keine ohne Bewegung > ${state.settings.liegezeit_tage} Tage` }),
     T && kpiKachel({ label: "Meine offenen Aufgaben", n: d.meineAufgaben.length, ton: d.meineAufgaben.some(aufgabeUeberfaellig) ? "danger" : "warning", href: "#/",
-      aktion: 'data-action="fokus-tab" data-tab="aufgaben"', hinweis: d.meineAufgaben.some(aufgabeUeberfaellig) ? `${d.meineAufgaben.filter(aufgabeUeberfaellig).length} davon überfällig` : "zum Abarbeiten", ruhigText: "Nichts offen" }),
+      aktion: `data-action="fokus-tab" data-tab="aufgaben" data-filter="${d.meineAufgaben.some(aufgabeUeberfaellig) ? "ueberfaellig" : "alle"}"`, hinweis: d.meineAufgaben.some(aufgabeUeberfaellig) ? `${d.meineAufgaben.filter(aufgabeUeberfaellig).length} davon überfällig` : "zum Abarbeiten", ruhigText: "Nichts offen" }),
   ].filter(Boolean);
   return kacheln.length ? html`<div class="kpi-reihe" role="list">${kacheln.map((k) => html`<div role="listitem">${k}</div>`)}</div>` : "";
 }
@@ -211,11 +212,21 @@ function fokusKarte(d, A, T) {
   if (!reiter.length) return "";
   const aktiv = reiter.some((r) => r.key === ui.dash.fokus) ? ui.dash.fokus : reiter[0].key;
   const inhalt = {
-    aufgaben: () => html`
-      ${aufgabeSchnellForm(null)}
-      ${d.ueberfaellig.length ? html`<div class="group-title danger-text">Überfällige Fristen</div><ul class="rows">${d.ueberfaellig.map((t) => terminRow(t))}</ul>` : ""}
-      <div class="group-title">Meine Aufgaben</div>
-      ${d.meineAufgaben.length ? html`<ul class="rows">${d.meineAufgaben.slice(0, 15).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}`,
+    aufgaben: () => {
+      const ueber = d.meineAufgaben.filter(aufgabeUeberfaellig);
+      const nurUeber = ui.dash.filter === "ueberfaellig" && ueber.length > 0;
+      const liste = nurUeber ? ueber : d.meineAufgaben;
+      return html`
+      ${aufgabeSchnellForm(null, { klappbar: true })}
+      ${d.ueberfaellig.length ? html`<div class="group-title danger-text">Überfällige Terminfristen</div><ul class="rows">${d.ueberfaellig.map((t) => terminRow(t))}</ul>` : ""}
+      <div class="group-title aufgaben-kopf">Meine Aufgaben
+        ${ueber.length ? html`<span class="filter-chips" role="group" aria-label="Aufgaben filtern">
+          <button type="button" class="filter-chip ${nurUeber ? "" : "active"}" aria-pressed="${!nurUeber}" data-action="aufgaben-filter" data-filter="alle">Alle (${d.meineAufgaben.length})</button>
+          <button type="button" class="filter-chip rot ${nurUeber ? "active" : ""}" aria-pressed="${nurUeber}" data-action="aufgaben-filter" data-filter="ueberfaellig">Überfällig (${ueber.length})</button>
+        </span>` : ""}
+      </div>
+      ${liste.length ? html`<ul class="rows">${liste.slice(0, 15).map((t) => aufgabeRow(t))}</ul>` : html`<p class="empty">Keine offenen Aufgaben.</p>`}`;
+    },
     dringend: () => html`
       ${d.inHaft.length ? html`<div class="group-title danger-text">Mandanten in Haft</div>
         <ul class="rows">${d.inHaft.map((a) => html`<li>
@@ -267,12 +278,12 @@ VIEWS.uebersicht = () => {
     <div class="page dashboard">
       <div class="page-head">
         <div>
-          <h1>${gruss}${profil && profil.anzeigename ? `, ${firstName(profil.anzeigename)}` : ""}</h1>
+          <h1>${gruss}${profil && rufName(profil) ? `, ${rufName(profil)}` : ""}</h1>
           <p class="muted">${fmt.tagLang(d.now)} · ${state.settings.kanzlei}</p>
         </div>
         <div class="seg-tabs gross" role="tablist" aria-label="Übersicht">
           <button type="button" role="tab" class="seg-tab ${reiter === "arbeitstag" ? "active" : ""}" aria-selected="${reiter === "arbeitstag"}" data-action="dash-tab" data-tab="arbeitstag">Mein Arbeitstag</button>
-          <button type="button" role="tab" class="seg-tab ${reiter === "kanzlei" ? "active" : ""}" aria-selected="${reiter === "kanzlei"}" data-action="dash-tab" data-tab="kanzlei">Kanzlei-Aktivität & Statistik</button>
+          <button type="button" role="tab" class="seg-tab ${reiter === "kanzlei" ? "active" : ""}" aria-selected="${reiter === "kanzlei"}" data-action="dash-tab" data-tab="kanzlei"><span class="tab-lang">Kanzlei-Aktivität & Statistik</span><span class="tab-kurz">Kanzlei & Statistik</span></button>
         </div>
       </div>
 
@@ -301,6 +312,7 @@ VIEWS.uebersicht = () => {
 };
 
 Object.assign(ACTIONS, {
+  "aufgaben-filter": (d) => { ui.dash.filter = d.filter === "ueberfaellig" ? "ueberfaellig" : "alle"; render(); },
   "dash-tab": (d) => {
     ui.dash.reiter = d.tab === "kanzlei" ? "kanzlei" : "arbeitstag";
     try { localStorage.setItem(DASH_KEY, ui.dash.reiter); } catch {}
@@ -308,6 +320,7 @@ Object.assign(ACTIONS, {
   },
   "fokus-tab": (d) => {
     ui.dash.fokus = d.tab;
+    if (d.filter) ui.dash.filter = d.filter;
     ui.dash.reiter = "arbeitstag";
     if (parseRoute().page !== "uebersicht") { go(""); return; }
     render();

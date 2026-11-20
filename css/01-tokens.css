@@ -69,6 +69,7 @@
     --brand-primary: #9b1c1c;      /* Kanzlei-Karmesin */
     --brand-primary-hover: #7f1d1d;
     --brand-primary-soft: rgba(155, 28, 28, 0.10);
+    --brand-text: #9b1c1c;         /* Links & Akten-Verweise in Rot (Schrift) */
 
     --brand-gold-text: #9a7209;    /* WCAG-AA-sicher auf Hell */
     --brand-gold-accent: #c99b00;  /* Dekor, Rahmen, Nigel-Akzent */
@@ -119,6 +120,7 @@
     --brand-primary: #c83232;
     --brand-primary-hover: #dc3f3f;
     --brand-primary-soft: rgba(200, 50, 50, 0.18);
+    --brand-text: #f07171;         /* aufgehellt – lesbar auf Dunkel */
 
     --brand-gold-text: #e0b42c;
     --brand-gold-accent: #c99b00;

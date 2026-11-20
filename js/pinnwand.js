@@ -45,28 +45,44 @@ function textMitLinks(text) {
   return new SafeHtml(s.replace(/\n/g, "<br>"));
 }
 
-function beitragKarte(b) {
+// „Al Abadi Al Majdoub“ → „Al Abadi“ (kurz für die Signatur)
+function kurzName(name) {
+  const teile = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (teile.length < 2) return teile[0] || "";
+  return teile[0].length <= 2 ? `${teile[0]} ${teile[1]}` : teile[0];
+}
+
+function beitragKarte(b, { featured = false } = {}) {
   const st = b.bestaetigen ? bestaetigungStand(b) : null;
   const ichSoll = st && b.created_by !== state.me.id && st.soll.some((p) => p.user_id === state.me.id);
   const ichHab = hatBestaetigt(b.id, state.me.id);
   const zeigeFehlt = st && st.fehlt.length && (isMe(b.created_by) || darf("einstellungen_schreiben"));
   const pct = st && st.soll.length ? Math.round((st.ja.length / st.soll.length) * 100) : 0;
+  const autor = personName(b.created_by);
+  const signLang = b.von_nigel ? `Nigel · im Auftrag von ${autor}` : autor;
+  const signKurz = b.von_nigel ? `Nigel · i. A. ${kurzName(autor)}` : autor;
+  const zusatz = [fmt.relativ(b.created_at),
+    b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? "bearbeitet" : "",
+    b.bis ? `bis ${fmt.datum(b.bis)}` : ""].filter(Boolean).join(" · ");
+  const badges = b.angeheftet || b.wichtig || (ichSoll && !ichHab);
+  const offen = ui.pinnwand.offen && ui.pinnwand.offen.has(b.id);
   return html`
-    <article data-live="pinnwand:${b.id}" class="beitrag ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""} ${ichSoll && !ichHab ? "offen" : ""}">
-      <div class="beitrag-kopf">
-        ${b.von_nigel ? nigelAvatar({ gross: true }) : avatar(b.created_by)}
-        <div class="grow">
-          <div class="badges">
-            ${b.angeheftet ? html`<span class="badge angeheftet" title="Oben angeheftet">📌 Angeheftet</span>` : ""}
-            ${b.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
-            ${ichSoll && !ichHab ? html`<span class="badge gold">Bitte bestätigen</span>` : ""}
-          </div>
-          <h3>${b.titel}</h3>
-          <div class="meta">${b.von_nigel ? `Nigel · im Auftrag von ${personName(b.created_by)}` : personName(b.created_by)} · ${fmt.relativ(b.created_at)}${b.updated_at && new Date(b.updated_at) - new Date(b.created_at) > 60000 ? " · bearbeitet" : ""}${b.bis ? ` · bis ${fmt.datum(b.bis)}` : ""}</div>
+    <article data-live="pinnwand:${b.id}" data-beitrag="${b.id}" class="beitrag pinnwand-post ${featured ? "pinnwand-post--featured" : ""} ${b.wichtig ? "wichtig" : ""} ${b.angeheftet ? "angeheftet" : ""} ${b.von_nigel ? "nigel-post" : ""} ${ichSoll && !ichHab ? "offen" : ""} ${offen ? "is-expanded" : ""}">
+      ${badges || darfBeitragAendern(b) ? html`<div class="beitrag-dach">
+        <div class="badges">
+          ${b.angeheftet ? html`<span class="badge angeheftet" title="Oben angeheftet">📌 Angeheftet</span>` : ""}
+          ${b.wichtig ? html`<span class="badge alert">Wichtig</span>` : ""}
+          ${ichSoll && !ichHab ? html`<span class="badge gold">Bitte bestätigen</span>` : ""}
         </div>
-        ${darfBeitragAendern(b) ? html`<button class="icon-btn" title="Bearbeiten" aria-label="Beitrag bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
+        ${darfBeitragAendern(b) ? html`<button class="icon-btn beitrag-edit" title="Bearbeiten" aria-label="Beitrag bearbeiten" data-action="pinnwand-bearbeiten" data-id="${b.id}">✎</button>` : ""}
+      </div>` : ""}
+      <h3 class="beitrag-titel">${b.titel}</h3>
+      ${b.text ? html`<div class="beitrag-text pinnwand-body">${textMitLinks(b.text)}</div>
+        <button type="button" class="link-btn mehr-lesen" data-action="pinnwand-mehr" data-id="${b.id}" hidden>${offen ? "Weniger anzeigen ↑" : "Mehr lesen ↓"}</button>` : ""}
+      <div class="beitrag-signatur" title="${signLang} · ${zusatz}">
+        ${b.von_nigel ? nigelAvatar() : avatar(b.created_by, { punkt: false })}
+        <span class="beitrag-signatur-text">${signKurz} · ${zusatz}</span>
       </div>
-      ${b.text ? html`<div class="beitrag-text">${textMitLinks(b.text)}</div>` : ""}
       ${st ? html`
         <div class="beitrag-fuss">
           ${ichSoll ? ichHab
@@ -80,6 +96,22 @@ function beitragKarte(b) {
         </div>` : ""}
     </article>`;
 }
+
+// Nach dem Rendern: „Mehr lesen“ nur dort zeigen, wo der Text wirklich abgeschnitten ist
+function pinnwandUeberlaufPruefen() {
+  document.querySelectorAll("#main .pinnwand-post").forEach((post) => {
+    const body = post.querySelector(".pinnwand-body");
+    const btn = post.querySelector(".mehr-lesen");
+    if (!body || !btn) return;
+    btn.hidden = !(post.classList.contains("is-expanded") || body.scrollHeight > body.clientHeight + 2);
+  });
+}
+RENDER_HOOKS.push((route) => { if (route.page === "uebersicht") pinnwandUeberlaufPruefen(); });
+let pinnwandResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(pinnwandResizeTimer);
+  pinnwandResizeTimer = setTimeout(pinnwandUeberlaufPruefen, 150);
+});
 
 // ---------- Team heute ----------
 function teamHeute() {
@@ -143,7 +175,7 @@ function pinnwandKarte() {
           ${offenIds.size ? html`<p class="small pinnwand-offen">${offenIds.size} ${offenIds.size === 1 ? "wartet" : "warten"} auf deine Bestätigung</p>` : ""}</div>
         <button class="btn small" data-action="pinnwand-neu" title="Neuer Beitrag an der Pinnwand">+ Beitrag</button>
       </div>
-      ${zeigen.length ? html`<div class="beitrag-liste">${zeigen.map((b) => beitragKarte(b))}</div>`
+      ${zeigen.length ? html`<div class="beitrag-liste">${zeigen.map((b, i) => beitragKarte(b, { featured: i === 0 }))}</div>`
         : html`<p class="empty">${archiv ? "Hier landen Beiträge, deren „Sichtbar bis“-Datum vorbei ist." : "Noch nichts angepinnt – neue Dienstzeiten, Regeln, Erfolge, Termine fürs ganze Team: alles, was alle wissen sollen."}</p>`}
       <div class="pinnwand-fuss">
         ${mehr > 0 ? html`<button class="link-btn" data-action="pinnwand-alle" data-alle="1">${mehr === 1 ? "1 weiteren Beitrag" : `${mehr} weitere Beiträge`} anzeigen</button>`
@@ -192,6 +224,17 @@ Object.assign(ACTIONS, {
   },
   "pinnwand-archiv": (d) => { ui.pinnwand.archiv = d.archiv === "1"; render(); },
   "pinnwand-alle": (d) => { ui.pinnwand.alle = d.alle === "1"; render(); },
+  "pinnwand-mehr": (d) => {
+    ui.pinnwand.offen = ui.pinnwand.offen || new Set();
+    const auf = !ui.pinnwand.offen.has(d.id);
+    if (auf) ui.pinnwand.offen.add(d.id); else ui.pinnwand.offen.delete(d.id);
+    const post = document.querySelector(`#main .pinnwand-post[data-beitrag="${CSS.escape(d.id)}"]`);
+    if (!post) { render(); return; }
+    post.classList.toggle("is-expanded", auf);
+    const btn = post.querySelector(".mehr-lesen");
+    if (btn) btn.textContent = auf ? "Weniger anzeigen ↑" : "Mehr lesen ↓";
+    pinnwandUeberlaufPruefen();
+  },
   "pinnwand-bestaetigen": async (d) => {
     if (hatBestaetigt(d.id, state.me.id)) return;
     await attempt(() => insertRow("pinnwand_gelesen", { beitrag_id: d.id }), "Danke – als gelesen bestätigt");

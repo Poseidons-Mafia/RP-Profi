@@ -178,6 +178,16 @@
   }
   .char-switch:hover, .char-switch[aria-expanded="true"] { background: var(--bg-subtle); border-color: var(--border-strong); }
   .char-marke { width: 36px; height: 36px; border-radius: 9px; flex: none; display: block; }
+  .char-marke-wrap { position: relative; flex: none; display: block; }
+  /* ⇅-Mini-Badge: nur in der eingeklappten Seitenleiste, dort fehlt sonst der Hinweis auf den Charakterwechsel */
+  .char-wechsel-badge {
+    display: none; position: absolute; right: -3px; bottom: -3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg-surface); color: var(--text-secondary);
+    border: 1px solid var(--border-strong); box-shadow: var(--shadow-sm);
+    font-size: 9px; line-height: 12px; text-align: center; font-weight: 700;
+  }
+  .char-switch:hover .char-wechsel-badge { color: var(--brand-text); border-color: var(--brand-gold-accent); }
   .char-text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
   .char-name { max-width: 100%; font-size: var(--text-sm); font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .char-rang {
@@ -279,6 +289,7 @@
     body.in-app.nav-eingeklappt .nav-group:first-child .nav-titel { display: none; }
     body.in-app.nav-eingeklappt .sidebar .nav-badge { position: absolute; top: 2px; right: 4px; margin: 0; min-width: 16px; padding: 0 4px; font-size: 0.62rem; line-height: 16px; }
     body.in-app.nav-eingeklappt .char-switch { justify-content: center; padding: 4px; border-color: transparent; background: none; }
+    body.in-app.nav-eingeklappt .char-wechsel-badge { display: block; }
   }
   @media (min-width: 768px) and (max-width: 1023px) {
     body.in-app { --seitenleiste: var(--sidebar-collapsed); }
@@ -292,6 +303,7 @@
     body.in-app .nav-group:first-child .nav-titel { display: none; }
     body.in-app .sidebar .nav-badge { position: absolute; top: 2px; right: 4px; margin: 0; min-width: 16px; padding: 0 4px; font-size: 0.62rem; line-height: 16px; }
     body.in-app .char-switch { justify-content: center; padding: 4px; border-color: transparent; background: none; }
+    body.in-app .char-wechsel-badge { display: block; }
   }
 
   /* ---------- Handy: Leiste unten, Kopfzeile kompakt ---------- */
