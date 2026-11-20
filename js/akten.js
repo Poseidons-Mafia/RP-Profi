@@ -74,62 +74,152 @@ function akteListItem(a, activeId) {
     </a>`;
 }
 
-// ---------- Aktenliste ausblenden (Fokus auf die Akte, wird im Browser gemerkt) ----------
-const LISTE_ZU_KEY = "wiwang.aktenListeZu";
-ui.akten.listeZu = (() => { try { return localStorage.getItem(LISTE_ZU_KEY) === "1"; } catch { return false; } })();
+// Status-Ton für Akzentstreifen (Haft schlägt alles)
+function akteTon(a) {
+  if (a.in_haft && a.status !== "Geschlossen") return "haft";
+  return { Offen: "offen", "In Bearbeitung": "bearbeitung", Geschlossen: "abgeschlossen" }[a.status] || "offen";
+}
 
-function setListeZu(zu) {
-  ui.akten.listeZu = zu;
-  try { localStorage.setItem(LISTE_ZU_KEY, zu ? "1" : "0"); } catch {}
+// Filterleiste (Liste und Akten-Switcher teilen sich die Filter)
+function aktenFilterleiste(praefix = "akten") {
+  const f = ui.akten;
+  return html`
+    <div class="search"><input type="search" id="${praefix}-q" data-search data-input="akten-filter" data-key="q"
+      value="${f.q}" placeholder="Suchen: Name, Az., Vorwurf …" aria-label="Akten durchsuchen" autocomplete="off"></div>
+    <select id="${praefix}-status" data-change="akten-filter" data-key="status" aria-label="Status">
+      ${[["aktiv", "Offen + In Bearbeitung"], ["Offen", "Offen"], ["In Bearbeitung", "In Bearbeitung"],
+         ["Geschlossen", "Geschlossen"], ["haft", "Mandant in Haft"], ["liegen", "Liegen geblieben"], ["alle", "Alle Akten"]]
+        .map(([v, l]) => html`<option value="${v}" ${f.status === v ? "selected" : ""}>${l}</option>`)}
+    </select>
+    <select id="${praefix}-typ" data-change="akten-filter" data-key="typ" aria-label="Rechtsgebiet">
+      <option value="">Alle Rechtsgebiete</option>
+      ${OPTIONEN.rechtsgebiet.map((r) => html`<option ${f.typ === r ? "selected" : ""}>${r}</option>`)}
+    </select>
+    <select id="${praefix}-sort" data-change="akten-filter" data-key="sort" title="Sortierung" aria-label="Sortierung">
+      ${[["aktiv", "Zuletzt aktiv"], ["prio", "Priorität"], ["termin", "Nächster Termin"], ["neu", "Neueste zuerst"], ["az", "Aktenzeichen"]]
+        .map(([v, l]) => html`<option value="${v}" ${f.sort === v ? "selected" : ""}>${l}</option>`)}
+    </select>
+    <label class="check"><input type="checkbox" id="${praefix}-meine" data-change="akten-filter" data-key="meine" ${f.meine ? "checked" : ""}> Nur meine</label>`;
+}
+
+// Zeile im vollbreiten Aktenverzeichnis – leere Angaben werden gar nicht gerendert
+function akteVerzeichnisZeile(a) {
+  const nt = naechsterTermin(a.id);
+  const wer = typeof betrachter === "function" ? betrachter(a.id) : [];
+  const zust = personName(a.zustaendig_id, a.lawyer || "");
+  return html`<li><a class="akten-zeile ton-${akteTon(a)}" href="#/akten/${a.id}" data-live="akten:${a.id}">
+    <span class="az-spalte"><span class="mono">${a.number}</span><span class="dot ${statusClass(a.prioritaet)}" title="Priorität ${a.prioritaet || "Normal"}"></span></span>
+    <span class="titel-spalte">
+      <span class="title">${a.title}</span>
+      <span class="sub">${[mandantName(a), a.area].filter(Boolean).join(" · ")}</span>
+    </span>
+    <span class="status-spalte">${haftBadge(a)}${statusBadge(a.status)}${prioBadge(a.prioritaet)}</span>
+    <span class="termin-spalte">${nt ? html`<span class="small"><strong>${fmt.tag(nt.beginn)}, ${fmt.zeit(nt.beginn)}</strong> · ${truncate(nt.titel, 34)}</span>` : ""}</span>
+    <span class="fortschritt-spalte">${a.status !== "Geschlossen" ? fortschrittBalken(a.id) : ""}</span>
+    <span class="wer-spalte">${zust ? html`<span class="small muted">${zust}</span>` : ""}${wer.length ? html`<span class="avatars mini" title="Gerade geöffnet von ${wer.map((id) => personName(id)).join(", ")}">${wer.map((id) => avatar(id, { punkt: false }))}</span>` : ""}</span>
+  </a></li>`;
 }
 
 VIEWS.akten = (route) => {
-  const f = ui.akten;
-  const list = gefilterteAkten();
   const akte = route.id ? byId("akten", route.id) : null;
+  if (route.id) {
+    return html`<div class="page page-breit akten-arbeitsraum">
+      ${akte ? renderAkteDetail(akte, route.sub)
+        : html`<a class="zurueck-link" href="#/akten">← Alle Akten</a><div class="card empty-state"><h2>Akte nicht gefunden</h2><p>Vielleicht wurde sie gelöscht.</p><a class="btn" href="#/akten">Zur Aktenliste</a></div>`}
+    </div>`;
+  }
+  const list = gefilterteAkten();
   return html`
-    <div class="page page-breit">
-      <div class="split ${route.id ? "has-detail" : ""} ${f.listeZu && route.id ? "liste-zu" : ""}">
-        <aside class="list-pane" aria-label="Aktenliste">
-          <div class="toolbar">
-            <div class="search"><input type="search" id="akten-q" data-search data-input="akten-filter" data-key="q"
-              value="${f.q}" placeholder="Suchen: Name, Az., Vorwurf …"></div>
-          </div>
-          <div class="toolbar">
-            <select id="akten-status" data-change="akten-filter" data-key="status">
-              ${[["aktiv", "Offen + In Bearbeitung"], ["Offen", "Offen"], ["In Bearbeitung", "In Bearbeitung"],
-                 ["Geschlossen", "Geschlossen"], ["haft", "Mandant in Haft"], ["liegen", "Liegen geblieben"], ["alle", "Alle Akten"]]
-                .map(([v, l]) => html`<option value="${v}" ${f.status === v ? "selected" : ""}>${l}</option>`)}
-            </select>
-            <select id="akten-typ" data-change="akten-filter" data-key="typ">
-              <option value="">Alle Rechtsgebiete</option>
-              ${OPTIONEN.rechtsgebiet.map((r) => html`<option ${f.typ === r ? "selected" : ""}>${r}</option>`)}
-            </select>
-            <select id="akten-sort" data-change="akten-filter" data-key="sort" title="Sortierung">
-              ${[["aktiv", "Zuletzt aktiv"], ["prio", "Priorität"], ["termin", "Nächster Termin"], ["neu", "Neueste zuerst"], ["az", "Aktenzeichen"]]
-                .map(([v, l]) => html`<option value="${v}" ${f.sort === v ? "selected" : ""}>${l}</option>`)}
-            </select>
-            <label class="check"><input type="checkbox" id="akten-meine" data-change="akten-filter" data-key="meine" ${f.meine ? "checked" : ""}> Nur meine</label>
-          </div>
-          <div class="list-count">${list.length} ${list.length === 1 ? "Akte" : "Akten"}</div>
-          <div class="list-scroll" data-scroll="akten-list">
-            <ul class="item-list">${list.map((a) => html`<li>${akteListItem(a, route.id)}</li>`)}</ul>
-            ${list.length ? "" : html`<p class="empty center">Keine Akten gefunden.</p>`}
-          </div>
-        </aside>
-        <section class="detail-pane">
-          ${route.id
-            ? akte ? renderAkteDetail(akte, route.sub)
-                   : html`<div class="card empty-state"><h2>Akte nicht gefunden</h2><p>Vielleicht wurde sie gelöscht.</p><a class="btn" href="#/akten">Zur Aktenliste</a></div>`
-            : html`<div class="card empty-state">
-                <h2>Wähle eine Akte aus</h2>
-                <p>Links findest du alle Akten. Mit <strong>/</strong> springst du in die Suche, mit <strong>N</strong> legst du eine neue Akte an.</p>
-                <button class="btn primary" data-action="akte-neu">+ Neue Akte</button>
-              </div>`}
-        </section>
-      </div>
+    <div class="page page-breit akten-verzeichnis">
+      <div class="page-head"><div><h1>Akten</h1><p class="muted">${list.length} ${list.length === 1 ? "Akte" : "Akten"} · <strong>/</strong> sucht, <strong>N</strong> legt eine neue Akte an</p></div></div>
+      <div class="akten-filterleiste">${aktenFilterleiste("akten")}</div>
+      ${list.length ? html`<ul class="akten-verzeichnis-liste card" data-scroll="akten-list">${list.map(akteVerzeichnisZeile)}</ul>`
+        : html`<div class="card empty-state"><h2>Keine Akten gefunden</h2><p>Suche oder Filter ändern.</p></div>`}
     </div>`;
 };
+
+// ---------- Akten-Switcher: Slide-over von links (eigener Top-Layer, außerhalb von #main) ----------
+function aktenDrawer() {
+  let d = document.getElementById("akten-drawer");
+  if (d) return d;
+  d = document.createElement("dialog");
+  d.id = "akten-drawer";
+  d.className = "akten-drawer";
+  d.setAttribute("aria-label", "Akte wechseln");
+  d.innerHTML = `<div class="drawer-kopf"><h2>Akte wechseln</h2><button type="button" class="btn ghost icon-only" data-drawer-zu aria-label="Schließen">✕</button></div>
+    <div class="drawer-filter toolbar"></div><div class="list-count drawer-zahl"></div><div class="drawer-liste list-scroll"></div>`;
+  document.body.append(d);
+  // Klick auf den Backdrop (= auf das Dialog-Element selbst) oder auf eine Akte schließt
+  d.addEventListener("click", (e) => {
+    if (e.target === d || e.target.closest("[data-drawer-zu]") || e.target.closest("a.item[href]")) d.close();
+  });
+  // Esc schließt immer – auch wenn das Suchfeld den Fokus hat (dort leert Esc sonst nur die Suche)
+  d.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); d.close(); }
+  });
+  d.addEventListener("close", () => {
+    const btn = document.querySelector(".akten-switcher");
+    if (btn) { btn.setAttribute("aria-expanded", "false"); btn.focus({ preventScroll: true }); }
+  });
+  return d;
+}
+
+function aktenDrawerListe() {
+  const d = document.getElementById("akten-drawer");
+  if (!d || !d.open) return;
+  const r = parseRoute();
+  const list = gefilterteAkten();
+  d.querySelector(".drawer-zahl").textContent = `${list.length} ${list.length === 1 ? "Akte" : "Akten"}`;
+  d.querySelector(".drawer-liste").innerHTML = String(list.length
+    ? html`<ul class="item-list">${list.map((a) => html`<li>${akteListItem(a, r.id)}</li>`)}</ul>`
+    : html`<p class="empty center">Keine Akten gefunden.</p>`);
+  const aktiv = d.querySelector("a.item.active");
+  if (aktiv && !d.dataset.gescrollt) { aktiv.scrollIntoView({ block: "center" }); d.dataset.gescrollt = "1"; }
+}
+
+function aktenDrawerOeffnen() {
+  const d = aktenDrawer();
+  d.querySelector(".drawer-filter").innerHTML = String(aktenFilterleiste("drawer"));
+  delete d.dataset.gescrollt;
+  if (!d.open) d.showModal();
+  aktenDrawerListe();
+  const btn = document.querySelector(".akten-switcher");
+  if (btn) btn.setAttribute("aria-expanded", "true");
+  const q = d.querySelector("#drawer-q");
+  if (q && matchMedia("(pointer: fine)").matches) q.focus();
+}
+
+RENDER_HOOKS.push((route) => {
+  const d = document.getElementById("akten-drawer");
+  if (!d || !d.open) return;
+  if (route.page !== "akten" || !route.id) d.close();
+  else aktenDrawerListe();
+});
+
+ACTIONS["akten-switcher"] = () => aktenDrawerOeffnen();
+
+// Tastenkürzel in einer geöffneten Akte: [ öffnet den Akten-Switcher
+document.addEventListener("keydown", (e) => {
+  if (!state.loaded || e.metaKey || e.ctrlKey || e.altKey || e.key !== "[") return;
+  if (e.target.closest("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
+  const r = parseRoute();
+  if (r.page !== "akten" || !r.id) return;
+  e.preventDefault();
+  aktenDrawerOeffnen();
+}, true);
+
+// Reiterleiste: weicher Verlauf rechts, solange es dort noch weitergeht
+function reiterFadePruefen() {
+  document.querySelectorAll("#main .fall-tabs").forEach((leiste) => {
+    const wrap = leiste.parentElement;
+    if (!wrap || !wrap.classList.contains("reiter-fade")) return;
+    const pruefen = () => wrap.classList.toggle("mehr-rechts", leiste.scrollLeft + leiste.clientWidth < leiste.scrollWidth - 2);
+    if (!leiste.dataset.fade) { leiste.dataset.fade = "1"; leiste.addEventListener("scroll", pruefen, { passive: true }); }
+    pruefen();
+  });
+}
+RENDER_HOOKS.push((route) => { if (route.page === "akten" && route.id) reiterFadePruefen(); });
+window.addEventListener("resize", () => { if (parseRoute().page === "akten") reiterFadePruefen(); });
 
 // Höhe des klebenden Aktenkopfs merken: Die Aktendaten-Spalte klebt darunter
 function fallKopfMessen() {
@@ -138,27 +228,6 @@ function fallKopfMessen() {
 }
 RENDER_HOOKS.push(fallKopfMessen);
 window.addEventListener("resize", fallKopfMessen);
-
-ACTIONS["akten-liste-umschalten"] = () => { setListeZu(!ui.akten.listeZu); render(); };
-
-// Tastenkürzel auf der Aktenseite: [ blendet die Liste aus/ein, / holt sie für die Suche zurück
-document.addEventListener("keydown", (e) => {
-  if (!state.loaded || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target.closest("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
-  const r = parseRoute();
-  if (r.page !== "akten" || !r.id || !window.matchMedia("(min-width: 981px)").matches) return;
-  if (e.key === "[") {
-    e.preventDefault();
-    ACTIONS["akten-liste-umschalten"]();
-  } else if (e.key === "/" && ui.akten.listeZu) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    setListeZu(false);
-    render();
-    const q = document.getElementById("akten-q");
-    if (q) { q.focus(); q.select(); }
-  }
-}, true);
 
 INPUTS["akten-filter"] = (el) => { ui.akten[el.dataset.key] = el.value; scheduleRender(); };
 CHANGES["akten-filter"] = (el) => {
@@ -266,26 +335,28 @@ function renderAkteDetail(a, sub) {
   const tab = AKTE_TABS.some((t) => t.key === gewuenscht) ? gewuenscht : "verlauf";
   const k = konflikte(a);
   const m = byId("mandanten", a.mandant_id);
-  const zu = ui.akten.listeZu;
   const wer = typeof betrachter === "function" ? betrachter(a.id) : [];
   const body = {
     verlauf: tabVerlauf, vorwuerfe: tabVorwuerfe, beteiligte: tabBeteiligte, beweise: tabBeweise,
     termine: tabTermineAufgaben, rechnungen: tabRechnungen, historie: tabHistorie,
   }[tab];
 
+  const st = aufgabenStand(a.id);
   return html`
-    <a class="back-link" href="#/akten">← Alle Akten</a>
-    <div class="detail-card akte-detail">
+    <nav class="akte-navi" aria-label="Aktennavigation">
+      <a class="zurueck-link" href="#/akten">← Alle Akten</a>
+      <button type="button" class="akten-switcher" data-action="akten-switcher" aria-haspopup="dialog" aria-expanded="false"
+        title="Akte wechseln ([)">${icon("checkliste")}<span class="mono">${a.number}</span><span aria-hidden="true">▾</span></button>
+    </nav>
+    <div class="detail-card akte-detail ton-${akteTon(a)}">
       <header class="fall-kopf">
-        <button type="button" class="btn ghost icon-only liste-umschalten" data-action="akten-liste-umschalten"
-          aria-pressed="${zu ? "true" : "false"}" aria-label="${zu ? "Aktenliste einblenden" : "Aktenliste ausblenden"}"
-          title="${zu ? "Aktenliste einblenden ([)" : "Aktenliste ausblenden – mehr Platz für die Akte ([)"}">${icon("liste")}</button>
         <div class="fall-titel">
           <div class="fall-zeile">
             <button type="button" class="aktenzeichen" data-action="az-kopieren" data-az="${a.number}" title="Aktenzeichen kopieren" aria-label="Aktenzeichen ${a.number} kopieren">${a.number}${icon("kopieren")}</button>
             <span class="status-pill ${AKTE_STATUS_TON[a.status] || "neutral"}">${a.status}</span>
             ${a.in_haft ? html`<span class="badge haft">In Haft</span>` : ""}
             ${prioBadge(a.prioritaet)}
+            ${st.gesamt ? html`<a class="kopf-fortschritt" href="#/akten/${a.id}/termine">${fortschrittBalken(a.id)}</a>` : ""}
           </div>
           <h2>${a.title}</h2>
           <div class="fall-mandant">${m ? html`<a href="#/mandanten/${m.id}">${m.name}</a>` : a.client || "Ohne Mandant"}${a.opponent ? html`<span class="muted"> gegen ${a.opponent}</span>` : ""}</div>
@@ -305,17 +376,17 @@ function renderAkteDetail(a, sub) {
       <div class="akte-rumpf">
         <div class="akte-haupt">
           <details class="meta-zusammenfassung">
-            <summary><span class="meta-titel">Aktendaten</span><span class="muted small">${[mandantName(a), personName(a.zustaendig_id, ""), a.az_extern].filter(Boolean).join(" · ")}</span></summary>
+            <summary><span class="meta-titel">Aktendaten</span><span class="muted small">${[mandantName(a), personName(a.zustaendig_id, ""), a.az_extern].filter(Boolean).join(" · ")}</span>${st.gesamt ? fortschrittBalken(a.id) : ""}</summary>
             ${metadatenListe(a)}
             ${a.summary ? html`<h3 class="spiegel-titel" style="margin-top:14px">Sachverhalt</h3><p class="pre" style="margin:0">${a.summary}</p>` : ""}
             <button class="btn small" data-action="akte-bearbeiten" data-id="${a.id}" style="margin-top:10px">Akte bearbeiten</button>
           </details>
-          <nav class="tabs fall-tabs" aria-label="Bereiche der Akte">
+          <div class="reiter-fade"><nav class="tabs fall-tabs" aria-label="Bereiche der Akte">
             ${AKTE_TABS.map((t) => {
               const n = t.count ? t.count(a.id) : 0;
               return html`<a href="#/akten/${a.id}/${t.key}" class="${t.key === tab ? "active" : ""}"${t.key === tab ? html` aria-current="page"` : ""}><span class="tab-lang">${t.label}</span><span class="tab-kurz">${t.kurz || t.label}</span>${n ? html`<span class="count">${n}</span>` : ""}</a>`;
             })}
-          </nav>
+          </nav></div>
           <div class="tab-body">${body(a)}</div>
         </div>
         ${aktenspiegel(a)}
