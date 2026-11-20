@@ -1081,3 +1081,50 @@
     .akten-drawer { width: 100vw; border-radius: 0; padding-bottom: max(var(--space-4), env(safe-area-inset-bottom)); }
   }
 }
+
+/* =============================================================
+   Akte: Sachverhalt als „Fall-Briefing“ über den Reitern
+   ============================================================= */
+@layer views {
+  .akten-sachverhalt-card {
+    margin: var(--space-3) var(--space-5) var(--space-2);
+    padding: 12px 16px;
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--brand-gold-accent);
+    border-radius: var(--radius-md, 8px);
+  }
+  [data-theme="dark"] .akten-sachverhalt-card { background-color: rgba(255, 255, 255, 0.03); }
+  .sv-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; margin-bottom: 4px; }
+  .sv-label { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-secondary); }
+  .sv-bearbeiten {
+    padding: 2px 8px; border: 0; border-radius: var(--radius-sm); background: none;
+    color: var(--text-secondary); font: inherit; font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+  }
+  .sv-bearbeiten:hover, .sv-bearbeiten:focus-visible { background: var(--bg-surface); color: var(--text-primary); }
+  .akten-sachverhalt-text {
+    margin: 0; font-size: 0.9375rem; line-height: 1.55; color: var(--text-primary); overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; -webkit-line-clamp: 3; line-clamp: 3;
+  }
+  .akten-sachverhalt-card.is-expanded .akten-sachverhalt-text { display: block; -webkit-line-clamp: unset; line-clamp: none; overflow: visible; }
+  .sv-mehr { margin-top: 4px; font-size: var(--text-sm); text-decoration: none; color: var(--brand-text); }
+  .sv-mehr:hover { text-decoration: underline; }
+  .sv-mehr[hidden] { display: none; }
+  .akten-sachverhalt-ghost {
+    display: block; width: 100%; padding: 4px 0; border: 0; background: none; text-align: left;
+    color: var(--text-muted); font: inherit; font-style: italic; font-size: var(--text-sm); cursor: pointer;
+  }
+  .akten-sachverhalt-ghost:hover { color: var(--text-primary); }
+  .akten-sachverhalt-input {
+    display: block; width: 100%; min-height: 90px; padding: 10px; border-radius: 6px;
+    font-family: inherit; font-size: 0.9375rem; line-height: 1.55; resize: vertical; overflow: hidden;
+    background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-strong);
+  }
+  .sv-aktionen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+  .sv-tipp { margin-left: auto; }
+  @media (hover: none) { .sv-tipp { display: none; } }
+  @media (pointer: coarse) { .sv-bearbeiten, .akten-sachverhalt-ghost { min-height: 44px; } }
+  @container akte (max-width: 700px) {
+    .akten-sachverhalt-card { margin-left: var(--space-4); margin-right: var(--space-4); }
+  }
+}
