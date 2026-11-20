@@ -68,6 +68,16 @@ function firstName(name) {
   return String(name || "").trim().split(/\s+/)[0] || "";
 }
 
+// Name für die Begrüßung: Rufname bevorzugt; sonst Vorname – bei kurzen
+// Namensteilen wie „Al“, „Dr“, „Mr“ die ersten beiden Teile („Al Abadi“).
+function rufName(profil) {
+  if (!profil) return "";
+  if (profil.rufname && String(profil.rufname).trim()) return String(profil.rufname).trim();
+  const teile = String(profil.anzeigename || "").trim().split(/\s+/).filter(Boolean);
+  if (!teile.length) return "";
+  return teile[0].replace(/\.$/, "").length <= 2 && teile.length > 1 ? `${teile[0]} ${teile[1]}` : teile[0];
+}
+
 // "Günther Freitag" → "G. Freitag" (für die Unterschrift)
 function signatureName(name) {
   const parts = String(name || "").trim().split(/\s+/);

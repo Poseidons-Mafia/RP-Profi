@@ -26,7 +26,7 @@ function terminRow(t, { akte = true, datum = true } = {}) {
   const overdue = terminUeberfaellig(t);
   return html`
     <li class="${overdue ? "overdue" : ""}" data-live="termine:${t.id}">
-      <input type="checkbox" title="Erledigt" data-change="termin-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}>
+      <label class="check-hit"><input type="checkbox" title="Erledigt" data-change="termin-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}></label>
       <div class="when">${datum ? html`<strong>${fmt.tag(t.beginn)}</strong>` : ""}${fmt.zeit(t.beginn)} Uhr</div>
       <div class="grow">
         <div class="title ${t.erledigt ? "strike" : ""}">${t.titel}
@@ -35,8 +35,8 @@ function terminRow(t, { akte = true, datum = true } = {}) {
         </div>
         <div class="meta">${joinHtml([
           t.ort,
-          akte && a ? html`<a href="#/akten/${a.id}">${a.number} · ${truncate(mandantName(a), 30)}</a>` : null,
-          t.verantwortlich ? personName(t.verantwortlich) : null,
+          akte && a ? akteChip(a, mandantName(a)) : null,
+          t.verantwortlich && t.verantwortlich !== state.me.id ? personName(t.verantwortlich) : null,
           vonNigel(t),
         ])}</div>
         ${t.notiz ? html`<div class="meta pre">${t.notiz}</div>` : ""}
@@ -59,13 +59,14 @@ function aufgabeRow(t, { akte = true } = {}) {
   const overdue = aufgabeUeberfaellig(t);
   return html`
     <li class="${overdue ? "overdue" : ""}" data-live="aufgaben:${t.id}">
-      <input type="checkbox" title="Erledigt" data-change="aufgabe-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}>
+      <label class="check-hit"><input type="checkbox" title="Erledigt" data-change="aufgabe-erledigt" data-id="${t.id}" ${t.erledigt ? "checked" : ""}></label>
       <div class="grow">
         <div class="${t.erledigt ? "strike" : ""}">${t.text}</div>
         <div class="meta">${joinHtml([
-          t.faellig ? html`<span class="${overdue ? "danger-text" : ""}">fällig ${fmt.tag(t.faellig)}</span>` : null,
-          t.zustaendig ? personName(t.zustaendig) : null,
-          akte && a ? html`<a href="#/akten/${a.id}">${a.number} · ${truncate(a.title, 30)}</a>` : null,
+          t.faellig ? html`<span class="${overdue ? "faellig-ueber" : ""}">fällig ${fmt.tag(t.faellig)}</span>` : null,
+          // Eigener Name ist redundant – nur zeigen, wenn jemand anderes zuständig ist
+          t.zustaendig && t.zustaendig !== state.me.id ? personName(t.zustaendig) : null,
+          akte && a ? akteChip(a, a.title) : null,
           t.erledigt && t.erledigt_am ? `erledigt ${fmt.relativ(t.erledigt_am)}` : null,
           vonNigel(t),
         ])}</div>
@@ -74,18 +75,77 @@ function aufgabeRow(t, { akte = true } = {}) {
     </li>`;
 }
 
-function aufgabeSchnellForm(akteId) {
+// Ruhiger, klickbarer Akten-Verweis (Rot bleibt der Überfälligkeit vorbehalten)
+function akteChip(a, zusatz) {
+  return html`<a class="akte-chip" href="#/akten/${a.id}" title="${a.number} · ${a.title}"><span class="mono">${a.number}</span>${zusatz ? html` · ${truncate(zusatz, 30)}` : ""}</a>`;
+}
+
+// Datumsfeld mit sichtbarem Platzhalter: Safari/iPadOS zeigt ein leeres
+// <input type="date"> sonst als weiße Box. Ruhezustand type="text", beim
+// Fokus type="date" (siehe Listener unten), ohne Wert zurück zu text.
+function datumPlatzhalter(name, id, placeholder = "Fällig am …") {
+  return html`<span class="datum-feld">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 9.5h17M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <input type="text" id="${id}" name="${name}" data-datum-platzhalter placeholder="${placeholder}" title="Fällig am" aria-label="Fällig am" inputmode="none" autocomplete="off">
+  </span>`;
+}
+
+// Quick-Add; klappbar = im Ruhezustand nur die Textzeile (Übersicht)
+ui.quickAddOffen = ui.quickAddOffen || {};
+function aufgabeSchnellForm(akteId, { klappbar = false } = {}) {
   const id = `aufgabe-${akteId || "allgemein"}`;
+  const offen = !klappbar || ui.quickAddOffen[id] || !!ui.drafts[id];
   return html`
-    <form class="quick-add" data-submit="aufgabe-schnell" data-akte="${akteId || ""}">
-      <input id="${id}" name="text" data-input="draft" value="${ui.drafts[id] || ""}" required placeholder="Neue Aufgabe … z. B. Bodycam anfordern">
-      <select name="zustaendig" title="Zuständig">
-        ${teamOptions().map((o) => html`<option value="${o.value}" ${o.value === state.me.id ? "selected" : ""}>${o.label}</option>`)}
-      </select>
-      <input type="date" name="faellig" title="Fällig am">
-      <button class="btn primary" type="submit" title="Aufgabe anlegen">+ Aufgabe</button>
+    <form class="quick-add ${klappbar ? "klappbar" : ""} ${offen ? "offen" : ""}" data-submit="aufgabe-schnell" data-akte="${akteId || ""}" data-klapp-id="${id}">
+      <input id="${id}" name="text" data-input="draft" value="${ui.drafts[id] || ""}" required placeholder="Neue Aufgabe … z. B. Bodycam anfordern" autocomplete="off">
+      <div class="quick-add-mehr">
+        <select id="${id}-zustaendig" name="zustaendig" title="Zuständig">
+          ${teamOptions().map((o) => html`<option value="${o.value}" ${o.value === state.me.id ? "selected" : ""}>${o.label}</option>`)}
+        </select>
+        ${datumPlatzhalter("faellig", `${id}-faellig`)}
+        <button class="btn primary" type="submit" title="Aufgabe anlegen">+ Aufgabe</button>
+      </div>
     </form>`;
 }
+
+function quickAddKlappen(form, offen) {
+  if (!form || !form.classList.contains("klappbar")) return;
+  form.classList.toggle("offen", offen);
+  if (offen) ui.quickAddOffen[form.dataset.klappId] = true;
+  else delete ui.quickAddOffen[form.dataset.klappId];
+}
+
+document.addEventListener("focusin", (e) => {
+  const el = e.target;
+  if (el.matches && el.matches("input[data-datum-platzhalter]") && el.type !== "date") {
+    el.type = "date";
+    try { if (el.showPicker && matchMedia("(pointer: fine)").matches) el.showPicker(); } catch {}
+  }
+  quickAddKlappen(el.closest && el.closest("form.quick-add.klappbar"), true);
+});
+document.addEventListener("focusout", (e) => {
+  const el = e.target;
+  if (el.matches && el.matches("input[data-datum-platzhalter]") && !el.value) el.type = "text";
+  const form = el.closest && el.closest("form.quick-add.klappbar");
+  if (!form) return;
+  // Einklappen nur, wenn der Fokus das Formular verlässt und das Textfeld leer ist
+  setTimeout(() => {
+    if (!form.isConnected || form.contains(document.activeElement)) return;
+    const hatDatum = form.elements.faellig && form.elements.faellig.value;
+    if (!form.elements.text.value.trim() && !hatDatum) quickAddKlappen(form, false);
+  }, 120);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  const form = e.target.closest && e.target.closest("form.quick-add.klappbar");
+  if (!form) return;
+  form.reset();
+  const df = form.querySelector("input[data-datum-platzhalter]");
+  if (df) df.type = "text";
+  delete ui.drafts[form.elements.text.id];
+  quickAddKlappen(form, false);
+  e.target.blur();
+});
 
 SUBMITS["aufgabe-schnell"] = async (form) => {
   const text = form.elements.text.value.trim();
@@ -96,6 +156,10 @@ SUBMITS["aufgabe-schnell"] = async (form) => {
   if (ok !== undefined) {
     delete ui.drafts[form.elements.text.id];
     form.reset();
+    const df = form.querySelector("input[data-datum-platzhalter]");
+    if (df) df.type = "text";
+    quickAddKlappen(form, false);
+    if (form.contains(document.activeElement)) document.activeElement.blur();
   }
 };
 
