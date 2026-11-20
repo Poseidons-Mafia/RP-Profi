@@ -1396,7 +1396,9 @@ Erstelle ein juristisches Gutachten im Gutachtenstil. Gliederung:
 ## Prüfung – für jeden Tatvorwurf bzw. Anspruch eine eigene ###-Überschrift mit: Obersatz (Konjunktiv), Definition jedes
 Tatbestandsmerkmals am Wortlaut (aus den Werkzeugen), Subsumtion unter den Sachverhalt, Zwischenergebnis. Danach
 Rechtswidrigkeit/Schuld bzw. Einwendungen, soweit das Recht des Servers dazu etwas hergibt.
-## Strafrahmen (laut Strafkatalog, bei mehreren Taten summiert; als Tabelle)
+## Strafrahmen (laut Strafkatalog als Spanne von Mindest- bis Höchstmaß, als Tabelle. Bei mehreren Taten addieren; die Gesamtstrafe
+darf nach § 3 StGB höchstens 120 Hafteinheiten betragen (180 bei Taten gegen Leben, körperliche Unversehrtheit, verfassungsmäßige
+Ordnung und bei Terror), Geldstrafen werden addiert. „Nicht unter X“ = nach oben offen; „bis zu X“ = Mindestmaß 1 Hafteinheit)
 ## Gesamtergebnis
 Kennzeichne offen, wo Angaben im Sachverhalt fehlen („**Offen:** …“). Der Butler-Ton gehört nur in Einstieg und Schluss,
 das Gutachten selbst ist sachlich.`,
@@ -1453,7 +1455,8 @@ Analysiere den Fall wie ein erfahrener Staatsanwalt. Gliederung:
 ## Was Sie sollten (empfohlenes Vorgehen)
 ## Was Sie können (weitere Optionen)
 ## Beweislage (belegt, fehlt, wo die Verteidigung ansetzen wird)
-## Strafrahmen und Strafantrag (laut Strafkatalog, als Tabelle)
+## Strafrahmen und Strafantrag (laut Strafkatalog als Spanne von Mindest- bis Höchstmaß, als Tabelle; Gesamtstrafe nach § 3 StGB höchstens 120,
+bei besonders schweren Fällen 180 Hafteinheiten; Geldstrafen werden addiert; „nicht unter X“ = nach oben offen)
 ## Nächste Schritte (Checkliste mit "- [ ]")
 ${aktenWerkzeuge ? "Nutze akten_suchen, um vergleichbare frühere Fälle und ihren Ausgang zu finden, und nenne sie mit Aktenzeichen." : ""}`;
     modusText.frage = `## Arbeitsmodus: Rechtsfrage (Sicht der Staatsanwaltschaft)
@@ -1533,9 +1536,17 @@ async function kontextBauen(db: SupabaseClient, kanzleiDaten: Zeile,
 
   if (gesetze.data?.length) {
     teile.push("## Strafkatalog des Servers (Delikte mit Strafmaß)\n" + gesetze.data.map((g: Zeile) => {
-      const geld = g.geldstrafe ? `Geldstrafe ${g.geldstrafe_min ? g.geldstrafe_min + "–" : ""}${g.geldstrafe} ${s.waehrung}` : "";
-      const haft = g.haft ? `Haft ${g.haft_min ? g.haft_min + "–" : ""}${g.haft} ${s.haft_einheit}` : "";
-      return "- " + zeile(g.paragraph, g.titel, g.deliktsart, geld, haft, g.gesamt_erhoeht ? "Gesamtstrafe erhöht" : "", g.bemerkung, `[${g.kategorie || "ohne Kategorie"}]`);
+      // Mindest- und Höchstmaß: „bis“ = nur Höchstmaß (Mindestmaß gilt als 1), „nicht unter“ = nach oben offen, gleiche Werte = fest
+      const spanne = (min: number | null, max: number | null, einheit: string, name: string) => {
+        if (!max && !min) return "";
+        if (!max) return `${name} nicht unter ${min} ${einheit} (nach oben offen, kein Höchstmaß)`;
+        if (min && min === max) return `${name} ${max} ${einheit} (fest)`;
+        return min ? `${name} ${min} bis ${max} ${einheit}` : `${name} bis ${max} ${einheit}`;
+      };
+      const geld = spanne(g.geldstrafe_min, g.geldstrafe, s.waehrung, "Geldstrafe");
+      const haft = spanne(g.haft_min, g.haft, s.haft_einheit, "Haft");
+      return "- " + zeile(g.paragraph, g.titel, g.deliktsart, haft, geld, g.haft && g.geldstrafe ? "Haft oder Geldstrafe (Alternativen)" : "",
+        g.gesamt_erhoeht ? "Gesamtstrafe bis 180 statt 120 HE" : "", g.bemerkung, `[${g.kategorie || "ohne Kategorie"}]`);
     }).join("\n"));
   } else {
     teile.push("## Strafkatalog des Servers\n(nicht verfügbar – fehlendes Leserecht oder leer)");
@@ -1578,8 +1589,10 @@ async function akteDetail(db: SupabaseClient, id: string, s: Zeile) {
   if (a.summary) out.push(`Sachverhalt: ${a.summary}`);
   if (a.stand) out.push(`Aktueller Stand${a.stand_am ? ` (${a.stand_am})` : ""}: ${a.stand}`);
   if ((a.vorwuerfe || []).length) {
-    out.push("Tatvorwürfe:\n" + a.vorwuerfe.map((v: Zeile) => `- ${v.anzahl > 1 ? v.anzahl + "× " : ""}${zeile(v.paragraph, v.titel,
-      v.geldstrafe ? `${v.geldstrafe} ${s.waehrung}` : "", v.haft ? `${v.haft} ${s.haft_einheit}` : "")}`).join("\n"));
+    out.push("Tatvorwürfe (Strafmaß je Tat; „bis“ = Höchstmaß, „ab“ = Mindestmaß, „ab … ohne Höchstmaß“ = nach oben offen):\n" + a.vorwuerfe.map((v: Zeile) => {
+      const maß = (min: number | null, max: number | null, einheit: string) => (max ? `${min && min !== max ? `${min}–` : "bis "}${max} ${einheit}` : min ? `ab ${min} ${einheit} ohne Höchstmaß` : "");
+      return `- ${v.anzahl > 1 ? v.anzahl + "× " : ""}${zeile(v.paragraph, v.titel, maß(v.haft_min, v.haft, s.haft_einheit), maß(v.geldstrafe_min, v.geldstrafe, s.waehrung))}`;
+    }).join("\n"));
   }
   if (a.ergebnis) out.push(`Ergebnis: ${zeile(a.ergebnis, a.ergebnis_datum, a.ergebnis_details)}`);
   if (beteiligte.data?.length) out.push("Beteiligte:\n" + beteiligte.data.map((b: Zeile) => "- " + zeile(b.rolle, b.name, b.notiz)).join("\n"));

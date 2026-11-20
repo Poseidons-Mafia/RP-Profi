@@ -393,7 +393,7 @@ function portalAkteDetail(route) {
 }
 
 function portalAkteUeberblick(a, neu) {
-  const summe = vorwurfSumme(a.vorwuerfe);
+  const rahmen = vorwurfStrafrahmen(a.vorwuerfe);
   const neuGesamt = neu.nachrichten + neu.termine + neu.dokumente;
   const nt = portalTermine(a)[0];
   const letzte = [...(a.verlauf || [])].reverse().find((e) => !e.eigene);
@@ -435,13 +435,13 @@ function portalAkteUeberblick(a, neu) {
     ${(a.vorwuerfe || []).length ? html`
       <h3 class="section-title" style="margin-top:20px">Tatvorwürfe & Strafrahmen</h3>
       <div class="table-wrap"><table class="table">
-        <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th></tr></thead>
-        <tbody>${a.vorwuerfe.map((v) => html`<tr><td class="nowrap">${v.paragraph || "–"}</td><td>${v.titel}</td><td>${v.anzahl || 1}</td>
-          <td class="num">${v.geldstrafe ? fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1)) : "–"}</td>
-          <td class="num">${v.haft ? fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1)) : "–"}</td></tr>`)}</tbody>
+        <thead><tr><th>Paragraph</th><th>Vorwurf</th><th>Anzahl</th><th class="num">Haft</th><th class="num">Geldstrafe</th></tr></thead>
+        <tbody>${a.vorwuerfe.map((v) => { const r = vorwurfRahmen(v); return html`<tr><td class="nowrap">${v.paragraph || "–"}</td><td>${v.titel}</td><td>${v.anzahl || 1}</td>
+          <td class="num">${vorwurfZeileText(r, v.anzahl, "haft")}</td>
+          <td class="num">${vorwurfZeileText(r, v.anzahl, "geld")}</td></tr>`; })}</tbody>
       </table></div>
-      <div class="sum-bar"><span>Strafrahmen gesamt:</span><span>Geldstrafe <strong>${fmt.geld(summe.geld)}</strong></span><span>Haft <strong>${fmt.haft(summe.haft)}</strong></span></div>
-      <p class="small muted">Höchstmaß laut Strafkatalog – das tatsächliche Ergebnis kann davon abweichen.</p>` : ""}`;
+      <div class="sum-bar"><span>Mögliche Bestrafung:</span>${rahmen.haft ? html`<span>Haft <strong>${spanneText(rahmen.haft, "haft")}</strong></span>` : ""}${rahmen.geld ? html`<span>Geldstrafe <strong>${spanneText(rahmen.geld, "geld")}</strong></span>` : ""}</div>
+      <p class="small muted">Spanne vom Mindest- bis zum Höchstmaß laut Strafkatalog${rahmen.deckel ? ` (Haft bei mehreren Taten auf höchstens ${fmt.haft(rahmen.deckel)} begrenzt)` : ""} – das tatsächliche Ergebnis kann davon abweichen.</p>` : ""}`;
 }
 
 // Nachrichten wie ein Chat: älteste oben, neueste unten, Eingabefeld darunter

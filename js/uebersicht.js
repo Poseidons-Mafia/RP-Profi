@@ -73,7 +73,7 @@ function globaleSuche(q) {
   add("Gesetze", state.paragraphen.filter((p) => matches(q, p.nummer, p.titel, p.text, (byId("gesetzbuecher", p.gesetzbuch_id) || {}).kuerzel)).map((p) => ({
     href: `#/gesetze/${p.gesetzbuch_id}/${p.id}`, titel: `${paragraphZitat(p)} ${p.titel || ""}`, sub: truncate(String(p.text || "").replace(/\s+/g, " "), 90) })));
   add("Strafkatalog", state.gesetze.filter((g) => matches(q, g.paragraph, g.titel, g.kategorie)).map((g) => ({
-    href: "#/gesetzbuch", titel: `${g.paragraph || ""} ${g.titel}`, sub: [g.geldstrafe ? fmt.geld(g.geldstrafe) : "", g.haft ? fmt.haft(g.haft) : ""].filter(Boolean).join(" · ") })));
+    href: "#/gesetzbuch", titel: `${g.paragraph || ""} ${g.titel}`, sub: ["haft", "geld"].map((e) => deliktStrafeText(deliktRahmen(g), e)).filter((t) => t !== "–").join(" · ") })));
   return gruppen;
 }
 
