@@ -121,9 +121,21 @@ und Änderungen erscheinen bei allen sofort.
   Kanzlei-Einstellungen, Komplettsicherung. Die Datenbank prüft jedes Recht selbst.
 - **KI-Assistent „Nigel“** – ein britischer Butler und Jurist, der jeden mit „Sir“ anspricht (genau **ein** Modell über
   **OpenRouter**, derzeit DeepSeek V4.1 Flash, keine Ausweich-Modelle): beantwortet
-  **ausschließlich Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
-  Strafrahmen) und lehnt alles andere ab – außer Büroarbeit für die Kanzlei im Modus *Organisatorisch* (Arbeitsbereich). Dafür hat die KI zwei **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
+  **Rechtsfragen** zu den Gesetzen des Servers (auch zu einer gewählten Akte: Rechtslage, Tatbestände,
+  Strafrahmen) **und Fragen zu allen Inhalten der Website** und lehnt alles andere ab – außer Büroarbeit für die Kanzlei im Modus *Organisatorisch* (Arbeitsbereich). Dafür hat die KI **Werkzeuge**: `gesetze_finden` (Gesetzbücher finden)
   und `paragraphen_finden` (einzelne Paragraphen im Wortlaut per Stichwort/Nummer finden); den Strafkatalog kennt sie direkt.
+  **Nigel kennt die ganze Website** – in allen Modi stehen ihm reine **Nachschlage-Werkzeuge** zur Verfügung (nur lesen, mit dem Login
+  des Mitglieds: Er sieht nie mehr, als das Mitglied selbst sehen darf, und nur Werkzeuge zu Bereichen mit Leserecht werden angeboten):
+  `akten_suchen`/`akte_lesen` (jetzt auch mit Verlauf, Beteiligten, Beweisen, Terminen, Aufgaben und Rechnungen der Akte),
+  `mandanten_suchen` (Kartei samt Akten und offenen Rechnungen), `kalender_ansehen` (Termine und Aufgaben je Zeitraum, Person oder Akte),
+  `rechnungen_suchen` (mit Summen, Fälligkeit und überfälligen) und `gebuehren_ansehen`, `buchhaltung_ansehen` (Konten, Salden, Gewinn, Buchungen),
+  `pinnwand_lesen` (mit Lesebestätigungen und Archiv), `ablaeufe_lesen`, `team_ansehen` (Mitglieder, Ränge, Rechte, Arbeitslast),
+  `personalakte_lesen` (nur eigene bzw. mit „Personal lesen“), `portal_ansehen` (Anliegen und Bewertungen), `protokoll_lesen`
+  (Änderungsprotokoll), `leitfaden_lesen` (liest den Leitfaden „Abhandlung einer Straftat“ live von der Website) und `website_hilfe`
+  (Anleitung: wo finde ich was, wie bedient man es). Beispiele: „Welche Rechnungen sind überfällig?“, „Was steht diese Woche bei mir an?“,
+  „Wer fehlt noch bei der Lesebestätigung?“, „Wo lege ich einen Mandanten an?“, „Was gilt bei der vorläufigen Festnahme?“.
+  Die Anleitung (`HANDBUCH`) steht in `supabase/functions/ki-assistent/index.ts` – bei neuen Seiten oder Funktionen dort ergänzen.
+  **Nach dieser Änderung die Edge Function `ki-assistent` neu bereitstellen** (keine SQL-Änderung nötig).
   Die KI antwortet in **Markdown**, das im Browser mit Showdown in HTML umgewandelt (und mit DOMPurify bereinigt) wird.
   Antworten sind auf **4000 Zeichen** begrenzt – das interne Nachdenken (Reasoning) zählt nicht mit. Unter jeder Antwort
   stehen die nachgeschlagenen Paragraphen (anklickbar). Rechte je Rang in zwei Stufen (wie Lesen/Bearbeiten):

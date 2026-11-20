@@ -619,6 +619,7 @@ const NW_VORSCHAU_BEISPIEL = {
 
 const NW_VORSCHAU_KANN = [
   ["§", "Beantwortet Rechtsfragen und schlägt dafür selbst in Gesetzen und Strafkatalog nach"],
+  ["?", "Weiß über alle Inhalte der Website Bescheid: Mandanten, Kalender, Rechnungen, Buchhaltung, Pinnwand, Personal – und wie man sie bedient"],
   ["G", "Prüft die Tatvorwürfe einer Akte im Gutachtenstil, mit Strafrahmen"],
   ["S", "Entwirft Schriftsätze und überarbeitet sie auf Anweisung"],
   ["F", "Analysiert Fälle: Stärken, Risiken, Beweislage, nächste Schritte"],
@@ -1005,6 +1006,10 @@ const NW_WERKZEUG = {
   gesetze_finden: ["GB", "Gesetzbücher"], paragraphen_finden: ["§", "Paragraphen"], akten_suchen: ["A", "Akten durchsucht"], akte_lesen: ["A", "Akte gelesen"],
   akte_eintrag: ["A", "In Akte notiert"], termin_anlegen: ["T", "Termin angelegt"], aufgabe_anlegen: ["✓", "Aufgabe angelegt"],
   pinnwand_beitrag: ["P", "Pinnwand"], termine_ansehen: ["T", "Kalender angesehen"], discord_nachricht: ["@", "Discord"],
+  mandanten_suchen: ["M", "Mandanten"], kalender_ansehen: ["T", "Kalender angesehen"], rechnungen_suchen: ["R", "Rechnungen"],
+  gebuehren_ansehen: ["R", "Gebührenkatalog"], buchhaltung_ansehen: ["B", "Buchhaltung"], pinnwand_lesen: ["P", "Pinnwand gelesen"],
+  ablaeufe_lesen: ["✓", "Abläufe"], team_ansehen: ["P", "Personal"], personalakte_lesen: ["P", "Personalakte"],
+  portal_ansehen: ["M", "Mandantenportal"], protokoll_lesen: ["H", "Änderungsprotokoll"], leitfaden_lesen: ["L", "Leitfaden"], website_hilfe: ["?", "Anleitung"],
 };
 function nwSchrittZeile(s) {
   const [zeichen, name] = NW_WERKZEUG[s.werkzeug] || ["•", s.werkzeug];
@@ -1063,7 +1068,7 @@ function nwLeisteZeichnen(chat) {
   if (senden) senden.disabled = !!(chat.id && ui.nigel.laeuft[chat.id]);
   const feld = nwFeld("nw-text");
   if (feld) {
-    const ph = { frage: "Ihre Rechtsfrage an Nigel …", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?", orga: "Was soll Nigel erledigen? (z. B. „Gib [Name] auf Discord Bescheid, dass ich mich zehn Minuten verspäte“)" }[chat.modus];
+    const ph = { frage: "Ihre Frage an Nigel … (Recht oder Website)", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?", orga: "Was soll Nigel erledigen? (z. B. „Gib [Name] auf Discord Bescheid, dass ich mich zehn Minuten verspäte“)" }[chat.modus];
     if (feld.placeholder !== ph) feld.placeholder = ph;
   }
 }

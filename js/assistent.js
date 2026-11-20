@@ -7,8 +7,9 @@
 //    aufgeklappt – links Akte & Schnellaktionen, rechts der Chat
 //  Die Seite dahinter bleibt bedienbar. Die KI läuft über die
 //  Supabase Edge Function "ki-assistent" (ein festes Modell über OpenRouter) und beantwortet
-//  ausschließlich Rechtsfragen. Dabei schlägt sie mit Werkzeugen in den
-//  Gesetzen nach. Ihre Antwort kommt als Markdown und wird hier mit
+//  Rechtsfragen und Fragen zu allen Inhalten der Website (Mandanten, Kalender,
+//  Rechnungen, Pinnwand …). Dabei schlägt sie mit Werkzeugen in den
+//  Gesetzen und auf der Website nach. Ihre Antwort kommt als Markdown und wird hier mit
 //  Showdown in HTML umgewandelt (und mit DOMPurify bereinigt).
 //  Rechte: "ki_assistent" (= Nigel verwenden) bzw. "ki_sehen" (= nur sehen): Wer Nigel nur
 //  sehen darf, bekommt dasselbe Handy, aber gesperrt (kein Chat, nichts wird geladen).
@@ -32,6 +33,10 @@ const KI_VORLAGEN = [
   { label: "Paragraphen finden", akte: false, text: "Welche Paragraphen passen auf folgenden Sachverhalt?\n", ergaenzen: true },
   { label: "Paragraph erklären", akte: false, text: "Erkläre mir ", ergaenzen: true },
   { label: "Welche Gesetze?", akte: false, text: "Welche Gesetzbücher gibt es auf dem Server und wofür gelten sie?" },
+  { label: "Termine der Woche", akte: false, text: "Welche Termine und Aufgaben stehen in den nächsten sieben Tagen an?" },
+  { label: "Offene Rechnungen", akte: false, text: "Welche Rechnungen sind noch offen oder überfällig?" },
+  { label: "Pinnwand", akte: false, text: "Was steht aktuell an der Pinnwand?" },
+  { label: "Wo finde ich …?", akte: false, text: "Wo finde ich auf der Website ", ergaenzen: true },
 ];
 
 const KI_ICON = {
@@ -123,7 +128,7 @@ kiChatBlock.innerHTML = `
   <div class="ki-unten">
     <div class="ki-chips" data-ki="chips"></div>
     <form class="ki-eingabe" data-submit="ki-frage">
-      <textarea name="text" rows="1" placeholder="Ihre Rechtsfrage an Nigel …" aria-label="Nachricht an Nigel"></textarea>
+      <textarea name="text" rows="1" placeholder="Ihre Frage an Nigel …" aria-label="Nachricht an Nigel"></textarea>
       <button type="submit" class="ki-senden" aria-label="Senden">${KI_ICON.senden}</button>
     </form>
   </div>`;
@@ -319,7 +324,7 @@ function kiAktualisieren() {
     return;
   }
   kiTextarea.disabled = false;
-  kiTextarea.placeholder = `Ihre Rechtsfrage an Nigel${anredeKomma()} …`;
+  kiTextarea.placeholder = `Ihre Frage an Nigel${anredeKomma()} …`;
   if (s.userId !== state.me.id) kiLaden(state.me.id);
 
   // Ohne laufenden Chat folgt der Kontext der geöffneten Akte
@@ -397,8 +402,8 @@ function kiPanelZeichnen(akte, akten) {
         </div>
       </section>` : html`
       <section class="ki-karte ki-allgemein">
-        <h3>Allgemeine Rechtsfragen</h3>
-        <p class="ki-leise">${offene.length ? `Für Fragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:` : "Nigel schlägt in den Gesetzen und im Strafkatalog nach."}</p>
+        <h3>Allgemeine Fragen</h3>
+        <p class="ki-leise">${offene.length ? `Für Fragen zu einem Fall wählen Sie eine Akte${anredeKomma()}:` : "Nigel schlägt in den Gesetzen nach und kennt alle Inhalte der Website."}</p>
         ${offene.length ? html`<div class="ki-aktenliste">
           ${offene.map((a) => html`<button type="button" data-action="ki-akte-setzen" data-id="${a.id}"><span class="ki-badge">${a.number}</span><span class="t">${a.title || ""}</span></button>`)}
         </div>` : ""}
@@ -428,7 +433,7 @@ function kiChatZeichnen() {
   const leer = html`<div class="ki-leer">
     <img src="assets/nigel.svg" alt="Nigel">
     <p class="ki-gruss">${kiTagesgruss()}${anredeKomma()}.</p>
-    <p>Nigel, zu Ihren Diensten. Ich kläre Ihre Rechtsfragen zu den Gesetzen dieser Stadt – und, wenn Sie gestatten, ausschließlich diese.</p>
+    <p>Nigel, zu Ihren Diensten. Ich kläre Ihre Rechtsfragen zu den Gesetzen dieser Stadt – und weiß auf dieser Website über jede Kleinigkeit Bescheid: Akten, Mandanten, Termine, Rechnungen, Pinnwand und mehr. Fragen Sie nur.</p>
     <ul class="ki-weiss">
       <li>§ ${state.gesetzbuecher.length} ${state.gesetzbuecher.length === 1 ? "Gesetzbuch" : "Gesetzbücher"} · ${state.gesetze.length} Delikte</li>
       ${akte ? html`<li>${new SafeHtml(KI_ICON.akte)}Akte ${akte.number}</li>` : ""}
@@ -495,7 +500,7 @@ function kiGesperrtZeichnen() {
     </div>
     <section class="ki-karte">
       <h3>Gesperrt</h3>
-      <p class="ki-leise">Nigel beantwortet Rechtsfragen und schlägt dafür in den Gesetzen nach. Für Ihren Rang${rang ? ` (${rang})` : ""} ist das Verwenden nicht freigeschaltet.</p>
+      <p class="ki-leise">Nigel beantwortet Rechtsfragen und Fragen zur Website und schlägt dafür in den Gesetzen und Inhalten nach. Für Ihren Rang${rang ? ` (${rang})` : ""} ist das Verwenden nicht freigeschaltet.</p>
     </section>
     <section class="ki-karte">
       <p class="ki-mini-titel" style="margin-top:0">Arbeitsbereich</p>
