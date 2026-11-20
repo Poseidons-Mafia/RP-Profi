@@ -85,7 +85,7 @@ function charakterSwitcher({ imSheet = false } = {}) {
   const rang = (p && rangName(p)) || (state.isAdmin ? "Admin" : "Mitglied");
   return html`<button type="button" class="char-switch ${imSheet ? "im-sheet" : ""}" popovertarget="char-pop" aria-haspopup="menu" aria-expanded="false"
       title="Charakter wechseln, Profil, Abmelden">
-    <span class="char-marke-wrap" title="Charakter wechseln"><img class="char-marke" src="assets/icon.png?v=63" alt="" width="36" height="36"><span class="char-wechsel-badge" aria-hidden="true">⇅</span></span>
+    <span class="char-marke-wrap" title="Charakter wechseln"><img class="char-marke" src="assets/icon.png?v=64" alt="" width="36" height="36"><span class="char-wechsel-badge" aria-hidden="true">⇅</span></span>
     <span class="char-text">
       <strong class="char-name">${myName() || "Mein Konto"}</strong>
       <span class="char-rang">${rang}</span>

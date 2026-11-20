@@ -324,10 +324,106 @@ function aktenspiegel(a) {
       <div class="spiegel-kopf"><h3 class="spiegel-titel">Aktendaten</h3>
         <button class="link-btn small" data-action="akte-bearbeiten" data-id="${a.id}">Bearbeiten</button></div>
       ${metadatenListe(a)}
-      <h3 class="spiegel-titel" style="margin-top:18px">Sachverhalt</h3>
-      <p class="spiegel-sachverhalt pre">${a.summary || html`<span class="muted">${darf("akten_schreiben") ? "Noch kein Sachverhalt – über „Bearbeiten“ eintragen." : "Noch kein Sachverhalt erfasst."}</span>`}</p>
     </aside>`;
 }
+
+// ---------- Sachverhalt als „Fall-Briefing“ über den Reitern ----------
+// Lesemodus mit 3 Zeilen + „Mehr lesen“, Leerzustand als Ghost-Zeile, Inline-Bearbeitung.
+ui.akten.svEdit = null;          // Akte, deren Sachverhalt gerade bearbeitet wird
+ui.akten.svOffen = new Set();    // aufgeklappte Sachverhalte
+const svDraftId = (id) => `sv-text-${id}`;
+
+function sachverhaltKarte(a) {
+  const schreiben = darf("akten_schreiben");
+  const text = String(a.summary || "");
+  const edit = ui.akten.svEdit === a.id && schreiben;
+  const offen = ui.akten.svOffen.has(a.id);
+  if (!text.trim() && !edit && !schreiben) return "";
+  const draftId = svDraftId(a.id);
+  return html`<section class="akten-sachverhalt-card ${offen ? "is-expanded" : ""} ${edit ? "is-editing" : ""}" data-sv="${a.id}" aria-label="Sachverhalt">
+    <div class="sv-kopf">
+      <h3 class="sv-label">Sachverhalt</h3>
+      ${schreiben && !edit && text.trim() ? html`<button type="button" class="sv-bearbeiten" data-action="sv-bearbeiten" data-id="${a.id}" aria-label="Sachverhalt bearbeiten">✎ Bearbeiten</button>` : ""}
+    </div>
+    ${edit ? html`
+      <textarea id="${draftId}" class="akten-sachverhalt-input" data-input="draft" data-sv-input="${a.id}" rows="4"
+        placeholder="Was ist passiert? Was wird dem Mandanten vorgeworfen? Was sagt er selbst?" aria-label="Sachverhalt">${ui.drafts[draftId] ?? text}</textarea>
+      <div class="sv-aktionen">
+        <button type="button" class="btn small primary" data-action="sv-speichern" data-id="${a.id}">Speichern</button>
+        <button type="button" class="btn small ghost" data-action="sv-abbrechen" data-id="${a.id}">Abbrechen</button>
+        <span class="small muted sv-tipp">Strg + Enter speichert · Esc bricht ab</span>
+      </div>`
+    : text.trim() ? html`
+      <div class="akten-sachverhalt-text pre">${text}</div>
+      <button type="button" class="link-btn sv-mehr" data-action="sv-mehr" data-id="${a.id}" hidden>${offen ? "Weniger anzeigen ↑" : "Mehr lesen ↓"}</button>`
+    : html`<button type="button" class="akten-sachverhalt-ghost" data-action="sv-bearbeiten" data-id="${a.id}">+ Sachverhalt erfassen …</button>`}
+  </section>`;
+}
+
+function svAutoHoehe(ta) {
+  ta.style.height = "auto";
+  ta.style.height = `${Math.max(90, ta.scrollHeight + 2)}px`;
+}
+
+function sachverhaltPruefen() {
+  document.querySelectorAll("#main .akten-sachverhalt-card").forEach((card) => {
+    const t = card.querySelector(".akten-sachverhalt-text");
+    const btn = card.querySelector(".sv-mehr");
+    if (t && btn) btn.hidden = !(card.classList.contains("is-expanded") || t.scrollHeight > t.clientHeight + 2);
+    const ta = card.querySelector(".akten-sachverhalt-input");
+    if (ta) svAutoHoehe(ta);
+  });
+}
+RENDER_HOOKS.push((route) => { if (route.page === "akten" && route.id) sachverhaltPruefen(); });
+window.addEventListener("resize", () => { if (parseRoute().page === "akten") sachverhaltPruefen(); });
+
+function svBeenden(id) {
+  ui.akten.svEdit = null;
+  delete ui.drafts[svDraftId(id)];
+  render();
+}
+
+async function svSpeichern(id) {
+  const ta = document.getElementById(svDraftId(id));
+  const a = byId("akten", id);
+  if (!ta || !a) return;
+  const wert = ta.value.trim();
+  if (wert === String(a.summary || "").trim()) { svBeenden(id); return; }
+  const ok = await attempt(() => updateRow("akten", id, { summary: wert || null }), "Sachverhalt gespeichert");
+  if (ok !== undefined) svBeenden(id);
+}
+
+Object.assign(ACTIONS, {
+  "sv-bearbeiten": (d) => {
+    ui.akten.svEdit = d.id;
+    render();
+    const ta = document.getElementById(svDraftId(d.id));
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  },
+  "sv-abbrechen": (d) => svBeenden(d.id),
+  "sv-speichern": (d) => svSpeichern(d.id),
+  "sv-mehr": (d) => {
+    const auf = !ui.akten.svOffen.has(d.id);
+    if (auf) ui.akten.svOffen.add(d.id); else ui.akten.svOffen.delete(d.id);
+    const card = document.querySelector(`#main .akten-sachverhalt-card[data-sv="${CSS.escape(d.id)}"]`);
+    if (!card) { render(); return; }
+    card.classList.toggle("is-expanded", auf);
+    const btn = card.querySelector(".sv-mehr");
+    if (btn) btn.textContent = auf ? "Weniger anzeigen ↑" : "Mehr lesen ↓";
+    sachverhaltPruefen();
+  },
+});
+
+document.addEventListener("input", (e) => {
+  if (e.target.matches && e.target.matches(".akten-sachverhalt-input")) svAutoHoehe(e.target);
+});
+document.addEventListener("keydown", (e) => {
+  const ta = e.target.closest && e.target.closest(".akten-sachverhalt-input");
+  if (!ta) return;
+  const id = ta.dataset.svInput;
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); svSpeichern(id); }
+  else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); svBeenden(id); }
+});
 
 // ---------- Detail: klebender Aktenkopf + Inhalt | Aktendaten ----------
 function renderAkteDetail(a, sub) {
@@ -378,9 +474,9 @@ function renderAkteDetail(a, sub) {
           <details class="meta-zusammenfassung">
             <summary><span class="meta-titel">Aktendaten</span><span class="muted small">${[mandantName(a), personName(a.zustaendig_id, ""), a.az_extern].filter(Boolean).join(" · ")}</span>${st.gesamt ? fortschrittBalken(a.id) : ""}</summary>
             ${metadatenListe(a)}
-            ${a.summary ? html`<h3 class="spiegel-titel" style="margin-top:14px">Sachverhalt</h3><p class="pre" style="margin:0">${a.summary}</p>` : ""}
             <button class="btn small" data-action="akte-bearbeiten" data-id="${a.id}" style="margin-top:10px">Akte bearbeiten</button>
           </details>
+          ${sachverhaltKarte(a)}
           <div class="reiter-fade"><nav class="tabs fall-tabs" aria-label="Bereiche der Akte">
             ${AKTE_TABS.map((t) => {
               const n = t.count ? t.count(a.id) : 0;
