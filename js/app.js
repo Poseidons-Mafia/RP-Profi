@@ -11,7 +11,7 @@ const ui = {
   mandanten: { q: "", filter: "alle" },
   kalender: { modus: "agenda", monat: ymd(new Date()).slice(0, 7), vergangene: false, meine: false },
   rechnungen: { status: "Offen", q: "" },
-  gesetze: { q: "", kategorie: "", auswahl: {} },
+  gesetze: { q: "", kategorie: "", auswahl: {}, schwer: false },
   globalQ: "",
   drafts: {},
   historie: {},     // Änderungsprotokoll je Akte (nachgeladen)
@@ -275,7 +275,7 @@ function renderNav(route) {
       </div>`)}
     </div>
     <div class="sb-fuss">
-      <a class="nav-item sb-leitfaden" href="leitfaden/straftat.html?v=65" title="Leitfaden „Abhandlung einer Straftat“">
+      <a class="nav-item sb-leitfaden" href="leitfaden/straftat.html?v=66" title="Leitfaden „Abhandlung einer Straftat“">
         ${navIcon("leitfaden")}<span class="nav-label">Leitfaden <small>Abhandlung einer Straftat</small></span></a>
       <button type="button" class="nav-item nav-klappen" data-action="nav-klappen" aria-expanded="${!zu}"
         title="${zu ? "Menü ausklappen" : "Menü einklappen (nur Symbole)"}" aria-label="${zu ? "Menü ausklappen" : "Menü einklappen"}">
@@ -305,7 +305,7 @@ function renderNav(route) {
     <div class="sheet-liste">
       <button type="button" class="sheet-zeile" data-action="nav-profil">${navIcon("profil")}<span>Mein Profil</span></button>
       <button type="button" class="sheet-zeile" data-action="theme-umschalten">${themeIcon()}<span class="theme-label">Design umschalten</span></button>
-      <a class="sheet-zeile" href="leitfaden/straftat.html?v=65">${navIcon("leitfaden")}<span>Leitfaden „Abhandlung einer Straftat“</span></a>
+      <a class="sheet-zeile" href="leitfaden/straftat.html?v=66">${navIcon("leitfaden")}<span>Leitfaden „Abhandlung einer Straftat“</span></a>
       <button type="button" class="sheet-zeile danger" data-action="logout">${navIcon("abmelden")}<span>Abmelden</span></button>
     </div>`);
 

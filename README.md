@@ -83,7 +83,7 @@ und Änderungen erscheinen bei allen sofort.
   Wird ein Mitglied auf „Urlaub“/„Krank“ gesetzt, bietet das System die Übergabe direkt an.
 - **Akten** mit Tabs:
   - **Überblick:** Mandant, Gegenpartei, Mandatsart, Priorität, Zuständige/r, Aktenzeichen von Polizei/StA/Gericht,
-    Haft-Status, **Tatvorwürfe mit Strafrechner** (Geldstrafe und Haft werden summiert), Ergebnis
+    Haft-Status, **Tatvorwürfe mit Strafrechner** (Spanne der möglichen Haft und Geldstrafe, Mindest- bis Höchstmaß), Ergebnis
   - **Verlauf:** Einträge nach Art (Telefonat, Gericht, Polizei …), als „wichtig“ markierbar
   - **Beteiligte:** Zeugen, Beamte, Richter, Staatsanwaltschaft, Gegenseite
   - **Beweise:** Links zu Screenshots und Clips, mit Bildvorschau
@@ -109,7 +109,20 @@ und Änderungen erscheinen bei allen sofort.
   (Landespolizeigesetz), **StVO**, **WaffG**, **BtMG**, **GewO** und **LuftVO** (Luftverkehrsordnung). Die Texte liegen im
   Ordner [`gesetze/`](gesetze); `python3 tools/gesetze-sql.py` erzeugt daraus [`supabase-gesetze.sql`](supabase-gesetze.sql),
   die die Gesetzbücher anlegt bzw. ihre Paragraphen vollständig ersetzt (beliebig oft ausführbar).
-- **Strafkatalog & Strafrechner:** Delikte eures Servers mit Geldstrafe und Haft, Massenimport aus Google Sheets/Excel.
+- **Strafkatalog & Strafrechner:** alle Straftaten des StGB sowie die Bußgelder der StVO (Geschwindigkeitsstufen, allgemeine
+  Ordnungswidrigkeiten) und der GewO – je Delikt mit **Mindest- und Höchstmaß** für Haft und Geldstrafe, Art (Verbrechen, Vergehen,
+  Ordnungswidrigkeit) und Kennzeichen („Haft oder Geldstrafe“, „nach oben offen“, „bis 180 HE gesamt“). Beim Zusammenrechnen
+  (Strafkatalog und Tab *Tatvorwürfe* der Akte, ebenso im Aktenblatt und im Mandantenportal) entsteht die **Spanne der möglichen
+  Bestrafung** nach diesen Regeln:
+  - *Spanne* („15 bis 30 HE“): Mindest- und Höchstmaß werden je Delikt (× Anzahl) addiert.
+  - *Nur Höchstmaß* („bis zu 20 HE“): Als Mindestmaß gilt 1 Hafteinheit bzw. die kleinste Geldstrafe.
+  - *Nur Mindestmaß* („nicht unter 45 HE“, z. B. Mord): nach oben offen – es gibt kein Höchstmaß.
+  - *Gesamtstrafe* (§ 3 StGB): ab zwei Straftaten ist die Haft auf 120 HE begrenzt, bei Taten gegen Leben, körperliche
+    Unversehrtheit oder die verfassungsmäßige Ordnung (und Terror) auf 180 HE – ohne diese Begrenzung wäre die Haft bei
+    „nicht unter …“ unbegrenzt (steht als Hinweis dabei). Geldstrafen werden addiert; Ordnungswidrigkeiten zählen nicht zur Gesamtstrafe.
+  - *Haft oder Geldstrafe*: Alternativen – die Geldstrafe ersetzt die Haft, beide Spannen stehen nebeneinander.
+  Massenimport aus Google Sheets/Excel (Spalten: Paragraph; Delikt; Kategorie; Geldstrafe bis; Haft bis; Bemerkung; Haft ab;
+  Geldstrafe ab; Art; Erhöhte Gesamtstrafe – die letzten vier optional).
 - **Dokumente:** Vollmacht, Mandatsvertrag, Antrag auf Haftprüfung, Akteneinsicht,
   Dienstaufsichtsbeschwerde, freier Schriftsatz, Aktenblatt. Die Vorschau lässt sich direkt bearbeiten,
   dann drucken oder als PDF speichern.
@@ -204,7 +217,7 @@ und Änderungen erscheinen bei allen sofort.
 
 In Supabase den **SQL Editor** öffnen, den kompletten Inhalt von
 [`supabase-update-2.sql`](supabase-update-2.sql) einfügen und **Run** klicken, danach genauso
-[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-19.sql`](supabase-update-19.sql) (Sicherheits-Härtung: Datenbank-Funktionen nur noch für Angemeldete) und [`supabase-update-20.sql`](supabase-update-20.sql) (Mandantenportal 2.0: Notruf, Anliegen, Zahlung melden, Bewertungen).
+[`supabase-update-3.sql`](supabase-update-3.sql) (Buchhaltung) , [`supabase-update-4.sql`](supabase-update-4.sql) (Personal & Rechte), [`supabase-update-5.sql`](supabase-update-5.sql) (Lese-/Schreibrechte), [`supabase-update-6.sql`](supabase-update-6.sql) (KI-Assistent), [`supabase-update-7.sql`](supabase-update-7.sql) (Benachrichtigungen, Pinnwand, Abläufe, Übergabe) [`supabase-update-8.sql`](supabase-update-8.sql) (Gesetzestexte, KI-Werkzeuge, KI-Limits) [`supabase-update-9.sql`](supabase-update-9.sql) (Nigels Arbeitsbereich: Chats, Entwürfe, Vorlagen, persönliche Einstellungen, gewichtete Nutzung), [`supabase-update-10.sql`](supabase-update-10.sql) (Kosten je Anfrage) und [`supabase-update-11.sql`](supabase-update-11.sql) (Discord-Login & mehrere Charaktere – danach den Abschnitt **Discord-Login einrichten** befolgen) [`supabase-update-12.sql`](supabase-update-12.sql) (Mandantenportal) und [`supabase-update-13.sql`](supabase-update-13.sql) (KI-Budget in US-Dollar pro Monat statt Anfragen pro Tag – danach die Edge Function `ki-assistent` neu bereitstellen), [`supabase-update-14.sql`](supabase-update-14.sql) (Nigel „Sehen“ und „Verwenden“ je Rang – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-15.sql`](supabase-update-15.sql) (Anrede im eigenen Profil, pro Charakter – danach die Edge Function `ki-assistent` neu bereitstellen) [`supabase-update-16.sql`](supabase-update-16.sql) (Akten ohne Mandant) und [`supabase-update-17.sql`](supabase-update-17.sql) (Gebührenkatalog gehört zu den Finanzen) und [`supabase-update-18.sql`](supabase-update-18.sql) (was Nigel im Modus „Organisatorisch“ anlegt, steht unter „Nigel · im Auftrag von …“ – danach die Edge Function `ki-assistent` neu bereitstellen) und [`supabase-update-19.sql`](supabase-update-19.sql) (Sicherheits-Härtung: Datenbank-Funktionen nur noch für Angemeldete) und [`supabase-update-20.sql`](supabase-update-20.sql) (Mandantenportal 2.0: Notruf, Anliegen, Zahlung melden, Bewertungen) und [`supabase-update-21.sql`](supabase-update-21.sql) (Strafkatalog überarbeitet: Mindest- und Höchstmaß, Bußgelder aus StVO und GewO, fehlende Absätze – danach die Edge Function `ki-assistent` neu bereitstellen).
 Nach Update 9 die Edge Function `ki-assistent` mit dem neuen Code **neu bereitstellen**. Bestehende Daten bleiben erhalten:
 Mandanten werden in die Kartei übernommen, bestehende Rechnungen automatisch nachgebucht.
 

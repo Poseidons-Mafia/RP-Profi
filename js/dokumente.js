@@ -476,7 +476,7 @@ function zahlungserinnerung(r) {
 // ---------- Aktenblatt ----------
 function aktenblatt(a) {
   const m = byId("mandanten", a.mandant_id) || {};
-  const sum = vorwurfSumme(a.vorwuerfe);
+  const rahmen = vorwurfStrafrahmen(a.vorwuerfe);
   const eintraege = kinder("eintraege", a.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at));
   const termine = kinder("termine", a.id).sort((x, y) => new Date(x.beginn) - new Date(y.beginn));
   const zeile = (label, value) => (value ? html`<tr><th>${label}</th><td>${value}</td></tr>` : "");
@@ -498,11 +498,12 @@ function aktenblatt(a) {
     ${a.summary ? absaetze(a.summary) : html`<p>–</p>`}
     ${(a.vorwuerfe || []).length ? html`
       <h3>Tatvorwürfe</h3>
-      <table class="doc-table"><thead><tr><th>Vorwurf</th><th class="num">Anzahl</th><th class="num">Geldstrafe</th><th class="num">Haft</th></tr></thead><tbody>
-        ${a.vorwuerfe.map((v) => html`<tr><td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}</td><td class="num">${v.anzahl || 1}</td>
-          <td class="num">${fmt.geld((Number(v.geldstrafe) || 0) * (v.anzahl || 1))}</td><td class="num">${fmt.haft((Number(v.haft) || 0) * (v.anzahl || 1))}</td></tr>`)}
+      <table class="doc-table"><thead><tr><th>Vorwurf</th><th class="num">Anzahl</th><th class="num">Haft</th><th class="num">Geldstrafe</th></tr></thead><tbody>
+        ${a.vorwuerfe.map((v) => { const r = vorwurfRahmen(v); return html`<tr><td>${v.paragraph ? `${v.paragraph} – ` : ""}${v.titel}</td><td class="num">${v.anzahl || 1}</td>
+          <td class="num">${vorwurfZeileText(r, v.anzahl, "haft")}</td><td class="num">${vorwurfZeileText(r, v.anzahl, "geld")}</td></tr>`; })}
       </tbody>
-      <tfoot><tr class="total"><td>Strafrahmen gesamt</td><td></td><td class="num">${fmt.geld(sum.geld)}</td><td class="num">${fmt.haft(sum.haft)}</td></tr></tfoot></table>` : ""}
+      <tfoot><tr class="total"><td>Mögliche Bestrafung (Spanne)</td><td></td><td class="num">${spanneText(rahmen.haft, "haft")}</td><td class="num">${spanneText(rahmen.geld, "geld")}</td></tr></tfoot></table>
+      <p class="doc-small">${strafrahmenHinweise(rahmen).join(" ")}</p>` : ""}
     ${kinder("beteiligte", a.id).length ? html`<h3>Beteiligte</h3><ul>${kinder("beteiligte", a.id).map((b) => html`<li><strong>${b.rolle}:</strong> ${b.name}${b.kontakt ? ` (${b.kontakt})` : ""}${b.notiz ? ` – ${b.notiz}` : ""}</li>`)}</ul>` : ""}
     ${kinder("beweise", a.id).length ? html`<h3>Beweismittel</h3><ul>${kinder("beweise", a.id).map((b) => html`<li><strong>${b.art}:</strong> ${b.titel}${b.link ? html` – <span class="doc-small">${b.link}</span>` : ""}${b.beschreibung ? ` – ${b.beschreibung}` : ""}</li>`)}</ul>` : ""}
     ${termine.length ? html`<h3>Termine</h3><ul>${termine.map((t) => html`<li>${fmt.datumZeit(t.beginn)} – ${t.art}: ${t.titel}${t.ort ? ` (${t.ort})` : ""}${t.erledigt ? " ✓" : ""}</li>`)}</ul>` : ""}

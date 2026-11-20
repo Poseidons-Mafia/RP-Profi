@@ -506,14 +506,185 @@ function naechsterTermin(akteId) {
     .sort((a, b) => new Date(a.beginn) - new Date(b.beginn))[0];
 }
 
-function vorwurfSumme(vorwuerfe) {
-  let geld = 0, haft = 0;
-  for (const v of vorwuerfe || []) {
-    const n = Number(v.anzahl) || 1;
-    geld += (Number(v.geldstrafe) || 0) * n;
-    haft += (Number(v.haft) || 0) * n;
+// ---------- Strafrahmen ----------
+// Ein Delikt kennt je Strafart (Haft / Geldstrafe) ein Mindest- und ein Höchstmaß:
+//   haft_min + haft   → Spanne („15 bis 30 HE“); gleiche Werte → feste Strafe
+//   nur haft          → „bis zu“: Mindestmaß ist 1 Hafteinheit (bei Geldstrafe: 1 $)
+//   nur haft_min      → „nicht unter“: nach oben OFFEN, es gibt kein Höchstmaß
+//   Haft und Geldstrafe zusammen → wahlweise („Freiheitsstrafe … oder Geldstrafe“)
+// Gesamtstrafe (§ 3 StGB): Bei mehreren Straftaten darf die Haft 120 HE nicht übersteigen,
+// bei besonders schweren Fällen (Delikt mit gesamt_erhoeht) 180 HE. Geldstrafen werden addiert.
+const GESAMTSTRAFE_MAX = 120;
+const GESAMTSTRAFE_MAX_SCHWER = 180;
+const MIN_HAFT_IMPLIZIT = 1;   // wo nur ein Höchstmaß genannt ist: eine Hafteinheit
+const MIN_GELD_IMPLIZIT = 1;   // … bzw. der kleinstmögliche Geldbetrag
+
+const zahlOderNull = (x) => (x === null || x === undefined || x === "" || !isFinite(Number(x)) ? null : Number(x));
+
+// Strafrahmen EINES Delikts (Katalogzeile oder Vorwurf aus einer Akte)
+function deliktRahmen(d) {
+  const hMax = zahlOderNull(d.haft), hMin = zahlOderNull(d.haft_min);
+  const gMax = zahlOderNull(d.geldstrafe), gMin = zahlOderNull(d.geldstrafe_min);
+  const haft = hMax || hMin ? {
+    min: hMin ?? Math.min(MIN_HAFT_IMPLIZIT, hMax),
+    max: hMax ?? Infinity,
+    offen: hMax === null, fest: hMax !== null && hMin === hMax,
+  } : null;
+  const geld = gMax || gMin ? {
+    min: gMin ?? Math.min(MIN_GELD_IMPLIZIT, gMax),
+    max: gMax ?? Infinity,
+    offen: gMax === null, fest: gMax !== null && gMin === gMax,
+  } : null;
+  const art = d.deliktsart || "";
+  return {
+    haft, geld, art,
+    wahlweise: !!(haft && geld),
+    ordnungswidrigkeit: art === "Ordnungswidrigkeit",
+    schwer: !!d.gesamt_erhoeht,
+  };
+}
+
+// Katalogzeile → Momentaufnahme für den Tatvorwurf einer Akte
+function vorwurfAusKatalog(g) {
+  return {
+    gesetz_id: g.id, paragraph: g.paragraph, titel: g.titel,
+    geldstrafe: g.geldstrafe, haft: g.haft,
+    geldstrafe_min: g.geldstrafe_min ?? null, haft_min: g.haft_min ?? null,
+    deliktsart: g.deliktsart ?? null, gesamt_erhoeht: !!g.gesamt_erhoeht,
+  };
+}
+
+// Vorwürfe, die vor der Spannen-Rechnung angelegt wurden, kennen nur das Höchstmaß –
+// Mindestmaß und Art werden dann (soweit möglich) aus dem Katalog nachgeschlagen
+function vorwurfRahmen(v) {
+  let d = v;
+  if (!("deliktsart" in v) && v.gesetz_id && state.gesetze && state.gesetze.length) {
+    const k = byId("gesetze", v.gesetz_id);
+    if (k) d = { ...v, ...vorwurfAusKatalog(k) };
   }
-  return { geld, haft };
+  return deliktRahmen(d);
+}
+
+// Strafrahmen mehrerer Delikte zusammen. posten: [{ rahmen, anzahl }]
+function strafrahmen(posten, opt = {}) {
+  let hMin = 0, hMax = 0, gMin = 0, gMax = 0, hOffen = false, gOffen = false;
+  let straftaten = 0, wahlweise = 0, schwer = false, mitHaft = 0, mitGeld = 0, ows = 0;
+  for (const { rahmen: r, anzahl } of posten) {
+    const n = Number(anzahl) || 1;
+    if (r.ordnungswidrigkeit) ows += n; else straftaten += n;
+    if (r.schwer) schwer = true;
+    if (r.haft) {
+      mitHaft += n;
+      hMin += r.haft.min * n;
+      if (r.haft.offen) hOffen = true; else hMax += r.haft.max * n;
+    }
+    if (r.geld) {
+      mitGeld += n;
+      // Bei „Haft oder Geldstrafe“ ist die Geldstrafe nur Alternative: Mindestmaß zählt bei der Haft
+      if (!r.haft) gMin += r.geld.min * n;
+      if (r.geld.offen) gOffen = true; else gMax += r.geld.max * n;
+    }
+    if (r.wahlweise) wahlweise += n;
+  }
+  // Gesamtstrafe nach § 3 StGB: ab zwei Straftaten, Ordnungswidrigkeiten zählen nicht mit
+  const gesamtstrafe = straftaten >= 2 && mitHaft > 0;
+  const schwerFall = schwer || !!opt.schwer;
+  const deckel = gesamtstrafe ? (schwerFall ? GESAMTSTRAFE_MAX_SCHWER : GESAMTSTRAFE_MAX) : null;
+  const ohneDeckel = hOffen ? Infinity : hMax;
+  const haftMax = deckel === null ? ohneDeckel : Math.min(ohneDeckel, deckel);
+  const haft = mitHaft ? {
+    min: deckel === null ? hMin : Math.min(hMin, deckel),
+    max: haftMax,
+    ohneDeckel,
+    deckelGreift: deckel !== null && ohneDeckel > deckel,
+  } : null;
+  const geld = mitGeld ? { min: gMin, max: gOffen ? Infinity : gMax, offen: gOffen } : null;
+  return {
+    haft, geld, deckel, gesamtstrafe, schwerFall, wahlweise,
+    straftaten, ows, anzahl: straftaten + ows,
+    haftOffen: hOffen,
+  };
+}
+
+// Strafrahmen einer Liste von Tatvorwürfen (Akte)
+function vorwurfStrafrahmen(vorwuerfe) {
+  return strafrahmen((vorwuerfe || []).map((v) => ({ rahmen: vorwurfRahmen(v), anzahl: v.anzahl })));
+}
+
+// --- Darstellung ---
+// „15 – 30 HE“ bzw. „$5.000 – $20.000“ (die Einheit steht nur einmal hinten)
+function minMaxText(min, max, einheit) {
+  return einheit === "geld" ? `${fmt.geld(min)} – ${fmt.geld(max)}` : `${fmt.zahl(min)} – ${fmt.haft(max)}`;
+}
+
+function strafeText(w, einheit) {
+  // w = { min, max }  →  „15 – 30 HE“ · „ab 45 HE (nach oben offen)“ · „10 HE (fest)“
+  if (!w) return "–";
+  const f = einheit === "geld" ? fmt.geld : fmt.haft;
+  if (w.max === Infinity) return `ab ${f(w.min)} (nach oben offen)`;
+  if (w.min === w.max) return `${f(w.max)} (fest)`;
+  return minMaxText(w.min, w.max, einheit);
+}
+
+// Delikt im Strafkatalog: so steht es im Gesetz („bis zu 20 HE“, „von 15 bis 30 HE“, „nicht unter 45 HE“)
+function deliktStrafeText(r, einheit) {
+  const w = einheit === "geld" ? r.geld : r.haft;
+  if (!w) return "–";
+  const f = einheit === "geld" ? fmt.geld : fmt.haft;
+  const implizit = einheit === "geld" ? MIN_GELD_IMPLIZIT : MIN_HAFT_IMPLIZIT;
+  if (w.max === Infinity) return `nicht unter ${f(w.min)}`;
+  if (w.min === w.max) return `${f(w.max)} (fest)`;
+  if (w.min <= implizit) return `bis ${f(w.max)}`;
+  return minMaxText(w.min, w.max, einheit);
+}
+
+// Ein Vorwurf mit Anzahl (Zeile in der Akte): „bis 20 HE“, bei mehrfacher Tat die vervielfachte Spanne
+function vorwurfZeileText(r, anzahl, einheit) {
+  const w = einheit === "geld" ? r.geld : r.haft;
+  const n = Number(anzahl) || 1;
+  if (!w) return "–";
+  if (n === 1) return deliktStrafeText(r, einheit);
+  const f = einheit === "geld" ? fmt.geld : fmt.haft;
+  const implizit = einheit === "geld" ? MIN_GELD_IMPLIZIT : MIN_HAFT_IMPLIZIT;
+  if (w.max === Infinity) return `nicht unter ${f(w.min * n)}`;
+  if (w.min === w.max) return `${f(w.max * n)} (fest)`;
+  if (w.min <= implizit) return `bis ${f(w.max * n)}`;
+  return minMaxText(w.min * n, w.max * n, einheit);
+}
+
+// Gesamt-Spanne mehrerer Delikte (nur das Ergebnis, ohne Gesetzes-Wortlaut)
+function spanneText(w, einheit) {
+  if (!w) return "–";
+  const f = einheit === "geld" ? fmt.geld : fmt.haft;
+  if (w.max === Infinity) return `ab ${f(w.min)} · unbegrenzt`;
+  if (w.min === w.max) return f(w.max);
+  if (w.min === 0) return `bis ${f(w.max)}`;
+  return minMaxText(w.min, w.max, einheit);
+}
+
+// Hinweise, die zur Spanne gehören (Deckel, offene Strafen, Wahlstrafen)
+function strafrahmenHinweise(r) {
+  const out = [];
+  const he = (n) => fmt.haft(n);
+  if (r.haft && r.haft.deckelGreift) {
+    out.push(`Gesamtstrafe nach § 3 StGB: Die Haft ist auf höchstens ${he(r.deckel)} begrenzt`
+      + `${r.schwerFall ? " (besonders schwerer Fall)" : ` (bei besonders schweren Fällen ${he(GESAMTSTRAFE_MAX_SCHWER)})`}.`
+      + ` Ohne diese Begrenzung wäre die Haft ${r.haft.ohneDeckel === Infinity ? "nach oben unbegrenzt" : `bis ${he(r.haft.ohneDeckel)} möglich`}.`);
+  } else if (r.haft && r.haft.max === Infinity) {
+    out.push("Mindestens ein Vorwurf kennt nur ein Mindestmaß („nicht unter …“): Die Haft ist nach oben unbegrenzt, solange keine Gesamtstrafe (ab zwei Straftaten) gebildet wird.");
+  }
+  if (r.geld && r.geld.max === Infinity) out.push("Mindestens ein Vorwurf kennt nur ein Mindestmaß bei der Geldstrafe: Die Geldstrafe ist nach oben unbegrenzt.");
+  if (r.wahlweise) {
+    out.push(`${r.wahlweise === 1 ? "Ein Vorwurf" : `${r.wahlweise} Vorwürfe`} mit „Haft oder Geldstrafe“: Das Gericht kann statt der Haft eine Geldstrafe verhängen – Haft und Geldstrafe sind dort Alternativen, keine Summe.`);
+  }
+  if (r.gesamtstrafe && r.haft && !r.haft.deckelGreift) out.push(`Gesamtstrafe nach § 3 StGB: Haft höchstens ${he(r.deckel)}.`);
+  out.push("Wo das Gesetz nur ein Höchstmaß nennt („bis zu“), gilt als Mindestmaß 1 Hafteinheit bzw. die kleinste Geldstrafe.");
+  return out;
+}
+
+// Eine Strafart der Spanne als Block („Haft · 3 – 120 HE“)
+function spanneBlock(label, w, einheit) {
+  return html`<span class="sum-wert"><small>${label}</small><strong>${spanneText(w, einheit)}</strong></span>`;
 }
 
 function gegnerNamen(akte) {
