@@ -358,6 +358,8 @@ eine Fehlermeldung. **Secrets** (Supabase → Edge Functions → Secrets):
 | `OPENROUTER_API_KEY` | Pflicht: Schlüssel von <https://openrouter.ai> (**Keys → Create Key**, am besten mit Credit-Limit) |
 | `OPENROUTER_MODELL` | Modell-ID von <https://openrouter.ai/models> (Filter „Tools“ – das Modell muss Werkzeuge können), z. B. `deepseek/deepseek-v4.1-flash-1017`. **Modell wechseln = nur dieses Secret ändern**, kein Code nötig. |
 | `KI_KOSTEN_MAX` | optional: Höchstkosten pro Anfrage in US-Dollar (z. B. `0.05`), falls in Nigels Kanzlei-Vorgaben nichts eingestellt ist |
+| `OPENROUTER_MODELL_2` | optional: Modell-ID eines **zweiten** Modells (gleiche Regeln wie oben: Filter „Tools“). Es arbeitet nur in den Arbeitsmodi aus `OPENROUTER_MODELL_2_MODI`; alle anderen Modi nutzen weiter `OPENROUTER_MODELL`. |
+| `OPENROUTER_MODELL_2_MODI` | optional: Arbeitsmodi für das zweite Modell, mit Komma getrennt aus `frage`, `gutachten`, `schriftsatz`, `strategie`, `ueberarbeiten`, `orga` (z. B. `gutachten,schriftsatz`). Ohne Angabe bleibt das zweite Modell ungenutzt. |
 | `KI_REASONING` | optional: `low`, `medium` oder `high` (Standard) – wie gründlich das Modell nachdenkt, solange das Mitglied in Nigels Einstellungen nichts anderes wählt (höchstens bis zur Kanzlei-Vorgabe) |
 | `DISCORD_BOT_TOKEN` | optional: Bot-Token, damit Nigel im Modus *Organisatorisch* Discord-Nachrichten schreiben kann (siehe **Nigel schreibt auf Discord**) |
 
