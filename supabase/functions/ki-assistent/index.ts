@@ -57,7 +57,7 @@ const MODELL_2_MODI = (Deno.env.get("OPENROUTER_MODELL_2_MODI") || "").split(","
 const modellFuer = (modus: string): string => MODELL_2 && MODELL_2_MODI.includes(modus) ? MODELL_2 : MODELL;
 const STUFEN = ["low", "medium", "high"];
 const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "high";
-const MAX_ZEICHEN_NACHRICHT = 20000;  // je Nachricht im Verlauf
+const MAX_ZEICHEN_NACHRICHT = 30000;  // je Nachricht im Verlauf
 const MAX_ZEICHEN_VERLAUF = 120000;   // Verlauf insgesamt (älteste fallen zuerst heraus)
 const MAX_PARAGRAPH_TEXT = 4000;
 const MAX_AKTEN_LESEN = 4;            // akte_lesen je Anfrage
@@ -71,7 +71,7 @@ const MODI: Record<string, { name: string; max: number; runden: number; nachrich
   frage:         { name: "Rechtsfrage",          max: 4000,  runden: 8,  nachrichten: 20 },
   gutachten:     { name: "Gutachten",            max: 14000, runden: 10, nachrichten: 30 },
   schriftsatz:   { name: "Schriftsatz",          max: 14000, runden: 8,  nachrichten: 30 },
-  strategie:     { name: "Fallanalyse",          max: 10000, runden: 10, nachrichten: 30 },
+  strategie:     { name: "Fallanalyse",          max: 30000, runden: 10, nachrichten: 30 },
   ueberarbeiten: { name: "Entwurf überarbeiten", max: 16000, runden: 6,  nachrichten: 30 },
   orga:          { name: "Organisatorisch",      max: 3000,  runden: 9,  nachrichten: 20 },
 };
