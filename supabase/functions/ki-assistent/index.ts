@@ -9,7 +9,7 @@
 //       des Rangs + Abweichung, dazu der Deckel der ganzen Kanzlei),
 //    2. liest die Daten MIT DEM LOGIN DES MITGLIEDS (es gelten also
 //       dieselben Leserechte wie im Aktensystem),
-//    3. fragt GENAU EIN Modell über OpenRouter (Secret OPENROUTER_MODELL) –
+//    3. fragt GENAU EIN Modell pro Anfrage über OpenRouter (Secret OPENROUTER_MODELL, im Modus ggf. OPENROUTER_MODELL_2) –
 //       keine Ausweich-Modelle, keine andere KI. Die KI kann dabei
 //       Werkzeuge nutzen:
 //         gesetze_finden      – Gesetzbücher finden
@@ -32,7 +32,12 @@
 //    OPENROUTER_API_KEY   Schlüssel von openrouter.ai (Pflicht)
 //    OPENROUTER_MODELL    Modell-ID von openrouter.ai/models, z. B. "deepseek/deepseek-v4.1-flash-1017"
 //                         (genau EIN Modell; Standard siehe MODELL_STANDARD)
-//    KI_REASONING         optional, "low" | "medium" | "high" (Standard "medium") –
+//    OPENROUTER_MODELL_2  optional, Modell-ID eines zweiten Modells. Es arbeitet nur in den Arbeitsmodi,
+//                         die in OPENROUTER_MODELL_2_MODI stehen; alle anderen Modi nutzen OPENROUTER_MODELL
+//    OPENROUTER_MODELL_2_MODI  optional, Arbeitsmodi für das zweite Modell, mit Komma getrennt aus
+//                         frage, gutachten, schriftsatz, strategie, ueberarbeiten, orga
+//                         (z. B. "gutachten,schriftsatz"). Ohne Angabe wird das zweite Modell nicht genutzt.
+//    KI_REASONING         optional, "low" | "medium" | "high" (Standard "high") –
 //                         Standard-Gründlichkeit, wenn das Mitglied nichts anderes eingestellt hat
 //    KI_KOSTEN_MAX        optional, Höchstkosten pro Anfrage in US-Dollar (z. B. "0.05"), falls in den
 //                         Kanzlei-Vorgaben (Nigel → Einstellungen) nichts eingestellt ist
@@ -46,8 +51,12 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.1
 // Genau ein Modell – ohne Ausweichliste. Steht im Secret versehentlich eine Liste, zählt nur der erste Eintrag.
 const MODELL_STANDARD = "deepseek/deepseek-v4.1-flash-1017";
 const MODELL = ((Deno.env.get("OPENROUTER_MODELL") || MODELL_STANDARD).split(",")[0] || MODELL_STANDARD).trim();
+const MODELL_2 = (Deno.env.get("OPENROUTER_MODELL_2") || "").split(",")[0].trim();
+const MODELL_2_MODI = (Deno.env.get("OPENROUTER_MODELL_2_MODI") || "").split(",").map((x) => x.trim()).filter(Boolean);
+// Welches Modell arbeitet im jeweiligen Arbeitsmodus? Zweites Modell nur, wenn es und der Modus eingestellt sind.
+const modellFuer = (modus: string): string => MODELL_2 && MODELL_2_MODI.includes(modus) ? MODELL_2 : MODELL;
 const STUFEN = ["low", "medium", "high"];
-const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "medium";
+const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "high";
 const MAX_ZEICHEN_NACHRICHT = 20000;  // je Nachricht im Verlauf
 const MAX_ZEICHEN_VERLAUF = 120000;   // Verlauf insgesamt (älteste fallen zuerst heraus)
 const MAX_PARAGRAPH_TEXT = 4000;
@@ -245,7 +254,7 @@ Deno.serve(async (req) => {
     const aktionen: Aktion[] = [];
     const schritt = (s: Schritt) => { schritte.push(s); melden({ typ: "schritt", ...s }); };
     const ergebnis = await frageModell(orKey, system, nachrichten, {
-      werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, mitDollar, maxZeichen: m.max,
+      modell: modellFuer(modus), werkzeuge, reasoning, runden: m.runden, melden, kostenMax: grenze.wert, kostenGrund: grenze.grund, mitDollar, maxZeichen: m.max,
       werkzeug: (name, args) => orga && ORGA_NAMEN.has(name)
         ? orgaWerkzeug(dbNigel, kanzleiDaten, orga, name, args, { schritt, aktionen, melden })
         : AUSKUNFT_NAMEN.has(name)
@@ -361,7 +370,7 @@ function persoenlich(roh: unknown) {
 //  Zur Sicherheit wird das antwortende Modell zusätzlich geprüft.
 // =============================================================
 async function frageModell(key: string, system: string, nachrichten: Nachricht[],
-  opt: { werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; kostenGrund: string; mitDollar: boolean; maxZeichen: number }): Promise<Ergebnis> {
+  opt: { modell: string; werkzeuge: Zeile[]; reasoning: string; runden: number; melden: Melden; werkzeug: Werkzeug; kostenMax: number; kostenGrund: string; mitDollar: boolean; maxZeichen: number }): Promise<Ergebnis> {
   const verlauf: Zeile[] = [
     { role: "system", content: system },
     ...nachrichten.map((n) => ({ role: n.rolle === "ki" ? "assistant" : "user", content: n.text })),
@@ -371,7 +380,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
   let tokensEin = 0, tokensAus = 0, kosten = 0;
   // Kostenlimit pro Anfrage: Preise des Modells holen (USD pro Token). Ohne Preise lässt sich nicht
   // vorab rechnen – dann wird nur nach jedem Schritt mit den tatsächlichen Kosten geprüft.
-  const preis = opt.kostenMax > 0 ? await modellPreis(key) : null;
+  const preis = opt.kostenMax > 0 ? await modellPreis(key, opt.modell) : null;
   const dollar = (n: number) => `$${n < 0.01 ? n.toFixed(4) : n.toFixed(3)}`;
   const grenze = () => `${dollar(opt.kostenMax)} (${opt.kostenGrund})`;
   // „Das Kostenlimit von $0.050 (Limit pro Anfrage)“ – ohne Admin-Recht ohne Betrag
@@ -416,7 +425,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
         method: "POST",
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "X-Title": "Wiwang Law Aktensystem" },
         body: JSON.stringify({
-          model: MODELL,
+          model: opt.modell,
           messages: verlauf,
           tools,
           tool_choice: letzteRunde ? "none" : "auto",
@@ -437,7 +446,7 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
       if (res.status === 402) throw new KiFehler("Das OpenRouter-Guthaben ist aufgebraucht (Credits aufladen oder Limit des Schlüssels erhöhen).");
       if (res.status === 429) throw new KiFehler("Einen Augenblick Geduld – zu viele Anfragen auf einmal. Bitte gleich noch einmal versuchen.", 429);
       if ([400, 404].includes(res.status) && /model|endpoint|not.*(found|exist|valid)/i.test(meldung)) {
-        throw new KiFehler(`Das Modell ${MODELL} ist bei OpenRouter nicht verfügbar oder kann keine Werkzeuge nutzen (Secret OPENROUTER_MODELL prüfen).`);
+        throw new KiFehler(`Das Modell ${opt.modell} ist bei OpenRouter nicht verfügbar oder kann keine Werkzeuge nutzen (Secret ${opt.modell === MODELL ? "OPENROUTER_MODELL" : "OPENROUTER_MODELL_2"} prüfen).`);
       }
       if (/context|too long|maximum.*tokens/i.test(meldung)) {
         throw new KiFehler("Der Kontext ist zu groß für das Modell. Bitte weniger Akten/Paragraphen anheften oder einen neuen Chat beginnen.", 413);
@@ -445,8 +454,8 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
       throw new KiFehler("Most irregular – es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.");
     }
     // Sicherheitsnetz: Antwortet ein anderes als das eingestellte Modell, wird die Antwort verworfen
-    const antwortModell = String(daten?.model || MODELL);
-    if (!antwortModell.startsWith(MODELL)) {
+    const antwortModell = String(daten?.model || opt.modell);
+    if (!antwortModell.startsWith(opt.modell)) {
       console.error("Falsches Modell geantwortet:", antwortModell);
       throw new KiFehler(`Es hat ein anderes Modell (${antwortModell}) geantwortet – die Antwort wurde verworfen.`);
     }
@@ -481,25 +490,27 @@ async function frageModell(key: string, system: string, nachrichten: Nachricht[]
     if (!text) throw new KiFehler(`Die KI hat keine Antwort geliefert (Grund: ${wahl?.finish_reason || "unbekannt"}).`);
     const gekappt = wahl?.finish_reason === "length" && maxTokens
       ? `\n\n*… Antwort wegen des Kostenlimits abgeschnitten (${opt.kostenGrund}).*` : "";
-    return { text: text + gekappt, tokensEin, tokensAus, modell: MODELL.split("/").pop() || MODELL, kosten };
+    return { text: text + gekappt, tokensEin, tokensAus, modell: opt.modell.split("/").pop() || opt.modell, kosten };
   }
   throw new KiFehler("Die KI hat keine Antwort geliefert.");
 }
 
 
 // Preise des Modells bei OpenRouter (USD pro Token), einmal je Stunde und Funktionsinstanz geladen
-let preisCache: { ein: number; aus: number; zeit: number } | null = null;
-async function modellPreis(key: string): Promise<{ ein: number; aus: number } | null> {
-  if (preisCache && Date.now() - preisCache.zeit < 3600000) return preisCache;
+const preisCache = new Map<string, { ein: number; aus: number; zeit: number }>();
+async function modellPreis(key: string, modell: string): Promise<{ ein: number; aus: number } | null> {
+  const treffer = preisCache.get(modell);
+  if (treffer && Date.now() - treffer.zeit < 3600000) return treffer;
   try {
     const res = await fetch("https://openrouter.ai/api/v1/models", { headers: { Authorization: `Bearer ${key}` } });
     const daten = await res.json();
     const liste: Zeile[] = daten?.data || [];
-    const m = liste.find((x) => x.id === MODELL) || liste.find((x) => MODELL.startsWith(x.id));
+    const m = liste.find((x) => x.id === modell) || liste.find((x) => modell.startsWith(x.id));
     const ein = Number(m?.pricing?.prompt), aus = Number(m?.pricing?.completion);
     if (!(ein >= 0) || !(aus > 0)) return null;
-    preisCache = { ein, aus, zeit: Date.now() };
-    return preisCache;
+    const neu = { ein, aus, zeit: Date.now() };
+    preisCache.set(modell, neu);
+    return neu;
   } catch (e) {
     console.error("Preise", e);
     return null;
