@@ -32,7 +32,7 @@
 //    OPENROUTER_API_KEY   Schlüssel von openrouter.ai (Pflicht)
 //    OPENROUTER_MODELL    Modell-ID von openrouter.ai/models, z. B. "deepseek/deepseek-v4.1-flash-1017"
 //                         (genau EIN Modell; Standard siehe MODELL_STANDARD)
-//    KI_REASONING         optional, "low" | "medium" | "high" (Standard "medium") –
+//    KI_REASONING         optional, "low" | "medium" | "high" (Standard "high") –
 //                         Standard-Gründlichkeit, wenn das Mitglied nichts anderes eingestellt hat
 //    KI_KOSTEN_MAX        optional, Höchstkosten pro Anfrage in US-Dollar (z. B. "0.05"), falls in den
 //                         Kanzlei-Vorgaben (Nigel → Einstellungen) nichts eingestellt ist
@@ -47,7 +47,7 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.1
 const MODELL_STANDARD = "deepseek/deepseek-v4.1-flash-1017";
 const MODELL = ((Deno.env.get("OPENROUTER_MODELL") || MODELL_STANDARD).split(",")[0] || MODELL_STANDARD).trim();
 const STUFEN = ["low", "medium", "high"];
-const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "medium";
+const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "high";
 const MAX_ZEICHEN_NACHRICHT = 20000;  // je Nachricht im Verlauf
 const MAX_ZEICHEN_VERLAUF = 120000;   // Verlauf insgesamt (älteste fallen zuerst heraus)
 const MAX_PARAGRAPH_TEXT = 4000;
