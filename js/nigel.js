@@ -25,7 +25,7 @@ const NW_MODI = [
   { key: "orga", label: "Organisatorisch", text: "Nigel erledigt Büroarbeit: in Akten notieren, Termine und Aufgaben anlegen, Pinnwand, Discord-Nachrichten." },
 ];
 const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung", orga: "Organisatorisch" };
-const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 10000, ueberarbeiten: 16000, orga: 3000 };
+const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 30000, ueberarbeiten: 16000, orga: 3000 };
 // Modi, die die Kanzlei an- und abschalten kann („orga“ hat einen eigenen Schalter, damit er auch bei gespeicherten Vorgaben an ist)
 const NW_MODI_SCHALTBAR = ["gutachten", "schriftsatz", "strategie"];
 
