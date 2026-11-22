@@ -287,7 +287,7 @@ async function nwAnfrage(chat, modus, frageText) {
     ergebnis = await nwStream(body, lauf);
     const zeile = {
       chat_id: chat.id, rolle: "ki", text: ergebnis.antwort, modus,
-      quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [], ...(ergebnis.aktionen && ergebnis.aktionen.length ? { aktionen: ergebnis.aktionen } : {}) },
+      quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [], ...(ergebnis.modell ? { modell: ergebnis.modell } : {}), ...(ergebnis.aktionen && ergebnis.aktionen.length ? { aktionen: ergebnis.aktionen } : {}) },
       schritte: ergebnis.schritte || [], vorschlag: !!ergebnis.vorschlag, gekuerzt: !!ergebnis.gekuerzt,
     };
     let { data, error } = await db.from("ki_nachrichten").insert({ ...zeile, kosten: ergebnis.kosten ?? null }).select().single();
@@ -974,6 +974,7 @@ function nwNachricht(chat, m, i, letzte) {
       <div class="nw-msg-meta"><strong>Nigel</strong>
         ${m.modus ? html`<span class="nw-modus-badge m-${m.modus}">${NW_MODUS_NAME[m.modus] || m.modus}</span>` : ""}
         <time>${zeit}</time>
+        ${m.quellen && m.quellen.modell ? html`<span class="nw-modell" title="Antwort erstellt mit diesem KI-Modell">${m.quellen.modell}</span>` : ""}
         ${m.gekuerzt ? html`<span class="badge" title="Die Antwort hat das Längenlimit erreicht">gekürzt</span>` : ""}
         ${nwKostenBadge(m)}
       </div>
@@ -1453,7 +1454,8 @@ Object.assign(ACTIONS, {
     chat.modus = d.modus;
     if (chat.id) nwSpeichernLeise(chat, { modus: d.modus });
     scheduleRender();
-    nwFeld("nw-text").focus({ preventScroll: true });
+    // Auf Touch-Geräten würde das Fokussieren die Bildschirmtastatur öffnen – dort nur am Desktop fokussieren
+    if (!window.matchMedia("(pointer: coarse)").matches) nwFeld("nw-text").focus({ preventScroll: true });
   },
   "nw-umbenennen": () => {
     const chat = nwAktiverChat();

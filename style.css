@@ -2221,6 +2221,9 @@ body.nw-seite { overflow: hidden; }
 
 .nw-kosten { margin-left: auto; padding: 0 7px; border-radius: 999px; background: var(--line-soft); color: var(--muted); font-size: 0.68rem; font-variant-numeric: tabular-nums; }
 .nw-msg-meta .badge + .nw-kosten { margin-left: 0; }
+/* KI-Modell: dezenter Hinweis, erst beim Darüberfahren gut lesbar */
+.nw-modell { color: var(--muted); font-size: 0.66rem; opacity: 0.55; transition: opacity 0.15s; }
+.nw-modell:hover { opacity: 1; }
 
 /* Fließtext in der Akte nicht über die volle Breite ziehen (besser lesbar) */
 .tab-body p.pre { max-width: 90ch; }
