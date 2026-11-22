@@ -588,9 +588,11 @@
   }
   .nw-liste, .nw-panel, .nw-kopf, .nw-eingabe { background: var(--bg-surface); border-color: var(--border-subtle); }
   .nw-marke strong, .nw-titel h1, .nw-msg-meta strong { font-family: var(--font-serif); font-weight: 600; }
-  .nw-verlauf-innen { max-width: 760px; }
-  .nw-eingabe-leiste { max-width: 760px; row-gap: 8px; }
-  .nw-eingabe-feld { max-width: 760px; margin-left: auto; margin-right: auto; }
+  /* Chat nutzt die verfügbare Breite (vorher 760px fest → viel leerer Rand) */
+  .nw { --nw-breite: 1320px; }
+  .nw-verlauf-innen { max-width: var(--nw-breite); padding-left: clamp(12px, 3vw, 40px); padding-right: clamp(12px, 3vw, 40px); }
+  .nw-eingabe-leiste { max-width: var(--nw-breite); row-gap: 8px; }
+  .nw-eingabe-feld { max-width: var(--nw-breite); margin-left: auto; margin-right: auto; }
   .nw-modi { flex-basis: 100%; flex-wrap: wrap; margin: 0; padding-bottom: 2px; overflow: visible; }
   .nw-modus { padding: 4px 11px; font-size: 0.78rem; }
   .nw-drawer-hintergrund { display: none; }
