@@ -131,7 +131,8 @@ VIEWS.akten = (route) => {
   const list = gefilterteAkten();
   return html`
     <div class="page page-breit akten-verzeichnis">
-      <div class="page-head"><div><h1>Akten</h1><p class="muted">${list.length} ${list.length === 1 ? "Akte" : "Akten"} · <strong>/</strong> sucht, <strong>N</strong> legt eine neue Akte an</p></div></div>
+      <div class="page-head"><div><h1>Akten</h1><p class="muted">${list.length} ${list.length === 1 ? "Akte" : "Akten"} · <strong>/</strong> sucht, <strong>N</strong> legt eine neue Akte an</p></div>
+        ${darf("akten_schreiben") && darf("ki_assistent") ? html`<div class="page-actions"><button type="button" class="btn" data-action="akte-aus-material" title="Discord-Ticket, Polizeiakte oder Notizen einfügen – Nigel baut daraus die Akte">${icon("nigel")}<span>Akte aus Material</span></button></div>` : ""}</div>
       <div class="akten-filterleiste">${aktenFilterleiste("akten")}</div>
       ${list.length ? html`<ul class="akten-verzeichnis-liste card" data-scroll="akten-list">${list.map(akteVerzeichnisZeile)}</ul>`
         : html`<div class="card empty-state"><h2>Keine Akten gefunden</h2><p>Suche oder Filter ändern.</p></div>`}
@@ -250,6 +251,7 @@ const AKTE_ICON = {
   schloss: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
   kopieren: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  nigel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h9l5 5v11H5zM13.5 4v5.5H19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 14.5l1.6 1.6L15 11.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   loeschen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13M10.5 11v5M13.5 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const icon = (name) => new SafeHtml(AKTE_ICON[name]);
@@ -269,6 +271,7 @@ function mehrMenue(a) {
         ${menuePunkt("akte-bearbeiten", a.id, "bearbeiten", "Akte bearbeiten")}
         ${menuePunkt("ablauf-starten", a.id, "checkliste", "Checklisten-Vorlage starten")}
         ${menuePunkt("wiedervorlage", a.id, "wiedervorlage", "Wiedervorlage anlegen")}
+        ${darf("akten_schreiben") && darf("ki_assistent") ? menuePunkt("material-nachtragen", a.id, "nigel", "Material nachtragen (Ticket, Polizeiakte …)") : ""}
         ${darf("akten_schreiben") ? html`<hr><div class="menue-titel">Status ändern</div>${OPTIONEN.status.map(statusPunkt)}` : ""}
         <hr>
         ${menuePunkt("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
@@ -684,7 +687,9 @@ function tabBeweise(a) {
           <div class="title" style="margin-top:4px">${b.titel}</div>
           ${url ? html`<a href="${url}" target="_blank" rel="noopener noreferrer" class="small">Öffnen ↗</a>` : ""}
           ${url && isImageUrl(url) ? html`<a href="${url}" target="_blank" rel="noopener noreferrer"><img class="thumb" src="${url}" alt="${b.titel}" loading="lazy"></a>` : ""}
-          ${b.beschreibung ? html`<p>${b.beschreibung}</p>` : ""}
+          ${b.beschreibung ? (String(b.beschreibung).length > 400
+            ? html`<details class="beweis-lang"><summary class="small">${truncate(b.beschreibung, 160)} <span class="muted">· ganzen Text zeigen (${String(b.beschreibung).length.toLocaleString("de-DE")} Zeichen)</span></summary><div class="pre small">${b.beschreibung}</div></details>`
+            : html`<p>${b.beschreibung}</p>`) : ""}
           <div class="tools"><button class="icon-btn" title="Bearbeiten" data-action="beweis-bearbeiten" data-id="${b.id}">✎</button></div>
         </div>`;
     })}</div>` : html`<p class="empty">Noch keine Beweismittel.</p>`}`;
