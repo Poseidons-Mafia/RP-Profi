@@ -85,7 +85,7 @@ function charakterSwitcher({ imSheet = false } = {}) {
   const rang = (p && rangName(p)) || (state.isAdmin ? "Admin" : "Mitglied");
   return html`<button type="button" class="char-switch ${imSheet ? "im-sheet" : ""}" popovertarget="char-pop" aria-haspopup="menu" aria-expanded="false"
       title="Charakter wechseln, Profil, Abmelden">
-    <span class="char-marke-wrap" title="Charakter wechseln"><img class="char-marke" src="assets/icon.png?v=66" alt="" width="36" height="36"><span class="char-wechsel-badge" aria-hidden="true">⇅</span></span>
+    <span class="char-marke-wrap" title="Charakter wechseln"><img class="char-marke" src="assets/icon.png?v=67" alt="" width="36" height="36"><span class="char-wechsel-badge" aria-hidden="true">⇅</span></span>
     <span class="char-text">
       <strong class="char-name">${myName() || "Mein Konto"}</strong>
       <span class="char-rang">${rang}</span>
@@ -183,6 +183,7 @@ const cmd = { q: "", i: 0, items: [] };
 function cmdAktionen() {
   const liste = [
     { titel: "Neue Akte anlegen", sub: "Leere Akte mit Aktenzeichen", kbd: "N", icon: "plus", recht: AKTIONS_RECHTE["akte-neu"], los: () => ACTIONS["akte-neu"]({}) },
+    { titel: "Akte aus Material erstellen", sub: "Discord-Ticket oder Polizeiakte einfügen – Nigel baut die Akte", icon: "nigel", recht: "akten_schreiben", recht2: "ki_assistent", los: () => ACTIONS["akte-aus-material"]({}) },
     { titel: "§ Paragraph nachschlagen", sub: "Gesetzestexte durchsuchen", icon: "paragraph", recht: SEITEN_RECHTE.gesetze, los: () => { go("gesetze"); setTimeout(() => { const s = document.querySelector("#main [data-search]"); if (s) s.focus(); }, 60); } },
     { titel: "Strafkatalog öffnen", sub: "Delikte, Geldstrafe, Haft", icon: "gesetzbuch", recht: SEITEN_RECHTE.gesetzbuch, los: () => go("gesetzbuch") },
     { titel: "Kalender öffnen", sub: "Termine, Fristen, Aufgaben", icon: "kalender", recht: SEITEN_RECHTE.kalender, los: () => go("kalender") },
@@ -190,7 +191,7 @@ function cmdAktionen() {
     { titel: "Tastenkürzel anzeigen", sub: "Alle Abkürzungen auf einen Blick", icon: "tastatur", los: () => tastenkuerzelZeigen() },
     { titel: "Design umschalten", sub: "Hell / Dunkel", icon: "uebersicht", los: () => ACTIONS["theme-umschalten"]() },
   ];
-  return liste.filter((a) => erlaubt(a.recht));
+  return liste.filter((a) => erlaubt(a.recht) && (!a.recht2 || erlaubt(a.recht2)));
 }
 
 function cmdEintraege(q) {

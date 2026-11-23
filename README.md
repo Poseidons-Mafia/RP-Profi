@@ -78,6 +78,21 @@ und Änderungen erscheinen bei allen sofort.
   In der Akte „Ablauf starten“ (oder direkt beim Anlegen) legt alle Aufgaben mit Fälligkeit und Termine
   (z. B. Wiedervorlage, Frist) auf einmal an; einzelne Schritte lassen sich abwählen. Fortschritt
   („3/7 Aufgaben“) steht in der Aktenliste. Vorlagen pflegt, wer die Kanzlei-Einstellungen bearbeiten darf.
+- **Akte aus Material (Nigel baut die Akte):** In der Aktenliste **„Akte aus Material“** (auch über die Suche `/`), in einer
+  Akte **⋯ → „Material nachtragen“**. Man fügt beliebig viele Stücke ein – das **ganze Discord-Ticket** der Staatsanwaltschaft,
+  die **Polizeiakte**, eigene Notizen – oder lädt eine `.txt`-Datei bzw. das **HTML-Transkript** eines Ticket-Bots.
+  - Der Browser räumt Discord-Text vorher auf: Nachrichtenköpfe („Name [TAG], — 10/21/26, 12:38 AM“, auch deutsch und
+    „Heute um …“), Bot-Nachrichten („APP“), Server-Tags, Embed-Fußzeilen, „Image“ und Discord-IDs werden zu
+    `[2026-10-21 00:38] Name:` + Text. Angezeigt wird, wie viele Nachrichten und Personen erkannt wurden (bis 120 000 Zeichen).
+  - Nigel (Modus „Akte aufbauen“ der Edge Function `ki-assistent`, Antwort als JSON) macht daraus Stammdaten (Titel, Mandant je nach
+    gewählter Seite – Verteidigung, Geschädigte/r oder Staatsanwaltschaft –, Gegenpartei, Aktenzeichen wie die DOC-Nummer, Haft),
+    ein **Fall-Briefing** als Sachverhalt, **Verlaufseinträge mit dem Datum aus dem Ticket**, Beteiligte (Dienstnummern in der Notiz),
+    **Tatvorwürfe passend zum Strafkatalog**, Beweise (jeder Link im Material), Termine, Aufgaben und offene Fragen.
+  - Alles erscheint als **Vorschau mit Häkchen** und ist bearbeitbar; gespeichert wird erst mit „Akte anlegen“ bzw. „In die Akte
+    übernehmen“ – mit den Rechten des Mitglieds. Beim Nachtragen schlägt Nigel nur Neues vor (Vorhandenes ist abgewählt).
+    Der aufgeräumte Originaltext wird auf Wunsch als Beweismittel „Chatverlauf“ abgelegt (in der Akte aufklappbar).
+  - Braucht die Rechte **Akten bearbeiten** und **Nigel verwenden**; die Kosten laufen über das KI-Budget.
+    **Nach dieser Änderung die Edge Function `ki-assistent` neu bereitstellen** (keine SQL-Änderung nötig).
 - **Arbeit übergeben:** Bei Urlaub, Krankheit oder Ausscheiden gehen aktive Akten, offene Aufgaben und Termine
   in einem Schritt an eine Vertretung – mit Vermerk im Verlauf jeder Akte und einer Benachrichtigung.
   Wird ein Mitglied auf „Urlaub“/„Krank“ gesetzt, bietet das System die Übergabe direkt an.
@@ -435,6 +450,7 @@ Edge Functions im kostenlosen Supabase-Tarif nach 150 Sekunden abbrechen.
 | `js/zusammenarbeit.js` | Wer ist online, Benachrichtigungen (Glocke), @-Erwähnungen |
 | `js/pinnwand.js` | Pinnwand mit Lesebestätigung, „Team heute“ |
 | `js/ablaeufe.js` | Abläufe (Checklisten), Wiedervorlage, Arbeit übergeben |
+| `js/aufnahme.js` | Akte aus Material: Discord-Ticket/Polizeiakte einfügen, aufräumen, Nigel baut die Akte, Vorschau mit Häkchen |
 | `supabase/functions/discord-pruefung/` | Edge Function: prüft nach der Discord-Anmeldung die Mitgliedschaft im Discord-Server |
 | `tools/test-konten/` | lokaler Test für Update 11 und 12 (Nachbau der Supabase-Umgebung + Szenarien) |
 | `supabase/functions/ki-assistent/` | Edge Function: Anmeldung, Rechte, KI-Budget, Arbeitsmodi, Kontext, Werkzeuge (Gesetze/Paragraphen/Akten finden), Anfrage an das eingestellte Modell (OpenRouter), Live-Fortschritt als Stream |

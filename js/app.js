@@ -79,6 +79,7 @@ const SEITEN_RECHTE = {
 };
 const AKTIONS_RECHTE = {
   "akte-neu": "akten_schreiben", "akte-bearbeiten": "akten_schreiben",
+  "akte-aus-material": "akten_schreiben", "material-nachtragen": "akten_schreiben", // dazu Nigel verwenden (prüft die Edge Function)
   "sv-bearbeiten": "akten_schreiben", "sv-speichern": "akten_schreiben", "sv-abbrechen": "akten_schreiben", "akte-abschluss": "akten_schreiben",
   "haft-ende": "akten_schreiben", "vorwurf-hinzufuegen": "akten_schreiben", "vorwurf-anzahl": "akten_schreiben",
   "vorwurf-entfernen": "akten_schreiben", "eintrag-bearbeiten": "akten_schreiben", "eintrag-loeschen": "akten_schreiben",
@@ -275,7 +276,7 @@ function renderNav(route) {
       </div>`)}
     </div>
     <div class="sb-fuss">
-      <a class="nav-item sb-leitfaden" href="leitfaden/straftat.html?v=66" title="Leitfaden „Abhandlung einer Straftat“">
+      <a class="nav-item sb-leitfaden" href="leitfaden/straftat.html?v=67" title="Leitfaden „Abhandlung einer Straftat“">
         ${navIcon("leitfaden")}<span class="nav-label">Leitfaden <small>Abhandlung einer Straftat</small></span></a>
       <button type="button" class="nav-item nav-klappen" data-action="nav-klappen" aria-expanded="${!zu}"
         title="${zu ? "Menü ausklappen" : "Menü einklappen (nur Symbole)"}" aria-label="${zu ? "Menü ausklappen" : "Menü einklappen"}">
@@ -305,7 +306,7 @@ function renderNav(route) {
     <div class="sheet-liste">
       <button type="button" class="sheet-zeile" data-action="nav-profil">${navIcon("profil")}<span>Mein Profil</span></button>
       <button type="button" class="sheet-zeile" data-action="theme-umschalten">${themeIcon()}<span class="theme-label">Design umschalten</span></button>
-      <a class="sheet-zeile" href="leitfaden/straftat.html?v=66">${navIcon("leitfaden")}<span>Leitfaden „Abhandlung einer Straftat“</span></a>
+      <a class="sheet-zeile" href="leitfaden/straftat.html?v=67">${navIcon("leitfaden")}<span>Leitfaden „Abhandlung einer Straftat“</span></a>
       <button type="button" class="sheet-zeile danger" data-action="logout">${navIcon("abmelden")}<span>Abmelden</span></button>
     </div>`);
 
