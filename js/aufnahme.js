@@ -368,7 +368,11 @@ async function aufStarten() {
       zeitzone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }, lauf);
     if (auf.laeuft !== lauf) return;
-    auf.ergebnis = aufVorbereiten(erg.aufnahme || {}, material);
+    // Eine ältere Version von Nigel (Edge Function nicht neu bereitgestellt) kennt den Modus nicht und antwortet wie auf eine Frage
+    if (!erg.aufnahme || typeof erg.aufnahme !== "object") {
+      throw new Error("Nigel kennt diese Aufgabe noch nicht: Die Edge Function „ki-assistent“ bei Supabase muss neu bereitgestellt werden. Es wurde nichts gespeichert.");
+    }
+    auf.ergebnis = aufVorbereiten(erg.aufnahme, material);
     auf.ergebnis.kosten = erg.kosten;
     aufVorschauZeichnen();
   } catch (e) {
