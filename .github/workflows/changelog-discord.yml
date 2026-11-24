@@ -1,5 +1,8 @@
-# Postet nach jedem gemergten Pull Request (= jede Änderung an der Website) eine
-# übersichtliche Karte in den Discord-Kanal #changelog.
+# Postet nach jedem gemergten Pull Request den Abschnitt "## Changelog" seiner
+# Beschreibung als Karte in den Discord-Kanal #changelog (für Kanzlei und Mandanten).
+# Ohne diesen Abschnitt wird nichts gepostet.
+# Von Hand (Actions → "Changelog auf Discord" → Run workflow, mit PR-Nummer):
+# postet die Karte neu oder aktualisiert eine bestehende, z. B. nach einer Korrektur des Textes.
 # Nötig: Repository-Secret DISCORD_BOT_TOKEN. Den Kanal legt "Discord-Server einrichten" an.
 name: Changelog auf Discord
 
@@ -7,13 +10,19 @@ on:
   pull_request:
     types: [closed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_nummer:
+        description: "Nummer des Pull Requests"
+        required: true
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   changelog:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +31,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Änderung in #changelog posten
+      - name: Changelog-Karte posten
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_SERVER_ID: "1572531594227355739"
-          PR_TITEL: ${{ github.event.pull_request.title }}
-          PR_TEXT: ${{ github.event.pull_request.body }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_NUMMER: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMMER: ${{ inputs.pr_nummer || github.event.pull_request.number }}
         run: node tools/discord-bot/changelog-posten.mjs
