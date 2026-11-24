@@ -1302,6 +1302,7 @@ dialog::backdrop { background: rgba(20, 10, 10, 0.55); }
   --falten: 0.72s;
   --glas: 0.3s;
   --ki-bg: #fbf7ea;
+  color: var(--text); /* bleibt auch im Darkmode dunkel auf hellem Handy (sonst erbt es die helle Schrift) */
   position: fixed;
   right: max(26px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
