@@ -9,6 +9,16 @@ Jede Aufgabe wird so weit erledigt, dass der Nutzer sie nur noch in GitHub geneh
 3. **Ohne Nachfrage** einen Pull Request gegen `main` erstellen, mit verständlicher deutscher Beschreibung (was wurde geändert, warum, worauf beim Prüfen achten).
 4. Dem Nutzer den Link zum Pull Request geben.
 
+## Changelog-Abschnitt in jedem Pull Request
+
+Jede PR-Beschreibung beginnt mit einem Abschnitt `## Changelog`. Er wird nach dem Merge automatisch in den
+Discord-Kanal #changelog gepostet und von **Kanzlei-Mitgliedern und Mandanten** gelesen. Deshalb:
+- Erste Zeile fett als kurze Überschrift, z. B. `**Termine lassen sich jetzt in den Kalender übernehmen**`.
+- Danach 1–4 kurze Stichpunkte: was ist neu oder besser, und wo findet man es auf der Website.
+- Einfache Sprache, keine Technik: keine Dateinamen, Workflows, Datenbank, Code, Secrets, PR-Nummern.
+- Betrifft eine Änderung nur die Technik (nichts, was Nutzer merken), den Abschnitt weglassen – dann wird nichts gepostet.
+- Die technischen Details (was geändert, worauf beim Prüfen achten) stehen darunter in eigenen Abschnitten.
+
 Nicht selbst mergen und nichts direkt live schalten.
 
 ## Ausnahme: Sofort live

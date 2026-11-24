@@ -340,11 +340,13 @@ Treffer. Passen mehrere oder keiner, sagt Nigel das und bittet, im Profil den Di
 
 ### Changelog auf Discord
 
-Nach **jedem gemergten Pull Request** (also jeder Änderung an der Website) postet der Workflow
-[`changelog-discord.yml`](.github/workflows/changelog-discord.yml) eine Karte in den Kanal **#changelog**: Titel (verlinkt zum
-Pull Request), die Beschreibung („Was wurde geändert, warum …“), Version und PR-Nummer. Die Beschreibung des Pull Requests ist
-also der Changelog-Text – verständlich auf Deutsch schreiben. Einrichtung: Secret `DISCORD_BOT_TOKEN` (wie beim Server-Einrichten) und
-einmal **Discord-Server einrichten → ausfuehren**, damit `#changelog` (unter 📢 Informationen, nur das Team schreibt) angelegt wird.
+Nach **jedem gemergten Pull Request** postet der Workflow [`changelog-discord.yml`](.github/workflows/changelog-discord.yml)
+eine Karte in den Kanal **#changelog** – gedacht für Kanzlei-Mitglieder und Mandanten. Gepostet wird **nur** der Abschnitt
+`## Changelog` aus der PR-Beschreibung (bis zur nächsten Überschrift oder `---`), in einfacher Sprache ohne Technik. Eine
+fette erste Zeile (`**Neue Terminübersicht**`) wird zur Überschrift der Karte, sonst der PR-Titel. Ohne diesen Abschnitt wird
+nichts gepostet (reine Technik-Änderungen). Text korrigieren: PR-Beschreibung ändern, dann **Actions → „Changelog auf
+Discord“ → Run workflow** mit der PR-Nummer – die bestehende Karte wird aktualisiert statt doppelt gepostet.
+Einrichtung: Secret `DISCORD_BOT_TOKEN` und einmal **Discord-Server einrichten → ausfuehren** (legt `#changelog` an).
 
 ### Discord-Server einrichten lassen
 
