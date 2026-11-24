@@ -1,0 +1,33 @@
+# Postet nach jedem gemergten Pull Request (= jede Änderung an der Website) eine
+# übersichtliche Karte in den Discord-Kanal #changelog.
+# Nötig: Repository-Secret DISCORD_BOT_TOKEN. Den Kanal legt "Discord-Server einrichten" an.
+name: Changelog auf Discord
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Änderung in #changelog posten
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_SERVER_ID: "1572531594227355739"
+          PR_TITEL: ${{ github.event.pull_request.title }}
+          PR_TEXT: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMMER: ${{ github.event.pull_request.number }}
+        run: node tools/discord-bot/changelog-posten.mjs

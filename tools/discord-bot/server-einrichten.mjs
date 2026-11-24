@@ -66,6 +66,7 @@ const KATEGORIEN = [
       ["regeln", "Die Regeln unseres Servers."],
       ["ankuendigungen", "Neuigkeiten der Kanzlei."],
       ["gesetzesaenderungen", "Änderungen an Gesetzen und Verordnungen."],
+      ["changelog", "Alle Änderungen an der Website – automatisch dokumentiert."],
     ],
   },
   {

@@ -338,6 +338,14 @@ Discord-Server: zuerst über das Feld **„Discord“ im Profil** (Benutzername 
 sonst über den Charakternamen im Server-Spitznamen, Anzeigenamen oder Benutzernamen. Angepingt wird nur bei **genau einem**
 Treffer. Passen mehrere oder keiner, sagt Nigel das und bittet, im Profil den Discord-Namen bzw. die ID einzutragen.
 
+### Changelog auf Discord
+
+Nach **jedem gemergten Pull Request** (also jeder Änderung an der Website) postet der Workflow
+[`changelog-discord.yml`](.github/workflows/changelog-discord.yml) eine Karte in den Kanal **#changelog**: Titel (verlinkt zum
+Pull Request), die Beschreibung („Was wurde geändert, warum …“), Version und PR-Nummer. Die Beschreibung des Pull Requests ist
+also der Changelog-Text – verständlich auf Deutsch schreiben. Einrichtung: Secret `DISCORD_BOT_TOKEN` (wie beim Server-Einrichten) und
+einmal **Discord-Server einrichten → ausfuehren**, damit `#changelog` (unter 📢 Informationen, nur das Team schreibt) angelegt wird.
+
 ### Discord-Server einrichten lassen
 
 Der Workflow **Discord-Server einrichten** legt Rollen, Kategorien und Kanäle an (Skript
