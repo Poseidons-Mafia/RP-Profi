@@ -1867,7 +1867,7 @@ body.nw-seite { overflow: hidden; }
 /* Farben der Arbeitsmodi */
 .m-frage { --nw-m: var(--blue); --nw-m-soft: var(--blue-soft); --nw-m-text: var(--blue); }
 .m-gutachten { --nw-m: var(--red); --nw-m-soft: var(--red-soft); --nw-m-text: var(--red); }
-.m-schriftsatz, .m-ueberarbeiten { --nw-m: var(--gold); --nw-m-soft: var(--gold-soft); --nw-m-text: var(--gold-text); }
+.m-schriftsatz, .m-ueberarbeiten, .m-plaedoyer { --nw-m: var(--gold); --nw-m-soft: var(--gold-soft); --nw-m-text: var(--gold-text); }
 .m-strategie { --nw-m: var(--green); --nw-m-soft: var(--green-soft); --nw-m-text: var(--green); }
 .m-orga { --nw-m: #5b4a8f; --nw-m-soft: color-mix(in srgb, #5b4a8f 16%, var(--bg-surface)); --nw-m-text: #4a3b7a; }
 
@@ -1950,7 +1950,7 @@ body.nw-seite { overflow: hidden; }
 .nw-modus:hover { border-color: var(--nw-m); }
 .nw-modus.aktiv { background: var(--nw-m); border-color: var(--nw-m); color: #fff; }
 .nw-modus.aktiv::before { background: currentColor; opacity: 0.6; }
-.nw-modus.aktiv.m-schriftsatz { color: var(--black); }
+.nw-modus.aktiv.m-schriftsatz, .nw-modus.aktiv.m-plaedoyer { color: var(--black); }
 .nw-modus small { font-size: 0.66rem; opacity: 0.75; }
 .nw-modus:disabled { opacity: 0.4; cursor: not-allowed; }
 
