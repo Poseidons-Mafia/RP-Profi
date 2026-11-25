@@ -115,7 +115,7 @@ function aktenzeichenZeile(a) {
 }
 
 // ---------- Dokument-Dialog ----------
-function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, verlaufText, hinweis = "" }) {
+function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, verlaufText, hinweis = "", onSpeichern = null }) {
   if (!darf("akten_schreiben")) verlaufAkte = null;
   const dlg = openDialog({
     id: "doc-dialog",
@@ -126,12 +126,21 @@ function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, ve
         <span class="muted small">Text direkt im Dokument anklicken und ändern. Gelb markierte Stellen ergänzen, ☐ zum Ankreuzen anklicken.</span>
         <span class="spacer"></span>
         ${verlaufAkte ? html`<label class="check small"><input type="checkbox" id="doc-verlauf" checked> Im Verlauf vermerken</label>` : ""}
+        ${onSpeichern ? html`<button class="btn" type="button" data-doc="speichern">In der Akte speichern</button>` : ""}
         <button class="btn primary" type="button" data-doc="print">Drucken / PDF</button>
       </div>
       ${hinweis ? html`<details class="doc-hinweis" open><summary>Hinweise von Nigel (werden nicht gedruckt)</summary><div class="ki-md">${hinweis}</div></details>` : ""}
       <div class="doc-preview"><div class="doc-page">${dokumentSeite(content, { autor, datum })}</div></div>`,
   });
   dokumentKreuzchen(dlg.querySelector(".doc-page"));
+  if (onSpeichern) {
+    const knopf = dlg.querySelector('[data-doc="speichern"]');
+    knopf.addEventListener("click", async () => {
+      knopf.disabled = true;
+      try { await onSpeichern(dlg.querySelector(".doc-inhalt")); } catch (e) { console.error(e); toast(errorText(e), "error"); }
+      knopf.disabled = false;
+    });
+  }
   let vermerkt = false;
   dlg.querySelector('[data-doc="print"]').addEventListener("click", async () => {
     const box = dlg.querySelector("#doc-verlauf");

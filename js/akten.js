@@ -603,10 +603,10 @@ function tabVerlauf(a) {
           <span class="zeit">${fmt.datumZeit(e.created_at)}</span>
           ${(e.erwaehnt || []).length ? html`<span class="erw-an" title="Erwähnt und benachrichtigt">→ ${e.erwaehnt.map((id) => personName(id)).join(", ")}</span>` : ""}
         </div>
-        <p>${mitErwaehnungen(e.text)}</p>
+        ${e.typ === "plaedoyer" ? plaedoyerEintrag(e) : html`<p>${mitErwaehnungen(e.text)}</p>`}
         <div class="tools">
           ${e.mandant_id ? "" : html`<button class="icon-btn ${e.fuer_mandant ? "an" : ""}" title="${e.fuer_mandant ? "Für den Mandanten wieder verbergen" : "Für den Mandanten sichtbar machen"}" aria-label="${e.fuer_mandant ? "Für den Mandanten verbergen" : "Für den Mandanten sichtbar machen"}" data-action="eintrag-fuer-mandant" data-id="${e.id}">${icon("auge")}</button>
-          <button class="icon-btn" title="Bearbeiten" aria-label="Eintrag bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>`}
+          ${e.typ === "plaedoyer" ? "" : html`<button class="icon-btn" title="Bearbeiten" aria-label="Eintrag bearbeiten" data-action="eintrag-bearbeiten" data-id="${e.id}">✎</button>`}`}
           <button class="icon-btn" title="Löschen" aria-label="Eintrag löschen" data-action="eintrag-loeschen" data-id="${e.id}">✕</button>
         </div>
       </li>`;
@@ -1096,24 +1096,57 @@ const PLAEDOYER_ZIELE = {
   ],
 };
 const PLAEDOYER_DAUER = [["kurz", "Kurz (etwa 2 Minuten)"], ["normal", "Normal (3–5 Minuten)"], ["ausfuehrlich", "Ausführlich (bis 8 Minuten)"]];
-const plaedoyerLetzte = {}; // akteId → { md, hinweise, sta } – letzter Entwurf dieser Sitzung, falls das Dokument zu früh geschlossen wurde
 
-// Sicht aus Nigels persönlichen Einstellungen (Verteidigung / Staatsanwaltschaft)
+// Sicht aus Nigels persönlichen Einstellungen (Verteidigung / Staatsanwaltschaft); lädt dabei auch die
+// Anzeige-Wünsche (Prozent/Dollar), damit die Kosten wie im Chat erscheinen
 async function plaedoyerSicht() {
-  if (ui.nigel && ui.nigel.geladen) return ui.nigel.profil.perspektive === "staatsanwaltschaft";
-  const { data } = await db.from("ki_profil").select("einstellungen").eq("user_id", state.me.id).maybeSingle();
-  return ((data && data.einstellungen) || {}).perspektive === "staatsanwaltschaft";
+  if (!(ui.nigel && ui.nigel.geladen)) {
+    const { data } = await db.from("ki_profil").select("einstellungen").eq("user_id", state.me.id).maybeSingle();
+    ui.nigel.profil = { ...ui.nigel.profil, ...((data && data.einstellungen) || {}) };
+  }
+  return ui.nigel.profil.perspektive === "staatsanwaltschaft";
 }
 
-function plaedoyerZeigen(a, erg) {
+// Modell und Verbrauch – gleiche Darstellung wie an Nigels Chat-Antworten
+function plaedoyerMeta(d) {
+  const kosten = Number(d.kosten);
+  const budget = Number(d.budget) || 0;
+  const modus = kiAnzeige("antwort");
+  const zeigeKosten = Number.isFinite(kosten) && d.kosten !== null && d.kosten !== undefined && (modus === "dollar" || budget > 0 || state.isAdmin);
+  return html`<span class="plaedoyer-meta">
+    ${d.modell ? html`<span class="nw-modell" title="Erstellt mit diesem KI-Modell">${d.modell}</span>` : ""}
+    ${zeigeKosten ? html`<span class="nw-kosten" title="${modus === "dollar" ? "Kosten dieser Anfrage" : "Verbrauch dieser Anfrage (Anteil am Monatsbudget)"}">${kiBetragText(kosten, budget, modus)}</span>` : ""}
+  </span>`;
+}
+
+function plaedoyerEintrag(e) {
+  const d = e.daten || {};
+  const vorschau = String(e.text || "").replace(/[#*>_`]/g, "").replace(/\s+/g, " ").trim();
+  return html`<div class="plaedoyer-eintrag">
+    <div class="plaedoyer-kopf"><strong>⚖ ${e.titel || "Abschlussplädoyer"}</strong>${plaedoyerMeta(d)}</div>
+    <p class="muted small">${truncate(vorschau, 220)}</p>
+    <button type="button" class="btn small nigel" data-action="plaedoyer-oeffnen" data-id="${e.id}"><img class="btn-nigel-bild" src="assets/nigel.svg" alt=""><span>Öffnen</span></button>
+  </div>`;
+}
+
+// Gespeichertes Plädoyer als Dokument öffnen; Änderungen lassen sich in die Akte zurückspeichern
+function plaedoyerOeffnen(e) {
+  const a = byId("akten", e.akte_id);
+  if (!a) return;
+  const d = e.daten || {};
+  const inhalt = d.html && window.DOMPurify ? DOMPurify.sanitize(d.html) : kiFormat(e.text || "");
   openDocument({
-    title: `${erg.sta ? "Schlussvortrag" : "Abschlussplädoyer"} – ${a.number}`,
-    content: new SafeHtml(kiFormat(erg.md)),
-    hinweis: erg.hinweise ? new SafeHtml(kiFormat(erg.hinweise)) : "",
-    verlaufAkte: a.id,
-    verlaufText: `${erg.sta ? "Schlussvortrag" : "Abschlussplädoyer"} mit Nigel erstellt und gedruckt`,
+    title: `${e.titel || "Abschlussplädoyer"} – ${a.number}`,
+    content: new SafeHtml(inhalt),
+    hinweis: html`<div class="plaedoyer-kopf">${plaedoyerMeta(d)}</div>${d.hinweise ? new SafeHtml(kiFormat(d.hinweise)) : ""}`,
+    onSpeichern: darf("akten_schreiben") ? async (el) => {
+      const neu = byId("eintraege", e.id) || e;
+      await updateRow("eintraege", e.id, { text: el.innerText.trim(), daten: { ...(neu.daten || {}), html: el.innerHTML } });
+      toast("Plädoyer in der Akte gespeichert");
+    } : null,
   });
 }
+ACTIONS["plaedoyer-oeffnen"] = (d) => { const e = byId("eintraege", d.id); if (e) plaedoyerOeffnen(e); };
 
 async function openPlaedoyerForm(a) {
   if (!a) return;
@@ -1131,11 +1164,9 @@ async function openPlaedoyerForm(a) {
     `${kinder("beteiligte", a.id).length} Beteiligte`, `${kinder("termine", a.id).length} Termine`,
   ];
   const darfEintragen = darf("akten_schreiben");
-  const letzter = plaedoyerLetzte[a.id];
   const fields = [
     { type: "info", html: html`<strong>Nigel liest die ganze Akte</strong> – Sachverhalt, Haft, ${teile.join(", ")}.
-      Die neuesten Einträge aus der Verhandlung haben Vorrang. Das ${sta ? "Schlussvortrag" : "Plädoyer"} öffnet sich danach hier als Dokument zum Bearbeiten und Drucken.
-      ${letzter ? html`<div style="margin-top:6px"><button type="button" class="link-btn" data-plaedoyer-letzter>Letzten Entwurf wieder öffnen</button></div>` : ""}` },
+      Die neuesten Einträge aus der Verhandlung haben Vorrang. Das ${sta ? "Schlussvortrag" : "Plädoyer"} wird im Verlauf der Akte gespeichert und öffnet sich als Dokument zum Bearbeiten und Drucken.` },
     { name: "ziel", label: "Ziel", type: "select", required: true, half: true, options: ziele.map(([value, label]) => ({ value, label })) },
     { name: "dauer", label: "Dauer des Vortrags", type: "select", required: true, half: true, options: PLAEDOYER_DAUER.map(([value, label]) => ({ value, label })) },
     { name: "strafe", label: sta ? "Eigene Strafvorstellung (optional)" : "Eigene Strafvorstellung / Hilfsantrag (optional)",
@@ -1153,8 +1184,6 @@ async function openPlaedoyerForm(a) {
     values: { ziel: "auto", dauer: "normal", speichern: true },
     submitLabel: "Plädoyer schreiben lassen",
     onMount: (form) => {
-      const knopf = form.querySelector("[data-plaedoyer-letzter]");
-      if (knopf) knopf.addEventListener("click", () => { form.closest("dialog").close(); plaedoyerZeigen(a, plaedoyerLetzte[a.id]); });
       // Schließen bricht eine laufende Anfrage ab
       form.closest("dialog").addEventListener("close", () => { if (lauf) lauf.abbruch.abort(); }, { once: true });
     },
@@ -1194,9 +1223,17 @@ async function openPlaedoyerForm(a) {
       const block = /^:::entwurf\s*$([\s\S]*?)^:::\s*$/m.exec(antwort);
       const md = (block ? block[1] : antwort).trim();
       const hinweise = block ? antwort.replace(block[0], "").trim() : "";
-      plaedoyerLetzte[a.id] = { md, hinweise, sta };
-      if (ui.assistent) ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(e.budget) || (ui.assistent.info || {}).budget || null };
-      setTimeout(() => plaedoyerZeigen(a, plaedoyerLetzte[a.id]), 0); // nach dem Schließen des Formulars
+      const budget = kiBudgetStand(e.budget);
+      if (ui.assistent) ui.assistent.info = { ...(ui.assistent.info || {}), budget: budget || (ui.assistent.info || {}).budget || null, modell: e.modell };
+      const titel = sta ? "Schlussvortrag (Entwurf von Nigel)" : "Abschlussplädoyer (Entwurf von Nigel)";
+      const daten = { hinweise, modell: e.modell || null, kosten: e.kosten ?? null, budget: budget ? budget.budget : null,
+        ziel: v.ziel, dauer: v.dauer, sicht: sta ? "staatsanwaltschaft" : "verteidigung" };
+      let eintrag = { akte_id: a.id, art: "Gericht", typ: "plaedoyer", titel, text: md, daten };
+      if (darfEintragen) {
+        try { eintrag = await insertRow("eintraege", eintrag); }
+        catch (err) { console.error(err); toast("Das Plädoyer konnte nicht in der Akte gespeichert werden – bitte vor dem Schließen drucken oder als PDF sichern.", "error"); }
+      } else toast("Ohne das Recht, Akten zu bearbeiten, wird das Plädoyer nicht gespeichert – bitte drucken oder als PDF sichern.", "error");
+      setTimeout(() => plaedoyerOeffnen(eintrag), 0); // nach dem Schließen des Formulars
     },
   });
 }

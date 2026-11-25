@@ -54,7 +54,8 @@ const MODELL = ((Deno.env.get("OPENROUTER_MODELL") || MODELL_STANDARD).split(","
 const MODELL_2 = (Deno.env.get("OPENROUTER_MODELL_2") || "").split(",")[0].trim();
 const MODELL_2_MODI = (Deno.env.get("OPENROUTER_MODELL_2_MODI") || "").split(",").map((x) => x.trim()).filter(Boolean);
 // Welches Modell arbeitet im jeweiligen Arbeitsmodus? Zweites Modell nur, wenn es und der Modus eingestellt sind.
-const modellFuer = (modus: string): string => MODELL_2 && MODELL_2_MODI.includes(modus) ? MODELL_2 : MODELL;
+// Das Abschlussplädoyer läuft immer über das zweite Modell (falls hinterlegt), unabhängig von OPENROUTER_MODELL_2_MODI
+const modellFuer = (modus: string): string => MODELL_2 && (MODELL_2_MODI.includes(modus) || modus === "plaedoyer") ? MODELL_2 : MODELL;
 const STUFEN = ["low", "medium", "high"];
 const OR_REASONING = STUFEN.includes(Deno.env.get("KI_REASONING") || "") ? Deno.env.get("KI_REASONING")! : "high";
 const MAX_ZEICHEN_NACHRICHT = 30000;  // je Nachricht im Verlauf
@@ -974,7 +975,7 @@ Oben rechts: Glocke (Benachrichtigungen, Taste B) und Wer-ist-online-Avatare. Su
   { titel: "Übersicht (Startseite)", stichworte: "übersicht startseite kennzahlen pinnwand team heute liegen gebliebene akten statistik fristen",
     text: `Zeigt nur, was der Rang lesen darf: Kennzahlen, Termine der nächsten 7 Tage, überfällige Fristen, eigene Aufgaben, Mandanten in Haft, dringende Akten, liegen gebliebene Akten (offen, seit X Tagen ohne Eintrag/Aufgabe/Termin – mit „Wiedervorlage“ per Klick), die Pinnwand, „Team heute“ (wer ist online/im Urlaub, Akten, Aufgaben, Termine je Person), letzte Aktivitäten im Team und Statistik (Erfolgsquote, Umsatz).` },
   { titel: "Abschlussplädoyer mit Nigel", stichworte: "plädoyer plaedoyer abschlussplädoyer schlussvortrag hauptverhandlung verhandlung gericht letztes wort hilfsantrag",
-    text: `In der Akte ⋯ → „Abschlussplädoyer mit Nigel“ (an Verhandlungstagen auch über den Hinweis oben im Reiter Verlauf). Im Fenster Ziel (Nigel entscheidet nach Beweislage, Freispruch, Teilfreispruch, mildere Strafe, Einstellung), Dauer, eigene Strafvorstellung und frische Notizen aus der Verhandlung angeben; die Notizen werden auf Wunsch als Verlaufseintrag (Art „Gericht“) gespeichert. Nigel liest die ganze Akte – Sachverhalt, Tatvorwürfe, Beteiligte, Beweise, Termine und den kompletten Verlauf, die Einträge aus der Verhandlung haben Vorrang – und das Plädoyer öffnet sich direkt in der Akte als Dokument (im Text bearbeiten, drucken / als PDF speichern); „Letzten Entwurf wieder öffnen“ holt es zurück, solange die Seite offen ist. Darunter Hinweise zur Strategie und ein Vorschlag fürs letzte Wort des Mandanten. Mit der Sicht „Staatsanwaltschaft“ entsteht der Schlussvortrag der Anklage. Braucht „Nigel verwenden“ und den freigegebenen Modus Schriftsatz.` },
+    text: `In der Akte ⋯ → „Abschlussplädoyer mit Nigel“ (an Verhandlungstagen auch über den Hinweis oben im Reiter Verlauf). Im Fenster Ziel (Nigel entscheidet nach Beweislage, Freispruch, Teilfreispruch, mildere Strafe, Einstellung), Dauer, eigene Strafvorstellung und frische Notizen aus der Verhandlung angeben; die Notizen werden auf Wunsch als Verlaufseintrag (Art „Gericht“) gespeichert. Nigel (zweites KI-Modell) liest die ganze Akte – Sachverhalt, Tatvorwürfe, Beteiligte, Beweise, Termine und den kompletten Verlauf, die Einträge aus der Verhandlung haben Vorrang – und das Plädoyer wird als Eintrag im Verlauf der Akte gespeichert (mit Modell und Kosten) und öffnet sich als Dokument (im Text bearbeiten, „In der Akte speichern“, drucken / als PDF). Später im Verlauf am Eintrag „Öffnen“. Darunter Hinweise zur Strategie und ein Vorschlag fürs letzte Wort des Mandanten. Mit der Sicht „Staatsanwaltschaft“ entsteht der Schlussvortrag der Anklage. Braucht „Nigel verwenden“ und den freigegebenen Modus Schriftsatz.` },
   { titel: "Akten", stichworte: "akte akten aktenzeichen verlauf beteiligte beweise tatvorwürfe strafrechner historie ergebnis haft interessenkonflikt dokument erzeugen ablauf material ticket discord polizeiakte einfügen importieren nachtragen",
     text: `Akte öffnen: Menü Akten. Reiter: Überblick (Mandant, Gegenpartei, Mandatsart, Priorität, Zuständige/r, Aktenzeichen von Polizei/StA/Gericht, Haft-Status, Tatvorwürfe mit Strafrechner = Summe von Geldstrafe und Haft, Ergebnis, Sachverhalt als Fall-Briefing) · Verlauf (Einträge nach Art: Notiz, Telefonat, Gespräch, Gericht, Polizei/StA, Schriftverkehr, Intern; als „wichtig“ markierbar; mit @Name Kollegen erwähnen; „für Mandant sichtbar“ macht einen Eintrag im Portal sichtbar) · Beteiligte (Zeugen, Beamte, Richter, Staatsanwalt, Gegenseite, Mandantenportal-Zugänge) · Beweise (Links zu Screenshots/Clips mit Vorschau) · Termine, Aufgaben, Rechnungen zur Akte · Historie (automatisches Änderungsprotokoll).
 Akte aus Material: In der Aktenliste „Akte aus Material“ (bzw. in einer Akte ⋯ → „Material nachtragen“) das ganze Discord-Ticket der Staatsanwaltschaft, die Polizeiakte und Notizen einfügen oder ein Ticket-Transkript (HTML) laden; Nigel baut daraus Stammdaten, Sachverhalt, Verlauf mit Datum, Beteiligte, Tatvorwürfe (Strafkatalog), Beweise, Termine und Aufgaben. Alles erscheint als Vorschau mit Häkchen, gespeichert wird erst nach Bestätigung. Tipp für lange Tickets: in mehreren Portionen kopieren und als einzelne Stücke einfügen.
@@ -1687,7 +1688,7 @@ async function akteDetail(db: SupabaseClient, id: string, s: Zeile, vollstaendig
   // Termine, Aufgaben und Rechnungen der Akte: ohne Leserecht kommt einfach nichts zurück.
   // Verlauf: die NEUESTEN Einträge laden (dort stehen z. B. die Notizen aus der Verhandlung), danach chronologisch sortieren.
   const [eintraege, beteiligte, beweise, m, termine, aufgaben, rechnungen, zustaendig, mitmandanten] = await Promise.all([
-    db.from("eintraege").select("art,titel,text,wichtig,created_at,zeitpunkt", { count: "exact" }).eq("akte_id", id)
+    db.from("eintraege").select("art,typ,titel,text,wichtig,created_at,zeitpunkt", { count: "exact" }).eq("akte_id", id)
       .order("created_at", { ascending: false }).limit(maxEintraege),
     db.from("beteiligte").select("rolle,name,notiz").eq("akte_id", id),
     db.from("beweise").select("art,titel,beschreibung").eq("akte_id", id),
@@ -1724,7 +1725,10 @@ async function akteDetail(db: SupabaseClient, id: string, s: Zeile, vollstaendig
   if (rechnungen.data?.length) out.push("Rechnungen:\n" + rechnungen.data.map((r: Zeile) => "- " + zeile(r.nummer, r.datum, r.betreff, `${r.summe} ${s.waehrung}`, r.status)).join("\n"));
   if (eintraege.data?.length) {
     const wann = (e: Zeile) => String(e.zeitpunkt || e.created_at || "");
-    const liste = [...eintraege.data].sort((x: Zeile, y: Zeile) => wann(x).localeCompare(wann(y)));
+    // Gespeicherte Plädoyer-Entwürfe: beim neuen Plädoyer weglassen (sonst schreibt Nigel sich selbst ab), sonst nur kurz
+    const liste = [...eintraege.data].filter((e: Zeile) => !(vollstaendig && e.typ === "plaedoyer"))
+      .map((e: Zeile) => e.typ === "plaedoyer" && String(e.text || "").length > 400 ? { ...e, text: String(e.text).slice(0, 400) + " …" } : e)
+      .sort((x: Zeile, y: Zeile) => wann(x).localeCompare(wann(y)));
     const ausgelassen = (eintraege.count || 0) - liste.length;
     out.push(`Verlauf (chronologisch, Zeiten UTC${ausgelassen > 0 ? `; die ${ausgelassen} ältesten Einträge sind ausgelassen` : ""}):\n` + liste.map((e: Zeile) =>
       `- ${wann(e).slice(0, 16).replace("T", " ")} ${e.art || ""}${e.wichtig ? " (wichtig)" : ""}: ${zeile(e.titel, e.text)}`).join("\n"));

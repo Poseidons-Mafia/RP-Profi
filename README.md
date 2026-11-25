@@ -227,8 +227,11 @@ und Änderungen erscheinen bei allen sofort.
     Beweise (längere Beschreibungen), Termine und bis zu 600 Verlaufseinträge, immer die neuesten; die Einträge aus der Verhandlung
     haben Vorrang. Er wählt die Strategie nach Beweislage, baut das Plädoyer für den mündlichen Vortrag auf (Ziel vorweg, wenige
     tragende Argumente mit Belegen, Antwort auf die StA, Rügen für die Berufung, Haupt- und Hilfsantrag mit Zahl). Das Plädoyer
-    öffnet sich direkt in der Akte als **Dokument** mit Briefkopf (im Text bearbeiten, drucken / als PDF); darüber Hinweise von Nigel
-    (nicht gedruckt) und ein Vorschlag fürs letzte Wort. „Letzten Entwurf wieder öffnen“ holt es zurück, solange die Seite offen ist. Mit der Sicht „Staatsanwaltschaft“ entsteht
+    wird als Eintrag im **Verlauf** gespeichert (Art „Gericht“, `typ = plaedoyer`, Hinweise/Modell/Kosten in `daten`) und öffnet sich als
+    **Dokument** mit Briefkopf (im Text bearbeiten, „In der Akte speichern“, drucken / als PDF); darüber Modell, Verbrauch (wie an Nigels
+    Chat-Antworten) und Nigels Hinweise (nicht gedruckt). Im Verlauf steht es als Karte mit „Öffnen“. Es läuft immer über das
+    **zweite Modell** (`OPENROUTER_MODELL_2`, unabhängig von `OPENROUTER_MODELL_2_MODI`). Gespeicherte Plädoyers liest Nigel beim
+    nächsten Plädoyer nicht mit, in anderen Modi nur gekürzt. Mit der Sicht „Staatsanwaltschaft“ entsteht
     der Schlussvortrag der Anklage.
     Allgemein liest Nigel bei Akten jetzt die **neuesten** Verlaufseinträge (vorher die ältesten 200).
 - **Menüführung:** Die Bereiche sind in drei Gruppen sortiert – *Arbeit* (Übersicht, Akten, Mandanten, Kalender),
