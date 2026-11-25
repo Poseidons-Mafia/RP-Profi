@@ -391,6 +391,13 @@
   .verhandlung-hinweis .grow { flex: 1 1 260px; min-width: 0; }
   .verhandlung-hinweis .small { margin-top: 2px; color: var(--text-secondary); }
 
+  /* Gespeichertes Abschlussplädoyer im Verlauf */
+  .plaedoyer-eintrag { display: grid; gap: 6px; justify-items: start; margin-top: 4px; }
+  .plaedoyer-eintrag p { margin: 0; }
+  .plaedoyer-kopf { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; width: 100%; }
+  .plaedoyer-meta { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+  .plaedoyer-meta .nw-kosten { margin-left: 0; }
+
   /* Rumpf: Inhalt | Aktendaten */
   .akte-rumpf { display: block; }
   .akte-haupt { min-width: 0; }
