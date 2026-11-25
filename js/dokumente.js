@@ -115,7 +115,7 @@ function aktenzeichenZeile(a) {
 }
 
 // ---------- Dokument-Dialog ----------
-function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, verlaufText }) {
+function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, verlaufText, hinweis = "" }) {
   if (!darf("akten_schreiben")) verlaufAkte = null;
   const dlg = openDialog({
     id: "doc-dialog",
@@ -128,6 +128,7 @@ function openDocument({ title, content, autor, datum, onPrinted, verlaufAkte, ve
         ${verlaufAkte ? html`<label class="check small"><input type="checkbox" id="doc-verlauf" checked> Im Verlauf vermerken</label>` : ""}
         <button class="btn primary" type="button" data-doc="print">Drucken / PDF</button>
       </div>
+      ${hinweis ? html`<details class="doc-hinweis" open><summary>Hinweise von Nigel (werden nicht gedruckt)</summary><div class="ki-md">${hinweis}</div></details>` : ""}
       <div class="doc-preview"><div class="doc-page">${dokumentSeite(content, { autor, datum })}</div></div>`,
   });
   dokumentKreuzchen(dlg.querySelector(".doc-page"));

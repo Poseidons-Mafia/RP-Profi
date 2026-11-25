@@ -31,20 +31,20 @@
        style.css ist die bisherige Gestaltung (Layer legacy) und wird schrittweise abgelöst. -->
   <link rel="preload" href="assets/fonts/public-sans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/00-layers.css?v=69">
-  <link rel="stylesheet" href="css/01-tokens.css?v=69">
-  <link rel="stylesheet" href="css/02-base.css?v=69">
-  <link rel="stylesheet" href="style.css?v=69">
-  <link rel="stylesheet" href="css/03-layout.css?v=69">
-  <link rel="stylesheet" href="css/04-components.css?v=69">
-  <link rel="stylesheet" href="css/05-views.css?v=69">
+  <link rel="stylesheet" href="css/00-layers.css?v=70">
+  <link rel="stylesheet" href="css/01-tokens.css?v=70">
+  <link rel="stylesheet" href="css/02-base.css?v=70">
+  <link rel="stylesheet" href="style.css?v=70">
+  <link rel="stylesheet" href="css/03-layout.css?v=70">
+  <link rel="stylesheet" href="css/04-components.css?v=70">
+  <link rel="stylesheet" href="css/05-views.css?v=70">
 </head>
 <body>
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
   <!-- Kopfzeile: links Kontext (Handy: Logo), Mitte Such-/Befehlsleiste, rechts Online, Neue Akte, Glocke, Hell/Dunkel -->
   <header id="topbar" class="topbar">
     <a class="brand" href="#/" aria-label="Wiwang Law – zur Übersicht">
-      <img class="brand-mark" src="assets/icon.png?v=69" alt="" width="32" height="32">
+      <img class="brand-mark" src="assets/icon.png?v=70" alt="" width="32" height="32">
       <span class="brand-text"><span class="brand-name">Wiwang Law</span><span id="brand-sub" class="brand-sub">Aktensystem</span></span>
     </a>
     <nav id="kopf-kontext" class="kopf-kontext" aria-label="Brotkrumen" hidden></nav>
@@ -133,7 +133,7 @@
   <!-- Login -->
   <section id="login-screen" class="center-screen" hidden>
     <form id="login-form" class="card login-card">
-      <div class="login-brand"><img src="assets/logo.png?v=69" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=70" alt="Wiwang Law"></div>
       <h2>Anmelden</h2>
       <p class="muted">Nur für Mitglieder der Kanzlei Wiwang Law.</p>
       <button type="button" class="btn discord full" data-action="discord-login">
@@ -149,14 +149,14 @@
       </label>
       <p id="login-error" class="error" hidden></p>
       <button class="btn primary full" type="submit">Anmelden</button>
-      <a class="login-leitfaden" href="leitfaden/straftat.html?v=69">Leitfaden „Abhandlung einer Straftat“ (öffentlich) →</a>
+      <a class="login-leitfaden" href="leitfaden/straftat.html?v=70">Leitfaden „Abhandlung einer Straftat“ (öffentlich) →</a>
     </form>
   </section>
 
   <!-- Discord-Konto ohne aktiven Charakter: Registrierung, Freigabe, Charakter wählen -->
   <section id="konto-screen" class="center-screen" hidden>
     <div class="card login-card konto-card">
-      <div class="login-brand"><img src="assets/logo.png?v=69" alt="Wiwang Law"></div>
+      <div class="login-brand"><img src="assets/logo.png?v=70" alt="Wiwang Law"></div>
       <div id="konto-inhalt"></div>
     </div>
   </section>
@@ -179,33 +179,33 @@
   <!-- KI-Antworten: Markdown → HTML (Showdown) und Bereinigung (DOMPurify) -->
   <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js" integrity="sha384-GP2+CwBlakZSDJUr+E4JvbxpM75i1i8+RKkieQxzuyDZLG+5105E1OfHIjzcXyWH" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" integrity="sha384-JEyTNhjM6R1ElGoJns4U2Ln4ofPcqzSsynQkmEc/KGy6336qAZl70tDLufbkla+3" crossorigin="anonymous"></script>
-  <script src="config.js?v=69"></script>
-  <script src="update-check.js?v=69"></script>
-  <script src="js/util.js?v=69"></script>
-  <script src="js/data.js?v=69"></script>
-  <script src="js/forms.js?v=69"></script>
-  <script src="js/app.js?v=69"></script>
-  <script src="js/theme.js?v=69"></script>
-  <script src="js/shell.js?v=69"></script>
-  <script src="js/konto.js?v=69"></script>
-  <script src="js/dokumente.js?v=69"></script>
-  <script src="js/akten.js?v=69"></script>
-  <script src="js/aufnahme.js?v=69"></script>
-  <script src="js/uebersicht.js?v=69"></script>
-  <script src="js/mandanten.js?v=69"></script>
-  <script src="js/kalender.js?v=69"></script>
-  <script src="js/rechnungen.js?v=69"></script>
-  <script src="js/gesetzbuch.js?v=69"></script>
-  <script src="js/gesetze.js?v=69"></script>
-  <script src="js/team.js?v=69"></script>
-  <script src="js/buchhaltung.js?v=69"></script>
-  <script src="js/finanzen.js?v=69"></script>
-  <script src="js/zusammenarbeit.js?v=69"></script>
-  <script src="js/pinnwand.js?v=69"></script>
-  <script src="js/ablaeufe.js?v=69"></script>
-  <script src="js/assistent.js?v=69"></script>
-  <script src="js/nigel.js?v=69"></script>
-  <script src="js/portal-verwaltung.js?v=69"></script>
-  <script src="js/portal.js?v=69"></script>
+  <script src="config.js?v=70"></script>
+  <script src="update-check.js?v=70"></script>
+  <script src="js/util.js?v=70"></script>
+  <script src="js/data.js?v=70"></script>
+  <script src="js/forms.js?v=70"></script>
+  <script src="js/app.js?v=70"></script>
+  <script src="js/theme.js?v=70"></script>
+  <script src="js/shell.js?v=70"></script>
+  <script src="js/konto.js?v=70"></script>
+  <script src="js/dokumente.js?v=70"></script>
+  <script src="js/akten.js?v=70"></script>
+  <script src="js/aufnahme.js?v=70"></script>
+  <script src="js/uebersicht.js?v=70"></script>
+  <script src="js/mandanten.js?v=70"></script>
+  <script src="js/kalender.js?v=70"></script>
+  <script src="js/rechnungen.js?v=70"></script>
+  <script src="js/gesetzbuch.js?v=70"></script>
+  <script src="js/gesetze.js?v=70"></script>
+  <script src="js/team.js?v=70"></script>
+  <script src="js/buchhaltung.js?v=70"></script>
+  <script src="js/finanzen.js?v=70"></script>
+  <script src="js/zusammenarbeit.js?v=70"></script>
+  <script src="js/pinnwand.js?v=70"></script>
+  <script src="js/ablaeufe.js?v=70"></script>
+  <script src="js/assistent.js?v=70"></script>
+  <script src="js/nigel.js?v=70"></script>
+  <script src="js/portal-verwaltung.js?v=70"></script>
+  <script src="js/portal.js?v=70"></script>
 </body>
 </html>
