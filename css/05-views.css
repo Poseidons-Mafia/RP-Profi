@@ -381,6 +381,16 @@
   .konflikt-banner ul { margin: 4px 0 0; padding-left: 18px; }
   .konflikt-banner a { color: inherit; font-weight: 600; }
 
+  /* Verlauf am Verhandlungstag: Hinweis mit Knopf „Abschlussplädoyer“ */
+  .verhandlung-hinweis {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px;
+    margin-bottom: var(--space-3); padding: 10px 14px;
+    background: var(--status-info-soft); border: 1px solid var(--status-info); border-left-width: 4px;
+    border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--text-sm);
+  }
+  .verhandlung-hinweis .grow { flex: 1 1 260px; min-width: 0; }
+  .verhandlung-hinweis .small { margin-top: 2px; color: var(--text-secondary); }
+
   /* Rumpf: Inhalt | Aktendaten */
   .akte-rumpf { display: block; }
   .akte-haupt { min-width: 0; }

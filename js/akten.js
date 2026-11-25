@@ -277,6 +277,7 @@ function mehrMenue(a) {
         ${menuePunkt("aktenblatt", a.id, "drucken", "Aktenblatt drucken")}
         ${menuePunkt("akte-link", a.id, "link", "Link kopieren")}
         ${darf("ki_assistent") ? menuePunkt("nw-mit-akte", a.id, "arbeitsbereich", "Im Nigel-Arbeitsbereich öffnen") : ""}
+        ${darf("ki_assistent") ? menuePunkt("plaedoyer-nigel", a.id, "nigel", "Abschlussplädoyer mit Nigel") : ""}
         ${darf("akten_loeschen") ? html`<hr>${menuePunkt("akte-loeschen", a.id, "loeschen", "Akte löschen", "danger")}` : ""}
       </div>
     </details>`;
@@ -546,18 +547,36 @@ const VERLAUF_TYP_TEXT = {
   mandant: "Nachricht vom Mandanten", nigel: "Von Nigel angelegt",
 };
 
+// Verhandlung der Akte heute (Termin-Art „Verhandlung“) – dann Hinweis im Verlauf und Art „Gericht“ vorbelegt
+function verhandlungHeute(a) {
+  const heute = ymd(new Date());
+  return kinder("termine", a.id).filter((t) => t.art === "Verhandlung" && ymd(t.beginn) === heute)
+    .sort((x, y) => new Date(x.beginn) - new Date(y.beginn))[0] || null;
+}
+
+function verhandlungHinweis(a, t) {
+  return html`<div class="verhandlung-hinweis" role="note">
+    <div class="grow"><strong>⚖ Heute Verhandlung</strong> <span class="muted">${joinHtml([fmt.zeit(t.beginn) + " Uhr", t.ort || ""].filter(Boolean), " · ")}</span>
+      <div class="small">Aussagen, Beweisaufnahme und Antrag der StA hier als Eintrag „Gericht“ festhalten – Nigel berücksichtigt sie im Plädoyer.</div></div>
+    ${darf("ki_assistent") ? html`<button type="button" class="btn small nigel" data-action="plaedoyer-nigel" data-id="${a.id}"><img class="btn-nigel-bild" src="assets/nigel.svg" alt=""><span>Abschlussplädoyer</span></button>` : ""}
+  </div>`;
+}
+
 function tabVerlauf(a) {
   const textId = `draft-${a.id}`, artId = `art-${a.id}`, wichtigId = `wichtig-${a.id}`, mandantId = `fuer-mandant-${a.id}`;
   const entries = kinder("eintraege", a.id).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
   const sichtbar = !!ui.drafts[mandantId];
+  const verhandlung = verhandlungHeute(a);
+  const artStandard = verhandlung ? "Gericht" : "Notiz";
   return html`
+    ${verhandlung ? verhandlungHinweis(a, verhandlung) : ""}
     <form class="entry-form ${sichtbar ? "fuer-mandant" : ""}" data-submit="eintrag" data-id="${a.id}">
       <textarea id="${textId}" name="text" rows="3" data-input="draft" data-mention required
         placeholder="Neuer Eintrag … z. B. Gespräch mit Mandant, Anruf bei der StA. Mit @Name holst du Kollegen dazu.">${ui.drafts[textId] || ""}</textarea>
       <div class="entry-leiste">
         <div class="entry-optionen">
           <select id="${artId}" name="art" data-input="draft" aria-label="Art des Eintrags">
-            ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || "Notiz") === o ? "selected" : ""}>${o}</option>`)}
+            ${OPTIONEN.eintragArt.map((o) => html`<option ${(ui.drafts[artId] || artStandard) === o ? "selected" : ""}>${o}</option>`)}
           </select>
           <label class="check"><input type="checkbox" id="${wichtigId}" name="wichtig" data-input="draft" ${ui.drafts[wichtigId] ? "checked" : ""}> Wichtig</label>
           <label class="sichtbar-schalter" title="Im Mandantenportal sichtbar – der Mandant wird benachrichtigt">
@@ -966,6 +985,7 @@ Object.assign(ACTIONS, {
     const ok = await attempt(() => deleteRow("akten", a.id), `Akte ${a.number} gelöscht`);
     if (ok !== undefined) go("akten");
   },
+  "plaedoyer-nigel": (d) => openPlaedoyerForm(byId("akten", d.id)),
   "haft-ende": (d) => attempt(() => updateRow("akten", d.id, { in_haft: false }), "Haft beendet"),
   "az-kopieren": async (d) => { toast((await copyText(d.az)) ? `Aktenzeichen ${d.az} kopiert` : d.az); },
   "ta-filter": (d) => { ui.akten.taFilter = d.f; render(); },
@@ -1060,3 +1080,71 @@ async function akteStatusSetzen(a, status) {
   if (ok !== undefined && status === "Geschlossen" && !a.ergebnis) openAbschlussForm(byId("akten", a.id));
 }
 CHANGES["akte-status"] = (el) => akteStatusSetzen(byId("akten", el.dataset.id), el.value);
+
+// ---------- Abschlussplädoyer mit Nigel ----------
+// Fenster mit Ziel, Dauer und frischen Notizen aus der Verhandlung. Die Notizen landen auf Wunsch im Verlauf
+// (Art „Gericht“); danach schreibt Nigel im Arbeitsbereich das Plädoyer aus der GANZEN Akte in den Entwurf.
+const PLAEDOYER_ZIELE = {
+  verteidigung: [
+    ["auto", "Nigel entscheidet nach Beweislage"], ["freispruch", "Freispruch"], ["teilfreispruch", "Teilfreispruch"],
+    ["strafmass", "Mildere Strafe (Strafmaß)"], ["einstellung", "Einstellung des Verfahrens"],
+  ],
+  staatsanwaltschaft: [
+    ["auto", "Nigel entscheidet nach Beweislage"], ["verurteilung", "Verurteilung wie angeklagt"],
+    ["teilverurteilung", "Verurteilung nur in Teilen"], ["einstellung", "Einstellung / Freispruch beantragen"],
+  ],
+};
+const PLAEDOYER_DAUER = [["kurz", "Kurz (etwa 2 Minuten)"], ["normal", "Normal (3–5 Minuten)"], ["ausfuehrlich", "Ausführlich (bis 8 Minuten)"]];
+
+async function openPlaedoyerForm(a) {
+  if (!a) return;
+  try { await nwBereit(); } catch (e) { return toast(errorText(e), "error"); }
+  if (!nwModusErlaubt("plaedoyer")) return toast("Der Modus „Schriftsatz“ ist in der Kanzlei nicht freigegeben – ohne ihn kann Nigel kein Plädoyer schreiben.", "error");
+  const sta = ui.nigel.profil.perspektive === "staatsanwaltschaft";
+  const ziele = PLAEDOYER_ZIELE[sta ? "staatsanwaltschaft" : "verteidigung"];
+  const heute = ymd(new Date());
+  const eintraege = kinder("eintraege", a.id);
+  const heuteN = eintraege.filter((e) => ymd(e.created_at) === heute).length;
+  const teile = [
+    `${eintraege.length} Verlaufseinträge${heuteN ? ` (${heuteN} von heute)` : ""}`,
+    `${(a.vorwuerfe || []).length} Tatvorwürfe`, `${kinder("beweise", a.id).length} Beweise`,
+    `${kinder("beteiligte", a.id).length} Beteiligte`, `${kinder("termine", a.id).length} Termine`,
+  ];
+  const darfEintragen = darf("akten_schreiben");
+  const fields = [
+    { type: "info", html: html`<strong>Nigel liest die ganze Akte</strong> – Sachverhalt, Haft, ${teile.join(", ")}.
+      Die neuesten Einträge aus der Verhandlung haben Vorrang. Das ${sta ? "Schlussvortrag" : "Plädoyer"} landet im Entwurf in Nigels Arbeitsbereich.` },
+    { name: "ziel", label: "Ziel", type: "select", required: true, half: true, options: ziele.map(([value, label]) => ({ value, label })) },
+    { name: "dauer", label: "Dauer des Vortrags", type: "select", required: true, half: true, options: PLAEDOYER_DAUER.map(([value, label]) => ({ value, label })) },
+    { name: "strafe", label: sta ? "Eigene Strafvorstellung (optional)" : "Eigene Strafvorstellung / Hilfsantrag (optional)",
+      placeholder: sta ? "z. B. 45 HE und $20.000" : "z. B. höchstens 20 HE, keine Geldstrafe" },
+    { name: "notizen", label: "Neues aus der Verhandlung (optional)", type: "textarea", rows: 5,
+      placeholder: "Was ist heute passiert und steht noch nicht im Verlauf? z. B. Officer Miller (DN 214) konnte die Uhrzeit nicht nennen; StA beantragt 45 HE; Bodycam zeigt keine Belehrung." },
+    ...(darfEintragen ? [{ name: "speichern", label: "Diese Notizen auch im Verlauf der Akte speichern (Art „Gericht“)", type: "checkbox" }] : []),
+    { name: "wuensche", label: "Worauf soll Nigel besonders eingehen? (optional)", type: "textarea", rows: 2,
+      placeholder: "z. B. Verwertungsverbot wegen fehlender Belehrung betonen; Mandant zeigt Reue" },
+  ];
+  openForm({
+    title: `Abschlussplädoyer mit Nigel – ${a.number}`,
+    fields,
+    values: { ziel: "auto", dauer: "normal", speichern: true },
+    submitLabel: "Plädoyer schreiben lassen",
+    onSubmit: async (v) => {
+      const notizen = (v.notizen || "").trim();
+      if (notizen && v.speichern && darfEintragen) {
+        await insertRow("eintraege", { akte_id: a.id, art: "Gericht", text: `Aus der Verhandlung: ${notizen}` });
+      }
+      const zielText = v.ziel === "auto" ? "Wähle das Ziel selbst nach der Beweislage." : (ziele.find(([k]) => k === v.ziel) || [])[1];
+      const text = [
+        `Entwirf ${sta ? "den Schlussvortrag der Staatsanwaltschaft" : "das Abschlussplädoyer"} für die Akte ${a.number} – ${a.title}.`,
+        `Ziel: ${zielText}`,
+        `Dauer: ${(PLAEDOYER_DAUER.find(([k]) => k === v.dauer) || [])[1] || "Normal (3–5 Minuten)"}`,
+        (v.strafe || "").trim() ? `Meine Strafvorstellung${sta ? "" : " / mein Hilfsantrag"}: ${v.strafe.trim()}` : "",
+        notizen ? `Neu aus der heutigen Verhandlung${v.speichern && darfEintragen ? " (auch im Verlauf gespeichert)" : ""}:\n${notizen}` : "",
+        (v.wuensche || "").trim() ? `Besonders eingehen auf: ${v.wuensche.trim()}` : "",
+        "Berücksichtige die ganze Akte, vor allem die neuesten Einträge aus der Verhandlung.",
+      ].filter(Boolean).join("\n");
+      await nwAuftragStarten({ titel: `Plädoyer – ${a.number} ${a.title}`, modus: "plaedoyer", akte_ids: [a.id], text });
+    },
+  });
+}

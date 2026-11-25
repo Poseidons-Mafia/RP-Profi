@@ -99,7 +99,7 @@ const AKTIONS_RECHTE = {
   "personalakte-bearbeiten": "personal_schreiben", "vermerk-neu": "personal_schreiben", "vermerk-loeschen": "personal_schreiben",
   "einstellungen-bearbeiten": "einstellungen_schreiben",
   "ki-oeffnen": "ki_assistent", "ki-klappen": "ki_sehen", "ki-neu": "ki_assistent", "ki-vorlage": "ki_assistent", "ki-akte-setzen": "ki_assistent",
-  "ki-in-verlauf": "akten_schreiben", "ki-arbeitsbereich": "ki_assistent", "nw-mit-akte": "ki_assistent",
+  "ki-in-verlauf": "akten_schreiben", "ki-arbeitsbereich": "ki_assistent", "nw-mit-akte": "ki_assistent", "plaedoyer-nigel": "ki_assistent",
   "ki-ansehen": "ki_sehen", "nw-neu": "ki_assistent", "nw-vom-handy": "ki_assistent",
   "nw-in-akte": "akten_schreiben", "nw-entwurf-in-akte": "akten_schreiben", "nw-aufgaben": "termine_schreiben",
   "nw-vorgaben": "einstellungen_schreiben",

@@ -218,6 +218,18 @@ und Änderungen erscheinen bei allen sofort.
     bevor Geld ausgegeben wird. Dieselbe Bremse greift, wenn das restliche Monatsbudget (eigenes oder das der Kanzlei) kleiner ist.
     Die tatsächlichen Kosten stehen an jeder Antwort, unter „Einstellungen“ (Monat) und für den Admin je Mitglied unter Personal → Ränge & Berechtigungen.
   - In jeder Akte führt „Mit Nigel bearbeiten“ direkt in eine neue Aufgabe mit dieser Akte als Kontext.
+  - **Abschlussplädoyer mit Nigel:** In der Akte **⋯ → „Abschlussplädoyer mit Nigel“**; an Tagen mit einem Termin der Art
+    „Verhandlung“ steht zusätzlich oben im Reiter **Verlauf** ein Hinweis mit Knopf, und neue Einträge sind dort auf die Art
+    „Gericht“ vorbelegt (für Mitschriften während der Verhandlung). Im Fenster: Ziel (Nigel entscheidet nach Beweislage,
+    Freispruch, Teilfreispruch, mildere Strafe, Einstellung), Dauer, eigene Strafvorstellung/Hilfsantrag, frische Notizen aus der
+    Verhandlung (auf Wunsch als Verlaufseintrag „Gericht“ gespeichert) und Wünsche. Nigel arbeitet im Modus `plaedoyer` der Edge
+    Function (Freigabe wie „Schriftsatz“) und bekommt die **ganze Akte** – Sachverhalt, Haft, Mitmandanten, Tatvorwürfe, Beteiligte,
+    Beweise (längere Beschreibungen), Termine und bis zu 600 Verlaufseinträge, immer die neuesten; die Einträge aus der Verhandlung
+    haben Vorrang. Er wählt die Strategie nach Beweislage, baut das Plädoyer für den mündlichen Vortrag auf (Ziel vorweg, wenige
+    tragende Argumente mit Belegen, Antwort auf die StA, Rügen für die Berufung, Haupt- und Hilfsantrag mit Zahl) und schreibt es in
+    den **Entwurf**; darunter Hinweise und ein Vorschlag fürs letzte Wort des Mandanten. Mit der Sicht „Staatsanwaltschaft“ entsteht
+    der Schlussvortrag der Anklage. **Nach dieser Änderung die Edge Function `ki-assistent` neu bereitstellen** (keine SQL-Änderung nötig).
+    Allgemein liest Nigel bei Akten jetzt die **neuesten** Verlaufseinträge (vorher die ältesten 200).
 - **Menüführung:** Die Bereiche sind in drei Gruppen sortiert – *Arbeit* (Übersicht, Akten, Mandanten, Kalender),
   *Recht* (Gesetze, Strafkatalog, Nigel) und *Kanzlei* (Finanzen, Personal). Am Computer stehen sie als Seitenleiste links,
   auf dem Tablet als Leiste oben (Gruppen durch Striche getrennt), auf dem Handy als feste Leiste unten mit
