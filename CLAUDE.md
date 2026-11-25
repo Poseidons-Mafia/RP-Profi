@@ -30,3 +30,11 @@ Nur wenn der Nutzer ausdrücklich sagt, dass etwas sofort / ohne Genehmigung liv
 SQL-Änderungen an der Live-Datenbank wirken sofort und laufen nicht über GitHub. Deshalb:
 - Neue SQL-Skripte als Datei im Pull Request mitliefern.
 - Erst nach Freigabe des Nutzers (oder wenn er sagt „sofort live") gegen die Live-Datenbank ausführen.
+
+## Nigel-Funktion `ki-assistent` immer selbst bereitstellen
+
+Der Nutzer kann die Edge Function nicht selbst neu bereitstellen. Deshalb gilt: Ändert sich etwas unter
+`supabase/functions/ki-assistent/` (oder eine Änderung verlangt „Funktion neu bereitstellen“), stellt Claude sie **selbst** bereit:
+- Mit `tools/deploy-ki-assistent.sh` (nutzt die Supabase-Management-API über den Proxy, Projekt aus `config.js`).
+- Nach der Bereitstellung kurz prüfen, dass die Version hochgezählt wurde, und dem Nutzer das Ergebnis nennen.
+- Den Nutzer nie auffordern, die Funktion von Hand neu bereitzustellen.
