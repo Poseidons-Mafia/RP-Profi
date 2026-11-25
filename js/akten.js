@@ -1083,7 +1083,8 @@ CHANGES["akte-status"] = (el) => akteStatusSetzen(byId("akten", el.dataset.id), 
 
 // ---------- Abschlussplädoyer mit Nigel ----------
 // Fenster mit Ziel, Dauer und frischen Notizen aus der Verhandlung. Die Notizen landen auf Wunsch im Verlauf
-// (Art „Gericht“); danach schreibt Nigel im Arbeitsbereich das Plädoyer aus der GANZEN Akte in den Entwurf.
+// (Art „Gericht“); Nigel liest die GANZE Akte (Edge Function, Modus „plaedoyer“) und das Plädoyer öffnet sich
+// direkt hier als Dokument (bearbeiten, drucken/PDF) – ohne Chat im Arbeitsbereich.
 const PLAEDOYER_ZIELE = {
   verteidigung: [
     ["auto", "Nigel entscheidet nach Beweislage"], ["freispruch", "Freispruch"], ["teilfreispruch", "Teilfreispruch"],
@@ -1095,12 +1096,31 @@ const PLAEDOYER_ZIELE = {
   ],
 };
 const PLAEDOYER_DAUER = [["kurz", "Kurz (etwa 2 Minuten)"], ["normal", "Normal (3–5 Minuten)"], ["ausfuehrlich", "Ausführlich (bis 8 Minuten)"]];
+const plaedoyerLetzte = {}; // akteId → { md, hinweise, sta } – letzter Entwurf dieser Sitzung, falls das Dokument zu früh geschlossen wurde
+
+// Sicht aus Nigels persönlichen Einstellungen (Verteidigung / Staatsanwaltschaft)
+async function plaedoyerSicht() {
+  if (ui.nigel && ui.nigel.geladen) return ui.nigel.profil.perspektive === "staatsanwaltschaft";
+  const { data } = await db.from("ki_profil").select("einstellungen").eq("user_id", state.me.id).maybeSingle();
+  return ((data && data.einstellungen) || {}).perspektive === "staatsanwaltschaft";
+}
+
+function plaedoyerZeigen(a, erg) {
+  openDocument({
+    title: `${erg.sta ? "Schlussvortrag" : "Abschlussplädoyer"} – ${a.number}`,
+    content: new SafeHtml(kiFormat(erg.md)),
+    hinweis: erg.hinweise ? new SafeHtml(kiFormat(erg.hinweise)) : "",
+    verlaufAkte: a.id,
+    verlaufText: `${erg.sta ? "Schlussvortrag" : "Abschlussplädoyer"} mit Nigel erstellt und gedruckt`,
+  });
+}
 
 async function openPlaedoyerForm(a) {
   if (!a) return;
-  try { await nwBereit(); } catch (e) { return toast(errorText(e), "error"); }
-  if (!nwModusErlaubt("plaedoyer")) return toast("Der Modus „Schriftsatz“ ist in der Kanzlei nicht freigegeben – ohne ihn kann Nigel kein Plädoyer schreiben.", "error");
-  const sta = ui.nigel.profil.perspektive === "staatsanwaltschaft";
+  const v0 = nwVorgaben();
+  if (!v0.modi.includes("schriftsatz")) return toast("Der Modus „Schriftsatz“ ist in der Kanzlei nicht freigegeben – ohne ihn kann Nigel kein Plädoyer schreiben.", "error");
+  let sta = false;
+  try { sta = await plaedoyerSicht(); } catch (e) { console.warn(e); }
   const ziele = PLAEDOYER_ZIELE[sta ? "staatsanwaltschaft" : "verteidigung"];
   const heute = ymd(new Date());
   const eintraege = kinder("eintraege", a.id);
@@ -1111,9 +1131,11 @@ async function openPlaedoyerForm(a) {
     `${kinder("beteiligte", a.id).length} Beteiligte`, `${kinder("termine", a.id).length} Termine`,
   ];
   const darfEintragen = darf("akten_schreiben");
+  const letzter = plaedoyerLetzte[a.id];
   const fields = [
     { type: "info", html: html`<strong>Nigel liest die ganze Akte</strong> – Sachverhalt, Haft, ${teile.join(", ")}.
-      Die neuesten Einträge aus der Verhandlung haben Vorrang. Das ${sta ? "Schlussvortrag" : "Plädoyer"} landet im Entwurf in Nigels Arbeitsbereich.` },
+      Die neuesten Einträge aus der Verhandlung haben Vorrang. Das ${sta ? "Schlussvortrag" : "Plädoyer"} öffnet sich danach hier als Dokument zum Bearbeiten und Drucken.
+      ${letzter ? html`<div style="margin-top:6px"><button type="button" class="link-btn" data-plaedoyer-letzter>Letzten Entwurf wieder öffnen</button></div>` : ""}` },
     { name: "ziel", label: "Ziel", type: "select", required: true, half: true, options: ziele.map(([value, label]) => ({ value, label })) },
     { name: "dauer", label: "Dauer des Vortrags", type: "select", required: true, half: true, options: PLAEDOYER_DAUER.map(([value, label]) => ({ value, label })) },
     { name: "strafe", label: sta ? "Eigene Strafvorstellung (optional)" : "Eigene Strafvorstellung / Hilfsantrag (optional)",
@@ -1124,12 +1146,21 @@ async function openPlaedoyerForm(a) {
     { name: "wuensche", label: "Worauf soll Nigel besonders eingehen? (optional)", type: "textarea", rows: 2,
       placeholder: "z. B. Verwertungsverbot wegen fehlender Belehrung betonen; Mandant zeigt Reue" },
   ];
+  let lauf = null;
   openForm({
     title: `Abschlussplädoyer mit Nigel – ${a.number}`,
     fields,
     values: { ziel: "auto", dauer: "normal", speichern: true },
     submitLabel: "Plädoyer schreiben lassen",
-    onSubmit: async (v) => {
+    onMount: (form) => {
+      const knopf = form.querySelector("[data-plaedoyer-letzter]");
+      if (knopf) knopf.addEventListener("click", () => { form.closest("dialog").close(); plaedoyerZeigen(a, plaedoyerLetzte[a.id]); });
+      // Schließen bricht eine laufende Anfrage ab
+      form.closest("dialog").addEventListener("close", () => { if (lauf) lauf.abbruch.abort(); }, { once: true });
+    },
+    onSubmit: async (v, form) => {
+      const knopf = form.querySelector('[type="submit"]');
+      knopf.textContent = "Nigel schreibt … (bis zu 2 Minuten)";
       const notizen = (v.notizen || "").trim();
       if (notizen && v.speichern && darfEintragen) {
         await insertRow("eintraege", { akte_id: a.id, art: "Gericht", text: `Aus der Verhandlung: ${notizen}` });
@@ -1144,7 +1175,28 @@ async function openPlaedoyerForm(a) {
         (v.wuensche || "").trim() ? `Besonders eingehen auf: ${v.wuensche.trim()}` : "",
         "Berücksichtige die ganze Akte, vor allem die neuesten Einträge aus der Verhandlung.",
       ].filter(Boolean).join("\n");
-      await nwAuftragStarten({ titel: `Plädoyer – ${a.number} ${a.title}`, modus: "plaedoyer", akte_ids: [a.id], text });
+      lauf = { abbruch: new AbortController() };
+      let e;
+      try {
+        e = await aufAnfrage({
+          stream: true, modus: "plaedoyer", nachrichten: [{ rolle: "nutzer", text }], akte_ids: [a.id],
+          zeitzone: (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ""; } })(),
+        }, lauf);
+      } catch (err) {
+        knopf.textContent = "Plädoyer schreiben lassen";
+        if (err.name === "AbortError") return;
+        throw /Failed to fetch|NetworkError|Load failed/i.test(err.message) ? new Error("Verzeihung – Nigel ist gerade nicht erreichbar.") : err;
+      } finally {
+        lauf = null;
+      }
+      if (e.modus && e.modus !== "plaedoyer") throw new Error("Nigel kennt das Abschlussplädoyer noch nicht – bitte die Edge Function ki-assistent neu bereitstellen.");
+      const antwort = String(e.antwort || "");
+      const block = /^:::entwurf\s*$([\s\S]*?)^:::\s*$/m.exec(antwort);
+      const md = (block ? block[1] : antwort).trim();
+      const hinweise = block ? antwort.replace(block[0], "").trim() : "";
+      plaedoyerLetzte[a.id] = { md, hinweise, sta };
+      if (ui.assistent) ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(e.budget) || (ui.assistent.info || {}).budget || null };
+      setTimeout(() => plaedoyerZeigen(a, plaedoyerLetzte[a.id]), 0); // nach dem Schließen des Formulars
     },
   });
 }

@@ -24,13 +24,8 @@ const NW_MODI = [
   { key: "strategie", label: "Fallanalyse", text: "Stärken, Risiken, Beweislage, Strategie und nächste Schritte." },
   { key: "orga", label: "Organisatorisch", text: "Nigel erledigt Büroarbeit: in Akten notieren, Termine und Aufgaben anlegen, Pinnwand, Discord-Nachrichten." },
 ];
-const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung", orga: "Organisatorisch", plaedoyer: "Plädoyer" };
-const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 30000, ueberarbeiten: 16000, orga: 3000, plaedoyer: 14000 };
-// Abschlussplädoyer: wird aus der Akte gestartet (⋯ → „Abschlussplädoyer mit Nigel“), läuft unter der Freigabe „Schriftsatz“
-// und erscheint in der Modus-Leiste nur in solchen Chats
-const NW_PLAEDOYER = { key: "plaedoyer", label: "Plädoyer", text: "Abschlussplädoyer aus der ganzen Akte – landet direkt im Entwurf." };
-// Modi, deren Antwort einen Entwurf enthält (der erste landet direkt im leeren Entwurf, der Entwurf wird standardmäßig mitgeschickt)
-const NW_ENTWURF_MODI = ["schriftsatz", "plaedoyer"];
+const NW_MODUS_NAME = { frage: "Rechtsfrage", gutachten: "Gutachten", schriftsatz: "Schriftsatz", strategie: "Fallanalyse", ueberarbeiten: "Überarbeitung", orga: "Organisatorisch" };
+const NW_MAX = { frage: 4000, gutachten: 14000, schriftsatz: 14000, strategie: 30000, ueberarbeiten: 16000, orga: 3000 };
 // Modi, die die Kanzlei an- und abschalten kann („orga“ hat einen eigenen Schalter, damit er auch bei gespeicherten Vorgaben an ist)
 const NW_MODI_SCHALTBAR = ["gutachten", "schriftsatz", "strategie"];
 
@@ -120,7 +115,7 @@ function nwKostenBadge(m) {
   if (modus !== "dollar" && !(budget > 0) && !state.isAdmin) return "";
   return html`<span class="nw-kosten" title="${modus === "dollar" ? "Kosten dieser Anfrage" : "Verbrauch dieser Anfrage (Anteil am Monatsbudget)"}">${kiBetragText(Number(m.kosten), budget, modus)}</span>`;
 }
-const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" || m === "plaedoyer" ? "schriftsatz" : m);
+const nwModusErlaubt = (m) => m === "frage" || nwVorgaben().modi.includes(m === "ueberarbeiten" ? "schriftsatz" : m);
 const nwAnrede = () => meineAnrede(); // aus „Mein Profil“ (pro Charakter)
 
 // ---------- Laden ----------
@@ -290,10 +285,6 @@ async function nwAnfrage(chat, modus, frageText) {
   let ergebnis = null;
   try {
     ergebnis = await nwStream(body, lauf);
-    // Wurde die Chat-Liste inzwischen neu geladen, mit dem angezeigten Chat-Objekt weiterarbeiten
-    chat = n.chats.find((c) => c.id === chat.id) || chat;
-    // Ältere Edge Function kennt den Modus nicht und antwortet als Rechtsfrage
-    if (ergebnis.modus && ergebnis.modus !== modus) toast(`Nigel kennt den Modus „${NW_MODUS_NAME[modus] || modus}“ noch nicht – bitte die Edge Function ki-assistent neu bereitstellen.`, "error");
     const zeile = {
       chat_id: chat.id, rolle: "ki", text: ergebnis.antwort, modus,
       quellen: { paragraphen: ergebnis.nachgeschlagen || [], akten: ergebnis.akten || [], ...(ergebnis.modell ? { modell: ergebnis.modell } : {}), ...(ergebnis.aktionen && ergebnis.aktionen.length ? { aktionen: ergebnis.aktionen } : {}) },
@@ -306,9 +297,9 @@ async function nwAnfrage(chat, modus, frageText) {
     nwSpeichernLeise(chat, { modus: chat.modus }); // nach oben in der Liste
     nwNachAktionen(ergebnis.aktionen);
     ui.assistent.info = { ...(ui.assistent.info || {}), budget: kiBudgetStand(ergebnis.budget) || (ui.assistent.info || {}).budget || null, modell: ergebnis.modell };
-    if (ergebnis.vorschlag && NW_ENTWURF_MODI.includes(modus) && !String(chat.entwurf || "").trim()) {
-      // Erster Schriftsatz bzw. erstes Plädoyer landet direkt im (leeren) Entwurf
-      nwEntwurfSetzen(chat, nwTeile(ergebnis.antwort).find((t) => t.entwurf).md, modus === "plaedoyer" ? "Plädoyer in den Entwurf übernommen" : "Schriftsatz in den Entwurf übernommen");
+    if (ergebnis.vorschlag && modus === "schriftsatz" && !String(chat.entwurf || "").trim()) {
+      // Erster Schriftsatz landet direkt im (leeren) Entwurf
+      nwEntwurfSetzen(chat, nwTeile(ergebnis.antwort).find((t) => t.entwurf).md, "Schriftsatz in den Entwurf übernommen");
     }
     if (document.hidden && "Notification" in window && Notification.permission === "granted") {
       try { new Notification("Nigel ist fertig", { body: chat.titel, icon: "assets/nigel.svg" }); } catch {}
@@ -396,7 +387,7 @@ function nwAktionenHtml(aktionen, live = false) {
 function nwMitEntwurf(chat) {
   if (!String(chat.entwurf || "").trim()) return false;
   const k = nwSchluessel(chat);
-  return ui.nigel.mitEntwurf[k] !== undefined ? ui.nigel.mitEntwurf[k] : NW_ENTWURF_MODI.includes(chat.modus);
+  return ui.nigel.mitEntwurf[k] !== undefined ? ui.nigel.mitEntwurf[k] : chat.modus === "schriftsatz";
 }
 
 // ---------- Antwort in Teile zerlegen: normaler Text und Entwurfsblöcke (:::entwurf … :::) ----------
@@ -1063,7 +1054,7 @@ function nwLeisteZeichnen(chat) {
   // Arbeitsmodi als farbige Segment-Pills direkt über dem Eingabefeld
   nwSetzen(nwEl("leiste"), html`
     <div class="nw-modi" role="radiogroup" aria-label="Arbeitsmodus">
-      ${(chat.modus === "plaedoyer" ? [...NW_MODI, NW_PLAEDOYER] : NW_MODI).map((m) => {
+      ${NW_MODI.map((m) => {
         const erlaubt = nwModusErlaubt(m.key);
         return html`<button type="button" role="radio" aria-checked="${chat.modus === m.key}" class="nw-modus m-${m.key} ${chat.modus === m.key ? "aktiv" : ""}"
           data-action="nw-modus" data-modus="${m.key}" ${erlaubt ? "" : "disabled"} title="${erlaubt ? m.text : "In der Kanzlei nicht freigegeben"}">
@@ -1078,7 +1069,7 @@ function nwLeisteZeichnen(chat) {
   if (senden) senden.disabled = !!(chat.id && ui.nigel.laeuft[chat.id]);
   const feld = nwFeld("nw-text");
   if (feld) {
-    const ph = { frage: "Ihre Frage an Nigel … (Recht oder Website)", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?", plaedoyer: "Was soll Nigel am Plädoyer ändern? (z. B. „kürzer“, „Zeuge Miller stärker angreifen“)", orga: "Was soll Nigel erledigen? (z. B. „Gib [Name] auf Discord Bescheid, dass ich mich zehn Minuten verspäte“)" }[chat.modus];
+    const ph = { frage: "Ihre Frage an Nigel … (Recht oder Website)", gutachten: "Was soll Nigel begutachten? (z. B. „alle Vorwürfe der Akte“)", schriftsatz: "Welchen Schriftsatz soll Nigel entwerfen?", strategie: "Welchen Fall soll Nigel analysieren?", orga: "Was soll Nigel erledigen? (z. B. „Gib [Name] auf Discord Bescheid, dass ich mich zehn Minuten verspäte“)" }[chat.modus];
     if (feld.placeholder !== ph) feld.placeholder = ph;
   }
 }
@@ -1434,36 +1425,6 @@ function nwNeueAufgabe(werte = {}) {
   ui.nigel.angezeigt = undefined;
   ui.nigel.ansicht = "chat";
   go("nigel");
-}
-
-// Warten, bis Chats und Einstellungen geladen sind (z. B. wenn ein Auftrag aus einer Akte heraus startet)
-async function nwBereit() {
-  const n = ui.nigel;
-  for (let i = 0; !n.geladen && !n.fehlt && !n.fehler && i < 100; i++) {
-    if (n.laedt) await new Promise((r) => setTimeout(r, 100));
-    else await nwLaden();
-  }
-  if (n.fehlt) throw new Error("Dafür fehlt noch das Datenbank-Update 9.");
-  if (!n.geladen) throw new Error(n.fehler || "Nigels Arbeitsbereich konnte nicht geladen werden.");
-}
-
-// Neuen Chat anlegen, in den Arbeitsbereich wechseln und den Auftrag sofort abschicken
-async function nwAuftragStarten({ titel, modus, akte_ids = [], text }) {
-  if (!nwModusErlaubt(modus)) throw new Error(`Der Modus „${modus === "plaedoyer" ? "Schriftsatz" : NW_MODUS_NAME[modus]}“ ist in der Kanzlei nicht freigegeben.`);
-  await nwBereit();
-  const n = ui.nigel;
-  const { data: chat, error } = await db.from("ki_chats").insert({
-    titel: truncate(titel, 70), modus, akte_ids, paragraph_ids: [], notiz: "", entwurf: "", angeheftet: false,
-  }).select().single();
-  if (error) throw error;
-  const { data: frage, error: e2 } = await db.from("ki_nachrichten").insert({ chat_id: chat.id, rolle: "nutzer", text, modus }).select().single();
-  if (e2) throw e2;
-  n.chats.unshift(chat);
-  n.nachrichten[chat.id] = [frage];
-  n.ansicht = "chat";
-  n.angezeigt = undefined;
-  go("nigel/" + chat.id);
-  nwAnfrage(chat, modus, text);
 }
 
 Object.assign(ACTIONS, {
