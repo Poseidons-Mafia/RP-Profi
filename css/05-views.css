@@ -608,10 +608,7 @@
   /* Chat nutzt die verfügbare Breite (vorher 760px fest → viel leerer Rand) */
   .nw { --nw-breite: 1320px; }
   .nw-verlauf-innen { max-width: var(--nw-breite); padding-left: clamp(12px, 3vw, 40px); padding-right: clamp(12px, 3vw, 40px); }
-  .nw-eingabe-leiste { max-width: var(--nw-breite); row-gap: 8px; }
-  .nw-eingabe-feld { max-width: var(--nw-breite); margin-left: auto; margin-right: auto; }
-  .nw-modi { flex-basis: 100%; flex-wrap: wrap; margin: 0; padding-bottom: 2px; overflow: visible; }
-  .nw-modus { padding: 4px 11px; font-size: 0.78rem; }
+  .nw-eingabe-feld, .nw-eingabe-hinweis { max-width: var(--nw-breite); margin-left: auto; margin-right: auto; }
   .nw-drawer-hintergrund { display: none; }
 
   /* Platzhalter im Entwurf als anklickbare Pillen */
@@ -627,22 +624,25 @@
     box-shadow: 0 0 0 3px var(--status-warning-soft);
   }
   .nw-aktionsmodus {
-    display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px;
+    display: inline-flex; align-items: center; gap: 4px; margin-right: 4px; padding: 1px 9px;
     border-radius: var(--radius-pill); background: var(--status-warning-soft); color: var(--status-warning);
     border: 1px solid color-mix(in srgb, var(--status-warning) 45%, transparent);
-    font-size: 0.74rem; font-weight: 700;
+    font-size: 0.72rem; font-weight: 700;
   }
-  .nw-kontext-chip { background: var(--brand-primary-soft); color: var(--brand-primary); font-family: var(--font-mono); font-size: 0.72rem; }
+  .nw-kontext-chip { background: var(--brand-primary-soft); color: var(--brand-text); font-family: var(--font-mono); font-size: 0.72rem; }
 
-  /* Laptop/Tablet (< 1280px): Chat-Liste und Arbeitsfläche als Slide-over-Drawer */
+  /* Laptop/Tablet (< 1280px): Chat-Liste und Arbeitsfläche als Slide-over-Drawer
+     (Breiten passen zu NW_HANDY/NW_BREIT in js/nigel.js). Die eingeklappte Chat-Liste ist
+     zusätzlich unsichtbar, damit die Tab-Taste nicht in verborgene Knöpfe springt. */
   @media (min-width: 901px) and (max-width: 1279px) {
     .nw, .nw.panel-auf, .nw:not(.panel-auf) { position: relative; overflow: hidden; grid-template-columns: minmax(0, 1fr); }
     .nw .nw-nur-mobil[data-ansicht="liste"] { display: grid; }
     .nw-liste {
       position: absolute; top: 0; left: 0; bottom: 0; z-index: 16; width: 280px;
-      transform: translateX(-102%); transition: transform 0.25s ease; box-shadow: var(--shadow-lg);
+      transform: translateX(-102%); visibility: hidden; box-shadow: var(--shadow-lg);
+      transition: transform 0.25s ease, visibility 0s linear 0.25s;
     }
-    .nw[data-ansicht="liste"] .nw-liste { transform: none; }
+    .nw[data-ansicht="liste"] .nw-liste { transform: none; visibility: visible; transition: transform 0.25s ease; }
     .nw-panel {
       position: absolute; top: 0; right: 0; bottom: 0; z-index: 16; width: min(400px, 90%);
       box-shadow: var(--shadow-lg);

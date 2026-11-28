@@ -58,17 +58,30 @@ const NW_ICON = {
   panel: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 4v16" stroke="currentColor" stroke-width="1.8"/></svg>',
   liste: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   zurueck: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  zu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   nochmal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   entwurf: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
   aufgabe: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m8 12 3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   stopp: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>',
+  mehr: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></svg>',
+  pfeil: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  zahnrad: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19.4 13.5a7.6 7.6 0 0 0 0-3l2-1.6-2-3.4-2.4 1a7.7 7.7 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.5A7.7 7.7 0 0 0 7 6.5l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 3l-2 1.6 2 3.4 2.4-1a7.7 7.7 0 0 0 2.6 1.5l.4 2.5h4l.4-2.5a7.7 7.7 0 0 0 2.6-1.5l2.4 1 2-3.4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
 };
+
+// Breiten (müssen zu den @media-Regeln für .nw in style.css und css/05-views.css passen):
+// bis 900 px eine Spalte (Chats, Chat oder Arbeitsfläche), bis 1279 px Chat-Liste und
+// Arbeitsfläche als Schublade über dem Chat, ab 1280 px alles nebeneinander.
+const NW_HANDY = 900;
+const NW_BREIT = 1280;
+const nwHandy = () => window.innerWidth <= NW_HANDY;
+const nwSchublade = () => window.innerWidth > NW_HANDY && window.innerWidth < NW_BREIT;
+const nwTouch = () => window.matchMedia("(pointer: coarse)").matches;
 
 ui.nigel = {
   userId: null, geladen: false, laedt: false, fehlt: false, fehler: "",
   chats: [], nachrichten: {}, laedtNachrichten: {},
   neu: null, angezeigt: undefined,
-  q: "", paraQ: "", tab: "kontext", ansicht: "chat", panel: window.innerWidth >= 1280,
+  q: "", paraQ: "", tab: "kontext", ansicht: "chat", panel: window.innerWidth >= NW_BREIT,
   entwurfAnsicht: "bearbeiten", entwurfVorher: {}, mitEntwurf: {},
   laeuft: {}, profil: { ...NW_STANDARD }, vorlagen: [], nutzungAlle: null,
 };
@@ -191,24 +204,40 @@ function nwChatTitel(text) {
 }
 
 // Chat speichern; ein neuer (noch ungespeicherter) Chat wird dabei angelegt
+const nwAnlegen = new WeakMap(); // laufendes Anlegen je neuem Chat (verhindert doppelte Chats)
 async function nwSpeichern(chat, felder = {}) {
   Object.assign(chat, felder);
+  // Wird der Chat gerade angelegt (z. B. Notiz speichert, während die erste Frage rausgeht)?
+  // Dann darauf warten und danach nur ändern – sonst entstünden zwei Chats.
+  if (!chat.id && nwAnlegen.has(chat)) {
+    await nwAnlegen.get(chat);
+    Object.assign(chat, felder);
+  }
   if (chat.id) {
     const { data, error } = await db.from("ki_chats").update(felder).eq("id", chat.id).select().single();
     if (error) throw error;
     Object.assign(chat, { updated_at: data.updated_at });
     return chat;
   }
-  const { data, error } = await db.from("ki_chats").insert({
+  // Promise.resolve: Eine Supabase-Abfrage wird bei jedem „await“ neu abgeschickt – als echtes
+  // Promise läuft sie genau einmal, auch wenn mehrere Aufrufe darauf warten.
+  const anlegen = Promise.resolve(db.from("ki_chats").insert({
     titel: chat.titel, modus: chat.modus, akte_ids: chat.akte_ids, paragraph_ids: chat.paragraph_ids,
     notiz: chat.notiz, entwurf: chat.entwurf, angeheftet: chat.angeheftet,
-  }).select().single();
+  }).select().single());
+  nwAnlegen.set(chat, anlegen);
+  let ergebnis;
+  try { ergebnis = await anlegen; } finally { nwAnlegen.delete(chat); }
+  const { data, error } = ergebnis;
   if (error) throw error;
-  Object.assign(chat, data);
+  // Nur die Kennung übernehmen: Was inzwischen getippt wurde (Notiz, Entwurf), bleibt erhalten
+  Object.assign(chat, { id: data.id, user_id: data.user_id, created_at: data.created_at, updated_at: data.updated_at });
   ui.nigel.chats.unshift(chat);
   ui.nigel.nachrichten[chat.id] = ui.nigel.nachrichten[chat.id] || [];
   if (ui.nigel.neu === chat) ui.nigel.neu = null;
-  if (ui.nigel.mitEntwurf.neu !== undefined) ui.nigel.mitEntwurf[chat.id] = ui.nigel.mitEntwurf.neu;
+  for (const merker of [ui.nigel.mitEntwurf, ui.nigel.entwurfVorher]) {
+    if (merker.neu !== undefined) { merker[chat.id] = merker.neu; delete merker.neu; }
+  }
   // Adresse ohne Seitenwechsel anpassen (kein hashchange → nichts wird neu aufgebaut)
   if (parseRoute().page === "nigel" && !parseRoute().id) {
     history.replaceState(null, "", "#/nigel/" + chat.id);
@@ -377,10 +406,11 @@ function nwNachAktionen(aktionen) {
 
 // Liste „Erledigt“ unter einer Orga-Antwort
 const NW_AKTION_ZEICHEN = { akte: "A", termin: "T", aufgabe: "✓", pinnwand: "P", discord: "@" };
-function nwAktionenHtml(aktionen, live = false) {
+// neuAb: ab diesem Eintrag frisch eingetroffen (nur diese blenden sanft ein, die übrigen stehen still)
+function nwAktionenHtml(aktionen, live = false, neuAb = Infinity) {
   if (!Array.isArray(aktionen) || !aktionen.length) return "";
   return html`<div class="nw-aktionen ${live ? "live" : ""}"><p class="nw-gruppe">${live ? "Bereits erledigt" : "Erledigt"}</p>
-    <ul>${aktionen.map((a) => html`<li><span class="nw-aktion-zeichen">${NW_AKTION_ZEICHEN[a.typ] || "•"}</span>
+    <ul>${aktionen.map((a, i) => html`<li class="${i >= neuAb ? "neu" : ""}"><span class="nw-aktion-zeichen">${NW_AKTION_ZEICHEN[a.typ] || "•"}</span>
       ${/^#\/[\w\/-]*$/.test(a.link || "") ? html`<a href="${a.link}">${a.text}</a>` : html`<span>${a.text}</span>`}</li>`)}</ul></div>`;
 }
 
@@ -411,9 +441,9 @@ function nwFormatiert(key, text) {
   const k = key + "|" + text.length;
   if (!nwFormat.has(k)) {
     if (nwFormat.size > 600) nwFormat.clear();
-    // Checklisten ("- [ ] …") als Kästchen, nicht als Platzhalter
+    // Checklisten ("- [ ] …") als Kästchen, nicht als Platzhalter – ohne zusätzlichen Aufzählungspunkt
     const md = text.replace(/^(\s*[-*]\s+)\[ \]\s+/gm, "$1☐ ").replace(/^(\s*[-*]\s+)\[x\]\s+/gim, "$1☑ ");
-    nwFormat.set(k, nwPlatzhalter(kiFormat(md)));
+    nwFormat.set(k, nwPlatzhalter(kiFormat(md)).replace(/<li>(\s*<p>)?\s*([☐☑])/g, '<li class="nw-todo">$1$2'));
   }
   return nwFormat.get(k);
 }
@@ -466,23 +496,29 @@ VIEWS.nigel = () => nigelNurAnsehen() ? nwVorschauGeruest() : html`
         </div>
       </div>
       <form class="nw-eingabe" data-submit="nw-senden">
-        <div class="nw-eingabe-leiste" data-nw="leiste"></div>
         <div class="nw-eingabe-feld">
           <textarea id="nw-text" name="text" rows="2" data-input="nw-text" placeholder="Ihr Auftrag an Nigel …" aria-label="Auftrag an Nigel"></textarea>
-          <button type="submit" class="nw-senden" data-nw-senden aria-label="Senden">${new SafeHtml(KI_ICON.senden)}</button>
+          <div class="nw-eingabe-fuss">
+            <div class="nw-eingabe-leiste" data-nw="leiste"></div>
+            <button type="submit" class="nw-senden" data-nw-senden aria-label="Senden" title="Senden">${new SafeHtml(KI_ICON.senden)}</button>
+          </div>
         </div>
+        <p class="nw-eingabe-hinweis" data-nw="hinweis"></p>
       </form>
     </section>
 
     <aside class="nw-panel" aria-label="Arbeitsfläche">
-      <nav class="nw-tabs" data-nw="tabs"></nav>
+      <div class="nw-panel-kopf">
+        <div class="nw-tabs" role="tablist" aria-label="Arbeitsfläche" data-nw="tabs"></div>
+        <button type="button" class="nw-icon nw-panel-zu" data-action="nw-panel-zu" aria-label="Arbeitsfläche schließen" title="Schließen">${new SafeHtml(NW_ICON.zu)}</button>
+      </div>
       <div class="nw-panel-inhalt" data-nw="panel-scroll">
-        <div class="nw-tab" data-tab="kontext">
+        <div class="nw-tab" data-tab="kontext" role="tabpanel">
           <div data-nw="k-akten"></div>
           <section class="nw-block">
             <h3>Angeheftete Paragraphen</h3>
             <div data-nw="k-paras"></div>
-            <input type="search" id="nw-para-suche" data-input="nw-para-suche" placeholder="Paragraph anheften: z. B. „§ 223 StGB“ oder „Diebstahl“" autocomplete="off">
+            <input type="search" id="nw-para-suche" data-input="nw-para-suche" placeholder="z. B. „§ 223 StGB“ oder „Diebstahl“" aria-label="Paragraph zum Anheften suchen" autocomplete="off">
             <div data-nw="k-treffer"></div>
           </section>
           <section class="nw-block">
@@ -493,23 +529,24 @@ VIEWS.nigel = () => nigelNurAnsehen() ? nwVorschauGeruest() : html`
           <div data-nw="k-info"></div>
         </div>
 
-        <div class="nw-tab" data-tab="entwurf">
+        <div class="nw-tab" data-tab="entwurf" role="tabpanel">
           <div data-nw="e-kopf"></div>
-          <textarea id="nw-entwurf" class="nw-entwurf-feld" data-input="nw-entwurf" spellcheck="true" placeholder="Hier entsteht Ihr Schriftsatz. Schreiben Sie selbst, übernehmen Sie eine Antwort von Nigel („In Entwurf“) oder lassen Sie ihn im Modus „Schriftsatz“ einen Entwurf erstellen. Markdown wird unterstützt."></textarea>
+          <textarea id="nw-entwurf" class="nw-entwurf-feld" data-input="nw-entwurf" spellcheck="true" aria-label="Entwurf" placeholder="Hier entsteht Ihr Schriftsatz. Schreiben Sie selbst, übernehmen Sie eine Antwort von Nigel („In Entwurf“) oder lassen Sie ihn im Modus „Schriftsatz“ einen Entwurf erstellen. Markdown wird unterstützt."></textarea>
           <div class="nw-entwurf-vorschau ki-md" data-nw="e-vorschau"></div>
+          <div data-nw="e-hinweis"></div>
           <form class="nw-block nw-ueberarbeiten" data-submit="nw-ueberarbeiten">
             <h3>Von Nigel überarbeiten lassen</h3>
             <div class="nw-chips" data-nw="e-chips"></div>
             <div class="nw-zeile">
-              <input type="text" id="nw-anweisung" name="anweisung" placeholder="Eigene Anweisung, z. B. „Absatz 2 schärfer formulieren“" autocomplete="off">
+              <input type="text" id="nw-anweisung" name="anweisung" placeholder="Eigene Anweisung, z. B. „Absatz 2 schärfer“" aria-label="Eigene Anweisung zum Überarbeiten" autocomplete="off">
               <button type="submit" class="btn gold">Überarbeiten</button>
             </div>
           </form>
         </div>
 
-        <div class="nw-tab" data-tab="quellen" data-nw="quellen"></div>
-        <div class="nw-tab" data-tab="vorlagen" data-nw="vorlagen"></div>
-        <div class="nw-tab" data-tab="einstellungen" data-nw="einstellungen"></div>
+        <div class="nw-tab" data-tab="quellen" data-nw="quellen" role="tabpanel"></div>
+        <div class="nw-tab" data-tab="vorlagen" data-nw="vorlagen" role="tabpanel"></div>
+        <div class="nw-tab" data-tab="einstellungen" data-nw="einstellungen" role="tabpanel"></div>
       </div>
     </aside>
   </div>`;
@@ -563,7 +600,7 @@ VIEWS.nigel.aktualisieren = (route) => {
     nwFeld("nw-entwurf").value = chat.entwurf || "";
     nwFeld("nw-para-suche").value = n.paraQ = "";
     nwAmEnde = true;
-    if (window.innerWidth < 1280) n.ansicht = "chat"; // Handy: Chat zeigen; Tablet/Laptop: Chat-Liste (Drawer) schließen
+    if (window.innerWidth < NW_BREIT) n.ansicht = "chat"; // Handy: Chat zeigen; Tablet/Laptop: Chat-Liste (Schublade) schließen
   }
 
   wurzel.dataset.ansicht = n.ansicht;
@@ -577,7 +614,8 @@ VIEWS.nigel.aktualisieren = (route) => {
   nwLaufendZeichnen();
   nwLeisteZeichnen(chat);
   nwPanelZeichnen(chat);
-  if (neuerChat && route.id && window.innerWidth > 900) setTimeout(() => nwFeld("nw-text") && nwFeld("nw-text").focus({ preventScroll: true }), 30);
+  // Eingabefeld fokussieren – nicht auf Touch-Geräten (dort ginge sonst die Bildschirmtastatur auf)
+  if (neuerChat && route.id && !nwHandy() && !nwTouch()) setTimeout(() => nwFeld("nw-text") && nwFeld("nw-text").focus({ preventScroll: true }), 30);
 };
 
 // =============================================================
@@ -675,8 +713,11 @@ function nwVorschauGeruest() {
     </section>
 
     <aside class="nw-panel" aria-label="Arbeitsfläche (zensiert)">
-      <nav class="nw-tabs" data-nw="tabs"></nav>
-      <div class="nw-panel-inhalt" data-nw="panel-scroll"><div data-nw="v-panel"></div></div>
+      <div class="nw-panel-kopf">
+        <div class="nw-tabs" role="tablist" aria-label="Arbeitsfläche" data-nw="tabs"></div>
+        <button type="button" class="nw-icon nw-panel-zu" data-action="nw-panel-zu" aria-label="Arbeitsfläche schließen" title="Schließen">${new SafeHtml(NW_ICON.zu)}</button>
+      </div>
+      <div class="nw-panel-inhalt" data-nw="panel-scroll"><div data-nw="v-panel" role="tabpanel"></div></div>
     </aside>
   </div>`;
 }
@@ -714,7 +755,7 @@ function nwVorschauZeichnen(wurzel) {
     ${rang ? html`<small>Ihr Rang: ${rang}</small>` : ""}
   </div>`);
 
-  // Kopf
+  // Kopf (die Modi stehen als Karten in der Mitte – dort wechselt auch das Beispiel)
   nwSetzen(nwEl("kopf"), html`
     <div class="nw-kopf-zeile">
       <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="liste" title="Chats" aria-label="Chats">${new SafeHtml(NW_ICON.liste)}</button>
@@ -723,12 +764,8 @@ function nwVorschauZeichnen(wurzel) {
         <span class="nw-titel-meta"><span class="nw-vorschau-marke">${new SafeHtml(NW_SCHLOSS)} Nur ansehen</span> Überblick</span>
       </div>
       <div class="nw-kopf-aktionen">
-        <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche">${new SafeHtml(NW_ICON.panel)}</button>
+        <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche" aria-pressed="${String(!!n.panel)}">${new SafeHtml(NW_ICON.panel)}</button>
       </div>
-    </div>
-    <div class="nw-modi" role="radiogroup" aria-label="Arbeitsmodus (Vorschau)">
-      ${NW_MODI.map((m) => html`<button type="button" role="radio" aria-checked="${modus === m.key}" class="nw-modus m-${m.key} ${modus === m.key ? "aktiv" : ""}"
-        data-action="nw-v-modus" data-modus="${m.key}" title="${m.text}">${m.label}</button>`)}
     </div>`);
 
   // Mitte: Begrüßung, Modi, Beispiel (Antwort zensiert), was alles ginge
@@ -766,9 +803,7 @@ function nwVorschauZeichnen(wurzel) {
   </div>`);
 
   // Rechts: Reiter wie im echten Arbeitsbereich – anklickbar, Inhalt zensiert
-  nwSetzen(nwEl("tabs"), html`
-    <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="chat" aria-label="Zurück">${new SafeHtml(NW_ICON.zurueck)}</button>
-    ${NW_TABS.map(([k, label]) => html`<button type="button" class="${n.tab === k ? "aktiv" : ""}" data-action="nw-tab" data-tab="${k}">${label}<span class="nw-tab-schloss">${new SafeHtml(NW_SCHLOSS)}</span></button>`)}`);
+  nwSetzen(nwEl("tabs"), nwTabsHtml(n.tab, (k) => html`<span class="nw-tab-schloss">${new SafeHtml(NW_SCHLOSS)}</span>`));
   nwSetzen(nwEl("v-panel"), nwVorschauPanel(n.tab));
 }
 
@@ -866,20 +901,37 @@ function nwListeZeichnen(aktiv) {
     ${handy ? html`<button type="button" class="nw-handy" data-action="nw-vom-handy">
       <span class="nw-handy-icon">${new SafeHtml(KI_ICON.ifruit)}</span>
       <span><strong>Handy-Chat übernehmen</strong><small>${anzahl(handy, "Nachricht", "Nachrichten")} vom iFruit</small></span></button>` : ""}
-    ${!aktiv.id ? html`<a class="nw-chat-item active" href="#/nigel"><span class="t">Neue Aufgabe</span><span class="m">noch nicht gespeichert</span></a>` : ""}
+    ${!aktiv.id ? html`<a class="nw-chat-item active" href="#/nigel" aria-current="page"><span class="t"><span class="t-text">Neue Aufgabe</span></span>
+      <span class="m"><span class="nw-modus-punkt m-${aktiv.modus}"></span><span class="m-text">noch nicht gespeichert</span></span></a>` : ""}
     ${gruppen.map(([titel, l]) => html`
       <p class="nw-gruppe">${titel}</p>
       ${l.map((c) => {
         const akte = c.akte_ids.map((id) => byId("akten", id)).find(Boolean);
-        return html`<a class="nw-chat-item ${c.id === aktiv.id ? "active" : ""} ${n.laeuft[c.id] ? "laeuft" : ""}" href="#/nigel/${c.id}">
-          <span class="t">${c.angeheftet ? html`<span class="nw-pin">${new SafeHtml(NW_ICON.pin)}</span>` : ""}${c.titel}</span>
-          <span class="m"><span class="nw-modus-punkt m-${c.modus}"></span>${NW_MODUS_NAME[c.modus] || ""}${akte ? ` · ${akte.number}` : ""} · ${fmt.relativ(c.updated_at)}</span>
+        const aktivChat = c.id === aktiv.id;
+        return html`<a class="nw-chat-item ${aktivChat ? "active" : ""} ${n.laeuft[c.id] ? "laeuft" : ""}" href="#/nigel/${c.id}" ${aktivChat ? html`aria-current="page"` : ""}
+            title="${c.titel} – zuletzt ${fmt.datumZeit(c.updated_at)}">
+          <span class="t">${c.angeheftet ? html`<span class="nw-pin" aria-label="angeheftet">${new SafeHtml(NW_ICON.pin)}</span>` : ""}<span class="t-text">${c.titel}</span>
+            ${n.laeuft[c.id] ? html`<span class="nw-laeuft-punkt" aria-label="Nigel arbeitet"></span>` : html`<time class="nw-chat-zeit">${nwKurzZeit(c.updated_at)}</time>`}</span>
+          <span class="m"><span class="nw-modus-punkt m-${c.modus}"></span><span class="m-text">${NW_MODUS_NAME[c.modus] || ""}${akte ? ` · ${akte.number}` : ""}</span></span>
         </a>`;
       })}`)}
     ${!liste.length && n.q ? html`<p class="nw-leer-hinweis">Keine Chats zu „${n.q}“.</p>` : ""}
     ${!n.chats.length && !n.q ? html`<p class="nw-leer-hinweis">Ihre Chats mit Nigel erscheinen hier – gespeichert und jederzeit fortsetzbar.</p>` : ""}`);
 
   nwSetzen(nwEl("nutzung"), kiBudgetHtml((ui.assistent.info || {}).budget, kiAnzeige("kontingent")));
+}
+
+// Kurze Zeitangabe für die Chat-Liste: „jetzt“, „14 Min.“, „09:32“, „gestern“, „Mo.“, „16.11.“
+function nwKurzZeit(wert) {
+  const d = new Date(wert);
+  if (isNaN(d)) return "";
+  const min = Math.floor((Date.now() - d) / 60000);
+  if (min < 1) return "jetzt";
+  if (min < 60) return `${min} Min.`;
+  if (sameDay(d, new Date())) return fmt.zeit(d);
+  if (sameDay(d, addDays(new Date(), -1))) return "gestern";
+  if (min < 6 * 24 * 60) return d.toLocaleDateString("de-DE", { weekday: "short" });
+  return d.toLocaleDateString("de-DE", d.getFullYear() === new Date().getFullYear() ? { day: "2-digit", month: "2-digit" } : { day: "2-digit", month: "2-digit", year: "2-digit" });
 }
 
 // ---------- Kopf: Titel, Modus, Aktionen ----------
@@ -892,20 +944,27 @@ function nwKopfZeichnen(chat) {
     String(chat.entwurf || "").trim() ? "Entwurf" : "",
     String(chat.notiz || "").trim() ? "Notizen" : "",
   ].filter(Boolean);
+  // Seltene Aktionen (umbenennen, anheften, exportieren, löschen) im Menü „⋯“ – der Titel behält so Platz
+  const punkt = (action, icon, label, extra = "") => html`<button type="button" role="menuitem" class="menue-punkt ${extra}" data-action="${action}">${new SafeHtml(icon)}<span>${label}</span></button>`;
   nwSetzen(nwEl("kopf"), html`
     <div class="nw-kopf-zeile">
       <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="liste" title="Chats" aria-label="Chats">${new SafeHtml(NW_ICON.liste)}</button>
       <div class="nw-titel">
-        <h1>${chat.titel}</h1>
+        <h1>${chat.angeheftet ? html`<span class="nw-pin" title="Angeheftet">${new SafeHtml(NW_ICON.pin)}</span>` : ""}<span>${chat.titel}</span></h1>
         <span class="nw-titel-meta">${teile.join(" · ")}</span>
       </div>
       <div class="nw-kopf-aktionen">
-        ${chat.id ? html`
-          <button type="button" class="nw-icon" data-action="nw-umbenennen" title="Umbenennen" aria-label="Umbenennen">${new SafeHtml(NW_ICON.stift)}</button>
-          <button type="button" class="nw-icon ${chat.angeheftet ? "an" : ""}" data-action="nw-anheften" title="${chat.angeheftet ? "Nicht mehr anheften" : "Oben anheften"}" aria-label="Anheften">${new SafeHtml(NW_ICON.pin)}</button>
-          <button type="button" class="nw-icon" data-action="nw-export" title="Chat als Markdown herunterladen" aria-label="Exportieren">${new SafeHtml(NW_ICON.laden)}</button>
-          <button type="button" class="nw-icon gefahr" data-action="nw-loeschen" title="Chat löschen" aria-label="Löschen">${new SafeHtml(NW_ICON.muell)}</button>` : ""}
-        <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche">${new SafeHtml(NW_ICON.panel)}</button>
+        ${chat.id ? html`<details class="mehr nw-mehr">
+          <summary class="nw-icon" aria-label="Weitere Aktionen" title="Weitere Aktionen">${new SafeHtml(NW_ICON.mehr)}</summary>
+          <div class="mehr-menue" role="menu">
+            ${punkt("nw-umbenennen", NW_ICON.stift, "Umbenennen")}
+            ${punkt("nw-anheften", NW_ICON.pin, chat.angeheftet ? "Nicht mehr anheften" : "Oben anheften")}
+            ${punkt("nw-export", NW_ICON.laden, "Als Markdown herunterladen")}
+            <hr>
+            ${punkt("nw-loeschen", NW_ICON.muell, "Chat löschen", "danger")}
+          </div>
+        </details>` : ""}
+        <button type="button" class="nw-icon nw-panel-knopf ${n.panel ? "an" : ""}" data-action="nw-panel" title="Arbeitsfläche ein-/ausblenden" aria-label="Arbeitsfläche" aria-pressed="${String(!!n.panel)}">${new SafeHtml(NW_ICON.panel)}</button>
       </div>
     </div>`);
 }
@@ -968,15 +1027,15 @@ function nwNachricht(chat, m, i, letzte) {
   const schritte = Array.isArray(m.schritte) ? m.schritte : [];
   const checkliste = nwCheckliste(m.text);
   const hatEntwurf = teile.some((t) => t.entwurf);
+  const modell = m.quellen && m.quellen.modell;
+  const kosten = nwKostenBadge(m);
   return html`<article class="nw-msg ki">
     <img class="nw-msg-avatar" src="assets/nigel.svg" alt="">
     <div class="nw-msg-inhalt">
       <div class="nw-msg-meta"><strong>Nigel</strong>
         ${m.modus ? html`<span class="nw-modus-badge m-${m.modus}">${NW_MODUS_NAME[m.modus] || m.modus}</span>` : ""}
-        <time>${zeit}</time>
-        ${m.quellen && m.quellen.modell ? html`<span class="nw-modell" title="Antwort erstellt mit diesem KI-Modell">${m.quellen.modell}</span>` : ""}
+        <time datetime="${m.created_at}">${zeit}</time>
         ${m.gekuerzt ? html`<span class="badge" title="Die Antwort hat das Längenlimit erreicht">gekürzt</span>` : ""}
-        ${nwKostenBadge(m)}
       </div>
       ${schritte.length ? html`<details class="nw-schritte"><summary>${anzahl(schritte.length, "Arbeitsschritt", "Arbeitsschritte")}${quellen.length ? ` · ${anzahl(quellen.length, "Paragraph", "Paragraphen")}` : ""}${akten.length ? ` · ${anzahl(akten.length, "Akte", "Akten")}` : ""}</summary>
         <ol>${schritte.map((s) => nwSchrittZeile(s))}</ol></details>` : ""}
@@ -992,12 +1051,16 @@ function nwNachricht(chat, m, i, letzte) {
       ${quellen.length || akten.length ? html`<div class="ki-quellen"><span>Nachgeschlagen:</span>
         ${quellen.map((q) => html`<button type="button" class="ki-quelle" data-action="nw-quelle" data-q="${q}">${q}</button>`)}
         ${akten.map((a) => html`<a class="ki-quelle nw-akte-quelle" href="#/akten/${a.id}">${a.number}</a>`)}</div>` : ""}
-      <div class="nw-msg-aktionen">
-        <button type="button" data-action="nw-kopieren" data-id="${m.id}">${new SafeHtml(KI_ICON.kopieren)}Kopieren</button>
-        ${hatEntwurf || m.modus === "orga" ? "" : html`<button type="button" data-action="nw-in-entwurf" data-id="${m.id}">${new SafeHtml(NW_ICON.entwurf)}In Entwurf</button>`}
-        <button type="button" data-action="nw-in-akte" data-id="${m.id}">${new SafeHtml(KI_ICON.akte)}In Akte</button>
-        ${checkliste.length ? html`<button type="button" data-action="nw-aufgaben" data-id="${m.id}">${new SafeHtml(NW_ICON.aufgabe)}${anzahl(checkliste.length, "Aufgabe", "Aufgaben")} anlegen</button>` : ""}
-        ${letzte && !ui.nigel.laeuft[chat.id] ? html`<button type="button" data-action="nw-nochmal" title="Antwort neu erzeugen">${new SafeHtml(NW_ICON.nochmal)}Neu</button>` : ""}
+      <div class="nw-msg-fusszeile">
+        <div class="nw-msg-aktionen">
+          <button type="button" data-action="nw-kopieren" data-id="${m.id}">${new SafeHtml(KI_ICON.kopieren)}Kopieren</button>
+          ${hatEntwurf || m.modus === "orga" ? "" : html`<button type="button" data-action="nw-in-entwurf" data-id="${m.id}">${new SafeHtml(NW_ICON.entwurf)}In Entwurf</button>`}
+          <button type="button" data-action="nw-in-akte" data-id="${m.id}">${new SafeHtml(KI_ICON.akte)}In Akte</button>
+          ${checkliste.length ? html`<button type="button" data-action="nw-aufgaben" data-id="${m.id}">${new SafeHtml(NW_ICON.aufgabe)}${anzahl(checkliste.length, "Aufgabe", "Aufgaben")} anlegen</button>` : ""}
+          ${letzte && !ui.nigel.laeuft[chat.id] ? html`<button type="button" data-action="nw-nochmal" title="Antwort neu erzeugen">${new SafeHtml(NW_ICON.nochmal)}Neu</button>` : ""}
+        </div>
+        ${modell || kosten ? html`<div class="nw-msg-info">
+          ${modell ? html`<span class="nw-modell" title="Antwort erstellt mit diesem KI-Modell">${modell}</span>` : ""}${kosten}</div>` : ""}
       </div>
     </div>
   </article>`;
@@ -1012,13 +1075,16 @@ const NW_WERKZEUG = {
   ablaeufe_lesen: ["✓", "Abläufe"], team_ansehen: ["P", "Personal"], personalakte_lesen: ["P", "Personalakte"],
   portal_ansehen: ["M", "Mandantenportal"], protokoll_lesen: ["H", "Änderungsprotokoll"], leitfaden_lesen: ["L", "Leitfaden"], website_hilfe: ["?", "Anleitung"],
 };
-function nwSchrittZeile(s) {
+function nwSchrittZeile(s, neu = false) {
   const [zeichen, name] = NW_WERKZEUG[s.werkzeug] || ["•", s.werkzeug];
-  return html`<li><span class="nw-schritt-zeichen">${zeichen}</span><span class="nw-schritt-text"><strong>${name}</strong> ${s.text || ""}</span>
+  return html`<li class="${neu ? "neu" : ""}"><span class="nw-schritt-zeichen">${zeichen}</span><span class="nw-schritt-text"><strong>${name}</strong> ${s.text || ""}</span>
     ${s.treffer !== undefined ? html`<span class="nw-schritt-treffer ${s.treffer ? "" : "null"}">${s.treffer ? anzahl(s.treffer, "Treffer", "Treffer") : "nichts gefunden"}</span>` : ""}</li>`;
 }
 
-// Laufende Anfrage: Arbeitsschritte live, mit Zeit und Abbrechen
+// Laufende Anfrage: Arbeitsschritte live, mit Zeit und Abbrechen.
+// Die Uhr läuft für sich (eigenes Textfeld) – der Block wird nur neu gezeichnet, wenn ein Schritt
+// dazukommt oder der Status wechselt, und nur die neuen Schritte blenden ein. Vorher wurde er jede
+// Sekunde neu aufgebaut, dadurch flackerten alle Schritte und „Bereits erledigt“ ständig weg.
 function nwLaufendZeichnen() {
   const el = nwEl("laufend");
   if (!el) return;
@@ -1030,41 +1096,57 @@ function nwLaufendZeichnen() {
   const sek = Math.floor((Date.now() - lauf.start) / 1000);
   const status = lauf.schreibt || (lauf.runde > 1 && !lauf.schritte.length) ? "schreibt die Antwort"
     : lauf.schritte.length ? (lauf.modus === "orga" ? "erledigt den Auftrag" : "schlägt nach") : lauf.runde ? "denkt nach" : "nimmt den Auftrag entgegen";
-  const geaendert = nwSetzen(el, html`<article class="nw-msg ki nw-laeuft">
+  // Gezeigt = so viele Schritte/Aktionen standen schon da (alles danach ist neu und blendet ein)
+  const gezeigt = lauf.gezeigt && lauf.gezeigt.el === el ? lauf.gezeigt : { el, schritte: 0, aktionen: 0 };
+  const geaendert = nwSetzen(el, html`<article class="nw-msg ki nw-laeuft" aria-busy="true">
     <img class="nw-msg-avatar" src="assets/nigel.svg" alt="">
     <div class="nw-msg-inhalt">
       <div class="nw-msg-meta"><strong>Nigel</strong><span class="nw-modus-badge m-${lauf.modus}">${NW_MODUS_NAME[lauf.modus]}</span>
-        <span class="nw-status">${status} …</span><span class="nw-uhr">${Math.floor(sek / 60)}:${pad2(sek % 60)}</span>
-        <button type="button" class="nw-abbrechen" data-action="nw-abbrechen">${new SafeHtml(NW_ICON.stopp)} Abbrechen</button></div>
-      ${lauf.schritte.length ? html`<ol class="nw-schritte-live">${lauf.schritte.map((s) => nwSchrittZeile(s))}</ol>` : ""}
-      ${nwAktionenHtml(lauf.aktionen, true)}
-      <div class="ki-tippt"><span></span><span></span><span></span></div>
+        <span class="nw-status" role="status">${status} …</span><span class="nw-uhr" data-nw-uhr></span></div>
+      ${lauf.schritte.length ? html`<ol class="nw-schritte-live">${lauf.schritte.map((s, i) => nwSchrittZeile(s, i >= gezeigt.schritte))}</ol>` : ""}
+      ${nwAktionenHtml(lauf.aktionen, true, gezeigt.aktionen)}
+      <div class="nw-laeuft-fuss">
+        <div class="ki-tippt" aria-hidden="true"><span></span><span></span><span></span></div>
+        <button type="button" class="nw-abbrechen" data-action="nw-abbrechen">${new SafeHtml(NW_ICON.stopp)} Abbrechen</button>
+      </div>
     </div>
   </article>`);
+  lauf.gezeigt = { el, schritte: lauf.schritte.length, aktionen: lauf.aktionen.length };
+  const uhr = el.querySelector("[data-nw-uhr]");
+  if (uhr) uhr.textContent = `${Math.floor(sek / 60)}:${pad2(sek % 60)}`;
   if (geaendert && amEnde) scroll.scrollTop = scroll.scrollHeight;
 }
 setInterval(() => {
   if (Object.keys(ui.nigel.laeuft).length && parseRoute().page === "nigel" && !document.hidden) nwLaufendZeichnen();
 }, 1000);
 
-// Leiste über dem Eingabefeld: Kontext, Entwurf mitsenden
+// Leiste im Eingabefeld: Arbeitsmodus (Menü mit Beschreibung), Akten im Kontext, Entwurf mitsenden
 function nwLeisteZeichnen(chat) {
   const akten = chat.akte_ids.map((id) => byId("akten", id)).filter(Boolean);
   const hatEntwurf = !!String(chat.entwurf || "").trim();
-  // Arbeitsmodi als farbige Segment-Pills direkt über dem Eingabefeld
+  const aktiv = NW_MODI.find((m) => m.key === chat.modus) || NW_MODI[0];
   nwSetzen(nwEl("leiste"), html`
-    <div class="nw-modi" role="radiogroup" aria-label="Arbeitsmodus">
-      ${NW_MODI.map((m) => {
-        const erlaubt = nwModusErlaubt(m.key);
-        return html`<button type="button" role="radio" aria-checked="${chat.modus === m.key}" class="nw-modus m-${m.key} ${chat.modus === m.key ? "aktiv" : ""}"
-          data-action="nw-modus" data-modus="${m.key}" ${erlaubt ? "" : "disabled"} title="${erlaubt ? m.text : "In der Kanzlei nicht freigegeben"}">
-          ${m.label}</button>`;
-      })}
-    </div>
-    ${chat.modus === "orga" ? html`<span class="nw-aktionsmodus" role="status">⚡ Aktionsmodus: Nigel kann Einträge & Nachrichten ausführen</span>` : ""}
-    ${akten.map((a) => html`<span class="nw-kontext-chip" title="${a.title}">${new SafeHtml(KI_ICON.akte)}${a.number}<button type="button" data-action="nw-akte-weg" data-id="${a.id}" aria-label="Akte ${a.number} entfernen">×</button></span>`)}
-    <button type="button" class="nw-kontext-plus" data-action="nw-tab" data-tab="kontext">${akten.length ? "+ Kontext" : "+ Akte / Kontext"}</button>
+    <details class="mehr nw-modus-wahl">
+      <summary class="nw-modus-knopf m-${aktiv.key}" title="Arbeitsmodus wählen" aria-label="Arbeitsmodus: ${aktiv.label} – ändern">
+        <span class="nw-modus-punkt m-${aktiv.key}"></span><span>${aktiv.label}</span>${new SafeHtml(NW_ICON.pfeil)}</summary>
+      <div class="mehr-menue nw-modus-menue" role="menu" aria-label="Arbeitsmodus">
+        ${NW_MODI.map((m) => {
+          const erlaubt = nwModusErlaubt(m.key);
+          const gewaehlt = chat.modus === m.key;
+          return html`<button type="button" role="menuitemradio" aria-checked="${String(gewaehlt)}" class="menue-punkt m-${m.key} ${gewaehlt ? "aktiv" : ""}"
+            data-action="nw-modus" data-modus="${m.key}" ${erlaubt ? "" : "disabled"}>
+            <span class="nw-modus-punkt m-${m.key}"></span>
+            <span class="nw-modus-menue-text"><strong>${m.label}</strong><small>${erlaubt ? m.text : "In der Kanzlei nicht freigegeben."}</small></span>
+            ${gewaehlt ? html`<span class="menue-haken" aria-hidden="true">✓</span>` : ""}</button>`;
+        })}
+      </div>
+    </details>
+    ${akten.map((a) => html`<span class="nw-kontext-chip" title="${a.number} · ${a.title}">${new SafeHtml(KI_ICON.akte)}<span>${a.number}</span><button type="button" data-action="nw-akte-weg" data-id="${a.id}" aria-label="Akte ${a.number} entfernen" title="Aus dem Kontext entfernen">×</button></span>`)}
+    <button type="button" class="nw-kontext-plus" data-action="nw-tab" data-tab="kontext" title="Akten, Paragraphen und Notizen für Nigel">${akten.length ? "+ Kontext" : "+ Akte / Kontext"}</button>
     ${hatEntwurf ? html`<label class="nw-schalter" title="Den aktuellen Entwurf bei der nächsten Frage mitschicken"><input type="checkbox" data-change="nw-mit-entwurf" ${nwMitEntwurf(chat) ? "checked" : ""}> Entwurf mitsenden</label>` : ""}`);
+  nwSetzen(nwEl("hinweis"), chat.modus === "orga"
+    ? html`<span class="nw-aktionsmodus">⚡ Aktionsmodus</span> Nigel legt Einträge, Termine und Aufgaben selbst an und schreibt auf Discord – mit Ihren Rechten.`
+    : "");
   const senden = document.querySelector("#main [data-nw-senden]");
   if (senden) senden.disabled = !!(chat.id && ui.nigel.laeuft[chat.id]);
   const feld = nwFeld("nw-text");
@@ -1086,16 +1168,27 @@ function nwTextHoehe() {
 // =============================================================
 const NW_TABS = [["kontext", "Kontext"], ["entwurf", "Entwurf"], ["quellen", "Quellen"], ["vorlagen", "Vorlagen"], ["einstellungen", "Einstellungen"]];
 
+// Reiterleiste der Arbeitsfläche. „Einstellungen“ steht als Zahnrad ganz rechts –
+// so passen alle Reiter auch in die schmale Spalte, ohne abgeschnitten zu werden.
+function nwTabsHtml(aktiv, zusatz = () => "") {
+  return html`${NW_TABS.map(([k, label]) => {
+    const symbol = k === "einstellungen";
+    return html`<button type="button" role="tab" id="nw-reiter-${k}" aria-selected="${String(aktiv === k)}"
+      class="nw-reiter ${aktiv === k ? "aktiv" : ""} ${symbol ? "nw-reiter-symbol" : ""}" data-action="nw-tab" data-tab="${k}"
+      ${symbol ? html`title="${label}" aria-label="${label}"` : ""}>${symbol ? new SafeHtml(NW_ICON.zahnrad) : label}${zusatz(k)}</button>`;
+  })}`;
+}
+
 function nwPanelZeichnen(chat) {
   const n = ui.nigel;
   const zaehler = {
     kontext: chat.akte_ids.filter((id) => byId("akten", id)).length + chat.paragraph_ids.length,
-    entwurf: String(chat.entwurf || "").trim() ? "●" : "",
     quellen: nwQuellen(chat).paragraphen.length,
   };
-  nwSetzen(nwEl("tabs"), html`
-    <button type="button" class="nw-icon nw-nur-mobil" data-action="nw-ansicht" data-ansicht="chat" aria-label="Zurück zum Chat">${new SafeHtml(NW_ICON.zurueck)}</button>
-    ${NW_TABS.map(([k, label]) => html`<button type="button" class="${n.tab === k ? "aktiv" : ""}" data-action="nw-tab" data-tab="${k}">${label}${zaehler[k] ? html`<span class="nw-zahl">${zaehler[k]}</span>` : ""}</button>`)}`);
+  const hatEntwurf = !!String(chat.entwurf || "").trim();
+  nwSetzen(nwEl("tabs"), nwTabsHtml(n.tab, (k) => k === "entwurf"
+    ? (hatEntwurf ? html`<span class="nw-punkt" title="Entwurf vorhanden"></span>` : "")
+    : zaehler[k] ? html`<span class="nw-zahl">${zaehler[k]}</span>` : ""));
   document.querySelectorAll("#main .nw-tab").forEach((el) => { el.hidden = el.dataset.tab !== n.tab; });
   if (n.tab === "kontext") nwKontextZeichnen(chat);
   if (n.tab === "entwurf") nwEntwurfZeichnen(chat);
@@ -1167,13 +1260,15 @@ function nwKontextZeichnen(chat) {
 function nwEntwurfZeichnen(chat) {
   const n = ui.nigel;
   const text = String(chat.entwurf || "");
-  const vorschau = n.entwurfAnsicht === "vorschau";
+  const leer = !text.trim();
+  // Ein leerer Entwurf hat keine Vorschau – dann gleich das Schreibfeld zeigen
+  const vorschau = n.entwurfAnsicht === "vorschau" && !leer;
   const vorher = n.entwurfVorher[nwSchluessel(chat)];
   const verlauf = nwVerlauf(chat);
   const letzte = [...verlauf].reverse().find((m) => m.rolle === "ki");
   const vorschlagTeil = letzte && letzte.vorschlag ? nwTeile(letzte.text).find((t) => t.entwurf) : null;
   const offenerVorschlag = vorschlagTeil && vorschlagTeil.md.trim() !== text.trim() && letzte.modus === "ueberarbeiten" ? letzte : null;
-  const woerter = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const woerter = leer ? 0 : text.trim().split(/\s+/).length;
   const lauf = chat.id && n.laeuft[chat.id];
   nwSetzen(nwEl("e-kopf"), html`
     ${offenerVorschlag ? html`<div class="nw-vorschlag">
@@ -1183,30 +1278,36 @@ function nwEntwurfZeichnen(chat) {
     </div>` : ""}
     ${lauf && lauf.modus === "ueberarbeiten" ? html`<div class="nw-vorschlag leise"><span class="spinner"></span> Nigel überarbeitet den Entwurf …</div>` : ""}
     <div class="nw-entwurf-leiste">
-      <div class="nw-segment">
-        <button type="button" class="${vorschau ? "" : "aktiv"}" data-action="nw-entwurf-ansicht" data-ansicht="bearbeiten">Bearbeiten</button>
-        <button type="button" class="${vorschau ? "aktiv" : ""}" data-action="nw-entwurf-ansicht" data-ansicht="vorschau">Vorschau</button>
+      <div class="nw-segment" role="group" aria-label="Ansicht">
+        <button type="button" class="${vorschau ? "" : "aktiv"}" aria-pressed="${String(!vorschau)}" data-action="nw-entwurf-ansicht" data-ansicht="bearbeiten">Bearbeiten</button>
+        <button type="button" class="${vorschau ? "aktiv" : ""}" aria-pressed="${String(vorschau)}" data-action="nw-entwurf-ansicht" data-ansicht="vorschau" ${leer ? html`disabled title="Noch kein Entwurf"` : ""}>Vorschau</button>
       </div>
       <span class="nw-hilfe">${anzahl(woerter, "Wort", "Wörter")}</span>
       <span class="spacer"></span>
-      ${vorher !== undefined ? html`<button type="button" class="btn small" data-action="nw-entwurf-zurueck" title="Letzte Übernahme rückgängig machen">Rückgängig</button>` : ""}
+      ${vorher !== undefined ? html`<button type="button" class="btn small ruhig" data-action="nw-entwurf-zurueck" title="Letzte Übernahme rückgängig machen">${new SafeHtml(NW_ICON.nochmal)} Rückgängig</button>` : ""}
+      ${leer ? "" : html`<button type="button" class="nw-icon gefahr" data-action="nw-entwurf-leeren" title="Entwurf leeren" aria-label="Entwurf leeren">${new SafeHtml(NW_ICON.muell)}</button>`}
     </div>
-    ${text.trim() ? html`<div class="nw-entwurf-export">
-      <button type="button" class="btn small primary" data-action="nw-entwurf-drucken">Mit Briefkopf drucken / PDF</button>
+    ${leer ? "" : html`<div class="nw-entwurf-export">
+      <button type="button" class="btn small primary" data-action="nw-entwurf-drucken" title="Mit Briefkopf drucken oder als PDF speichern">Drucken / PDF</button>
       <button type="button" class="btn small" data-action="nw-entwurf-kopieren">Kopieren</button>
-      <button type="button" class="btn small" data-action="nw-entwurf-laden">.md</button>
-      <button type="button" class="btn small" data-action="nw-entwurf-in-akte">In Akte</button>
-      <button type="button" class="btn small danger" data-action="nw-entwurf-leeren">Leeren</button>
-    </div>` : ""}`);
+      <button type="button" class="btn small" data-action="nw-entwurf-in-akte" title="In den Verlauf einer Akte übernehmen">In Akte</button>
+      <button type="button" class="btn small" data-action="nw-entwurf-laden" title="Als Markdown-Datei (.md) herunterladen">${new SafeHtml(NW_ICON.laden)} .md</button>
+    </div>`}`);
   const feld = nwFeld("nw-entwurf");
   feld.hidden = vorschau;
   if (document.activeElement !== feld && feld.value !== text) feld.value = text;
   const vor = nwEl("e-vorschau");
   vor.hidden = !vorschau;
-  if (vorschau) nwSetzen(vor, text.trim() ? new SafeHtml(nwPlatzhalter(kiFormat(text))) : html`<p class="muted">Noch leer.</p>`);
-  nwSetzen(nwEl("e-chips"), html`${NW_UEBERARBEITEN.map((t) => html`<button type="button" class="ki-chip" data-action="nw-ueberarbeiten-chip" data-text="${t}" ${text.trim() && !lauf ? "" : "disabled"}>${t}</button>`)}`);
+  if (vorschau) nwSetzen(vor, new SafeHtml(nwPlatzhalter(kiFormat(text))));
+  // Überarbeiten erst, wenn es etwas zu überarbeiten gibt (vorher nur ein Hinweis statt ausgegrauter Knöpfe)
   const form = document.querySelector("#main .nw-ueberarbeiten");
-  if (form) form.classList.toggle("gesperrt", !text.trim() || !nwModusErlaubt("ueberarbeiten"));
+  const darfUeberarbeiten = nwModusErlaubt("ueberarbeiten");
+  if (form) form.hidden = leer || !darfUeberarbeiten;
+  nwSetzen(nwEl("e-chips"), html`${NW_UEBERARBEITEN.map((t) => html`<button type="button" class="ki-chip" data-action="nw-ueberarbeiten-chip" data-text="${t}" ${lauf ? "disabled" : ""}>${t}</button>`)}`);
+  const knopf = form && form.querySelector('button[type="submit"]');
+  if (knopf) knopf.disabled = !!lauf;
+  nwSetzen(nwEl("e-hinweis"), leer ? html`<p class="nw-hilfe nw-entwurf-tipp">Tipp: Im Modus „Schriftsatz“ landet Nigels erster Entwurf automatisch hier. Danach können Sie ihn hier von Nigel überarbeiten lassen.</p>`
+    : !darfUeberarbeiten ? html`<p class="nw-hilfe">Überarbeiten durch Nigel ist in der Kanzlei nicht freigegeben (Modus „Schriftsatz“).</p>` : "");
 }
 
 function nwEntwurfSetzen(chat, text, meldung) {
@@ -1217,7 +1318,7 @@ function nwEntwurfSetzen(chat, text, meldung) {
   if (feld && nwAktiverChat() === chat) feld.value = text;
   nwSpeichernLeise(chat, { entwurf: text });
   ui.nigel.tab = "entwurf";
-  if (window.innerWidth > 900 && window.innerWidth <= 1250) ui.nigel.panel = true;
+  if (!nwHandy()) ui.nigel.panel = true; // Arbeitsfläche zeigen, damit man den Entwurf auch sieht
   if (meldung) toast(meldung);
   scheduleRender();
 }
@@ -1289,8 +1390,10 @@ function nwVorlagenZeichnen(chat) {
 function nwEinstellungenZeichnen() {
   const p = ui.nigel.profil;
   const v = nwVorgaben();
-  const auswahl = (key, optionen, aktiv = p[key]) => html`<div class="nw-segment breit">${optionen.map(([wert, label]) => html`
-    <button type="button" class="${String(aktiv) === String(wert) ? "aktiv" : ""}" data-action="nw-einstellung" data-key="${key}" data-wert="${wert}">${label}</button>`)}</div>`;
+  const auswahl = (key, optionen, aktiv = p[key]) => html`<div class="nw-segment breit" role="group">${optionen.map(([wert, label]) => {
+    const an = String(aktiv) === String(wert);
+    return html`<button type="button" class="${an ? "aktiv" : ""}" aria-pressed="${String(an)}" data-action="nw-einstellung" data-key="${key}" data-wert="${wert}">${label}</button>`;
+  })}</div>`;
   const stufen = { low: "Schnell", medium: "Gründlich", high: "Sehr gründlich" };
   nwSetzen(nwEl("einstellungen"), html`
     <section class="nw-block">
@@ -1419,6 +1522,14 @@ async function nwVomHandy() {
   }
 }
 
+// Zurück zum Chat: Handy zeigt wieder den Chat, auf Tablet/Laptop schließen Chat-Liste und
+// Arbeitsfläche, wenn sie als Schublade über dem Chat liegen (sonst verdecken sie das Eingabefeld)
+function nwSchubladeZu() {
+  ui.nigel.ansicht = "chat";
+  if (nwSchublade()) ui.nigel.panel = false;
+  scheduleRender();
+}
+
 // Neue Aufgabe (optional mit Akte und Modus), z. B. aus einer Akte heraus
 function nwNeueAufgabe(werte = {}) {
   ui.nigel.neu = nwNeuerChat(werte);
@@ -1434,19 +1545,20 @@ Object.assign(ACTIONS, {
   "nw-vom-handy": () => nwVomHandy(),
   "ki-arbeitsbereich": () => { if (ui.assistent.verlauf.length) nwVomHandy(); else { kiSchliessen(); nwNeueAufgabe({ akte_ids: ui.assistent.akteId ? [ui.assistent.akteId] : [] }); } },
   "nw-ansicht": (d) => { ui.nigel.ansicht = d.ansicht; scheduleRender(); },
-  "nw-drawer-zu": () => { ui.nigel.ansicht = "chat"; if (window.innerWidth < 1280 && window.innerWidth > 900) ui.nigel.panel = false; scheduleRender(); },
+  "nw-drawer-zu": () => nwSchubladeZu(),
+  "nw-panel-zu": () => { ui.nigel.panel = false; ui.nigel.ansicht = "chat"; scheduleRender(); },
   "nw-v-modus": (d) => { ui.nigel.vorschauModus = d.modus; scheduleRender(); },
   "nw-panel": () => {
-    if (window.innerWidth <= 900) ui.nigel.ansicht = ui.nigel.ansicht === "panel" ? "chat" : "panel";
+    if (nwHandy()) ui.nigel.ansicht = ui.nigel.ansicht === "panel" ? "chat" : "panel";
     else ui.nigel.panel = !ui.nigel.panel;
     scheduleRender();
   },
   "nw-tab": (d) => {
     ui.nigel.tab = d.tab;
-    if (window.innerWidth <= 900) ui.nigel.ansicht = "panel";
+    if (nwHandy()) ui.nigel.ansicht = "panel";
     else ui.nigel.panel = true;
     scheduleRender();
-    if (d.tab === "kontext" && !nigelNurAnsehen()) setTimeout(() => { const s = document.querySelector('#main [data-change="nw-akte-hinzu"]'); if (s && !nwAktiverChat().akte_ids.length) s.focus(); }, 30);
+    if (d.tab === "kontext" && !nigelNurAnsehen() && !nwTouch()) setTimeout(() => { const s = document.querySelector('#main [data-change="nw-akte-hinzu"]'); if (s && !nwAktiverChat().akte_ids.length) s.focus(); }, 30);
   },
   "nw-modus": (d) => {
     const chat = nwAktiverChat();
@@ -1455,7 +1567,7 @@ Object.assign(ACTIONS, {
     if (chat.id) nwSpeichernLeise(chat, { modus: d.modus });
     scheduleRender();
     // Auf Touch-Geräten würde das Fokussieren die Bildschirmtastatur öffnen – dort nur am Desktop fokussieren
-    if (!window.matchMedia("(pointer: coarse)").matches) nwFeld("nw-text").focus({ preventScroll: true });
+    if (!nwTouch()) nwFeld("nw-text").focus({ preventScroll: true });
   },
   "nw-umbenennen": () => {
     const chat = nwAktiverChat();
@@ -1466,6 +1578,7 @@ Object.assign(ACTIONS, {
   "nw-loeschen": async () => {
     const chat = nwAktiverChat();
     if (!chat.id || !confirm(`Chat „${chat.titel}“ mit allen Nachrichten und dem Entwurf löschen?`)) return;
+    if (ui.nigel.laeuft[chat.id]) ui.nigel.laeuft[chat.id].abbruch.abort(); // laufende Anfrage nicht ins Leere schreiben lassen
     const { error } = await db.from("ki_chats").delete().eq("id", chat.id);
     if (error) return toast(errorText(error), "error");
     ui.nigel.chats = ui.nigel.chats.filter((c) => c.id !== chat.id);
@@ -1505,7 +1618,7 @@ Object.assign(ACTIONS, {
   },
   "nw-zur-nachricht": (d) => {
     const el = document.querySelector(`#main [data-action="nw-kopieren"][data-id="${CSS.escape(d.id)}"]`);
-    if (window.innerWidth <= 900) { ui.nigel.ansicht = "chat"; scheduleRender(); }
+    nwSchubladeZu();
     if (el) setTimeout(() => el.closest(".nw-msg").scrollIntoView({ behavior: "smooth", block: "start" }), 40);
   },
   "nw-in-akte": (d) => {
@@ -1569,7 +1682,7 @@ Object.assign(ACTIONS, {
     const p = nwParagraphAusZitat(d.q);
     if (!p) return;
     ui.nigel.tab = "quellen";
-    if (window.innerWidth <= 900) ui.nigel.ansicht = "panel";
+    if (nwHandy()) ui.nigel.ansicht = "panel";
     else ui.nigel.panel = true;
     scheduleRender();
     setTimeout(() => {
@@ -1581,7 +1694,7 @@ Object.assign(ACTIONS, {
     const feld = nwFeld("nw-text");
     feld.value = (feld.value ? feld.value.trimEnd() + " " : "") + d.q + " ";
     nwTextHoehe();
-    if (window.innerWidth <= 900) { ui.nigel.ansicht = "chat"; scheduleRender(); }
+    nwSchubladeZu(); // Eingabefeld sichtbar machen
     feld.focus();
   },
   "nw-akte-weg": (d) => {
@@ -1609,8 +1722,7 @@ Object.assign(ACTIONS, {
     const feld = nwFeld("nw-text");
     feld.value = v.text;
     nwTextHoehe();
-    if (window.innerWidth <= 900) ui.nigel.ansicht = "chat";
-    scheduleRender();
+    nwSchubladeZu(); // Eingabefeld sichtbar machen (Handy: zurück zum Chat, Tablet: Schublade zu)
     setTimeout(() => { feld.focus(); feld.setSelectionRange(v.text.length, v.text.length); }, 20);
     if (v.akte && !chat.akte_ids.length) toast("Diese Vorlage braucht eine Akte – bitte unter Kontext wählen.");
   },
@@ -1740,13 +1852,12 @@ Object.assign(SUBMITS, {
   },
 });
 
-// Mittlere Breite: Die Arbeitsfläche schwebt über dem Chat – ein Klick in den Chat schließt sie.
-// (Aktionen, die sie brauchen, öffnen sie danach selbst wieder.)
-document.addEventListener("click", (e) => {
-  if (!ui.nigel.panel || window.innerWidth > 1250 || window.innerWidth <= 900 || parseRoute().page !== "nigel") return;
-  if (!e.target.closest || !e.target.closest(".nw-haupt") || e.target.closest('[data-action="nw-panel"]')) return;
-  ui.nigel.panel = false;
-  scheduleRender();
+// Esc schließt auf Tablet/Laptop die Schublade (Chat-Liste bzw. Arbeitsfläche über dem Chat).
+// Läuft vor den anderen Tasten-Handlern (capture): Ist noch ein Menü oder Dialog offen, schließt Esc zuerst das.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || parseRoute().page !== "nigel" || !nwSchublade()) return;
+  if (document.querySelector("dialog[open], details.mehr[open]")) return;
+  if (ui.nigel.ansicht === "liste" || ui.nigel.panel) nwSchubladeZu();
 }, true);
 
 // Tasten im Eingabefeld: Enter bzw. Strg+Enter sendet (Einstellung)
