@@ -183,11 +183,13 @@ und Änderungen erscheinen bei allen sofort.
   Die KI sieht nur, was das Mitglied selbst lesen darf. Antworten lassen sich in den Verlauf der Akte übernehmen.
 - **Nigels Arbeitsbereich** (Menüpunkt „Nigel“, `#/nigel`) für komplexe juristische Arbeit – das Handy bleibt das schnelle
   Nachschlage-Werkzeug:
-  - **Gespeicherte Chats** (links): Suche, Anheften, nach Datum gruppiert, umbenennen, als Markdown exportieren, löschen.
-    Jeder sieht nur seine eigenen Chats. Ein Handy-Chat lässt sich mit einem Klick übernehmen („Im Arbeitsbereich fortsetzen“).
+  - **Gespeicherte Chats** (links): Suche, Anheften, nach Datum gruppiert (mit Uhrzeit bzw. Tag rechts), umbenennen, als Markdown
+    exportieren, löschen – Umbenennen, Anheften, Export und Löschen stehen im Menü **„⋯“** oben rechts im Chat. Jeder sieht nur seine eigenen Chats. Ein Handy-Chat lässt sich mit einem Klick übernehmen („Im Arbeitsbereich fortsetzen“).
   - **Arbeitsmodi:** *Rechtsfrage* (kurz, wie auf dem Handy), *Gutachten* (Gutachtenstil mit Strafrahmen), *Schriftsatz*
     (Anträge, Stellungnahmen, Schreiben – landet direkt im Entwurf) und *Fallanalyse* (Stärken, Risiken, Beweislage, Strategie,
     nächste Schritte, Fragen an den Mandanten). Lange Modi dürfen deutlich längere Antworten schreiben (bis 14 000 Zeichen).
+    Gewählt wird der Modus unten im Eingabefeld (Auswahl mit kurzer Beschreibung, daneben Akten im Kontext und „Entwurf mitsenden“)
+    oder bei einer neuen Aufgabe über die Karten. Modell und Verbrauch stehen leise unten rechts an jeder Antwort.
   - **Modus *Organisatorisch*:** Nigel erledigt Büroarbeit selbst – mit den Rechten des Mitglieds (was man von Hand nicht darf,
     darf Nigel auch nicht): **in den Verlauf einer Akte notieren**, **Termine** und **Aufgaben** anlegen (auch für Kollegen),
     anstehende Termine/Aufgaben ansehen, **an die Pinnwand hängen** und **Kollegen auf Discord Bescheid geben**. Beispiel:
@@ -209,7 +211,7 @@ und Änderungen erscheinen bei allen sofort.
     Antwort neu erzeugen, frühere Frage ändern und neu stellen.
   - **Quellen:** alle nachgeschlagenen Paragraphen des Chats mit Wortlaut, zum Anheften oder Öffnen.
   - **Vorlagen:** Standard-, Kanzlei- und eigene Vorlagen (Auftrag + Modus). Kanzlei-Vorlagen pflegt, wer die Kanzlei-Einstellungen bearbeiten darf.
-  - **Persönliche Einstellungen** (gelten auch fürs Handy): Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren,
+  - **Persönliche Einstellungen** (Zahnrad oben in der Arbeitsfläche; gelten auch fürs Handy): Antwortlänge, Gründlichkeit, Paragraphen-Wortlaut zitieren,
     Standardmodus, Senden mit Enter oder Strg+Enter, Kosten-Anzeige (Prozent/Dollar). Der Ton ist immer der Butler;
     die Anrede kommt aus „Mein Profil“ (Herr → Sir, Frau → Madam, Keine Anrede).
   - **Kanzlei-Vorgaben** (Recht „Kanzlei-Einstellungen bearbeiten“): freigegebene Modi (auch *Organisatorisch*), Discord-Nachrichten an/aus und Kanal, höchste Gründlichkeit (Kostenbremse), Akten-Suche an/aus, **Hausregeln** für alle Antworten und
